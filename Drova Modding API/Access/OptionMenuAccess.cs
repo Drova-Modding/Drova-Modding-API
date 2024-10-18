@@ -1,6 +1,5 @@
 ﻿using Il2Cpp;
 using Il2CppDrova.GUI;
-using Il2CppSystem.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;

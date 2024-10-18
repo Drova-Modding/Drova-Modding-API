@@ -36,6 +36,7 @@ And to your csproj:
 
 ## Features
 - Easier access to OptionsMenu
+- Create your own loc files for your mods
 
 ### Contributing
 Feel free to contribute to this project. If you have any questions or ideas, feel free to ask.
