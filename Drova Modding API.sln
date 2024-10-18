@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drova Modding API", "Drova Modding API\Drova Modding API.csproj", "{3251C608-5D80-4F2E-81DE-D538ED7ECDEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3251C608-5D80-4F2E-81DE-D538ED7ECDEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3251C608-5D80-4F2E-81DE-D538ED7ECDEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3251C608-5D80-4F2E-81DE-D538ED7ECDEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3251C608-5D80-4F2E-81DE-D538ED7ECDEE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3B29BB11-E427-4CBF-96C1-F6EBAE0FA5C8}
+	EndGlobalSection
+EndGlobal
