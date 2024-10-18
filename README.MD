@@ -26,8 +26,8 @@ public class MyMod : MelonMod
 *Don't use a Priority greater than 1000, because the Drova Modding API uses 1000 and would than load later.*
 
 
-And to your sln: 
-```sln
+And to your csproj: 
+```csproj
 <Reference Include="DrovaModdingAPI">
 	<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods\Drova_Modding_API.dll</HintPath>
 </Reference>
