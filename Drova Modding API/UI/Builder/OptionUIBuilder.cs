@@ -2,9 +2,8 @@
 using Il2CppDrova.ConfigOptions;
 using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.Options;
-using Il2CppSystem.Runtime.Remoting;
-using MelonLoader;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 namespace Drova_Modding_API.UI.Builder
@@ -38,6 +37,11 @@ namespace Drova_Modding_API.UI.Builder
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Interface/SlotScrollRect(VIEW)/LayoutGroup_Interface/GUI_OptionRow_Show_PlayerHealthbar");
         }
 
+        private static GameObject GetSliderObject()
+        {
+            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Video/SlotScrollRect(VIEW)/LayoutGroup_Video/GUI_OptionRow_Slider_Screenshake");
+        }
+
         public OptionUIBuilder CreateTitle(LocalizedString localizedString)
         {
             var title = UnityEngine.Object.Instantiate(GetTitleObject(), _parent);
@@ -65,6 +69,73 @@ namespace Drova_Modding_API.UI.Builder
             return this;
         }
 
+        public OptionUIBuilder CreateSlider(LocalizedString title, string optionKey, int min = 0, int max = 100, int defaultValue = 0)
+        {
+            var slider = UnityEngine.Object.Instantiate(GetSliderObject(), _parent);
+            SetLocalizedText(slider.transform.FindChild("Left").gameObject, title);
+            var rightOptionConfig = slider.transform.FindChild("Right/GUI_Slider_OptionConfig");
+            var unitySlider = rightOptionConfig.GetComponent<Slider>();
+            unitySlider.minValue = min;
+            unitySlider.maxValue = max;
+            unitySlider.value = defaultValue;
+
+            var sliderOption = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
+            if (!sliderOption._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))
+            {
+                sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
+                var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
+                //configOptionBool.ValueChangedEvent.AddEventListener(new Action<AConfigOption<bool>>(t =>
+                //{
+                //    bool value = t.TryGetValue(out bool rightValue);
+                //    MelonLogger.Msg("Value changed " + rightValue.ToString());
+                //}));
+                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionInt);
+                sliderOption.UpdateOptionValue(defaultValue);
+            }
+            sliderOption._key._key = optionKey;
+            slider.SetActive(false);
+            toPut.AddLast(slider);
+            return this;
+        }
+
+        public OptionUIBuilder CreateSlider(LocalizedString title, string optionKey, float min = 0, float max = 100, float defaultValue = 0, bool wholeNumbers = false)
+        {
+            var slider = UnityEngine.Object.Instantiate(GetSliderObject(), _parent);
+            SetLocalizedText(slider.transform.FindChild("Left").gameObject, title);
+            var rightOptionConfig = slider.transform.FindChild("Right/GUI_Slider_OptionConfig");
+            var unitySlider = rightOptionConfig.GetComponent<Slider>();
+            unitySlider.minValue = min;
+            unitySlider.maxValue = max;
+            unitySlider.value = defaultValue;
+            unitySlider.wholeNumbers = wholeNumbers;
+
+            var toDestory = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
+            var sliderOption = rightOptionConfig.gameObject.AddComponent<GUI_ConfigOption_Slider_Float>();
+            sliderOption._uiElement = rightOptionConfig.GetComponent<Slider>();
+            sliderOption._key = toDestory._key;
+            sliderOption._configHandler = toDestory._configHandler;
+
+
+            UnityEngine.Object.Destroy(toDestory);
+
+            sliderOption.Init();
+
+            if (!sliderOption._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))
+            {
+                sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
+
+                var configOptionFloat = new ConfigOption_Float(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
+
+                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionFloat);
+            }
+
+            sliderOption._key._key = optionKey;
+
+            slider.SetActive(false);
+            toPut.AddLast(slider);
+            return this;
+        }
+
         public OptionUIBuilder CreateSwitch(LocalizedString title, LocalizedString onValue, LocalizedString offValue, string optionKey, bool defaultValue = false)
         {
             var @switch = UnityEngine.Object.Instantiate(GetSwitchObject(), _parent);
@@ -75,7 +146,7 @@ namespace Drova_Modding_API.UI.Builder
             configOption.GetComponent<GUI_SwitchBhvr>()._toggle.isOn = defaultValue;
             configOption.FindChild("TextOn").GetComponent<LocalizedTextMeshPro>()._localizedString = onValue;
             configOption.FindChild("TextOff").GetComponent<LocalizedTextMeshPro>()._localizedString = offValue;
-            
+
             var toggle = configOption.GetComponent<GUI_ConfigOption_Toggle>();
 
             if (!toggle._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))

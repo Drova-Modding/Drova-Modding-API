@@ -18,6 +18,7 @@ namespace Drova_Modding_API.Access
         public static OptionMenuAccess Instance { get; } = _instance;
 
         public delegate void OptionMenuOpenAction();
+
         /**
         * This event is used to react on option menu open or closes, this can happen from the pause menu and the game main menu.
         */
@@ -26,13 +27,19 @@ namespace Drova_Modding_API.Access
         internal static void OnOptionRoot()
         {
             _instance.OnOptionMenuOpen.Invoke();
+            var manager = _instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
+            // Workaround for Update 1.0.2.1 where the modded panel is not activated for whatever reason.
+            if (manager._currentPanelIndex == -1)
+            {
+                manager.ChangePanel(0);
+            }
         }
 
         /**
          * Add a header and panel to the option menu and set a icon. This is not persistent and will be removed when the option menu is closed.
          * @param icon The icon of the header (not the background).
          * @param name The name of the header. It needs to be unique and named liked: GUI_Button_OptionTab_YOUROPTION.
-         * @return The created transfrom for the builder.
+         * @return The created transfrom for the builder or if the Elements already exists null.
          */
         public Transform AddPanel(Sprite icon, string name)
         {
@@ -42,6 +49,7 @@ namespace Drova_Modding_API.Access
                 return null;
             }
             GameObject root = GetRootOfHeader();
+            if (GetHeader(name)) return null;
             GameObject newHeader = GameObject.Instantiate(root.transform.GetChild(0).gameObject, root.transform);
             Image image = newHeader.transform.GetChild(0).GetComponent<Image>();
             newHeader.name = name;
@@ -86,7 +94,8 @@ namespace Drova_Modding_API.Access
 
             manager.GuiPanels.Add(guiPanel);
             manager.SetupPanelNavigationElements();
-            // Rerender panel, otherwise its empty.
+            // Rerender panel, otherwise its empty. 
+            // TODO find out whats setting the _configHandler.GameplayConfig, so far we know its only getting set in active panel and removed on disabled panels.
             manager.ChangePanel(header.transform.GetSiblingIndex() + 1);
         }
 
@@ -99,6 +108,7 @@ namespace Drova_Modding_API.Access
         {
             var root = GetRootOfOptionWindow();
             var newPanel = UnityEngine.Object.Instantiate(root.transform.GetChild(4).gameObject, root.transform);
+            newPanel.transform.SetSiblingIndex(newPanel.transform.GetSiblingIndex() - 1);
             newPanel.name = string.Concat("Panel", header.name.AsSpan(header.name.LastIndexOf('_')));
             newPanel.SetActive(false);  
             return newPanel;
@@ -134,6 +144,11 @@ namespace Drova_Modding_API.Access
         public GameObject GetRootOfHeader()
         {
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Header");
+        }
+
+        public GameObject GetHeader(string name)
+        {
+            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Header/" + name);
         }
 
     }

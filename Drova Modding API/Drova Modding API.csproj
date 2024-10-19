@@ -460,9 +460,11 @@
 		<Compile Include="Patches\GUI_ButtonClick_OpenOptions_Patch.cs" />
 		<Compile Include="Patches\GUI_Window_PauseMenu_Patch.cs" />
 		<Compile Include="UI\Builder\OptionUIBuilder.cs" />
+		<Compile Include="UI\GUI_ConfigOption_Slider_Float.cs" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;" />
+		<Exec Command="COPY &quot;$(TargetDir)$(TargetName).xml&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;" />
 	</Target>
 </Project>
