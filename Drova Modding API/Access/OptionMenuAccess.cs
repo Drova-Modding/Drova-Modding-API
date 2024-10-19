@@ -1,4 +1,5 @@
-﻿using Il2Cpp;
+﻿using Drova_Modding_API.UI.Builder;
+using Il2Cpp;
 using Il2CppDrova.GUI;
 using MelonLoader;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace Drova_Modding_API.Access
     public class OptionMenuAccess
     {
         private OptionMenuAccess() { }
+        private const string ScrollBarName = "ScrollRectView";
         private static readonly OptionMenuAccess _instance = new();
         public static OptionMenuAccess Instance { get; } = _instance;
 
@@ -30,9 +32,9 @@ namespace Drova_Modding_API.Access
          * Add a header and panel to the option menu and set a icon. This is not persistent and will be removed when the option menu is closed.
          * @param icon The icon of the header (not the background).
          * @param name The name of the header. It needs to be unique and named liked: GUI_Button_OptionTab_YOUROPTION.
-         * @return The created header game object.
+         * @return The created transfrom for the builder.
          */
-        public GameObject AddPanel(Sprite icon, string name)
+        public Transform AddPanel(Sprite icon, string name)
         {
             if(!name.StartsWith("GUI_Button_OptionTab_"))
             {
@@ -48,11 +50,22 @@ namespace Drova_Modding_API.Access
             image.MarkDirty();
             var panel = this.AddPanel(newHeader);
             var componentToRegister = newHeader.GetComponent<GUI_ButtonNavigationAnimationElement>();
-            
+
+            var scrollbar = GetScrollBar(panel);
+            scrollbar.name = ScrollBarName;
+            var layoutGroup = scrollbar.transform.GetChild(0);
+            layoutGroup.name = $"LayoutGroup{name.AsSpan(name.LastIndexOf('_'))}";
+            layoutGroup.DestroyAllChildren();
+
             root.GetComponent<GUI_ButtonNavigationAnimation>().AddElement(componentToRegister);
             GetGUIWindow().GetComponent<GUI_GameMenu_NavigationSwitcher>().legacyElements.Add(componentToRegister);
             OverrideNavigation(newHeader, panel);
-            return newHeader;
+            return layoutGroup;
+        }
+
+        private GameObject GetScrollBar(GameObject panel)
+        {
+            return panel.transform.GetChild(1).gameObject;
         }
 
         /**
@@ -74,7 +87,7 @@ namespace Drova_Modding_API.Access
             manager.GuiPanels.Add(guiPanel);
             manager.SetupPanelNavigationElements();
             // Rerender panel, otherwise its empty.
-            manager.ChangePanel(0);
+            manager.ChangePanel(header.transform.GetSiblingIndex() + 1);
         }
 
         /**
@@ -85,10 +98,15 @@ namespace Drova_Modding_API.Access
         private GameObject AddPanel(GameObject header)
         {
             var root = GetRootOfOptionWindow();
-            var newPanel = GameObject.Instantiate(root.transform.GetChild(4).gameObject, root.transform);
-            newPanel.name = "Panel" + header.name.Substring(header.name.LastIndexOf('_'));
-            newPanel.SetActive(false);
+            var newPanel = UnityEngine.Object.Instantiate(root.transform.GetChild(4).gameObject, root.transform);
+            newPanel.name = string.Concat("Panel", header.name.AsSpan(header.name.LastIndexOf('_')));
+            newPanel.SetActive(false);  
             return newPanel;
+        }
+
+        public OptionUIBuilder GetBuilder(Transform panel)
+        {
+            return new OptionUIBuilder(panel);
         }
 
         /**

@@ -459,6 +459,7 @@
 		<Compile Include="Access\OptionMenuAccess.cs" />
 		<Compile Include="Patches\GUI_ButtonClick_OpenOptions_Patch.cs" />
 		<Compile Include="Patches\GUI_Window_PauseMenu_Patch.cs" />
+		<Compile Include="UI\Builder\OptionUIBuilder.cs" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
