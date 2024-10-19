@@ -2,6 +2,7 @@
 using Il2CppDrova.ConfigOptions;
 using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.Options;
+using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -80,15 +81,16 @@ namespace Drova_Modding_API.UI.Builder
             unitySlider.value = defaultValue;
 
             var sliderOption = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
+            sliderOption._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
             if (!sliderOption._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))
             {
                 sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
                 var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
-                //configOptionBool.ValueChangedEvent.AddEventListener(new Action<AConfigOption<bool>>(t =>
-                //{
-                //    bool value = t.TryGetValue(out bool rightValue);
-                //    MelonLogger.Msg("Value changed " + rightValue.ToString());
-                //}));
+                configOptionInt.ValueChangedEvent.AddEventListener(new Action<AConfigOption<int>>(t =>
+                {
+                    bool value = t.TryGetValue(out int rightValue);
+                    MelonLogger.Msg("Value changed " + rightValue.ToString());
+                }));
                 sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionInt);
                 sliderOption.UpdateOptionValue(defaultValue);
             }
@@ -112,8 +114,8 @@ namespace Drova_Modding_API.UI.Builder
             var toDestory = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
             var sliderOption = rightOptionConfig.gameObject.AddComponent<GUI_ConfigOption_Slider_Float>();
             sliderOption._uiElement = rightOptionConfig.GetComponent<Slider>();
-            sliderOption._key = toDestory._key;
             sliderOption._configHandler = toDestory._configHandler;
+            sliderOption._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
 
 
             UnityEngine.Object.Destroy(toDestory);
@@ -170,6 +172,7 @@ namespace Drova_Modding_API.UI.Builder
                     toggle.UpdateOptionValue(value._cachedValue);
                 }
             }
+            toggle._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
             toggle._key._key = optionKey;
             @switch.SetActive(false);
             toPut.AddLast(@switch);
