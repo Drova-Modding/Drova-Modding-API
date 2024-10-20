@@ -455,6 +455,7 @@
 
 	<ItemGroup>
 		<Compile Include="Access\LocalizationAccess.cs" />
+		<Compile Include="Access\ProviderAccess.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="Access\OptionMenuAccess.cs" />
 		<Compile Include="Patches\GUI_ButtonClick_OpenOptions_Patch.cs" />

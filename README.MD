@@ -23,8 +23,6 @@ public class MyMod : MelonMod
 {
 }
 ```
-*Don't use a Priority greater than 1000, because the Drova Modding API uses 1000 and would than load later.*
-
 
 And to your csproj: 
 ```csproj
@@ -35,8 +33,9 @@ And to your csproj:
 
 
 ## Features
-- Easier access to OptionsMenu
+- Easier access to OptionsMenu, you can create your own Panel!
 - Create your own loc files for your mods
+- Easier access to the Drova Providers
 
 ### Contributing
 Feel free to contribute to this project. If you have any questions or ideas, feel free to ask.

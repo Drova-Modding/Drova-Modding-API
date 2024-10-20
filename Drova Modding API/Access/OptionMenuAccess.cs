@@ -95,8 +95,7 @@ namespace Drova_Modding_API.Access
             manager.GuiPanels.Add(guiPanel);
             manager.SetupPanelNavigationElements();
             // Rerender panel, otherwise its empty. 
-            // TODO find out whats setting the _configHandler.GameplayConfig, so far we know its only getting set in active panel and removed on disabled panels.
-            manager.ChangePanel(header.transform.GetSiblingIndex() + 1);
+            manager.ChangePanel(0);
         }
 
         /**

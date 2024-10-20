@@ -1,4 +1,5 @@
-﻿using Il2Cpp;
+﻿using Drova_Modding_API.Access;
+using Il2Cpp;
 using Il2CppDrova.ConfigOptions;
 using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.Options;
@@ -81,6 +82,7 @@ namespace Drova_Modding_API.UI.Builder
             unitySlider.value = defaultValue;
 
             var sliderOption = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
+            sliderOption._configHandler = ProviderAccess.GetConfigGameHandler();
             sliderOption._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
             if (!sliderOption._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))
             {
@@ -111,14 +113,13 @@ namespace Drova_Modding_API.UI.Builder
             unitySlider.value = defaultValue;
             unitySlider.wholeNumbers = wholeNumbers;
 
-            var toDestory = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
             var sliderOption = rightOptionConfig.gameObject.AddComponent<GUI_ConfigOption_Slider_Float>();
             sliderOption._uiElement = rightOptionConfig.GetComponent<Slider>();
-            sliderOption._configHandler = toDestory._configHandler;
+            sliderOption._configHandler = ProviderAccess.GetConfigGameHandler();
             sliderOption._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
 
 
-            UnityEngine.Object.Destroy(toDestory);
+            UnityEngine.Object.Destroy(rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>());
 
             sliderOption.Init();
 
@@ -150,6 +151,7 @@ namespace Drova_Modding_API.UI.Builder
             configOption.FindChild("TextOff").GetComponent<LocalizedTextMeshPro>()._localizedString = offValue;
 
             var toggle = configOption.GetComponent<GUI_ConfigOption_Toggle>();
+            toggle._configHandler = ProviderAccess.GetConfigGameHandler();
 
             if (!toggle._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))
             {
@@ -179,6 +181,11 @@ namespace Drova_Modding_API.UI.Builder
             return this;
         }
 
+        //public OptionUIBuilder CreateKeyBindingSection(LocalizedString titleOfSection, List<Keybinding> keybindings)
+        //{
+
+        //}
+
         public void Build()
         {
             foreach (var gameObject in toPut)
@@ -194,6 +201,6 @@ namespace Drova_Modding_API.UI.Builder
             localizedText.UpdateLocalizedText();
         }
 
-
+        public record Keybinding(LocalizedString title, string actionName, Keybinding actionKey);
     }
 }
