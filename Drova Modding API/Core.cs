@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.UI;
+﻿using Drova_Modding_API.Register;
+using Drova_Modding_API.UI;
 using Il2CppInterop.Runtime.Injection;
 using MelonLoader;
 
@@ -9,10 +10,31 @@ namespace Drova_Modding_API
 {
     public class Core : MelonMod
     {
+        internal static string assemblyLocation;
+        internal static event Action OnMonoUpdate;
+        /// <inheritdoc/>
+
         public override void OnInitializeMelon()
         {
+            base.OnLateInitializeMelon();
             LoggerInstance.Msg("Initialized Modding API.");
             ClassInjector.RegisterTypeInIl2Cpp<GUI_ConfigOption_Slider_Float>();
+            ClassInjector.RegisterTypeInIl2Cpp<GUI_Options_Controls_KeyFieldElement_Custom>();
+            assemblyLocation = MelonAssembly.Location;
+        }
+        /// <inheritdoc/>
+
+        public override void OnLateInitializeMelon()
+        {
+            base.OnLateInitializeMelon();
+            ActionKeyRegister.Instance.LoadKeyCodes();
+        }
+        /// <inheritdoc/>
+
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            OnMonoUpdate?.Invoke();
         }
     }
 }

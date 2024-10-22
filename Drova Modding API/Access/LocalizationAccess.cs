@@ -13,6 +13,10 @@ namespace Drova_Modding_API.Access
     {
         private LocalizationAccess() { }
 
+        /// <summary>
+        /// Changes the language of the game.
+        /// </summary>
+        /// <param name="language"></param>
         public static void SetLanguage(ELanguage language)
         {
             LocalizationDB.Instance.LoadLanguage(language);
@@ -75,7 +79,12 @@ namespace Drova_Modding_API.Access
             LocalizationDB.Instance.ReloadCurrentLanguage();
         }
 
-
+        /// <summary>
+        /// Localization entry for a mod.
+        /// </summary>
+        /// <param name="Key"></param>
+        /// <param name="Value"></param>
+        /// <param name="Language"></param>
         public record LocalizationEntry(string Key, string Value, ELanguage Language)
         {
         }

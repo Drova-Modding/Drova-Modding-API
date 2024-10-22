@@ -145,9 +145,23 @@ namespace Drova_Modding_API.Access
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Header");
         }
 
+        /**
+         * Get the header by name.
+         * @param name The name of the header.
+         * @return The header game object.
+         */
         public GameObject GetHeader(string name)
         {
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Header/" + name);
+        }
+
+        /**
+         * Get the controls panel.
+         * @return The controls panel.
+         */
+        public GameObject GetControlsPanel()
+        {
+            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Controls/SlotScrollRect(VIEW)/LayoutGroup_Controls");
         }
 
     }
