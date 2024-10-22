@@ -15,8 +15,14 @@ namespace Drova_Modding_API.Access
         private OptionMenuAccess() { }
         private const string ScrollBarName = "ScrollRectView";
         private static readonly OptionMenuAccess _instance = new();
+        /**
+         * The instance of the option menu access.
+         */
         public static OptionMenuAccess Instance { get; } = _instance;
 
+        /**
+         * Delegate for the option menu open action.
+         */
         public delegate void OptionMenuOpenAction();
 
         /**
@@ -113,6 +119,11 @@ namespace Drova_Modding_API.Access
             return newPanel;
         }
 
+        /**
+         * Get the builder for the option menu.
+         * @param panel The panel to add the elements to.
+         * @return The builder for the option menu.
+         */
         public OptionUIBuilder GetBuilder(Transform panel)
         {
             return new OptionUIBuilder(panel);

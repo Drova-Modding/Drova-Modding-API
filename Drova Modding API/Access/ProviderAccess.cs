@@ -16,6 +16,10 @@ namespace Drova_Modding_API.Access
     public class ProviderAccess
     {
         private static DrovaResourceProvider _DrovaResourceProvider;
+
+        /// <summary>
+        /// Access to the DrovaResourceProvider
+        /// </summary>
         public static DrovaResourceProvider GetDrovaResourceProvider()
         {
             if (_DrovaResourceProvider != null)

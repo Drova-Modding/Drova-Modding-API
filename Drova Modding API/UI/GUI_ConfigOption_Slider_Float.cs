@@ -7,14 +7,23 @@ using Il2CppTMPro;
 
 namespace Drova_Modding_API.UI
 {
+    /// <summary>
+    /// Class for a float slider in the option menu.
+    /// </summary>
     [RegisterTypeInIl2Cpp]
     public class GUI_ConfigOption_Slider_Float : GUI_AConfigOption<float, Slider>
     {
         private TextMeshProUGUI _amountText;
         private bool _showPercentSign;
 
+        /// <summary>
+        /// Constructor for the float slider.
+        /// </summary>
         public GUI_ConfigOption_Slider_Float(IntPtr ptr) : base(ptr) {}
 
+        /// <summary>
+        /// Initialize the float slider.
+        /// </summary>
         public void Init()
         {
             _amountText = gameObject.transform.parent.GetComponentInChildren<TextMeshProUGUI>();
@@ -30,7 +39,10 @@ namespace Drova_Modding_API.UI
             GetComponent<Slider>()?.onValueChanged.RemoveAllListeners();
         }
 
-        
+        /// <summary>
+        /// Value Change listener for the slider.
+        /// </summary>
+        /// <param name="value"></param>
         protected void OnValueChangedListener(float value)
         {
             if (_showPercentSign)

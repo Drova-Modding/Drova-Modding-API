@@ -8,6 +8,9 @@ using MelonLoader;
 [assembly: MelonPriority(1000)]
 namespace Drova_Modding_API
 {
+    /**
+     * The core class of the Drova Modding API.
+     */
     public class Core : MelonMod
     {
         internal static string assemblyLocation;

@@ -1,7 +1,6 @@
 ﻿using Drova_Modding_API.Access;
 using Drova_Modding_API.Register;
 using Il2Cpp;
-using Il2CppCysharp.Threading.Tasks;
 using Il2CppDrova.ConfigOptions;
 using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.Options;
