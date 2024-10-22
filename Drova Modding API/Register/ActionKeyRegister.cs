@@ -25,9 +25,9 @@ namespace Drova_Modding_API.Register
          */
         public List<KeyCode> KeyCodes => [.. _actionKeys.Values];
 
-        /**
-         * Get the KeyCode of a action.
-         */
+        
+        /// <param name="actionName"></param>
+        /// <returns><see cref="KeyCode"/> When its available, if not than <see cref="KeyCode.None"/></returns>
         public KeyCode this[string actionName]
         {
             get => _actionKeys.ContainsKey(actionName) ? _actionKeys[actionName] : KeyCode.None;
