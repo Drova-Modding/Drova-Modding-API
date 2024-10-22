@@ -4,6 +4,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Il2CppDrova.GUI;
 
 namespace Drova_Modding_API.UI
 {
@@ -16,6 +17,7 @@ namespace Drova_Modding_API.UI
         Button _keybindingButton;
         TextMeshProUGUI _keybindingText;
         string _actionName;
+        GUI_OptionPanel_Controls _controls;
 
         /**
          * Initialize the keybinding element.
@@ -24,9 +26,22 @@ namespace Drova_Modding_API.UI
         {
             _actionName = actionName;
             var keyboard = transform.FindChild("Keyboard");
+            _controls = transform.GetComponentInParent<GUI_OptionPanel_Controls>();
             _keybindingButton = keyboard.GetComponentInChildren<Button>();
             _keybindingText = keyboard.GetComponentInChildren<TextMeshProUGUI>();
-            _keybindingButton.onClick.AddListener(new System.Action(RegisterListenKey));
+            _keybindingButton.onClick.AddListener(new Action(RegisterListenKey));
+        }
+
+        private bool KeyAlreadyBound(KeyCode code)
+        {
+            foreach (var key in ActionKeyRegister.Instance.KeyCodes)
+                if (key == code) return true;
+            foreach(var key in _controls.RemapService._defaultMappingKeyboard.Values)
+                if(Enum.TryParse(key.KeyboardValue, out KeyCode result))
+                {
+                    if (result == code) return true;
+                }
+            return false;
         }
 
         /**
@@ -52,10 +67,30 @@ namespace Drova_Modding_API.UI
                     }
                     KeyCode code = Utils.KeyToKeyCode(key.keyCode);
                     if (code == KeyCode.None) return;
+                    if(KeyAlreadyBound(code))
+                    {
+                        Core.OnMonoUpdate -= ListenForKey;
+                        _controls._popupConflict.gameObject.SetActive(true);
+                        _controls._popupConflict.Accept.onClick.AddListener(new Action(() => {
+                            HandleConflict();
+                        }));
+                        _controls._popupConflict.Cancel.onClick.AddListener(new Action(() =>
+                        {
+                            HandleConflict();
+                        }));
+                        return;
+                    }
                     ActionKeyRegister.Instance.AddAction(_actionName, code);
                     _keybindingText.text = code.ToString();
                     Core.OnMonoUpdate -= ListenForKey;
                 }
+        }
+
+        private void HandleConflict()
+        {
+            _controls._popupConflict.gameObject.SetActive(false);
+            _keybindingText.text = ActionKeyRegister.Instance[_actionName].ToString();
+            _controls._popupConflict.Cancel.onClick.RemoveAllListeners();
         }
     }
 }

@@ -21,6 +21,11 @@ namespace Drova_Modding_API.Register
         public static ActionKeyRegister Instance { get; } = _instance;
 
         /**
+         * Returns a list of all used actions.
+         */
+        public List<KeyCode> KeyCodes => [.. _actionKeys.Values];
+
+        /**
          * Get the KeyCode of a action.
          */
         public KeyCode this[string actionName]

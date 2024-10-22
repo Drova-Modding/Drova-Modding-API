@@ -238,17 +238,18 @@ namespace Drova_Modding_API.UI.Builder
 
         /**
          * Create a keybinding section in the Controls Panel.
+         * At the moment it is not working as intended, because the keybinding area recreates itself on the second time, which moves our elements from last to first!
          * @param titleOfSection The title of the section.
          * @param keybindings The keybindings to create.
          */
         public OptionUIBuilder CreateKeyBindingSection(LocalizedString titleOfSection, List<Keybinding> keybindings)
         {
             var manager = OptionMenuAccess.Instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
+            // Load the controls panel otherwise we can not get a Prefab
             manager.ChangePanel(4);
             var controlsPanel = OptionMenuAccess.Instance.GetControlsPanel();
             var keybindingPrefab = GetKeyBinding(controlsPanel.transform);
             CreateTitle(titleOfSection, controlsPanel.transform);
-            var title = toPut.Last.Value;
             foreach (var keybinding in keybindings)
             {
                 var keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, controlsPanel.transform);
@@ -267,6 +268,7 @@ namespace Drova_Modding_API.UI.Builder
                 keyBinding.transform.FindChild("Keyboard").GetComponentInChildren<TextMeshProUGUI>().text = loadedKeycode != KeyCode.None ? Enum.GetName(loadedKeycode) : Enum.GetName(keybinding.DefaultActionKey);
                 toPut.AddLast(keyBinding);
             }
+            // Change back to the first panel
             manager.ChangePanel(0);
             return this;
         }
