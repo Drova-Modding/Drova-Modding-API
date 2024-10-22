@@ -60,7 +60,7 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateTitle(LocalizedString localizedString)
         {
-            
+
             return CreateTitle(localizedString, _parent);
         }
 
@@ -119,21 +119,35 @@ namespace Drova_Modding_API.UI.Builder
             unitySlider.value = defaultValue;
 
             var sliderOption = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
+            sliderOption._uiElement.onValueChanged.AddListener(new Action<float>(f =>
+            {
+                int i = (int)f;
+                sliderOption.OnValueChangedListener(f);
+                sliderOption.SetUIValue(i);
+                sliderOption.UpdateOptionValue(i);
+                sliderOption._configHandler.GameplayConfig.ConfigFile.SetValue(optionKey, i.ToString());
+            }));
             sliderOption._configHandler = ProviderAccess.GetConfigGameHandler();
             sliderOption._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
-            if (!sliderOption._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))
+            sliderOption._key._key = optionKey;
+            if (!sliderOption._configHandler.GameplayConfig.ConfigFile.TryGetInt(optionKey, out int value))
             {
+
                 sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
                 var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
-                configOptionInt.ValueChangedEvent.AddEventListener(new Action<AConfigOption<int>>(t =>
-                {
-                    bool value = t.TryGetValue(out int rightValue);
-                    MelonLogger.Msg("Value changed " + rightValue.ToString());
-                }));
                 sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionInt);
+                sliderOption.SetUIValue(defaultValue);
                 sliderOption.UpdateOptionValue(defaultValue);
+
             }
-            sliderOption._key._key = optionKey;
+            else
+            {
+                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, sliderOption._configHandler.GameplayConfig.GetOption<ConfigOption_Int>(optionKey));
+
+                sliderOption.SetUIValue(value);
+                sliderOption.UpdateOptionValue(defaultValue);
+
+            }
             slider.SetActive(false);
             toPut.AddLast(slider);
             return this;
@@ -163,22 +177,27 @@ namespace Drova_Modding_API.UI.Builder
             sliderOption._uiElement = rightOptionConfig.GetComponent<Slider>();
             sliderOption._configHandler = ProviderAccess.GetConfigGameHandler();
             sliderOption._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
-
+            sliderOption._key._key = optionKey;
 
             UnityEngine.Object.Destroy(rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>());
 
-            sliderOption.Init();
 
-            if (!sliderOption._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))
+            sliderOption.Init();
+            if (!sliderOption._configHandler.GameplayConfig._configFile.TryGetString(optionKey, out string value))
             {
                 sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
 
                 var configOptionFloat = new ConfigOption_Float(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
-
                 sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionFloat);
-            }
+                sliderOption.SetUIValueCustom(defaultValue);
 
-            sliderOption._key._key = optionKey;
+            }
+            else
+            {
+
+                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, sliderOption._configHandler.GameplayConfig.GetOption<ConfigOption_Float>(optionKey));
+                sliderOption.SetUIValueCustom(float.Parse(value));
+            }
 
             slider.SetActive(false);
             toPut.AddLast(slider);
@@ -205,31 +224,31 @@ namespace Drova_Modding_API.UI.Builder
             configOption.FindChild("TextOff").GetComponent<LocalizedTextMeshPro>()._localizedString = offValue;
 
             var toggle = configOption.GetComponent<GUI_ConfigOption_Toggle>();
+            toggle._uiElement.onValueChanged.AddListener(new Action<bool>(b =>
+            {
+                toggle.OnValueChangedListener(b);
+                toggle.SetUIValue(b);
+                toggle.UpdateOptionValue(b);
+                toggle._configHandler.GameplayConfig.ConfigFile.SetValue(optionKey, b.ToString());
+            }));
             toggle._configHandler = ProviderAccess.GetConfigGameHandler();
+            toggle._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
+            toggle._key._key = optionKey;
 
-            if (!toggle._configHandler.GameplayConfig._keyToOptions.ContainsKey(optionKey))
+            if (!toggle._configHandler.GameplayConfig._configFile.TryGetBool(optionKey, out bool value))
             {
                 toggle._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
                 var configOptionBool = new ConfigOption_Bool(toggle._configHandler.GameplayConfig, optionKey, defaultValue);
-                //configOptionBool.ValueChangedEvent.AddEventListener(new Action<AConfigOption<bool>>(t =>
-                //{
-                //    bool value = t.TryGetValue(out bool rightValue);
-                //    MelonLogger.Msg("Value changed " + rightValue.ToString());
-                //}));
                 toggle._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionBool);
                 toggle.UpdateOptionValue(defaultValue);
+                toggle.UpdateUIValue();
             }
             else
             {
-                var assignedValue = toggle._configHandler.GameplayConfig.GetOption<ConfigOption_Bool>(optionKey);
-                assignedValue.TryGetValue(out ConfigOption_Bool value);
-                if (value != null)
-                {
-                    toggle.UpdateOptionValue(value._cachedValue);
-                }
+                toggle._configHandler.GameplayConfig._keyToOptions.Add(optionKey, toggle._configHandler.GameplayConfig.GetOption<ConfigOption_Bool>(optionKey));
+                toggle.SetUIValue(value);
             }
-            toggle._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
-            toggle._key._key = optionKey;
+
             @switch.SetActive(false);
             toPut.AddLast(@switch);
             return this;
@@ -281,6 +300,7 @@ namespace Drova_Modding_API.UI.Builder
             {
                 gameObject.SetActive(true);
             }
+            ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.SaveChangesToFile();
         }
 
         private static void SetLocalizedText(GameObject gameObject, LocalizedString localizedString)

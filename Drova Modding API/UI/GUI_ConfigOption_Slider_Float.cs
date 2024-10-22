@@ -34,6 +34,12 @@ namespace Drova_Modding_API.UI
             _showPercentSign = false;
         }
 
+        public void SetUIValueCustom(float value)
+        {
+            _uiElement.value = value;
+            OnValueChangedListener(value);
+        }
+
         private void OnDestroy()
         {
             GetComponent<Slider>()?.onValueChanged.RemoveAllListeners();
@@ -53,7 +59,8 @@ namespace Drova_Modding_API.UI
             {
                 _amountText.text = value.ToString();
             }
-
+            this.UpdateOptionValue(value);
+            _configHandler.GameplayConfig.ConfigFile.SetValue(_key._key, value.ToString());
         }
     }
 }
