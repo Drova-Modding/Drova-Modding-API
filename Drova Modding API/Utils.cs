@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Drova_Modding_API
@@ -13,6 +8,26 @@ namespace Drova_Modding_API
      */
     public class Utils
     {
+        /**
+         * Converts an enum to its index.
+         */
+        public static int GetIndexFromEnum<T>(T enumValue) where T : Enum
+        {
+            int index = Convert.ToInt32(enumValue);
+            return index;
+        }
+
+
+        /**
+         * Converts an index to an enum.
+         */
+        public static T GetEnumFromIndex<T>(int index) where T : Enum
+        {
+            T enumValue = (T)Enum.ToObject(typeof(T), index);
+            return enumValue;
+        }
+
+
         /**
          * Converts a Key to a KeyCode.
          */

@@ -454,6 +454,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="Access\ConfigAccessor.cs" />
 		<Compile Include="Access\LocalizationAccess.cs" />
 		<Compile Include="Access\ProviderAccess.cs" />
 		<Compile Include="Core.cs" />
@@ -462,6 +463,7 @@
 		<Compile Include="Patches\GUI_Window_PauseMenu_Patch.cs" />
 		<Compile Include="Register\ActionKeyRegister.cs" />
 		<Compile Include="UI\Builder\OptionUIBuilder.cs" />
+		<Compile Include="UI\DropdownHandler.cs" />
 		<Compile Include="UI\GUI_ConfigOption_Slider_Float.cs" />
 		<Compile Include="UI\GUI_Options_Controls_KeyFieldElement_Custom.cs" />
 		<Compile Include="Utils.cs" />

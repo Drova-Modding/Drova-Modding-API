@@ -4,6 +4,7 @@ using Il2Cpp;
 using Il2CppDrova.ConfigOptions;
 using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.Options;
+using Il2CppInterop.Runtime.Injection;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
@@ -47,6 +48,11 @@ namespace Drova_Modding_API.UI.Builder
         private static GameObject GetSliderObject()
         {
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Video/SlotScrollRect(VIEW)/LayoutGroup_Video/GUI_OptionRow_Slider_Screenshake");
+        }
+
+        private static GameObject GetDropdownObject()
+        {
+            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Gameplay/SlotScrollRect(VIEW/LayoutGroup_Gameplay/GUI_OptionRow_Dropdown_Language");
         }
 
         private static GameObject GetKeyBinding(Transform transform)
@@ -288,6 +294,34 @@ namespace Drova_Modding_API.UI.Builder
             }
             // Change back to the first panel
             manager.ChangePanel(0);
+            return this;
+        }
+
+        /// <summary>
+        /// Create a dropdown with a Enum.
+        /// </summary>
+        /// <typeparam name="E"></typeparam>
+        /// <param name="title"></param>
+        /// <param name="optionKey"></param>
+        /// <param name="dropdownOptions">the int is the value of the Enum use <see cref="Utils.GetIndexFromEnum{T}(T)"></see>/></param>
+        /// <param name="defaulValue"></param>
+        public OptionUIBuilder CreateDropdown<E>(LocalizedString title, string optionKey, Dictionary<int, LocalizedString> dropdownOptions, E defaulValue) where E : Enum
+        {
+            var dropdown = UnityEngine.Object.Instantiate(GetDropdownObject(), _parent);
+            SetLocalizedText(dropdown.transform.FindChild("Left").gameObject, title);
+            var rightOptionConfig = dropdown.transform.FindChild("Right/GUI_Dropdown_OptionConfig");
+            UnityEngine.Object.Destroy(rightOptionConfig.GetComponent<GUI_ConfigOption_Dropdown>());
+            var dropdownHandler = rightOptionConfig.gameObject.AddComponent<DropdownHandler>();
+            var configHandler = ProviderAccess.GetConfigGameHandler();
+            if (ConfigAccessor.TryGetConfigValue(optionKey, out E value))
+            {
+                dropdownHandler.Init([.. dropdownOptions.Keys], [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(value));
+            }
+            else
+            {
+                dropdownHandler.Init([.. dropdownOptions.Keys], [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(defaulValue));
+            }
+            toPut.AddLast(dropdown);
             return this;
         }
 

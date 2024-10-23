@@ -57,10 +57,10 @@ namespace Drova_Modding_API.UI
             }
             else
             {
-                _amountText.text = value.ToString();
+                _amountText.text = value.ToString("0.00");
             }
             this.UpdateOptionValue(value);
-            _configHandler.GameplayConfig.ConfigFile.SetValue(_key._key, value.ToString());
+            _configHandler.GameplayConfig.ConfigFile.SetValue(_key._key, value.ToString("0.00"));
         }
     }
 }
