@@ -298,14 +298,14 @@ namespace Drova_Modding_API.UI.Builder
         }
 
         /// <summary>
-        /// Create a dropdown with a Enum.
+        /// Create a dropdown with a Enum List.
         /// </summary>
-        /// <typeparam name="E"></typeparam>
-        /// <param name="title"></param>
-        /// <param name="optionKey"></param>
-        /// <param name="dropdownOptions">the int is the value of the Enum use <see cref="Utils.GetIndexFromEnum{T}(T)"></see>/></param>
-        /// <param name="defaulValue"></param>
-        public OptionUIBuilder CreateDropdown<E>(LocalizedString title, string optionKey, Dictionary<int, LocalizedString> dropdownOptions, E defaulValue) where E : Enum
+        /// <typeparam name="E">Your Enum</typeparam>
+        /// <param name="title">Title of the dropdown</param>
+        /// <param name="optionKey">Key for the option</param>
+        /// <param name="dropdownOptions">Value pairs</param>
+        /// <param name="defaulValue">Value when option does not exist</param>
+        public OptionUIBuilder CreateDropdown<E>(LocalizedString title, string optionKey, Dictionary<E, LocalizedString> dropdownOptions, E defaulValue) where E : Enum
         {
             var dropdown = UnityEngine.Object.Instantiate(GetDropdownObject(), _parent);
             SetLocalizedText(dropdown.transform.FindChild("Left").gameObject, title);
@@ -313,13 +313,19 @@ namespace Drova_Modding_API.UI.Builder
             UnityEngine.Object.Destroy(rightOptionConfig.GetComponent<GUI_ConfigOption_Dropdown>());
             var dropdownHandler = rightOptionConfig.gameObject.AddComponent<DropdownHandler>();
             var configHandler = ProviderAccess.GetConfigGameHandler();
+            List<int> keys = [];
+            foreach (var key in dropdownOptions.Keys)
+            {
+                keys.Add(Utils.GetIndexFromEnum(key));
+            }
+            keys.Sort();
             if (ConfigAccessor.TryGetConfigValue(optionKey, out E value))
             {
-                dropdownHandler.Init([.. dropdownOptions.Keys], [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(value));
+                dropdownHandler.Init(keys, [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(value));
             }
             else
             {
-                dropdownHandler.Init([.. dropdownOptions.Keys], [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(defaulValue));
+                dropdownHandler.Init(keys, [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(defaulValue));
             }
             toPut.AddLast(dropdown);
             return this;

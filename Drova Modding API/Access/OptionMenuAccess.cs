@@ -56,13 +56,13 @@ namespace Drova_Modding_API.Access
             }
             GameObject root = GetRootOfHeader();
             if (GetHeader(name)) return null;
-            GameObject newHeader = GameObject.Instantiate(root.transform.GetChild(0).gameObject, root.transform);
+            GameObject newHeader = UnityEngine.Object.Instantiate(root.transform.GetChild(0).gameObject, root.transform);
             Image image = newHeader.transform.GetChild(0).GetComponent<Image>();
             newHeader.name = name;
             image.m_OverrideSprite = icon;
             image.sprite = icon;
             image.MarkDirty();
-            var panel = this.AddPanel(newHeader);
+            var panel = AddPanel(newHeader);
             var componentToRegister = newHeader.GetComponent<GUI_ButtonNavigationAnimationElement>();
 
             var scrollbar = GetScrollBar(panel);
