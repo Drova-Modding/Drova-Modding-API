@@ -23,7 +23,7 @@ namespace Drova_Modding_API
             LoggerInstance.Msg("Initialized Modding API.");
             ClassInjector.RegisterTypeInIl2Cpp<GUI_ConfigOption_Slider_Float>();
             ClassInjector.RegisterTypeInIl2Cpp<DropdownHandler>();
-            ClassInjector.RegisterTypeInIl2Cpp<GUI_Options_Controls_KeyFieldElement_Custom>();
+            ClassInjector.RegisterTypeInIl2Cpp<GUI_Options_Controls_KeyFieldElement_Custom>();            
             assemblyLocation = MelonAssembly.Location;
         }
         /// <inheritdoc/>

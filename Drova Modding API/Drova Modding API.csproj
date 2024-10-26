@@ -455,10 +455,12 @@
 
 	<ItemGroup>
 		<Compile Include="Access\ConfigAccessor.cs" />
+		<Compile Include="Access\InputAccess.cs" />
 		<Compile Include="Access\LocalizationAccess.cs" />
 		<Compile Include="Access\ProviderAccess.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="Access\OptionMenuAccess.cs" />
+		<Compile Include="GlobalFields\InputActionFields.cs" />
 		<Compile Include="Patches\GUI_ButtonClick_OpenOptions_Patch.cs" />
 		<Compile Include="Patches\GUI_Window_Patch.cs" />
 		<Compile Include="Patches\GUI_Window_PauseMenu_Patch.cs" />
