@@ -1,4 +1,6 @@
-﻿namespace Drova_Modding_API.Access
+﻿using MelonLoader;
+
+namespace Drova_Modding_API.Access
 {
     /// <summary>
     /// Wrapper around the config file to get your config values in game.
@@ -14,11 +16,25 @@
         /// <returns>Returns your value or default if not found</returns>
         public static bool TryGetConfigValue<T>(string key, out T value)
         {
+            var ressource = ProviderAccess.GetDrovaResourceProvider();
+            if (ressource == null)
+            {
+                MelonLogger.Error("DrovaResourceProvider is null. The Game might still be bootstrapping");
+                value = default;
+                return false;
+            }
+            var provider = ProviderAccess.GetConfigGameHandler();
+            if (provider == null)
+            {
+                MelonLogger.Error("ConfigGameHandler is null. The Game might still be bootstrapping");
+                value = default;
+                return false;
+            }
             try
             {
                 if (typeof(T) == typeof(float))
                 {
-                    if (ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.TryGetString(key, out string stringifiedValue))
+                    if (provider.GameplayConfig.ConfigFile.TryGetString(key, out string stringifiedValue))
                     {
                         value = (T)Convert.ChangeType(float.Parse(stringifiedValue), typeof(T));
                         return true;
@@ -26,7 +42,7 @@
                 }
                 else if (typeof(T) == typeof(int))
                 {
-                    if (ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.TryGetInt(key, out int configValue))
+                    if (provider.GameplayConfig.ConfigFile.TryGetInt(key, out int configValue))
                     {
                         value = (T)Convert.ChangeType(configValue, typeof(T));
                         return true;
@@ -34,7 +50,7 @@
                 }
                 else if (typeof(T) == typeof(bool))
                 {
-                    if (ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.TryGetBool(key, out bool configValue))
+                    if (provider.GameplayConfig.ConfigFile.TryGetBool(key, out bool configValue))
                     {
                         value = (T)Convert.ChangeType(configValue, typeof(T));
                         return true;
@@ -50,7 +66,7 @@
                 }
                 else if (typeof(T).IsEnum)
                 {
-                    if (ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.TryGetString(key, out string stringifiedValue))
+                    if (provider.GameplayConfig.ConfigFile.TryGetString(key, out string stringifiedValue))
                     {
                         if (Enum.TryParse(typeof(T), stringifiedValue, out object result)) {
                             value = (T)result;

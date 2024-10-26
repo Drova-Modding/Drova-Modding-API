@@ -13,6 +13,8 @@ namespace Drova_Modding_API.Access
     public class OptionMenuAccess
     {
         private OptionMenuAccess() { }
+        private bool _isOpen = false;
+        private GUI_Window _GUI_Window;
         private const string ScrollBarName = "ScrollRectView";
         private static readonly OptionMenuAccess _instance = new();
         /**
@@ -21,14 +23,19 @@ namespace Drova_Modding_API.Access
         public static OptionMenuAccess Instance { get; } = _instance;
 
         /**
-         * Delegate for the option menu open action.
+         * Delegate for the option menu open/close action.
          */
-        public delegate void OptionMenuOpenAction();
+        public delegate void OptionMenuAction();
 
         /**
-        * This event is used to react on option menu open or closes, this can happen from the pause menu and the game main menu.
+        * This event is used to react on option menu open, this can happen from the pause menu and the game main menu.
         */
-        public event OptionMenuOpenAction OnOptionMenuOpen;
+        public event OptionMenuAction OnOptionMenuOpen;
+
+        /**
+        * This event is used to react on option menu close, you can use this Event to save your configs globally.
+        */
+        public event OptionMenuAction OnOptionMenuClose;
 
         internal static void OnOptionRoot()
         {
@@ -41,6 +48,19 @@ namespace Drova_Modding_API.Access
             }
         }
 
+        internal static void OnOptionClose()
+        {
+            var window = _instance.GetGUIWindow();
+            if (!window)
+            {
+                return;
+            }
+            if (!window.gameObject.activeSelf)
+            {
+                _instance.OnOptionMenuClose.Invoke();
+            }
+        }
+
         /**
          * Add a header and panel to the option menu and set a icon. This is not persistent and will be removed when the option menu is closed.
          * @param icon The icon of the header (not the background).
@@ -49,7 +69,7 @@ namespace Drova_Modding_API.Access
          */
         public Transform AddPanel(Sprite icon, string name)
         {
-            if(!name.StartsWith("GUI_Button_OptionTab_"))
+            if (!name.StartsWith("GUI_Button_OptionTab_"))
             {
                 MelonLogger.Error("The name of the header needs to start with GUI_Button_OptionTab_");
                 return null;
@@ -115,7 +135,7 @@ namespace Drova_Modding_API.Access
             var newPanel = UnityEngine.Object.Instantiate(root.transform.GetChild(4).gameObject, root.transform);
             newPanel.transform.SetSiblingIndex(newPanel.transform.GetSiblingIndex() - 1);
             newPanel.name = string.Concat("Panel", header.name.AsSpan(header.name.LastIndexOf('_')));
-            newPanel.SetActive(false);  
+            newPanel.SetActive(false);
             return newPanel;
         }
 
@@ -135,7 +155,12 @@ namespace Drova_Modding_API.Access
          */
         public GameObject GetGUIWindow()
         {
-            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)");
+            if(_GUI_Window)
+            {
+                return _GUI_Window.gameObject;
+            }
+            _GUI_Window = UnityEngine.Object.FindAnyObjectByType<GUI_Window>();
+            return _GUI_Window.gameObject;
         }
 
         /**

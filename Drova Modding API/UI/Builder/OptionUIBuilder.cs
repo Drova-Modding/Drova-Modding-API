@@ -45,6 +45,11 @@ namespace Drova_Modding_API.UI.Builder
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Interface/SlotScrollRect(VIEW)/LayoutGroup_Interface/GUI_OptionRow_Show_PlayerHealthbar");
         }
 
+        private static GameObject GetSwitchWithMainTextObject()
+        {
+            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Interface/SlotScrollRect(VIEW)/LayoutGroup_Interface/GUI_OptionRow_Show_PoiseBars");
+        }
+
         private static GameObject GetSliderObject()
         {
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Video/SlotScrollRect(VIEW)/LayoutGroup_Video/GUI_OptionRow_Slider_Screenshake");
@@ -57,6 +62,7 @@ namespace Drova_Modding_API.UI.Builder
 
         private static GameObject GetKeyBinding(Transform transform)
         {
+
             var gameObject = transform.GetChild(18).gameObject;
             return gameObject;
         }
@@ -122,6 +128,16 @@ namespace Drova_Modding_API.UI.Builder
             var unitySlider = rightOptionConfig.GetComponent<Slider>();
             unitySlider.minValue = min;
             unitySlider.maxValue = max;
+            if (min > defaultValue)
+            {
+                MelonLogger.Warning("Default value is smaller than min value. Setting default value to min value.");
+                defaultValue = min;
+            }
+            else if (max < defaultValue)
+            {
+                MelonLogger.Warning("Default value is higher than max value. Setting default value to max value.");
+                defaultValue = max;
+            }
             unitySlider.value = defaultValue;
 
             var sliderOption = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
@@ -176,6 +192,15 @@ namespace Drova_Modding_API.UI.Builder
             var unitySlider = rightOptionConfig.GetComponent<Slider>();
             unitySlider.minValue = min;
             unitySlider.maxValue = max;
+            if(min > defaultValue)
+            {
+                MelonLogger.Warning("Default value is smaller than min value. Setting default value to min value.");
+                defaultValue = min;
+            } else if (max < defaultValue)
+            {
+                MelonLogger.Warning("Default value is higher than max value. Setting default value to max value.");
+                defaultValue = max;
+            }
             unitySlider.value = defaultValue;
             unitySlider.wholeNumbers = wholeNumbers;
 
@@ -210,6 +235,7 @@ namespace Drova_Modding_API.UI.Builder
             return this;
         }
 
+
         /**
          * Create a switch.
          * @param title The title of the switch.
@@ -217,10 +243,13 @@ namespace Drova_Modding_API.UI.Builder
          * @param offValue The value when the switch is off.
          * @param optionKey The key of the option.
          * @param defaultValue The default value of the switch.
+         * @param useGreyText If the text should be grey.
          */
-        public OptionUIBuilder CreateSwitch(LocalizedString title, LocalizedString onValue, LocalizedString offValue, string optionKey, bool defaultValue = false)
+        public OptionUIBuilder CreateSwitch(LocalizedString title, LocalizedString onValue, LocalizedString offValue, string optionKey, bool defaultValue = false, bool useGreyText = true)
         {
-            var @switch = UnityEngine.Object.Instantiate(GetSwitchObject(), _parent);
+
+            var objectToInstantiate = useGreyText ? GetSwitchObject() : GetSwitchWithMainTextObject();
+            var @switch = UnityEngine.Object.Instantiate(objectToInstantiate, _parent);
             @switch.SetActive(true);
             @switch.transform.FindChild("Left").GetComponentInChildren<LocalizedTextMeshPro>()._localizedString = title;
 
@@ -270,10 +299,18 @@ namespace Drova_Modding_API.UI.Builder
         {
             var manager = OptionMenuAccess.Instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
             // Load the controls panel otherwise we can not get a Prefab
-            manager.ChangePanel(4);
+            if (manager._currentPanelIndex != 4)
+            {
+                manager.ChangePanel(4);
+            }
             var controlsPanel = OptionMenuAccess.Instance.GetControlsPanel();
             var keybindingPrefab = GetKeyBinding(controlsPanel.transform);
             CreateTitle(titleOfSection, controlsPanel.transform);
+            return BuildKeyBinding(keybindings, manager, controlsPanel, keybindingPrefab);
+        }
+
+        private OptionUIBuilder BuildKeyBinding(List<Keybinding> keybindings, GUI_Window_Options manager, GameObject controlsPanel, GameObject keybindingPrefab)
+        {
             foreach (var keybinding in keybindings)
             {
                 var keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, controlsPanel.transform);
@@ -297,6 +334,23 @@ namespace Drova_Modding_API.UI.Builder
             return this;
         }
 
+        /**
+         * Create a keybinding section in the Controls Panel without a title.
+         * At the moment it is not working as intended, because the keybinding area recreates itself on the second time, which moves our elements from last to first!
+         * @param keybindings The keybindings to create.
+         */
+        public OptionUIBuilder CreateKeyBindingSection(List<Keybinding> keybindings)
+        {
+            var manager = OptionMenuAccess.Instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
+            // Load the controls panel otherwise we can not get a Prefab
+            if(manager._currentPanelIndex != 4) { 
+                manager.ChangePanel(4);
+            }
+            var controlsPanel = OptionMenuAccess.Instance.GetControlsPanel();
+            var keybindingPrefab = GetKeyBinding(controlsPanel.transform);
+            return BuildKeyBinding(keybindings, manager, controlsPanel, keybindingPrefab);
+        }
+
         /// <summary>
         /// Create a dropdown with a Enum List.
         /// </summary>
@@ -309,9 +363,13 @@ namespace Drova_Modding_API.UI.Builder
         {
             var dropdown = UnityEngine.Object.Instantiate(GetDropdownObject(), _parent);
             SetLocalizedText(dropdown.transform.FindChild("Left").gameObject, title);
+
             var rightOptionConfig = dropdown.transform.FindChild("Right/GUI_Dropdown_OptionConfig");
+
             UnityEngine.Object.Destroy(rightOptionConfig.GetComponent<GUI_ConfigOption_Dropdown>());
+
             var dropdownHandler = rightOptionConfig.gameObject.AddComponent<DropdownHandler>();
+
             var configHandler = ProviderAccess.GetConfigGameHandler();
             List<int> keys = [];
             foreach (var key in dropdownOptions.Keys)
@@ -321,6 +379,7 @@ namespace Drova_Modding_API.UI.Builder
             keys.Sort();
             if (ConfigAccessor.TryGetConfigValue(optionKey, out E value))
             {
+
                 dropdownHandler.Init(keys, [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(value));
             }
             else
