@@ -108,6 +108,22 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
+        /// Get the action element map for the given action name and pole from the keyboard
+        /// </summary>
+        /// <param name="actionName"></param>
+        /// <param name="pole">Null, if action is a button. Use Pole.Positive or Pole.Negative to get the ActionElementMap for a specific axis direction</param>
+        /// <returns></returns>
+        internal static ActionElementMap GetActionKeyboardElementMap(string actionName, Il2CppSystem.Nullable<Pole> pole)
+        {
+            return GetActionElementMap(actionName, pole, new Il2CppSystem.Nullable<ControllerType>(ControllerType.Keyboard));
+        }
+
+        internal static ActionElementMap GetActionElementMap(string actionName, Il2CppSystem.Nullable<Pole> pole, Il2CppSystem.Nullable<ControllerType> controllerType)
+        {
+            return InputSystem.GetActionElementMapFromActionName(actionName, pole, controllerType);
+        }
+
+        /// <summary>
         /// Callback after the input is remapped to save the data to the player prefs
         /// </summary>
         /// <param name="data"></param>
@@ -117,7 +133,11 @@ namespace Drova_Modding_API.Access
             ReInput.userDataStore.Save();
         }
 
-        //Convert Function from Pole? to IL2CppSystem.Nullable<Pole>
+        /// <summary>
+        /// Convert Function from Pole? to IL2CppSystem.Nullable<Pole>
+        /// </summary>
+        /// <param name="pole"></param>
+        /// <returns></returns>
         private static Il2CppSystem.Nullable<Pole> ConvertPole(Pole? pole)
         {
             if (pole == null)
@@ -135,22 +155,5 @@ namespace Drova_Modding_API.Access
                     return new Il2CppSystem.Nullable<Pole>();
             }
         }
-
-        /// <summary>
-        /// Get the action element map for the given action name and pole from the keyboard
-        /// </summary>
-        /// <param name="actionName"></param>
-        /// <param name="pole">Null, if action is a button. Use Pole.Positive or Pole.Negative to get the ActionElementMap for a specific axis direction</param>
-        /// <returns></returns>
-        internal static ActionElementMap GetActionKeyboardElementMap(string actionName, Il2CppSystem.Nullable<Pole> pole)
-        {
-            return GetActionElementMap(actionName, pole, new Il2CppSystem.Nullable<ControllerType>(ControllerType.Keyboard));
-        }
-
-        internal static ActionElementMap GetActionElementMap(string actionName, Il2CppSystem.Nullable<Pole> pole, Il2CppSystem.Nullable<ControllerType> controllerType)
-        {
-            return InputSystem.GetActionElementMapFromActionName(actionName, pole, controllerType);
-        }
-
     }
 }
