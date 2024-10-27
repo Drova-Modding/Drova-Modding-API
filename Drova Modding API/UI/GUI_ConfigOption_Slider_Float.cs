@@ -29,11 +29,14 @@ namespace Drova_Modding_API.UI
             _amountText = gameObject.transform.parent.GetComponentInChildren<TextMeshProUGUI>();
             GetComponent<Slider>().onValueChanged.AddListener(new Action<float>(f =>
             {
-                this.OnValueChangedListener(f);
+                OnValueChangedListener(f);
             }));
             _showPercentSign = false;
         }
 
+        /// <summary>
+        /// Set the value of the slider and text.
+        /// </summary>
         public void SetUIValueCustom(float value)
         {
             _uiElement.value = value;
@@ -59,7 +62,6 @@ namespace Drova_Modding_API.UI
             {
                 _amountText.text = value.ToString("0.00");
             }
-            this.UpdateOptionValue(value);
             _configHandler.GameplayConfig.ConfigFile.SetValue(_key._key, value.ToString("0.00"));
         }
     }

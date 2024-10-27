@@ -4,7 +4,6 @@ using Il2Cpp;
 using Il2CppDrova.ConfigOptions;
 using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.Options;
-using Il2CppInterop.Runtime.Injection;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
@@ -62,7 +61,6 @@ namespace Drova_Modding_API.UI.Builder
 
         private static GameObject GetKeyBinding(Transform transform)
         {
-
             var gameObject = transform.GetChild(18).gameObject;
             return gameObject;
         }
@@ -145,7 +143,6 @@ namespace Drova_Modding_API.UI.Builder
             {
                 int i = (int)f;
                 sliderOption.OnValueChangedListener(f);
-                sliderOption.SetUIValue(i);
                 sliderOption.UpdateOptionValue(i);
                 sliderOption._configHandler.GameplayConfig.ConfigFile.SetValue(optionKey, i.ToString());
             }));
@@ -158,17 +155,16 @@ namespace Drova_Modding_API.UI.Builder
                 sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
                 var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
                 sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionInt);
-                sliderOption.SetUIValue(defaultValue);
+                sliderOption.OnValueChangedListener(defaultValue);
                 sliderOption.UpdateOptionValue(defaultValue);
 
             }
             else
             {
-                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, sliderOption._configHandler.GameplayConfig.GetOption<ConfigOption_Int>(optionKey));
-
-                sliderOption.SetUIValue(value);
-                sliderOption.UpdateOptionValue(defaultValue);
-
+                var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, value);
+                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionInt);
+                sliderOption.OnValueChangedListener(value);
+                sliderOption.UpdateOptionValue(value);
             }
             slider.SetActive(false);
             toPut.AddLast(slider);
@@ -192,11 +188,12 @@ namespace Drova_Modding_API.UI.Builder
             var unitySlider = rightOptionConfig.GetComponent<Slider>();
             unitySlider.minValue = min;
             unitySlider.maxValue = max;
-            if(min > defaultValue)
+            if (min > defaultValue)
             {
                 MelonLogger.Warning("Default value is smaller than min value. Setting default value to min value.");
                 defaultValue = min;
-            } else if (max < defaultValue)
+            }
+            else if (max < defaultValue)
             {
                 MelonLogger.Warning("Default value is higher than max value. Setting default value to max value.");
                 defaultValue = max;
@@ -225,8 +222,9 @@ namespace Drova_Modding_API.UI.Builder
             }
             else
             {
+                var configOptionFloat = new ConfigOption_Float(sliderOption._configHandler.GameplayConfig, optionKey, float.Parse(value));
 
-                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, sliderOption._configHandler.GameplayConfig.GetOption<ConfigOption_Float>(optionKey));
+                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(float.Parse(value));
             }
 
@@ -247,7 +245,6 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateSwitch(LocalizedString title, LocalizedString onValue, LocalizedString offValue, string optionKey, bool defaultValue = false, bool useGreyText = true)
         {
-
             var objectToInstantiate = useGreyText ? GetSwitchObject() : GetSwitchWithMainTextObject();
             var @switch = UnityEngine.Object.Instantiate(objectToInstantiate, _parent);
             @switch.SetActive(true);
@@ -280,7 +277,9 @@ namespace Drova_Modding_API.UI.Builder
             }
             else
             {
-                toggle._configHandler.GameplayConfig._keyToOptions.Add(optionKey, toggle._configHandler.GameplayConfig.GetOption<ConfigOption_Bool>(optionKey));
+                var configOptionBool = new ConfigOption_Bool(toggle._configHandler.GameplayConfig, optionKey, value);
+
+                toggle._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionBool);
                 toggle.SetUIValue(value);
             }
 
@@ -343,7 +342,8 @@ namespace Drova_Modding_API.UI.Builder
         {
             var manager = OptionMenuAccess.Instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
             // Load the controls panel otherwise we can not get a Prefab
-            if(manager._currentPanelIndex != 4) { 
+            if (manager._currentPanelIndex != 4)
+            {
                 manager.ChangePanel(4);
             }
             var controlsPanel = OptionMenuAccess.Instance.GetControlsPanel();

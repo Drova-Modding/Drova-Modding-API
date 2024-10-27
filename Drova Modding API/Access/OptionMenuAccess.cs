@@ -13,9 +13,9 @@ namespace Drova_Modding_API.Access
     public class OptionMenuAccess
     {
         private OptionMenuAccess() { }
-        private bool _isOpen = false;
         private GUI_Window _GUI_Window;
         private const string ScrollBarName = "ScrollRectView";
+        public static string OptionSceneName = "RuntimeScene_GUI";
         private static readonly OptionMenuAccess _instance = new();
         /**
          * The instance of the option menu access.
@@ -37,12 +37,12 @@ namespace Drova_Modding_API.Access
         */
         public event OptionMenuAction OnOptionMenuClose;
 
-        internal static void OnOptionRoot()
+        internal static void OnOptionOpen()
         {
             _instance.OnOptionMenuOpen.Invoke();
             var manager = _instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
             // Workaround for Update 1.0.2.1 where the modded panel is not activated for whatever reason.
-            if (manager._currentPanelIndex == -1)
+            if (manager._currentPanelIndex == -1 || manager._currentPanelIndex >= 5)
             {
                 manager.ChangePanel(0);
             }
@@ -63,7 +63,7 @@ namespace Drova_Modding_API.Access
 
         /**
          * Add a header and panel to the option menu and set a icon. This is not persistent and will be removed when the option menu is closed.
-         * @param icon The icon of the header (not the background).
+         * @param icon The icon of the header (not the background). If null, a random icon will be used.
          * @param name The name of the header. It needs to be unique and named liked: GUI_Button_OptionTab_YOUROPTION.
          * @return The created transfrom for the builder or if the Elements already exists null.
          */
@@ -77,20 +77,21 @@ namespace Drova_Modding_API.Access
             GameObject root = GetRootOfHeader();
             if (GetHeader(name)) return null;
             GameObject newHeader = UnityEngine.Object.Instantiate(root.transform.GetChild(0).gameObject, root.transform);
-            Image image = newHeader.transform.GetChild(0).GetComponent<Image>();
+            if (icon)
+            {
+                Image image = newHeader.transform.GetChild(0).GetComponent<Image>();
+                image.m_OverrideSprite = icon;
+                image.sprite = icon;
+                image.MarkDirty();
+            }
             newHeader.name = name;
-            image.m_OverrideSprite = icon;
-            image.sprite = icon;
-            image.MarkDirty();
             var panel = AddPanel(newHeader);
             var componentToRegister = newHeader.GetComponent<GUI_ButtonNavigationAnimationElement>();
 
             var scrollbar = GetScrollBar(panel);
             scrollbar.name = ScrollBarName;
             var layoutGroup = scrollbar.transform.GetChild(0);
-            layoutGroup.name = $"LayoutGroup{name.AsSpan(name.LastIndexOf('_'))}";
             layoutGroup.DestroyAllChildren();
-
             root.GetComponent<GUI_ButtonNavigationAnimation>().AddElement(componentToRegister);
             GetGUIWindow().GetComponent<GUI_GameMenu_NavigationSwitcher>().legacyElements.Add(componentToRegister);
             OverrideNavigation(newHeader, panel);
@@ -155,12 +156,20 @@ namespace Drova_Modding_API.Access
          */
         public GameObject GetGUIWindow()
         {
-            if(_GUI_Window)
+            if (_GUI_Window)
             {
                 return _GUI_Window.gameObject;
             }
-            _GUI_Window = UnityEngine.Object.FindAnyObjectByType<GUI_Window>();
-            return _GUI_Window.gameObject;
+            var allWindows = UnityEngine.Object.FindObjectsByType<GUI_Window>(FindObjectsSortMode.None);
+            foreach (var window in allWindows)
+            {
+                if (window.gameObject.scene.name == OptionSceneName && window.name == "GUI_Window_Options(Clone)")
+                {
+                    _GUI_Window = window;
+                    return window.gameObject;
+                }
+            }
+            return null;
         }
 
         /**
