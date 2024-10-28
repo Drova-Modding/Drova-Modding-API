@@ -28,7 +28,7 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// See GetPlayer()
+        /// See <see cref="GetPlayer"/>
         /// </summary>
         /// <param name="player"></param>
         /// <returns></returns>
