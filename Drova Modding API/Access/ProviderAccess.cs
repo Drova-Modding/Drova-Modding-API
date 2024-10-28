@@ -12,7 +12,7 @@ namespace Drova_Modding_API.Access
     /// <summary>
     ///  Easy access to the DrovaResourceProvider and its ressources
     /// </summary>
-    public class ProviderAccess
+    public static class ProviderAccess
     {
         private static DrovaResourceProvider _DrovaResourceProvider;
 
@@ -80,7 +80,7 @@ namespace Drova_Modding_API.Access
         ///  Tooltip Builder for the game <see cref="TooltipElement"/>
         /// </summary>
         /// <returns></returns>
-        public TooltipBuilder GetTooltipBuilder()
+        public static TooltipBuilder GetTooltipBuilder()
         {
             return GetDrovaResourceProvider()._handler[6].Cast<TooltipBuilder>();
         }
@@ -88,7 +88,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Provide access to further Databases, like items, effects, recipes, etc.
         /// </summary>
-        public GameDatabase GetGameDatabase()
+        public static GameDatabase GetGameDatabase()
         {
             return GetDrovaResourceProvider()._handler[7].Cast<GameDatabase>();
         }

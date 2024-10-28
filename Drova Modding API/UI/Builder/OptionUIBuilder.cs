@@ -302,7 +302,7 @@ namespace Drova_Modding_API.UI.Builder
             {
                 manager.ChangePanel(4);
             }
-            var controlsPanel = OptionMenuAccess.Instance.GetControlsPanel();
+            var controlsPanel = OptionMenuAccess.GetControlsPanel();
             var keybindingPrefab = GetKeyBinding(controlsPanel.transform);
             CreateTitle(titleOfSection, controlsPanel.transform);
             return BuildKeyBinding(keybindings, manager, controlsPanel, keybindingPrefab);
@@ -346,7 +346,7 @@ namespace Drova_Modding_API.UI.Builder
             {
                 manager.ChangePanel(4);
             }
-            var controlsPanel = OptionMenuAccess.Instance.GetControlsPanel();
+            var controlsPanel = OptionMenuAccess.GetControlsPanel();
             var keybindingPrefab = GetKeyBinding(controlsPanel.transform);
             return BuildKeyBinding(keybindings, manager, controlsPanel, keybindingPrefab);
         }
