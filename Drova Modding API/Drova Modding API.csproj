@@ -454,6 +454,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="Access\AddressableAccess.cs" />
 		<Compile Include="Access\ConfigAccessor.cs" />
 		<Compile Include="Access\LocalizationAccess.cs" />
 		<Compile Include="Access\ProviderAccess.cs" />
