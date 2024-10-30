@@ -1,0 +1,1 @@
+# This Folder contains generation items, which can help this library to assist in the generation of code.
