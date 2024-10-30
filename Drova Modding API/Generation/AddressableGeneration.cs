@@ -157,7 +157,7 @@ namespace Drova_Modding_API.Generation
                     index += kBytesPerInt32;
                     var resourceType = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     //object data = dataIndex < 0 ? null : SerializationUtilities.ReadObjectFromByteArray(extraData, dataIndex);
-                    sb.Append("Index: " + index + " internalId: " + internalId + " dependencyKeyIndex: " + dependencyKeyIndex + " Name/InternalId: " + data.m_InternalIds[internalId] + " Guid: " + keys[primaryKey].ToString() + " ressourceType" + resourceType + "\n");
+                    sb.Append("Name/InternalId: " + data.m_InternalIds[internalId] + " Guid: " + keys[primaryKey].ToString() + " ressourceType: " + data.m_resourceTypes[resourceType].ClassName + "\n");
 
                 }
                 stream.Write(Encoding.ASCII.GetBytes(sb.ToString()));
