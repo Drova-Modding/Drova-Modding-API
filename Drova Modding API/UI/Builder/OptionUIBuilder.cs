@@ -399,7 +399,7 @@ namespace Drova_Modding_API.UI.Builder
             {
                 gameObject.SetActive(true);
             }
-            ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.SaveChangesToFile();
+            ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.SaveChangesToFile(true);
         }
 
         private static void SetLocalizedText(GameObject gameObject, LocalizedString localizedString)
