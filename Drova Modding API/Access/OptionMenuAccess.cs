@@ -148,6 +148,7 @@ namespace Drova_Modding_API.Access
             var newPanel = UnityEngine.Object.Instantiate(root.transform.GetChild(4).gameObject, root.transform);
             newPanel.transform.SetSiblingIndex(newPanel.transform.GetSiblingIndex() - 1);
             newPanel.name = string.Concat("Panel", header.name.AsSpan(header.name.LastIndexOf('_')));
+            root.transform.FindChild("NextKey").localPosition += new Vector3(20f, 0f);
             newPanel.SetActive(false);
             return newPanel;
         }
