@@ -6,6 +6,8 @@ using Il2CppDrova.DialogueNew;
 using Il2CppDrova.GUI;
 using Il2CppDrova.Items.Stats;
 using Il2CppDrova.QuestSystem;
+using Il2CppDrova.Utilities.LazyLoading;
+using Il2CppDrova.Weather;
 
 namespace Drova_Modding_API.Access
 {
@@ -15,6 +17,7 @@ namespace Drova_Modding_API.Access
     public static class ProviderAccess
     {
         private static DrovaResourceProvider _DrovaResourceProvider;
+        private static GameManager _gameManager;
 
         /// <summary>
         /// Access to the DrovaResourceProvider
@@ -256,6 +259,226 @@ namespace Drova_Modding_API.Access
             return GetScriptableGameHandlerDatabase()._assets[18].Cast<TutorialManager>();
         }
 
+        /// <summary>
+        /// Get Game Manager 
+        /// </summary>
+        public static bool TryGetGameManager(out GameManager gameManager)
+        {
+            if (_gameManager)
+            {
+                gameManager = _gameManager;
+                return true;
+            }
+            var gameManagerObject = UnityEngine.Object.FindObjectOfType<GameManager>();
+            gameManager = gameManagerObject;
+            if (gameManagerObject != null)
+            {
+                _gameManager = gameManagerObject;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// GameOverManager
+        /// </summary>
+        public static bool TryGetGameOverGameHandler(out GameOverGameHandler gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("GameOverGameHandler", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<GameOverGameHandler>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Time scale
+        /// </summary>
+        public static bool TryGetGameStateGameHandler(out GameStateGameHandler gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("GameStateGameHandler", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<GameStateGameHandler>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Access to joarnal, map collection and crafting
+        /// </summary>
+        public static bool TryGetPlayerMetaDataGameHandler(out PlayerMetaDataGameHandler gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("PlayerMetaDataGameHandler", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<PlayerMetaDataGameHandler>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// WeatherGameHandler Access to weather events and properties
+        /// </summary>
+        public static bool TryGetWeatherGameHandler(out WeatherGameHandler gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("WeatherGameHandler", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<WeatherGameHandler>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// DaytimeGameHandler with events 
+        /// </summary>
+        public static bool TryGetDaytimeGameHandler(out DaytimeGameHandler gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("DaytimeGameHandler", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<DaytimeGameHandler>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// RootObjectHandler get root objects for scenes
+        /// Possible values: "RoutineScene_Gameplay_Main", "RoutineScene_Creatures", "AIControllerScene_Creatures", "AIControllerScene_Actors", "RoutineScene_Actors"
+        /// </summary>
+        public static bool TryGetRootObjectHandler(out RootObjectHandler gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("RootObjectHandler", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<RootObjectHandler>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// LazyManager for other lazy Objects
+        /// </summary>
+        public static bool TryGetLazyManager(out LazyManager gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("LazyManager", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<LazyManager>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Lazy Ai Factory Manager
+        /// </summary>
+        public static bool TryGetLazyAIFactoryManager(out LazyAIFactoryManager gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("LazyAIFactoryManager", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<LazyAIFactoryManager>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Lazy Loaded Hit Objects
+        /// </summary>
+        public static bool TryGetLazyHitFactoryManager(out LazyHitFactoryManager gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("LazyHitFactoryManager", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<LazyHitFactoryManager>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Congition Manager
+        /// </summary>
+        public static bool TryGetCognitionOctreeManager(out CognitionOctreeManager gameOverGameHandler)
+        {
+            if (!_gameManager && !TryGetGameManager(out GameManager _))
+            {
+                gameOverGameHandler = null;
+                return false;
+            }
+            if (_gameManager.TryGetGameHandler("CognitionOctreeManager", out IGameHandler handler))
+            {
+                gameOverGameHandler = handler.Cast<CognitionOctreeManager>();
+                return true;
+            }
+
+            gameOverGameHandler = null;
+            return false;
+        }
 
     }
 }

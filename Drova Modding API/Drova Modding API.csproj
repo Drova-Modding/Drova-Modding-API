@@ -454,8 +454,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="Access\AddressableAccess.cs" />
 		<Compile Include="Access\ConfigAccessor.cs" />
 		<Compile Include="Access\LocalizationAccess.cs" />
+		<Compile Include="Access\PlayerAccess.cs" />
 		<Compile Include="Access\ProviderAccess.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="Access\OptionMenuAccess.cs" />
