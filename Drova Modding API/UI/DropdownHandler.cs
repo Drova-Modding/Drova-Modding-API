@@ -38,7 +38,7 @@ namespace Drova_Modding_API.UI
         private void OnDestroy()
         {
             Dropdown.onValueChanged.RemoveAllListeners();
-            LocalizationDB.Instance.LanguageLoadedEvent.RemoveEventListener(new Action<LocalizationDB>(OnLanguageChange));
+            LocalizationDB.Instance?.LanguageLoadedEvent.RemoveEventListener(new Action<LocalizationDB>(OnLanguageChange));
         }
 
         private void OnLanguageChange(LocalizationDB _db)

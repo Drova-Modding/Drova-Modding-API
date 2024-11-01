@@ -1178,6 +1178,27 @@ namespace Drova_Modding_API.Access
             public readonly static AssetReferenceT<Item> Template_Weapon_Sword = new("3f8efd8edf3389e4fb820e4b20de9c81");
             public readonly static AssetReferenceT<Item> Weapon_BareHands = new("b51c3a44e34388b49bf83aa85674f895");
         }
+
+        public static class GUIOptions
+        {
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Control = new("a5aebf6066e3a954eacdcb72b1d18b82");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Controls_Category = new("5f78f9858e70baa48b673acef4ecf180");
+            public readonly static AssetReferenceGameObject GUI_OptionRow = new("3da914e6d444e64429c5b8689b096fcf");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Description = new("34f01167ecbf6cd4984f6cc5e5eda94d");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Divider = new("11f0f993c0ace594c9d3eea8c7c6b1d9");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Dropdown = new("745f66ffafe3fb34da341677b163aad7");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Slider = new("9e3d45921a72ee04292c7ab9ec06b9e8");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Switch = new("80abeae4511081a4bb8be0dc35317887");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_TextCenter = new("74bf36a1237410e468db0620ad1e517f");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Title = new("b071088a7fcb4ff40add5f394018b939");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Toggle = new("d7ab78b2c111aad4ab64511ea299da5c");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Toggle_Text = new("4449bf0668fd0b44396b1fef8f082348");
+            public readonly static AssetReferenceGameObject GUI_OptionRow_Button_ResetDefault = new("eec075c61d96e65459b448f7fcb3b3df");
+            public readonly static AssetReferenceGameObject GUI_Dropdown_OptionConfig = new("f7947f06257b4dd43bf78def245ed23d");
+            public readonly static AssetReferenceGameObject GUI_Slider_OptionConfig = new("c5f5375f4dcaada439ebdd639466df98");
+            public readonly static AssetReferenceGameObject GUI_Switch_ConfigOption = new("c5f5375f4dcaada439ebdd639466df98");
+            public readonly static AssetReferenceGameObject GUI_Toggle_Big_ConfigOption = new("c5f5375f4dcaada439ebdd639466df98");
+        }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

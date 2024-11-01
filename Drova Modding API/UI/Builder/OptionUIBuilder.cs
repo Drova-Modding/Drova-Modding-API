@@ -7,6 +7,7 @@ using Il2CppDrova.GUI.Options;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
 
@@ -17,7 +18,6 @@ namespace Drova_Modding_API.UI.Builder
     /// </summary>
     public class OptionUIBuilder
     {
-        private readonly LinkedList<GameObject> toPut = new();
         private readonly Transform _parent;
         internal OptionUIBuilder(Transform parent)
         {
@@ -26,43 +26,42 @@ namespace Drova_Modding_API.UI.Builder
 
         private static GameObject GetTitleObject()
         {
-            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Interface/SlotScrollRect(VIEW)/LayoutGroup_Interface/GUI_OptionRow_Title_Interface");
+            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Title).WaitForCompletion();
         }
 
         private static GameObject GetDisclaimerObject()
         {
-            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Interface/SlotScrollRect(VIEW)/LayoutGroup_Interface/GUI_OptionRow_Show_DisclaimerText");
+            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Description).WaitForCompletion();
         }
 
         private static GameObject GetHeaderObject()
         {
-            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Interface/SlotScrollRect(VIEW)/LayoutGroup_Interface/GUI_OptionRow_Parent_BasicHudElements");
+            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_TextCenter).WaitForCompletion();
         }
 
         private static GameObject GetSwitchObject()
         {
-            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Interface/SlotScrollRect(VIEW)/LayoutGroup_Interface/GUI_OptionRow_Show_PlayerHealthbar");
+            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Toggle).WaitForCompletion();
         }
 
         private static GameObject GetSwitchWithMainTextObject()
         {
-            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Interface/SlotScrollRect(VIEW)/LayoutGroup_Interface/GUI_OptionRow_Show_PoiseBars");
+            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Toggle).WaitForCompletion();
         }
 
         private static GameObject GetSliderObject()
         {
-            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Video/SlotScrollRect(VIEW)/LayoutGroup_Video/GUI_OptionRow_Slider_Screenshake");
+            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Slider).WaitForCompletion();
         }
 
         private static GameObject GetDropdownObject()
         {
-            return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Gameplay/SlotScrollRect(VIEW/LayoutGroup_Gameplay/GUI_OptionRow_Dropdown_Language");
+            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Dropdown).WaitForCompletion();
         }
 
-        private static GameObject GetKeyBinding(Transform transform)
+        private static GameObject GetKeyBinding()
         {
-            var gameObject = transform.GetChild(18).gameObject;
-            return gameObject;
+            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Control).WaitForCompletion();
         }
 
         /**
@@ -70,7 +69,6 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateTitle(LocalizedString localizedString)
         {
-
             return CreateTitle(localizedString, _parent);
         }
 
@@ -80,9 +78,7 @@ namespace Drova_Modding_API.UI.Builder
         public OptionUIBuilder CreateTitle(LocalizedString localizedString, Transform parent)
         {
             var title = UnityEngine.Object.Instantiate(GetTitleObject(), parent);
-            title.SetActive(false);
             SetLocalizedText(title, localizedString);
-            toPut.AddLast(title);
             return this;
         }
 
@@ -92,9 +88,7 @@ namespace Drova_Modding_API.UI.Builder
         public OptionUIBuilder CreateDisclaimer(LocalizedString localizedString)
         {
             var disclaimer = UnityEngine.Object.Instantiate(GetDisclaimerObject(), _parent);
-            disclaimer.SetActive(false);
             SetLocalizedText(disclaimer, localizedString);
-            toPut.AddLast(disclaimer);
             return this;
         }
 
@@ -104,9 +98,7 @@ namespace Drova_Modding_API.UI.Builder
         public OptionUIBuilder CreateHeader(LocalizedString localizedString)
         {
             var header = UnityEngine.Object.Instantiate(GetHeaderObject(), _parent);
-            header.SetActive(false);
             SetLocalizedText(header, localizedString);
-            toPut.AddLast(header);
             return this;
         }
 
@@ -154,7 +146,7 @@ namespace Drova_Modding_API.UI.Builder
 
                 sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
                 var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
-                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionInt);
+                sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionInt);
                 sliderOption.OnValueChangedListener(defaultValue);
                 sliderOption.UpdateOptionValue(defaultValue);
 
@@ -162,12 +154,10 @@ namespace Drova_Modding_API.UI.Builder
             else
             {
                 var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, value);
-                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionInt);
+                sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionInt);
                 sliderOption.OnValueChangedListener(value);
                 sliderOption.UpdateOptionValue(value);
             }
-            slider.SetActive(false);
-            toPut.AddLast(slider);
             return this;
         }
 
@@ -216,20 +206,16 @@ namespace Drova_Modding_API.UI.Builder
                 sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
 
                 var configOptionFloat = new ConfigOption_Float(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
-                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionFloat);
+                sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(defaultValue);
-
             }
             else
             {
                 var configOptionFloat = new ConfigOption_Float(sliderOption._configHandler.GameplayConfig, optionKey, float.Parse(value));
 
-                sliderOption._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionFloat);
+                sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(float.Parse(value));
             }
-
-            slider.SetActive(false);
-            toPut.AddLast(slider);
             return this;
         }
 
@@ -245,11 +231,16 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateSwitch(LocalizedString title, LocalizedString onValue, LocalizedString offValue, string optionKey, bool defaultValue = false, bool useGreyText = true)
         {
-            var objectToInstantiate = useGreyText ? GetSwitchObject() : GetSwitchWithMainTextObject();
+            var objectToInstantiate = GetSwitchObject();
             var @switch = UnityEngine.Object.Instantiate(objectToInstantiate, _parent);
-            @switch.SetActive(true);
+            if (useGreyText)
+            {
+                var row = @switch.GetComponent<GUI_OptionsRow>();
+                row.InitRow(true);
+                row._rowType = GUI_OptionsRow.RowType.OptionChild;
+                row.SetRowType(GUI_OptionsRow.RowType.OptionChild);
+            }
             @switch.transform.FindChild("Left").GetComponentInChildren<LocalizedTextMeshPro>()._localizedString = title;
-
             var configOption = @switch.transform.FindChild("Right/GUI_Switch_ConfigOption");
             configOption.GetComponent<GUI_SwitchBhvr>()._toggle.isOn = defaultValue;
             configOption.FindChild("TextOn").GetComponent<LocalizedTextMeshPro>()._localizedString = onValue;
@@ -271,7 +262,7 @@ namespace Drova_Modding_API.UI.Builder
             {
                 toggle._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
                 var configOptionBool = new ConfigOption_Bool(toggle._configHandler.GameplayConfig, optionKey, defaultValue);
-                toggle._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionBool);
+                toggle._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionBool);
                 toggle.UpdateOptionValue(defaultValue);
                 toggle.UpdateUIValue();
             }
@@ -279,40 +270,32 @@ namespace Drova_Modding_API.UI.Builder
             {
                 var configOptionBool = new ConfigOption_Bool(toggle._configHandler.GameplayConfig, optionKey, value);
 
-                toggle._configHandler.GameplayConfig._keyToOptions.Add(optionKey, configOptionBool);
-                toggle.SetUIValue(value);
+                toggle._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionBool);
             }
 
-            @switch.SetActive(false);
-            toPut.AddLast(@switch);
             return this;
         }
 
         /**
-         * Create a keybinding section in the Controls Panel.
-         * At the moment it is not working as intended, because the keybinding area recreates itself on the second time, which moves our elements from last to first!
+         * Create a keybinding
          * @param titleOfSection The title of the section.
          * @param keybindings The keybindings to create.
          */
-        public OptionUIBuilder CreateKeyBindingSection(LocalizedString titleOfSection, List<Keybinding> keybindings)
+        public OptionUIBuilder CreateKeyBindingSection(List<Keybinding> keybindings, LocalizedString titleOfSection = null)
         {
-            var manager = OptionMenuAccess.Instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
-            // Load the controls panel otherwise we can not get a Prefab
-            if (manager._currentPanelIndex != 4)
+            var keybindingPrefab = GetKeyBinding();
+            if (titleOfSection != null)
             {
-                manager.ChangePanel(4);
-            }
-            var controlsPanel = OptionMenuAccess.GetControlsPanel();
-            var keybindingPrefab = GetKeyBinding(controlsPanel.transform);
-            CreateTitle(titleOfSection, controlsPanel.transform);
-            return BuildKeyBinding(keybindings, manager, controlsPanel, keybindingPrefab);
+                CreateTitle(titleOfSection);
+            };
+            return BuildKeyBinding(keybindings, keybindingPrefab);
         }
 
-        private OptionUIBuilder BuildKeyBinding(List<Keybinding> keybindings, GUI_Window_Options manager, GameObject controlsPanel, GameObject keybindingPrefab)
+        private OptionUIBuilder BuildKeyBinding(List<Keybinding> keybindings, GameObject keybindingPrefab)
         {
             foreach (var keybinding in keybindings)
             {
-                var keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, controlsPanel.transform);
+                var keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, _parent);
                 UnityEngine.Object.Destroy(keyBinding.GetComponent<GUI_Option_Controls_KeyFieldElement>());
                 var components = keyBinding.GetComponentsInChildren<HorizontalLayoutGroup>();
                 foreach (var component in components)
@@ -321,15 +304,14 @@ namespace Drova_Modding_API.UI.Builder
                 }
                 var customKeyFieldElement = keyBinding.AddComponent<GUI_Options_Controls_KeyFieldElement_Custom>();
                 customKeyFieldElement.Init(keybinding.ActionName);
-                keyBinding.SetActive(true);
                 keyBinding.transform.FindChild("Left").GetComponentInChildren<TextMeshProUGUI>().text = keybinding.Title.GetLocalizedString(null);
+
+                // We can't support at the moment controller keybindings. Fix me with MelonLoader 1.6.6
+                keyBinding.transform.FindChild("Controller/ChangeButton").gameObject.SetActive(false);
 
                 var loadedKeycode = ActionKeyRegister.Instance.GetKeyCode(keybinding.ActionName);
                 keyBinding.transform.FindChild("Keyboard").GetComponentInChildren<TextMeshProUGUI>().text = loadedKeycode != KeyCode.None ? Enum.GetName(loadedKeycode) : Enum.GetName(keybinding.DefaultActionKey);
-                toPut.AddLast(keyBinding);
             }
-            // Change back to the first panel
-            manager.ChangePanel(0);
             return this;
         }
 
@@ -340,15 +322,9 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateKeyBindingSection(List<Keybinding> keybindings)
         {
-            var manager = OptionMenuAccess.Instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
-            // Load the controls panel otherwise we can not get a Prefab
-            if (manager._currentPanelIndex != 4)
-            {
-                manager.ChangePanel(4);
-            }
-            var controlsPanel = OptionMenuAccess.GetControlsPanel();
-            var keybindingPrefab = GetKeyBinding(controlsPanel.transform);
-            return BuildKeyBinding(keybindings, manager, controlsPanel, keybindingPrefab);
+
+            var keybindingPrefab = GetKeyBinding();
+            return BuildKeyBinding(keybindings, keybindingPrefab);
         }
 
         /// <summary>
@@ -379,14 +355,12 @@ namespace Drova_Modding_API.UI.Builder
             keys.Sort();
             if (ConfigAccessor.TryGetConfigValue(optionKey, out E value))
             {
-
                 dropdownHandler.Init(keys, [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(value));
             }
             else
             {
                 dropdownHandler.Init(keys, [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(defaulValue));
             }
-            toPut.AddLast(dropdown);
             return this;
         }
 
@@ -395,11 +369,7 @@ namespace Drova_Modding_API.UI.Builder
          */
         public void Build()
         {
-            foreach (var gameObject in toPut)
-            {
-                gameObject.SetActive(true);
-            }
-            ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.SaveChangesToFile(true);
+            ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.SaveChangesToFile(false);
         }
 
         private static void SetLocalizedText(GameObject gameObject, LocalizedString localizedString)
