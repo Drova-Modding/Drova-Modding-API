@@ -31,11 +31,16 @@ And to your csproj:
 </Reference>
 ```
 
+## Wiki
+See [Wiki](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
 
 ## Features
-- Easier access to OptionsMenu, you can create your own Panel!
+- Easier access to OptionsMenu, you can create your own Panel or use the exesting modding panel!
+- You can create persistent settings in there including, keyboard bindings, switches, dropdown, buttons and sliders. 
 - Create your own loc files for your mods
-- Easier access to the Drova Providers
+- Easier access to the Drova Providers and GameManager and Player
+- Access to the Addressables, including GUI, Items/Recipies/Spells, Creatures and Bandits
+
 
 ### Contributing
 Feel free to contribute to this project. If you have any questions or ideas, feel free to ask.
