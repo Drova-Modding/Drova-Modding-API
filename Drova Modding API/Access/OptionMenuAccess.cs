@@ -14,8 +14,14 @@ namespace Drova_Modding_API.Access
     {
         private OptionMenuAccess() { }
         private GUI_Window _GUI_Window;
+        private Transform moddingPanel;
+        private readonly List<string> idsAdded = [];
+        private GUI_Window_ATabManager.GUI_TabPanel guiPanel;
         private const string ScrollBarName = "ScrollRectView";
-        public static string OptionSceneName = "RuntimeScene_GUI";
+        /**
+         * The name of the scene where the option menu is located.
+         */
+        public const string OptionSceneName = "RuntimeScene_GUI";
         private static readonly OptionMenuAccess _instance = new();
         /**
          * The instance of the option menu access.
@@ -39,8 +45,13 @@ namespace Drova_Modding_API.Access
 
         internal static void OnOptionOpen()
         {
+            var guiWindow = _instance.GetGUIWindow();
+            if (!guiWindow)
+            {
+                return;
+            }
             _instance.OnOptionMenuOpen.Invoke();
-            var manager = _instance.GetGUIWindow().GetComponent<GUI_Window_Options>();
+            var manager = guiWindow.GetComponent<GUI_Window_Options>();
             // Workaround for Update 1.0.2.1 where the modded panel is not activated for whatever reason.
             if (manager._currentPanelIndex == -1 || manager._currentPanelIndex >= 5)
             {
@@ -53,10 +64,12 @@ namespace Drova_Modding_API.Access
             var window = _instance.GetGUIWindow();
             if (!window)
             {
+                _instance.idsAdded.Clear();
                 return;
             }
             if (!window.gameObject.activeSelf)
             {
+                window.GetComponent<GUI_Window_Options>()._currentPanelIndex = 0;
                 _instance.OnOptionMenuClose.Invoke();
             }
         }
@@ -75,6 +88,7 @@ namespace Drova_Modding_API.Access
                 return null;
             }
             GameObject root = GetRootOfHeader();
+            if (!root) return null;
             if (GetHeader(name)) return null;
             GameObject newHeader = UnityEngine.Object.Instantiate(root.transform.GetChild(0).gameObject, root.transform);
             if (icon)
@@ -98,7 +112,7 @@ namespace Drova_Modding_API.Access
             return layoutGroup;
         }
 
-        private GameObject GetScrollBar(GameObject panel)
+        private static GameObject GetScrollBar(GameObject panel)
         {
             return panel.transform.GetChild(1).gameObject;
         }
@@ -111,18 +125,16 @@ namespace Drova_Modding_API.Access
         private void OverrideNavigation(GameObject header, GameObject panel)
         {
             var manager = GetGUIWindow().GetComponent<GUI_Window_Options>();
-            var guiPanel = new GUI_Window_ATabManager.GUI_TabPanel
+            guiPanel = new GUI_Window_ATabManager.GUI_TabPanel
             {
                 Instance = panel.GetComponent<GUI_GameMenu_APanel>(),
-                Id = header.transform.GetSiblingIndex() + 1
+                Id = header.transform.GetSiblingIndex() + 1,
+                NavigationElement = header.GetComponent<GUI_ButtonNavigationAnimationElement>()
             };
-            guiPanel.OverrideNavigationElement(header.GetComponent<GUI_ButtonNavigationAnimationElement>());
-            guiPanel.SetButtonName();
-
             manager.GuiPanels.Add(guiPanel);
             manager.SetupPanelNavigationElements();
             // Rerender panel, otherwise its empty. 
-            manager.ChangePanel(0);
+            manager.ChangePanelDefault(0);
         }
 
         /**
@@ -130,12 +142,13 @@ namespace Drova_Modding_API.Access
          * @param header The header to add the panel to. It needs a name with GUI_Button_OptionTab_YOUROPTION
          * @return The created panel game object.
          */
-        private GameObject AddPanel(GameObject header)
+        private static GameObject AddPanel(GameObject header)
         {
             var root = GetRootOfOptionWindow();
             var newPanel = UnityEngine.Object.Instantiate(root.transform.GetChild(4).gameObject, root.transform);
             newPanel.transform.SetSiblingIndex(newPanel.transform.GetSiblingIndex() - 1);
             newPanel.name = string.Concat("Panel", header.name.AsSpan(header.name.LastIndexOf('_')));
+            root.transform.FindChild("NextKey").localPosition += new Vector3(20f, 0f);
             newPanel.SetActive(false);
             return newPanel;
         }
@@ -145,9 +158,26 @@ namespace Drova_Modding_API.Access
          * @param panel The panel to add the elements to.
          * @return The builder for the option menu.
          */
-        public OptionUIBuilder GetBuilder(Transform panel)
+        public static OptionUIBuilder GetBuilder(Transform panel)
         {
             return new OptionUIBuilder(panel);
+        }
+
+        /// <summary>
+        /// Create your Options in the general modding panel
+        /// </summary>
+        /// <param name="id">Unique identifier for your mod</param>
+        /// <returns></returns>
+        public OptionUIBuilder GetBuilder(string id)
+        {
+            if(!moddingPanel)
+            {
+                moddingPanel = AddPanel(null, "GUI_Button_OptionTab_Modding");
+            }
+            if (!moddingPanel) return null;
+            if(idsAdded.Contains(id)) return null;
+            idsAdded.Add(id);
+            return new OptionUIBuilder(moddingPanel);
         }
 
         /**
@@ -176,7 +206,7 @@ namespace Drova_Modding_API.Access
          * Get the root of the panel where header and panels are.
          * @return The root of the option window.
          */
-        public GameObject GetRootOfOptionWindow()
+        public static GameObject GetRootOfOptionWindow()
         {
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel");
         }
@@ -185,7 +215,7 @@ namespace Drova_Modding_API.Access
          * Get the root of the header.
          * @return The root of the header.
          */
-        public GameObject GetRootOfHeader()
+        public static GameObject GetRootOfHeader()
         {
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Header");
         }
@@ -195,7 +225,7 @@ namespace Drova_Modding_API.Access
          * @param name The name of the header.
          * @return The header game object.
          */
-        public GameObject GetHeader(string name)
+        public static GameObject GetHeader(string name)
         {
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Header/" + name);
         }
@@ -204,7 +234,7 @@ namespace Drova_Modding_API.Access
          * Get the controls panel.
          * @return The controls panel.
          */
-        public GameObject GetControlsPanel()
+        public static GameObject GetControlsPanel()
         {
             return GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/Panel_Controls/SlotScrollRect(VIEW)/LayoutGroup_Controls");
         }
