@@ -7,14 +7,28 @@ using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.UI
-{
+{    /// <summary>
+     /// Class for a dropdown in the option menu.
+     /// </summary>
     [RegisterTypeInIl2Cpp]
 
     public class DropdownHandler : MonoBehaviour
     {
+        /**
+         * The options for the dropdown.
+         */
         protected Dictionary<int, LocalizedString> Options;
+        /**
+         * The dropdown component.
+         */
         protected TMP_Dropdown Dropdown;
+        /**
+         * The config handler.
+         */
         protected ConfigGameHandler ConfigHandler;
+        /**
+         * The option key.
+         */
         protected string OptionKey;
 
         [HideFromIl2Cpp]

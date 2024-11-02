@@ -310,7 +310,13 @@ namespace Drova_Modding_API.UI.Builder
                 }
                 var customKeyFieldElement = keyBinding.AddComponent<GUI_Options_Controls_KeyFieldElement_Custom>();
                 customKeyFieldElement.Init(keybinding.ActionName);
-                keyBinding.transform.FindChild("Left").GetComponentInChildren<TextMeshProUGUI>().text = keybinding.Title.GetLocalizedString(null);
+                var textMeshProObject = keyBinding.transform.FindChild("Left").GetComponentInChildren<TextMeshProUGUI>().gameObject;
+                MelonLogger.Msg(textMeshProObject);
+                var localized = textMeshProObject.AddComponent<LocalizedTextMeshPro>();
+                MelonLogger.Msg(localized);
+                localized._text = textMeshProObject.GetComponent<TextMeshProUGUI>();
+                localized._localizedString = keybinding.Title;
+                localized.UpdateLocalizedText();
 
                 // We can't support at the moment controller keybindings. Fix me with MelonLoader 1.6.6
                 keyBinding.transform.FindChild("Controller/ChangeButton").gameObject.SetActive(false);

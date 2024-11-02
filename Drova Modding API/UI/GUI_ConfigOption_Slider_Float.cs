@@ -10,16 +10,14 @@ namespace Drova_Modding_API.UI
     /// <summary>
     /// Class for a float slider in the option menu.
     /// </summary>
+    /// <remarks>
+    /// Constructor for the float slider.
+    /// </remarks>
     [RegisterTypeInIl2Cpp]
-    public class GUI_ConfigOption_Slider_Float : GUI_AConfigOption<float, Slider>
+    public class GUI_ConfigOption_Slider_Float(IntPtr ptr) : GUI_AConfigOption<float, Slider>(ptr)
     {
         private TextMeshProUGUI _amountText;
         private bool _showPercentSign;
-
-        /// <summary>
-        /// Constructor for the float slider.
-        /// </summary>
-        public GUI_ConfigOption_Slider_Float(IntPtr ptr) : base(ptr) {}
 
         /// <summary>
         /// Initialize the float slider.
@@ -27,11 +25,19 @@ namespace Drova_Modding_API.UI
         public void Init()
         {
             _amountText = gameObject.transform.parent.GetComponentInChildren<TextMeshProUGUI>();
-            GetComponent<Slider>().onValueChanged.AddListener(new Action<float>(f =>
-            {
-                OnValueChangedListener(f);
-            }));
+            GetComponent<Slider>().onValueChanged.AddListener(new Action<float>(OnValueChangedListener));
             _showPercentSign = false;
+        }
+
+
+        /// <summary>
+        /// Set the value of the slider and text.
+        /// Doesn't work at the moment
+        /// </summary>
+        /// <param name="value"></param>
+        public override void SetUIValue(float value)
+        {
+            SetUIValueCustom(value);
         }
 
         /// <summary>

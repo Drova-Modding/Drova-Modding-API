@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.1 - 2024-11-02]
+### Fixed
+- Fixed a bug where the KeyBindingSection would not refresh the keybindings when you change the language
+
 ## [0.2.0 - 2024-11-02]
 ### Added
 - Button component
