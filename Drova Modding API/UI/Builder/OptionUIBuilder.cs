@@ -19,6 +19,7 @@ namespace Drova_Modding_API.UI.Builder
     public class OptionUIBuilder
     {
         private readonly Transform _parent;
+        private readonly List<GameObject> gameObjects = [];
         internal OptionUIBuilder(Transform parent)
         {
             _parent = parent;
@@ -79,6 +80,7 @@ namespace Drova_Modding_API.UI.Builder
         {
             var title = UnityEngine.Object.Instantiate(GetTitleObject(), parent);
             SetLocalizedText(title, localizedString);
+            gameObjects.Add(title);
             return this;
         }
 
@@ -89,6 +91,7 @@ namespace Drova_Modding_API.UI.Builder
         {
             var disclaimer = UnityEngine.Object.Instantiate(GetDisclaimerObject(), _parent);
             SetLocalizedText(disclaimer, localizedString);
+            gameObjects.Add(disclaimer);
             return this;
         }
 
@@ -99,6 +102,7 @@ namespace Drova_Modding_API.UI.Builder
         {
             var header = UnityEngine.Object.Instantiate(GetHeaderObject(), _parent);
             SetLocalizedText(header, localizedString);
+            gameObjects.Add(header);
             return this;
         }
 
@@ -158,6 +162,7 @@ namespace Drova_Modding_API.UI.Builder
                 sliderOption.OnValueChangedListener(value);
                 sliderOption.UpdateOptionValue(value);
             }
+            gameObjects.Add(slider);
             return this;
         }
 
@@ -216,6 +221,7 @@ namespace Drova_Modding_API.UI.Builder
                 sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(float.Parse(value));
             }
+            gameObjects.Add(slider);
             return this;
         }
 
@@ -272,7 +278,7 @@ namespace Drova_Modding_API.UI.Builder
 
                 toggle._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionBool);
             }
-
+            gameObjects.Add(@switch);
             return this;
         }
 
@@ -311,6 +317,7 @@ namespace Drova_Modding_API.UI.Builder
 
                 var loadedKeycode = ActionKeyRegister.Instance.GetKeyCode(keybinding.ActionName);
                 keyBinding.transform.FindChild("Keyboard").GetComponentInChildren<TextMeshProUGUI>().text = loadedKeycode != KeyCode.None ? Enum.GetName(loadedKeycode) : Enum.GetName(keybinding.DefaultActionKey);
+                gameObjects.Add(keyBinding);
             }
             return this;
         }
@@ -361,15 +368,33 @@ namespace Drova_Modding_API.UI.Builder
             {
                 dropdownHandler.Init(keys, [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(defaulValue));
             }
+            gameObjects.Add(dropdown);
             return this;
         }
 
         /**
-         * Builds the UI.
+         * Add a button to the UI.
+         * @param title The title of the button Action.
+         * @param buttonName The name of the button.
+         * @param onClick The action to perform when the button is clicked.
          */
-        public void Build()
+        public OptionUIBuilder CreateButton(LocalizedString title, LocalizedString buttonName, Action onClick)
+        {
+            var button = UnityEngine.Object.Instantiate(Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Button_ResetDefault).WaitForCompletion(), _parent);
+            SetLocalizedText(button.transform.FindChild("Left").gameObject, title);
+            SetLocalizedText(button.transform.FindChild("Right").gameObject, buttonName);
+            button.GetComponentInChildren<ButtonJ2D>().onClick.AddListener(new Action(onClick));
+            gameObjects.Add(button);
+            return this;
+        }
+
+        /**
+         * Builds the UI and returns all your elements sorted after your call order.
+         */
+        public List<GameObject> Build()
         {
             ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.SaveChangesToFile(false);
+            return gameObjects;
         }
 
         private static void SetLocalizedText(GameObject gameObject, LocalizedString localizedString)
