@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Drova Modding API", "Drova Modding API\Drova Modding API.csproj", "{3251C608-5D80-4F2E-81DE-D538ED7ECDEE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Drova Modding API", "Drova Modding API\Drova Modding API.csproj", "{3251C608-5D80-4F2E-81DE-D538ED7ECDEE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{67D6732D-2CA1-4DA2-9DA9-209CD3E0F79E}"
+	ProjectSection(SolutionItems) = preProject
+		README.MD = README.MD
+		CHANGELOD.MD = CHANGELOD.MD
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

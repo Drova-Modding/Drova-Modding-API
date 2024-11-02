@@ -77,7 +77,7 @@ namespace Drova_Modding_API.Access
             }
             catch (Exception e)
             {
-                MelonLoader.MelonLogger.Error($"Failed to get config value for key {key} with type {typeof(T)}: {e}");
+                MelonLogger.Error($"Failed to get config value for key {key} with type {typeof(T)}: {e}");
             }
             value = default;
             return false;
