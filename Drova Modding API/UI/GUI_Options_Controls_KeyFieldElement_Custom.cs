@@ -32,16 +32,20 @@ namespace Drova_Modding_API.UI
             _keybindingText = keyboard.GetComponentInChildren<TextMeshProUGUI>();
             _keybindingButton.onClick.AddListener(new Action(RegisterListenKey));
             conflictMarker = keyboard.transform.FindChild("ConflictMarker").gameObject;
+            if (KeyAlreadyBound(ActionKeyRegister.Instance[_actionName])) conflictMarker.GetComponent<Image>().enabled = true;
         }
 
         private bool KeyAlreadyBound(KeyCode code)
         {
             foreach (var key in ActionKeyRegister.Instance.KeyCodes)
+            {
+                if (key == ActionKeyRegister.Instance[_actionName]) continue;
                 if (key == code) return true;
+            }
             if (_controls)
             {
                 foreach (var key in _controls.RemapService._defaultMappingKeyboard.Values)
-                    if (Enum.TryParse(key.KeyboardValue, out KeyCode result))
+                    if (Enum.TryParse(key.KeyboardValue.Replace(" ", ""), out KeyCode result))
                     {
                         if (result == code) return true;
                     }

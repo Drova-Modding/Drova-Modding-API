@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.2 - 2024-11-03]
+### Fixed
+- Fixed a bug where the KeyBindingSection would not refresh their conflict marker
+- Fixed a bug where the KeyBindingSection would not display the conflict marker, when the keybinding in Drova have Spaces
+
 ## [0.2.1 - 2024-11-02]
 ### Fixed
 - Fixed a bug where the KeyBindingSection would not refresh the keybindings when you change the language
