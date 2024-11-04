@@ -461,9 +461,11 @@
 		<Compile Include="Access\ProviderAccess.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="Access\OptionMenuAccess.cs" />
+		<Compile Include="Extensions\ActorExtension.cs" />
 		<Compile Include="Generation\AddressableGeneration.cs" />
 		<Compile Include="Patches\GUI_Window_Patch.cs" />
 		<Compile Include="Register\ActionKeyRegister.cs" />
+		<Compile Include="Systems\WorldEvents\EncounterEvent.cs" />
 		<Compile Include="Systems\WorldEvents\IWorldEvent.cs" />
 		<Compile Include="Systems\WorldEvents\TimedEvent.cs" />
 		<Compile Include="Systems\WorldEvents\WorldEventSystemManager.cs" />

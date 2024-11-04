@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using MelonLoader;
+using Il2CppDrova;
 
 namespace Drova_Modding_API.Systems.WorldEvents
 {
@@ -9,6 +10,24 @@ namespace Drova_Modding_API.Systems.WorldEvents
     [RegisterTypeInIl2Cpp]
     public class WorldEventSystemManager(IntPtr ptr) : MonoBehaviour(ptr)
     {
+
+        private static WorldEventSystemManager _instance;
+
+        /**
+         * The instance of the WorldEventSystemManager.
+         */
+        public static WorldEventSystemManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = new GameObject("WorldEventSystemManager").AddComponent<WorldEventSystemManager>();
+                    DontDestroyOnLoad(_instance.gameObject);
+                }
+                return _instance;
+            }
+        }
 
         private IWorldEvent _currentEvent;
 
@@ -22,7 +41,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 MelonLogger.Warning("Tried to start a new event while another event is running.");
                 return;
             }
-            if(!worldEvent.CanStartEvent())
+            if (!worldEvent.CanStartEvent())
             {
                 MelonLogger.Warning("Tried to start an event that can't start.");
                 return;

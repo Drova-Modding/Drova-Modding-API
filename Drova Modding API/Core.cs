@@ -1,4 +1,8 @@
-﻿using Drova_Modding_API.Register;
+﻿#if DEBUG
+using Drova_Modding_API.Access;
+#endif
+
+using Drova_Modding_API.Register;
 using Drova_Modding_API.Systems.WorldEvents;
 using Drova_Modding_API.UI;
 using Il2CppInterop.Runtime.Injection;
@@ -14,8 +18,9 @@ namespace Drova_Modding_API
      */
     public class Core : MelonMod
     {
-        internal static string assemblyLocation;
+        internal static string AssemblyLocation;
         internal static event Action OnMonoUpdate;
+
 
         /// <inheritdoc/>
         public override void OnInitializeMelon()
@@ -26,8 +31,20 @@ namespace Drova_Modding_API
             ClassInjector.RegisterTypeInIl2Cpp<DropdownHandler>();
             ClassInjector.RegisterTypeInIl2Cpp<GUI_Options_Controls_KeyFieldElement_Custom>();
             ClassInjector.RegisterTypeInIl2Cpp<WorldEventSystemManager>();
-            assemblyLocation = MelonAssembly.Location;
+            AssemblyLocation = MelonAssembly.Location;
+
         }
+
+#if DEBUG
+        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+        {
+            if (sceneName == "Scene_MainMenu")
+            {
+                ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
+            }
+        }
+
+#endif
 
         /// <inheritdoc/>
         public override void OnLateInitializeMelon()
