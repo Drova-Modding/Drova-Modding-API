@@ -1,4 +1,5 @@
 ﻿using Drova_Modding_API.Register;
+using Drova_Modding_API.Systems.WorldEvents;
 using Drova_Modding_API.UI;
 using Il2CppInterop.Runtime.Injection;
 using MelonLoader;
@@ -15,8 +16,8 @@ namespace Drova_Modding_API
     {
         internal static string assemblyLocation;
         internal static event Action OnMonoUpdate;
-        /// <inheritdoc/>
 
+        /// <inheritdoc/>
         public override void OnInitializeMelon()
         {
             base.OnLateInitializeMelon();
@@ -24,17 +25,19 @@ namespace Drova_Modding_API
             ClassInjector.RegisterTypeInIl2Cpp<GUI_ConfigOption_Slider_Float>();
             ClassInjector.RegisterTypeInIl2Cpp<DropdownHandler>();
             ClassInjector.RegisterTypeInIl2Cpp<GUI_Options_Controls_KeyFieldElement_Custom>();
+            ClassInjector.RegisterTypeInIl2Cpp<WorldEventSystemManager>();
             assemblyLocation = MelonAssembly.Location;
         }
-        /// <inheritdoc/>
 
+        /// <inheritdoc/>
         public override void OnLateInitializeMelon()
         {
             base.OnLateInitializeMelon();
             ActionKeyRegister.Instance.LoadKeyCodes();
-        }
-        /// <inheritdoc/>
 
+        }
+
+        /// <inheritdoc/>
         public override void OnUpdate()
         {
             base.OnUpdate();

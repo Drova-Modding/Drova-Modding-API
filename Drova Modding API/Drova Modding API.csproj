@@ -464,6 +464,9 @@
 		<Compile Include="Generation\AddressableGeneration.cs" />
 		<Compile Include="Patches\GUI_Window_Patch.cs" />
 		<Compile Include="Register\ActionKeyRegister.cs" />
+		<Compile Include="Systems\WorldEvents\IWorldEvent.cs" />
+		<Compile Include="Systems\WorldEvents\TimedEvent.cs" />
+		<Compile Include="Systems\WorldEvents\WorldEventSystemManager.cs" />
 		<Compile Include="UI\Builder\OptionUIBuilder.cs" />
 		<Compile Include="UI\DropdownHandler.cs" />
 		<Compile Include="UI\GUI_ConfigOption_Slider_Float.cs" />
