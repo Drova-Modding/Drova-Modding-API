@@ -13,8 +13,16 @@ namespace Drova_Modding_API
          */
         public static int GetIndexFromEnum<T>(T enumValue) where T : Enum
         {
-            int index = Convert.ToInt32(enumValue);
-            return index;
+            try
+            {
+                int index = Convert.ToInt32(enumValue);
+                return index;
+            }
+            catch (Exception e)
+            {
+                MelonLoader.MelonLogger.Error("Error converting enum to index: " + e);
+                return default;
+            }
         }
 
 
@@ -23,8 +31,16 @@ namespace Drova_Modding_API
          */
         public static T GetEnumFromIndex<T>(int index) where T : Enum
         {
-            T enumValue = (T)Enum.ToObject(typeof(T), index);
-            return enumValue;
+            try
+            {
+                T enumValue = (T)Enum.ToObject(typeof(T), index);
+                return enumValue;
+            }
+            catch (Exception e)
+            {
+                MelonLoader.MelonLogger.Error("Error converting index to enum: " + e);
+                return default;
+            }
         }
 
 
