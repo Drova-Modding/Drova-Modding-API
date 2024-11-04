@@ -90,31 +90,58 @@ namespace Drova_Modding_API.Access
             GameObject root = GetRootOfHeader();
             if (!root) return null;
             if (GetHeader(name)) return null;
-            GameObject newHeader = UnityEngine.Object.Instantiate(root.transform.GetChild(0).gameObject, root.transform);
+
+            var prefabForHeader = root.transform.GetChild(0);
+            if (!prefabForHeader) { MelonLogger.Error("Failed to get prefabForHeader"); return null; }
+            GameObject newHeader = UnityEngine.Object.Instantiate(prefabForHeader.gameObject, root.transform);
+
             if (icon)
             {
-                Image image = newHeader.transform.GetChild(0).GetComponent<Image>();
+                var headerChildIcon = newHeader.transform.GetChild(0);
+                if (!headerChildIcon) { MelonLogger.Error("Failed to get headerChildIcon"); return null; }
+                Image image = headerChildIcon.GetComponent<Image>();
+                if (!image) { MelonLogger.Error("Failed to get Image"); return null; }
                 image.m_OverrideSprite = icon;
                 image.sprite = icon;
                 image.MarkDirty();
             }
             newHeader.name = name;
             var panel = AddPanel(newHeader);
+            if (!panel)
+            {
+                MelonLogger.Error("Failed to get panel"); return null;
+            }
             var componentToRegister = newHeader.GetComponent<GUI_ButtonNavigationAnimationElement>();
+            if (!componentToRegister) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimationElement");
 
             var scrollbar = GetScrollBar(panel);
+            if (!scrollbar) MelonLogger.Error("Failed to get scrollbar");
             scrollbar.name = ScrollBarName;
+
             var layoutGroup = scrollbar.transform.GetChild(0);
-            layoutGroup.DestroyAllChildren();
-            root.GetComponent<GUI_ButtonNavigationAnimation>().AddElement(componentToRegister);
-            GetGUIWindow().GetComponent<GUI_GameMenu_NavigationSwitcher>().legacyElements.Add(componentToRegister);
-            OverrideNavigation(newHeader, panel);
+            if (!layoutGroup) MelonLogger.Error("Failed to get LayoutGroup");
+            layoutGroup?.DestroyAllChildren();
+
+            var nagivation = root.GetComponent<GUI_ButtonNavigationAnimation>();
+            if (!nagivation) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimation");
+            nagivation?.AddElement(componentToRegister);
+
+            var window = GetGUIWindow();
+            if (window)
+            {
+                window.GetComponent<GUI_GameMenu_NavigationSwitcher>().legacyElements.Add(componentToRegister);
+                OverrideNavigation(newHeader, panel);
+            }
+            else
+            {
+                MelonLogger.Error("Failed to get GetGUIWindow");
+            }
             return layoutGroup;
         }
 
         private static GameObject GetScrollBar(GameObject panel)
         {
-            return panel.transform.GetChild(1).gameObject;
+            return panel.transform.GetChild(1)?.gameObject;
         }
 
         /**
@@ -125,6 +152,7 @@ namespace Drova_Modding_API.Access
         private void OverrideNavigation(GameObject header, GameObject panel)
         {
             var manager = GetGUIWindow().GetComponent<GUI_Window_Options>();
+            if (!manager) { MelonLogger.Error("Failed to get manager to override the navigation"); return; }
             guiPanel = new GUI_Window_ATabManager.GUI_TabPanel
             {
                 Instance = panel.GetComponent<GUI_GameMenu_APanel>(),
@@ -145,10 +173,15 @@ namespace Drova_Modding_API.Access
         private static GameObject AddPanel(GameObject header)
         {
             var root = GetRootOfOptionWindow();
-            var newPanel = UnityEngine.Object.Instantiate(root.transform.GetChild(4).gameObject, root.transform);
+            var panelPrefab = root.transform.GetChild(4);
+            if (!panelPrefab) { MelonLogger.Error("Failed to get panelPrefab"); return null; }
+            var newPanel = UnityEngine.Object.Instantiate(panelPrefab.gameObject, root.transform);
             newPanel.transform.SetSiblingIndex(newPanel.transform.GetSiblingIndex() - 1);
             newPanel.name = string.Concat("Panel", header.name.AsSpan(header.name.LastIndexOf('_')));
-            root.transform.FindChild("NextKey").localPosition += new Vector3(20f, 0f);
+            var nextKey = root.transform.FindChild("NextKey");
+            if (nextKey)
+                nextKey.localPosition += new Vector3(20f, 0f);
+            else MelonLogger.Warning("Failed to adjust position of NextKey");
             newPanel.SetActive(false);
             return newPanel;
         }
@@ -170,12 +203,12 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public OptionUIBuilder GetBuilder(string id)
         {
-            if(!moddingPanel)
+            if (!moddingPanel)
             {
                 moddingPanel = AddPanel(null, "GUI_Button_OptionTab_Modding");
             }
             if (!moddingPanel) return null;
-            if(idsAdded.Contains(id)) return null;
+            if (idsAdded.Contains(id)) return null;
             idsAdded.Add(id);
             return new OptionUIBuilder(moddingPanel);
         }

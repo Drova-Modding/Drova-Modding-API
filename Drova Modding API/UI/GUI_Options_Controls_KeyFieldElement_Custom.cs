@@ -28,10 +28,27 @@ namespace Drova_Modding_API.UI
             _actionName = actionName;
             var keyboard = transform.FindChild("Keyboard");
             _controls = FindObjectOfType<GUI_OptionPanel_Controls>(true);
+            if (keyboard == null)
+            {
+                MelonLogger.Error("Keyboard not found."); return;
+            }
+            if (_controls == null)
+            {
+                MelonLogger.Error("Controls not found."); return;
+            }
             _keybindingButton = keyboard.GetComponentInChildren<Button>();
             _keybindingText = keyboard.GetComponentInChildren<TextMeshProUGUI>();
+            if (_keybindingButton == null || _keybindingText == null)
+            {
+                MelonLogger.Error("Keybinding button or text not found."); return;
+            }
             _keybindingButton.onClick.AddListener(new Action(RegisterListenKey));
-            conflictMarker = keyboard.transform.FindChild("ConflictMarker").gameObject;
+            var conflictMarkerChild = keyboard.transform.FindChild("ConflictMarker");
+            if (conflictMarkerChild == null)
+            {
+                MelonLogger.Error("ConflictMarker not found."); return;
+            }
+            conflictMarker = conflictMarkerChild.gameObject;
             if (KeyAlreadyBound(ActionKeyRegister.Instance[_actionName])) conflictMarker.GetComponent<Image>().enabled = true;
         }
 

@@ -21,7 +21,7 @@ namespace Drova_Modding_API.Generation
             public int[] entries;
         }
 
-        [System.Serializable]
+        [Serializable]
         internal class ContentCatalogData
         {
             public string[] m_ProviderIds { get; set; }
@@ -62,7 +62,7 @@ namespace Drova_Modding_API.Generation
                     case SerializationUtilities.ObjectType.UInt32: return BitConverter.ToUInt32(keyData, dataIndex);
                     case SerializationUtilities.ObjectType.Int32: return BitConverter.ToInt32(keyData, dataIndex);
                     case SerializationUtilities.ObjectType.Hash128: return Hash128.Parse(Encoding.ASCII.GetString(keyData, dataIndex + 1, keyData[dataIndex]));
-                    case SerializationUtilities.ObjectType.Type: return Type.GetTypeFromCLSID(new Guid(Encoding.ASCII.GetString(keyData, dataIndex + 1, keyData[dataIndex])));
+                    //case SerializationUtilities.ObjectType.Type: return Type.GetTypeFromCLSID(new Guid(Encoding.ASCII.GetString(keyData, dataIndex + 1, keyData[dataIndex])));
                     case SerializationUtilities.ObjectType.JsonObject:
                         {
                             int assemblyNameLength = keyData[dataIndex];

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3 - 2024-11-04]
+### Fixed
+- Fixed a bug where the KeyBinding default value did not get saved and was not accessible at runtime
+
+### Added
+- A lot more null safety and better logging
+
 ## [0.2.2 - 2024-11-03]
 ### Fixed
 - Fixed a bug where the KeyBindingSection would not refresh their conflict marker

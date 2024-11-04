@@ -25,7 +25,16 @@ namespace Drova_Modding_API.UI
         public void Init()
         {
             _amountText = gameObject.transform.parent.GetComponentInChildren<TextMeshProUGUI>();
-            GetComponent<Slider>().onValueChanged.AddListener(new Action<float>(OnValueChangedListener));
+            if(_amountText == null)
+            {
+                MelonLogger.Error("Amount text not found");
+            }
+            var slider = GetComponent<Slider>();
+            if(slider == null)
+            {
+                MelonLogger.Error("Slider not found"); return;
+            }
+            slider.onValueChanged.AddListener(new Action<float>(OnValueChangedListener));
             _showPercentSign = false;
         }
 

@@ -46,7 +46,7 @@ namespace Drova_Modding_API.UI
             Options.Values.ToList().ForEach(label => Dropdown.options.Add(new TMP_Dropdown.OptionData(label.GetLocalizedString(null))));
             SetOption(value);
             Dropdown.onValueChanged.AddListener(new Action<int>(SetConfig));
-            LocalizationDB.Instance.LanguageLoadedEvent.AddEventListener(new Action<LocalizationDB>(OnLanguageChange));
+            LocalizationDB.Instance?.LanguageLoadedEvent.AddEventListener(new Action<LocalizationDB>(OnLanguageChange));
         }
 
         private void OnDestroy()
