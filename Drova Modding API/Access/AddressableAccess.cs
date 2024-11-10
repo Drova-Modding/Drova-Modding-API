@@ -1,4 +1,5 @@
-﻿using Il2CppDrova.Items;
+﻿using Il2CppDrova;
+using Il2CppDrova.Items;
 using UnityEngine.AddressableAssets;
 
 namespace Drova_Modding_API.Access
@@ -1198,6 +1199,87 @@ namespace Drova_Modding_API.Access
             public readonly static AssetReferenceGameObject GUI_Slider_OptionConfig = new("c5f5375f4dcaada439ebdd639466df98");
             public readonly static AssetReferenceGameObject GUI_Switch_ConfigOption = new("c5f5375f4dcaada439ebdd639466df98");
             public readonly static AssetReferenceGameObject GUI_Toggle_Big_ConfigOption = new("c5f5375f4dcaada439ebdd639466df98");
+        }
+
+        public static class EntityInfos
+        {
+            public readonly static AssetReference EntityInfo_Bandit = new("4b2c7c9e33363ca4eaf9166083039219");
+            public readonly static AssetReference EntityInfo_Firefly_Player = new("8c6090966a4a84d4597f6c9b93395473");
+            public readonly static AssetReference EntityInfo_Critter_Rat = new("6efe720bf07dbed41a98284993345fbe");
+            public readonly static AssetReference EntityInfo_Default = new("8c21a23d7c8250b4a954374f2c285e8d");
+            public readonly static AssetReference EntityInfo_Draugr = new("17e7ffc947a92ea45aac7fda57f29e28");
+            public readonly static AssetReference EntityInfo_Draugr_ReijaIntro = new("fde1270aa8021454388b3d652a0f3677");
+            public readonly static AssetReference EntityInfoNPCAlraune = new("2aba882292642c24a920cabab5f1b2a1");
+            public readonly static AssetReference EntityInfo_NPC_BabyRedFox = new("9ccfadaf50747a74b92818769a78ba7b");
+            public readonly static AssetReference EntityInfo_NPC_BabySnapper = new("a7ee325f11608e74cb72cb0813a0f839");
+            public readonly static AssetReference EntityInfo_NPC_Banshee = new("5a1d7b1181e372e43be62b051b44ef5d");
+            public readonly static AssetReference EntityInfo_NPC_Bear = new("57c9da47a0fdb05468b96f38c2eae057");
+            public readonly static AssetReference EntityInfo_NPC_BigSpider = new("f5d3613a66d61d34696602bcf19eb34b");
+            public readonly static AssetReference EntityInfo_NPC_BigSpider_Spot_01 = new("5bbbdedfe0f16bb4f8cda658927da220");
+            public readonly static AssetReference EntityInfo_NPC_BigSpider_Spot_02 = new("a0352009050536746a0c2fbfd2c578ed");
+            public readonly static AssetReference EntityInfo_NPC_Bloodquito = new("aa9fb514f87b01649beb2fa9c1010784");
+            public readonly static AssetReference EntityInfo_NPC_Bloodquito_Auwald = new("b5bb7ca43f7f32944b8969c96f7c30ca");
+            public readonly static AssetReference EntityInfo_NPC_Bloodquito_Kamikaze = new("a178a0f2ebbe9e747b2f1b2e79c7a8e5");
+            public readonly static AssetReference EntityInfo_NPC_Boar = new("0137728c48313724aa802c4c020034cb");
+            public readonly static AssetReference EntityInfo_NPC_Boar_Intro = new("b2dd75e8ceb4ee3499a53b7627f75f02");
+            public readonly static AssetReference EntityInfo_NPC_Boar_Luminous = new("af5d09d1ff6d3674683f6f752fc230d7");
+            public readonly static AssetReference EntityInfo_NPC_Boar_Luminous_ExpeditionML = new("671ee28dec1fa83499ab16ada6cbdcab");
+            public readonly static AssetReference EntityInfo_NPC_Boar_Luminous_ExpeditionRL = new("221f0fd958ba0bc469f39b24f8d0978b");
+            public readonly static AssetReference EntityInfo_NPC_Cat_Generic = new("3a34259c93149824195b11eb62dc796e");
+            public readonly static AssetReference EntityInfo_NPC_ChaosSpirit = new("7394ddd1b23c0ce45ab53fd3ecc139b3");
+            public readonly static AssetReference EntityInfo_NPC_DiggerPig = new("b1772da028cedc54dbab9ee612aeac63");
+            public readonly static AssetReference EntityInfo_NPC_Dog_Generic = new("60633a087dd9bed47999b9ddd1140dfd");
+            public readonly static AssetReference EntityInfo_NPC_EliteRipper = new("6bba432db81a1ff45bf90777ec5c36c1");
+            public readonly static AssetReference EntityInfo_NPC_EnemyFlesh_Baneling = new("3988252c16b4c9c45a892a5c7ea15f2f");
+            public readonly static AssetReference EntityInfo_NPC_EnemyFlesh_Melee = new("0cbe5d9051122bd49bf1af469e7f6c8f");
+            public readonly static AssetReference EntityInfo_NPC_EnemyFlesh_Ranged = new("bc2a42c6b4ea5cd428a251f050276f50");
+            public readonly static AssetReference EntityInfo_NPC_EnemyFlesh_Tank = new("222cc6aca83bae74594689e70b24bb3a");
+            public readonly static AssetReference EntityInfo_NPC_Foglet = new("b9cbf7e60d23e6446aa6520fb7ba5203");
+            public readonly static AssetReference EntityInfo_NPC_Foglet_Minion = new("a65ead2f47b9ef14c985caa3d5860b06");
+            public readonly static AssetReference EntityInfo_NPC_Frog_Hansi = new("15b2bc7c7a6980c46ad90fba9fd0250d");
+            public readonly static AssetReference EntityInfo_NPC_Frog_Melee = new("e30a7c7ecf23e4842990ca2b7776efa2");
+            public readonly static AssetReference EntityInfo_NPC_Frog_Player = new("4a8964fbc717a2f4f999289312dda86d");
+            public readonly static AssetReference EntityInfo_NPC_Frog_Ranged = new("8d069b13a335be34c8bd21f23e9c44cc");
+            public readonly static AssetReference EntityInfo_NPC_Golem = new("58c75b2e94283c84387ec1e530bf1c99");
+            public readonly static AssetReference EntityInfo_NPC_GreatTusk = new("583776ca914a14346b17b1db8e358a1a");
+            public readonly static AssetReference EntityInfo_NPC_GreatTusk_Intro = new("01ad2e6888f8bf347a190deb9386dc76");
+            public readonly static AssetReference EntityInfo_NPC_GreatTusk_Outro = new("02e9945d67b46784786b5f5387041bee");
+            public readonly static AssetReference EntityInfo_NPC_Harpy = new("59aa5b22357bcbb46aa82e2e23d68bc8");
+            public readonly static AssetReference EntityInfo_NPC_HungryRipper = new("52997f6b377585e4686caff8e01ffd31");
+            public readonly static AssetReference EntityInfo_NPC_Leshen = new("d6f551ee33ae8f54c9465e1e03416aa2");
+            public readonly static AssetReference EntityInfo_NPC_LibraryGolem = new("683026b4680a4e547af896c9f9df3d5d");
+            public readonly static AssetReference EntityInfo_NPC_LibraryGolem_Perception = new("4bf023fbc0db3824a9a0ad1b479d2d11");
+            public readonly static AssetReference EntityInfo_NPC_LightBear = new("a6520137149095049a60c2ab08670e43");
+            public readonly static AssetReference EntityInfo_NPC_Lightbear_ExpeditionML = new("aed1eb2c79630404a94b73d130db618c");
+            public readonly static AssetReference EntityInfo_NPC_Menshee = new("2f10dbd56a88e5e49842bed343a5419e");
+            public readonly static AssetReference EntityInfo_NPC_MoorRipper = new("1fcae5d713cfab244b414fe833989425");
+            public readonly static AssetReference EntityInfo_NPC_MortarShroom = new("6f24ac27d9978a94b9e62dd832b898de");
+            public readonly static AssetReference EntityInfo_NPC_RedFox = new("d9b940a3cd04859499e2b048ce194811");
+            public readonly static AssetReference EntityInfo_NPC_Ripper = new("8c553ffd5bc861a4386b94abbb1f0606");
+            public readonly static AssetReference EntityInfo_NPC_ShadowRipper = new("df433e60a2f70ca47a59a46da9885c83");
+            public readonly static AssetReference EntityInfo_NPC_ShadowRipper_Ambush = new("1cf855557d109bb46a8eb80fba0a5dbb");
+            public readonly static AssetReference EntityInfo_NPC_ShadowRipper_ExpeditionFollower_01 = new("e6e6ce26891a21c4b9bc416179e80d95");
+            public readonly static AssetReference EntityInfo_NPC_ShadowRipper_ExpeditionFollower_02 = new("a34a44486b8625a4995c5b98a68da1cc");
+            public readonly static AssetReference EntityInfo_NPC_ShadowRipper_ExpeditionLeader = new("cc0be36ccb8bca644928a4b900943201");
+            public readonly static AssetReference EntityInfo_NPC_Sheep_01 = new("a61beff20e1a5594085afb35811b959a");
+            public readonly static AssetReference EntityInfo_NPC_Sheep_02 = new("c933eb9a9af19894dafa5dcc4da30437");
+            public readonly static AssetReference EntityInfo_NPC_Sheep_03 = new("9bbdf7c9d6129d04e85fd075a2409772");
+            public readonly static AssetReference EntityInfo_NPC_Sheep_04 = new("4503e618249335140bf3a31a9dff49ca");
+            public readonly static AssetReference EntityInfo_NPC_Sheep_Generic = new("16ca4dc5073a11a40b4aa8d39599b946");
+            public readonly static AssetReference EntityInfo_NPC_Snapper = new("a85c8bf41a3a49348932a075d77ad384");
+            public readonly static AssetReference EntityInfo_NPC_Spitter = new("1101debb7c6895f459a34db76acbbc22");
+            public readonly static AssetReference EntityInfo_NPC_Sprigga = new("e5e96e18e10d46d478e5039ae4eb58a4");
+            public readonly static AssetReference EntityInfo_NPC_Sprigga_Young = new("38510e3fa8ca9164ab877e2657f24092");
+            public readonly static AssetReference EntityInfo_NPC_Stalker = new("5616f193759d08442b9528743d7aae91");
+            public readonly static AssetReference EntityInfo_NPC_StoneFist = new("949bc93acc5130d4aa122d1c952260cc");
+            public readonly static AssetReference EntityInfo_NPC_StoneFist_DeepMine = new("8b01f8a2586ca91409e88c321f652ec8");
+            public readonly static AssetReference EntityInfo_NPC_TrainingDummy = new("1582546845da3c241a064125f7955b4a");
+            public readonly static AssetReference EntityInfo_NPC_WaterAmbusher = new("93977aa5ee5d50747bf7796fbc78c53f");
+            public readonly static AssetReference EntityInfo_NPC_WaterDevil = new("602767c67356c2244a683a7753121e0a");
+            public readonly static AssetReference EntityInfo_NPC_WaterDevil_Red = new("b8b78651f8024eb479e66f69a4099d88");
+            public readonly static AssetReference EntityInfo_NPC_WaterRat = new("2d1a533396feb2940bc8c92071aee386");
+            public readonly static AssetReference EntityInfo_NPC_WaterRat_Young = new("2d49896360d00e84cb04b53a27bc7fef");
+            public readonly static AssetReference EntityInfo_NPC_Worm = new("ea0454dc51927cb43b2cca5cc5558ace");
         }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

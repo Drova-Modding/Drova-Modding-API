@@ -480,5 +480,12 @@ namespace Drova_Modding_API.Access
             return false;
         }
 
+        /**
+         * Access to the AstarPath for navigation and pathfinding, as example <see cref="AstarPath.GetNearest(UnityEngine.Vector3)"/>
+         */
+        public static AstarPath GetAstarPath()
+        {
+            return AstarPath.active;
+        }
     }
 }

@@ -62,7 +62,7 @@ namespace Drova_Modding_API.Access
         internal static void OnOptionClose()
         {
             var window = _instance.GetGUIWindow();
-            if (!window)
+            if (window)
             {
                 _instance.idsAdded.Clear();
                 return;

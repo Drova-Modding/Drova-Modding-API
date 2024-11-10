@@ -4,14 +4,12 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 		<RootNamespace>Drova_Modding_API</RootNamespace>
-		<LangVersion>default</LangVersion>
+		<LangVersion>latest</LangVersion>
 		<IsPackable>false</IsPackable>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<AssemblyName>Drova_Modding_API</AssemblyName>
-		<LangVersion>latest</LangVersion>
-		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -463,10 +461,22 @@
 		<Compile Include="Access\OptionMenuAccess.cs" />
 		<Compile Include="Extensions\ActorExtension.cs" />
 		<Compile Include="Generation\AddressableGeneration.cs" />
+		<Compile Include="GlobalFields\SceneNames.cs" />
+		<Compile Include="Patches\AreaNamePatch.cs" />
 		<Compile Include="Patches\GUI_Window_Patch.cs" />
+		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
 		<Compile Include="Register\ActionKeyRegister.cs" />
+		<Compile Include="Systems\AreaNameSystem.cs" />
+		<Compile Include="Systems\ModdingUI\ModdingUI.cs" />
+		<Compile Include="Systems\Region.cs" />
+		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
+		<Compile Include="Systems\Spawning\ActorWorldLocator.cs" />
+		<Compile Include="Systems\Spawning\LazyActorCreator.cs" />
+		<Compile Include="Systems\SystemInit.cs" />
 		<Compile Include="Systems\WorldEvents\EncounterEvent.cs" />
 		<Compile Include="Systems\WorldEvents\IWorldEvent.cs" />
+		<Compile Include="Systems\WorldEvents\PersistentEncounterEvent.cs" />
+		<Compile Include="Systems\WorldEvents\Regional\ARegionalEvent.cs" />
 		<Compile Include="Systems\WorldEvents\TimedEvent.cs" />
 		<Compile Include="Systems\WorldEvents\WorldEventSystemManager.cs" />
 		<Compile Include="UI\Builder\OptionUIBuilder.cs" />
