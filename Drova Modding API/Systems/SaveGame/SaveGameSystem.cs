@@ -4,8 +4,8 @@ using Il2CppDrova.Saveables;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
 using Il2CppInterop.Runtime.Runtime;
-using Il2CppSystem.Runtime.Serialization;
-using Il2CppSystem.Runtime.Serialization.Formatters.Binary;
+using Il2CppSirenix.Serialization;
+using Il2CppSystem.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
 
@@ -43,7 +43,7 @@ namespace Drova_Modding_API.Systems.SaveGame
          */
         public static SaveGameSystem Instance { get; private set; }
 
-        internal Il2CppSystem.Collections.Generic.List<LazyActorSaveData> lazyActors = new();
+        internal System.Collections.Generic.List<LazyActorSaveData> lazyActors = [];
 
         /**
          * Saves the lazy actors to the savegame
@@ -51,15 +51,17 @@ namespace Drova_Modding_API.Systems.SaveGame
          */
         public void OnSave(Savegame saveGame)
         {
-            saveGame.Data.SetObject(SAVEGAME_KEY_LAZY_ACTORS, lazyActors);
+            var saveData = new ModdingSave();
+            foreach (var lazyActor in lazyActors)
+            {
+
+                saveData.LazyActors.Add(lazyActor);
+            }
+            saveGame.Data.SetObject(SAVEGAME_KEY_LAZY_ACTORS, lazyActors[0]);
+
             if (saveGame.Data._objectDict.ContainsKey(SAVEGAME_KEY_LAZY_ACTORS))
             {
-                MelonLogger.Msg("Loading lazy actors");
-                var data = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS].Cast<Il2CppSystem.Collections.Generic.List<LazyActorSaveData>>();
-                foreach (var lazyActor in data)
-                {
-                    MelonLogger.Msg($"Loading lazy actor {lazyActor.ActorGuid}");
-                }
+                MelonLogger.Msg("Saved lazy actors");
             }
         }
 
@@ -105,49 +107,53 @@ namespace Drova_Modding_API.Systems.SaveGame
         {
             if (lazyActors.Count > 0)
                 lazyActors.Clear();
+            foreach(var test in DefaultSerializationBinder.typeMap)
+            {
+                var type = test.Value.GetType();
+                MelonLogger.Msg(type?.FullName);
+                MelonLogger.Msg(test.key);
+            }
             if (saveGame.Data._objectDict.ContainsKey(SAVEGAME_KEY_LAZY_ACTORS))
             {
-                if (saveGame.Data.GetObject(SAVEGAME_KEY_LAZY_ACTORS, ref lazyActors))
-                {
-                    LazyActorCreator.RestoreLazyActor(lazyActors.ToArray().ToList());
-                }
-                MelonLogger.Msg("Loading lazy actors");
-                var keyData = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS];
-                var data = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS].TryCast<Il2CppSystem.Collections.Generic.List<LazyActorSaveData>>();
-                var test = (object)keyData;
-                var test2 = (List<LazyActorSaveData>)test;
-                foreach(var tesos in test2)
-                {
-                    MelonLogger.Msg(tesos.ActorGuid);
-                }
                 
-                if (test == null)
-                {
-                    MelonLogger.Msg("help");
-                }
-
+                var keyData = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS];
+                var data = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS].TryCast<LazyActorSaveData>();
 
                 if (data == null) return;
 
-                foreach (var lazyActor in data)
-                {
-                    MelonLogger.Msg($"Loading lazy actor {lazyActor.ActorGuid}");
-                    lazyActors.Add(lazyActor);
-                }
+               
 
             }
-            if (saveGame.Data.GetObject(SAVEGAME_KEY_LAZY_ACTORS, ref lazyActors))
-            {
-                LazyActorCreator.RestoreLazyActor(lazyActors.ToArray().ToList());
-            }
+            //if (saveGame.Data.GetObject(SAVEGAME_KEY_LAZY_ACTORS, ref lazyActors))
+            //{
+            //    LazyActorCreator.RestoreLazyActor(lazyActors.ToArray().ToList());
+            //}
+        }
+    }
+
+    [RegisterTypeInIl2Cpp]
+    public class ModdingSave : Il2CppSystem.Object
+    {
+        /**
+        * Constructor from il2cpp side
+        */
+        public ModdingSave(IntPtr ptr) : base(ptr) { }
+
+        /**
+         * Constructor from managed side
+         */
+        public ModdingSave() : base(ClassInjector.DerivedConstructorPointer<LazyActorSaveData>())
+        {
+            ClassInjector.DerivedConstructorBody(this);
         }
 
+        public Il2CppSystem.Collections.Generic.List<LazyActorSaveData> LazyActors = new();
     }
 
     /**
     * The data for a lazy actor
     */
-    [Serializable]
+    [RegisterTypeInIl2Cpp]
     public class LazyActorSaveData : Il2CppSystem.Object
     {
 

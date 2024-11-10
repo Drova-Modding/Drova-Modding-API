@@ -12,6 +12,8 @@ using Drova_Modding_API.UI;
 using Il2CppInterop.Runtime.Injection;
 using MelonLoader;
 using Drova_Modding_API.Systems.SaveGame;
+using Il2CppInterop.Runtime;
+using Il2CppSirenix.Serialization;
 
 [assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.3.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
@@ -42,6 +44,7 @@ namespace Drova_Modding_API
             ClassInjector.RegisterTypeInIl2Cpp<AreaNameSystem>();
             ClassInjector.RegisterTypeInIl2Cpp<LazyActorSaveData>();
             ClassInjector.RegisterTypeInIl2Cpp<SaveGameSystem>();
+           
             AssemblyLocation = MelonAssembly.Location;
             LoggerInstance.Msg("Initialized Modding API.");
         }
@@ -52,6 +55,14 @@ namespace Drova_Modding_API
 
             if (sceneName == SceneNames.MainMenu)
             {
+                if (DefaultSerializationBinder.typeMap.TryAdd("Drova_Modding_API.Systems.SaveGame.ModdingSave, InjectedMonoTypes", Il2CppType.Of<ModdingSave>()))
+                {
+                    MelonLogger.Msg("Added ModdingSave to typeMap");
+                }
+                if (DefaultSerializationBinder.typeMap.TryAdd("Drova_Modding_API.Systems.SaveGame.LazyActorSaveData, InjectedMonoTypes", Il2CppType.Of<LazyActorSaveData>()))
+                {
+                    MelonLogger.Msg("Added LazyActorSaveData to typeMap");
+                }
                 ModdingUI.RegisterLocalization();
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
@@ -60,6 +71,7 @@ namespace Drova_Modding_API
 
             if (sceneName == SceneNames.GameplayMain)
             {
+               
                 SystemInit.Init();
             }
         }
