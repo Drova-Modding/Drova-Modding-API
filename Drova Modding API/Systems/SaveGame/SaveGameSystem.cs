@@ -1,5 +1,6 @@
 ﻿using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Spawning;
+using Il2CppDrova;
 using Il2CppDrova.Saveables;
 using Il2CppInterop.Runtime;
 using Il2CppInterop.Runtime.Injection;
@@ -8,13 +9,13 @@ using Il2CppSirenix.Serialization;
 using Il2CppSystem.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
+using static Il2CppDrova.DialogueNew.LookDirectionsOverrides.ActorLookParam;
 
 namespace Drova_Modding_API.Systems.SaveGame
 {
     /// <summary>
     /// Handles saving and loading of the game.
     /// </summary>
-    [RegisterTypeInIl2Cpp]
     public class SaveGameSystem(IntPtr ptr) : MonoBehaviour(ptr)
     {
         /**
@@ -43,7 +44,8 @@ namespace Drova_Modding_API.Systems.SaveGame
          */
         public static SaveGameSystem Instance { get; private set; }
 
-        internal System.Collections.Generic.List<LazyActorSaveData> lazyActors = [];
+
+        internal System.Collections.Generic.List<LazyActorSaveDataManaged> lazyActors = [];
 
         /**
          * Saves the lazy actors to the savegame
@@ -51,18 +53,51 @@ namespace Drova_Modding_API.Systems.SaveGame
          */
         public void OnSave(Savegame saveGame)
         {
-            var saveData = new ModdingSave();
-            foreach (var lazyActor in lazyActors)
-            {
+            //var saveData = new ModdingSave();
+            //foreach (var lazyActor in lazyActors)
+            //{
 
-                saveData.LazyActors.Add(lazyActor);
-            }
-            saveGame.Data.SetObject(SAVEGAME_KEY_LAZY_ACTORS, lazyActors[0]);
-
-            if (saveGame.Data._objectDict.ContainsKey(SAVEGAME_KEY_LAZY_ACTORS))
+            //    saveData.LazyActors.Add(lazyActor);
+            //}
+            MelonLogger.Msg(ClassInjector.IsTypeRegisteredInIl2Cpp<LazyActorSaveData>());
+            if (lazyActors.Count > 0)
             {
-                MelonLogger.Msg("Saved lazy actors");
+                LazyActorSaveData data = new LazyActorSaveData()
+                {
+                    ActorEnitityInfoReferenceString = lazyActors[0].ActorEnitityInfoReferenceString,
+                    ActorGuid = lazyActors[0].ActorGuid,
+                    ActorName = lazyActors[0].ActorName,
+                    ActorReferenceString = lazyActors[0].ActorReferenceString
+                };
+                saveGame.Data._objectDict.TryInsert(SAVEGAME_KEY_LAZY_ACTORS, data, InsertionBehavior.OverwriteExisting);
+                if (saveGame.Data._objectDict.ContainsKey(SAVEGAME_KEY_LAZY_ACTORS))
+                {
+                    LazyActorSaveData lazy = new LazyActorSaveData();
+                    if (saveGame.Data.GetObject(SAVEGAME_KEY_LAZY_ACTORS, ref lazy))
+                    {
+                        MelonLogger.Msg("Loaded lazy actors");
+                        if (!lazy.WasCollected)
+                        {
+                            MelonLogger.Msg(lazy.ActorName);
+                            MelonLogger.Msg(lazy.ActorReferenceString);
+                        }
+                    }
+                    else
+                    {
+                        MelonLogger.Msg("NOT Loaded lazy actors");
+                        if (!lazy.WasCollected)
+                        {
+                            MelonLogger.Msg(lazy.ActorName);
+                            MelonLogger.Msg(lazy.ActorReferenceString);
+                        }
+                    }
+                    MelonLogger.Msg("Saved lazy actors");
+                }
             }
+            saveGame.Data._objectDict.TryInsert("Test", "Test", InsertionBehavior.OverwriteExisting);
+
+
+
         }
 
         private void Awake()
@@ -94,7 +129,7 @@ namespace Drova_Modding_API.Systems.SaveGame
          * Registers a lazy actor to be saved
          * @param lazyActorSaveData The lazy actor to save
          */
-        public void RegisterLazyActor(LazyActorSaveData lazyActorSaveData)
+        public void RegisterLazyActor(LazyActorSaveDataManaged lazyActorSaveData)
         {
             lazyActors.Add(lazyActorSaveData);
         }
@@ -105,25 +140,52 @@ namespace Drova_Modding_API.Systems.SaveGame
          */
         public void OnLoad(Savegame saveGame)
         {
-            if (lazyActors.Count > 0)
-                lazyActors.Clear();
-            foreach(var test in DefaultSerializationBinder.typeMap)
+            foreach (var test in DefaultSerializationBinder.typeMap)
             {
                 var type = test.Value.GetType();
                 MelonLogger.Msg(type?.FullName);
                 MelonLogger.Msg(test.key);
             }
+            //foreach (var test in DefaultSerializationBinder.assemblyNameLookUp)
+            //{
+            //    MelonLogger.Msg(test.Value.FullName);
+            //    MelonLogger.Msg(test.key);
+            //}
             if (saveGame.Data._objectDict.ContainsKey(SAVEGAME_KEY_LAZY_ACTORS))
-            {
-                
-                var keyData = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS];
-                var data = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS].TryCast<LazyActorSaveData>();
+                MelonLogger.Msg(saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS].GetIl2CppType());
+            //if (saveGame.Data.GetObject(SAVEGAME_KEY_LAZY_ACTORS, ref lazy))
+            //{
+            //    MelonLogger.Msg("Loaded lazy actors");
+            //}
+            //else
+            //{
+            //    MelonLogger.Msg("NOT Loaded lazy actors");
+            //    if (!lazy.WasCollected)
+            //    {
+            //        MelonLogger.Msg(lazy.ActorName);
+            //        MelonLogger.Msg(lazy.ActorReferenceString);
+            //    }
+            //}
 
-                if (data == null) return;
+            //if(saveGame.Data._objectDict.ContainsKey("Test"))
+            //{
+            //    string test = "";
+            //    if (saveGame.Data.GetString("Test", ref test))
+            //    {
+            //        MelonLogger.Msg(test);
+            //    }
+            //    MelonLogger.Msg("Loaded test");
+            //}
 
-               
+            //if(saveGame.Data._objectDict.ContainsKey() {
 
-            }
+            //    var keyData = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS];
+            //    var data = saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS].TryCast<LazyActorSaveData>();
+
+            //    if (data == null) return;
+
+            //    MelonLogger.Msg("Loaded lazy actors WTF!");
+            //}
             //if (saveGame.Data.GetObject(SAVEGAME_KEY_LAZY_ACTORS, ref lazyActors))
             //{
             //    LazyActorCreator.RestoreLazyActor(lazyActors.ToArray().ToList());
@@ -131,59 +193,29 @@ namespace Drova_Modding_API.Systems.SaveGame
         }
     }
 
-    [RegisterTypeInIl2Cpp]
-    public class ModdingSave : Il2CppSystem.Object
-    {
-        /**
-        * Constructor from il2cpp side
-        */
-        public ModdingSave(IntPtr ptr) : base(ptr) { }
+    //public class ModdingSave : Il2CppSystem.Object
+    //{
+    //    /**
+    //    * Constructor from il2cpp side
+    //    */
+    //    public ModdingSave(IntPtr ptr) : base(ptr) { }
 
-        /**
-         * Constructor from managed side
-         */
-        public ModdingSave() : base(ClassInjector.DerivedConstructorPointer<LazyActorSaveData>())
-        {
-            ClassInjector.DerivedConstructorBody(this);
-        }
+    //    /**
+    //     * Constructor from managed side
+    //     */
+    //    public ModdingSave() : base(ClassInjector.DerivedConstructorPointer<LazyActorSaveData>())
+    //    {
+    //        ClassInjector.DerivedConstructorBody(this);
+    //    }
 
-        public Il2CppSystem.Collections.Generic.List<LazyActorSaveData> LazyActors = new();
-    }
+    //    public Il2CppSystem.Collections.Generic.List<LazyActorSaveData> LazyActors = new();
+    //}
+}
 
-    /**
-    * The data for a lazy actor
-    */
-    [RegisterTypeInIl2Cpp]
-    public class LazyActorSaveData : Il2CppSystem.Object
-    {
-
-        /**
-        * Constructor from il2cpp side
-        */
-        public LazyActorSaveData(IntPtr ptr) : base(ptr) { }
-
-        /**
-         * Constructor from managed side
-         */
-        public LazyActorSaveData() : base(ClassInjector.DerivedConstructorPointer<LazyActorSaveData>())
-        {
-            ClassInjector.DerivedConstructorBody(this);
-        }
-        /**
-         * The name of the actor
-         */
-        public string ActorName = "";
-        /**
-         * The reference string for the actor
-         */
-        public string ActorReferenceString = "";
-        /**
-         * The reference string for the entity info of the actor
-         */
-        public string ActorEnitityInfoReferenceString = "";
-        /**
-         * The guid of the actor
-         */
-        public string ActorGuid = "";
-    }
+public class LazyActorSaveDataManaged
+{
+    public string ActorName = "";
+    public string ActorReferenceString = "";
+    public string ActorEnitityInfoReferenceString = "";
+    public string ActorGuid = "";
 }

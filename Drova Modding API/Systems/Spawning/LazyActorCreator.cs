@@ -60,7 +60,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 lazyActor._health._currentHealth.Value = actorParams.CurrentHealth ?? 0;
                 lazyActor._health._currentHealth.IsActive = true;
             }
-            SaveGameSystem.Instance?.RegisterLazyActor(new LazyActorSaveData()
+            SaveGameSystem.Instance?.RegisterLazyActor(new LazyActorSaveDataManaged()
             {
                 ActorEnitityInfoReferenceString = actorParams.EntityInfo.AssetGUID,
                 ActorGuid = guidComponent._guidString,
