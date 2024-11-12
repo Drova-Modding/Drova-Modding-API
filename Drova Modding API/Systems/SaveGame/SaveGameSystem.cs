@@ -9,7 +9,6 @@ using Il2CppSirenix.Serialization;
 using Il2CppSystem.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
-using static Il2CppDrova.DialogueNew.LookDirectionsOverrides.ActorLookParam;
 
 namespace Drova_Modding_API.Systems.SaveGame
 {
@@ -140,19 +139,20 @@ namespace Drova_Modding_API.Systems.SaveGame
          */
         public void OnLoad(Savegame saveGame)
         {
-            foreach (var test in DefaultSerializationBinder.typeMap)
-            {
-                var type = test.Value.GetType();
-                MelonLogger.Msg(type?.FullName);
-                MelonLogger.Msg(test.key);
-            }
+            //foreach (var test in DefaultSerializationBinder.typeMap)
+            //{
+            //    var type = test.Value.GetType();
+            //    MelonLogger.Msg(type?.FullName);
+            //    MelonLogger.Msg(test.key);
+            //}
             //foreach (var test in DefaultSerializationBinder.assemblyNameLookUp)
             //{
             //    MelonLogger.Msg(test.Value.FullName);
             //    MelonLogger.Msg(test.key);
-            //}
+            ////}
             if (saveGame.Data._objectDict.ContainsKey(SAVEGAME_KEY_LAZY_ACTORS))
                 MelonLogger.Msg(saveGame.Data._objectDict[SAVEGAME_KEY_LAZY_ACTORS].GetIl2CppType());
+            //var lazy = new LazyActorSaveData();
             //if (saveGame.Data.GetObject(SAVEGAME_KEY_LAZY_ACTORS, ref lazy))
             //{
             //    MelonLogger.Msg("Loaded lazy actors");

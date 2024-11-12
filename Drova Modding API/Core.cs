@@ -15,6 +15,7 @@ using Drova_Modding_API.Systems.SaveGame;
 using Il2CppInterop.Runtime;
 using Il2CppSirenix.Serialization;
 using Il2CppSystem.Runtime;
+using Il2CppDrova.SaveData;
 
 [assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.3.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
@@ -42,13 +43,21 @@ namespace Drova_Modding_API
             ClassInjector.RegisterTypeInIl2Cpp<GUI_Options_Controls_KeyFieldElement_Custom>();
             ClassInjector.RegisterTypeInIl2Cpp<WorldEventSystemManager>();
             ClassInjector.RegisterTypeInIl2Cpp<AreaNameSystem>();
-            ClassInjector.RegisterTypeInIl2Cpp<LazyActorSaveData>();
+
+            Type[] interfaces = [typeof(ISaveData)];
+            RegisterTypeOptions registerTypeOptions = new()
+            {
+                LogSuccess = true,
+                Interfaces = interfaces
+            };
+            ClassInjector.RegisterTypeInIl2Cpp<LazyActorSaveData>(registerTypeOptions);
             ClassInjector.RegisterTypeInIl2Cpp<SaveGameSystem>();
             AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
             {
                 MelonLogger.Msg("AssemblyResolve: " + args.Name);
                 return null;
             };
+
             AssemblyLocation = MelonAssembly.Location;
             LoggerInstance.Msg("Initialized Modding API.");
         }
