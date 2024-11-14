@@ -134,7 +134,7 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Convert Function from Pole? to IL2CppSystem.Nullable<Pole>
+        /// Convert Function from Pole? to IL2CppSystem.Nullable{Pole}
         /// </summary>
         /// <param name="pole"></param>
         /// <returns></returns>
