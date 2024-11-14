@@ -6,16 +6,14 @@ using UnityEngine;
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Register;
 using Drova_Modding_API.Systems;
+
 using Drova_Modding_API.Systems.ModdingUI;
 using Drova_Modding_API.Systems.WorldEvents;
 using Drova_Modding_API.UI;
 using Il2CppInterop.Runtime.Injection;
 using MelonLoader;
-using Drova_Modding_API.Systems.SaveGame;
-using Il2CppInterop.Runtime;
-using Il2CppSirenix.Serialization;
-using Il2CppSystem.Runtime;
 using Il2CppDrova.SaveData;
+using Il2CppInterop.Runtime.InteropTypes.Fields;
 
 [assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.3.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
@@ -44,20 +42,6 @@ namespace Drova_Modding_API
             ClassInjector.RegisterTypeInIl2Cpp<WorldEventSystemManager>();
             ClassInjector.RegisterTypeInIl2Cpp<AreaNameSystem>();
 
-            Type[] interfaces = [typeof(ISaveData)];
-            RegisterTypeOptions registerTypeOptions = new()
-            {
-                LogSuccess = true,
-                Interfaces = interfaces
-            };
-            ClassInjector.RegisterTypeInIl2Cpp<LazyActorSaveData>(registerTypeOptions);
-            ClassInjector.RegisterTypeInIl2Cpp<SaveGameSystem>();
-            AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
-            {
-                MelonLogger.Msg("AssemblyResolve: " + args.Name);
-                return null;
-            };
-
             AssemblyLocation = MelonAssembly.Location;
             LoggerInstance.Msg("Initialized Modding API.");
         }
@@ -68,44 +52,6 @@ namespace Drova_Modding_API
 
             if (sceneName == SceneNames.MainMenu)
             {
-                //if (DefaultSerializationBinder.typeMap.TryAdd("Drova_Modding_API.Systems.SaveGame.ModdingSave, InjectedMonoTypes", Il2CppType.Of<ModdingSave>()))
-                //{
-                //    MelonLogger.Msg("Added ModdingSave to typeMap");
-                //}
-                //MelonLogger.Msg("Queued Assemblies: " + DefaultSerializationBinder.assembliesQueuedForRegister.Count);
-                //foreach (var assembly in DefaultSerializationBinder.assembliesQueuedForRegister)
-                //{
-                //    MelonLogger.Msg(assembly.FullName);
-                //}
-                //MelonLogger.Msg("Queued Assembly Load Events: " + DefaultSerializationBinder.assemblyLoadEventsQueuedForRegister.Count);
-                //foreach (var assembly in DefaultSerializationBinder.assemblyLoadEventsQueuedForRegister)
-                //{
-                //    MelonLogger.Msg(assembly.LoadedAssembly.FullName);
-                //}
-                if (DefaultSerializationBinder.typeMap.TryAdd("Drova_Modding_API.Systems.SaveGame.LazyActorSaveData, InjectedMonoTypes", Il2CppType.Of<LazyActorSaveData>()))
-                {
-                    MelonLogger.Msg("Added LazyActorSaveData to typeMap");
-                }
-                if (DefaultSerializationBinder.nameMap.TryAdd(Il2CppType.Of<LazyActorSaveData>(), "Drova_Modding_API.Systems.SaveGame.LazyActorSaveData, InjectedMonoTypes"))
-                {
-                    MelonLogger.Msg("Added LazyActorSaveData to nameMap");
-                }
-                DefaultSerializationBinder.RegisterAssembly(Il2CppType.Of<LazyActorSaveData>().Assembly);
-                MelonLogger.Msg("Added LazyActorSaveData to assemblyNameLookUp");
-
-                //foreach (var type in DefaultSerializationBinder.assemblyNameLookUp)
-                //{
-                //    MelonLogger.Msg(type.Key + " : " + type.Value);
-                //    foreach (var t in type.Value.GetTypes())
-                //    {
-                //        MelonLogger.Msg(t.FullName);
-                //        MelonLogger.Msg(t.IsClass);
-                //    }
-                //}
-
-
-
-
                 ModdingUI.RegisterLocalization();
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
@@ -114,7 +60,7 @@ namespace Drova_Modding_API
 
             if (sceneName == SceneNames.GameplayMain)
             {
-               
+
                 SystemInit.Init();
             }
         }
@@ -128,7 +74,7 @@ namespace Drova_Modding_API
             ActionKeyRegister.Instance.LoadKeyCodes();
             ModdingUI.RegisterModdingUI();
 
-
+            new MyData().Test = 5;
         }
 
         /// <inheritdoc/>
@@ -143,5 +89,28 @@ namespace Drova_Modding_API
 #endif
             OnMonoUpdate?.Invoke();
         }
+    }
+}
+
+[RegisterTypeInIl2CppWithInterfaces(typeof(ISaveData))]
+public class MyData : Il2CppSystem.Object
+{
+    public Il2CppValueField<int> Test;
+
+    public MyData(IntPtr ptr): base(ptr)
+    {
+    }
+
+    public MyData(): this(ClassInjector.DerivedConstructorPointer<MyData>())
+    {
+        ClassInjector.DerivedConstructorBody(this);
+    }
+
+    public Il2CppSystem.Object DeepCopy()
+    {
+        return new MyData
+        {
+            Test = Test
+        };
     }
 }

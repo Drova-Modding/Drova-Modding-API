@@ -469,7 +469,7 @@
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\ModdingUI\ModdingUI.cs" />
 		<Compile Include="Systems\Region.cs" />
-		<Compile Include="Systems\SaveGame\LazyActorSaveData.cs" />
+		<Compile Include="Systems\Spawning\LazyActorSaveDataManaged.cs" />
 		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
 		<Compile Include="Systems\Spawning\ActorWorldLocator.cs" />
 		<Compile Include="Systems\Spawning\LazyActorCreator.cs" />

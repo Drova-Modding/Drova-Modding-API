@@ -16,7 +16,7 @@ namespace Drova_Modding_API.Systems
                 moddingAPISystemRoot.SetActive(false);
                 var areaNameSystem   = moddingAPISystemRoot.AddComponent<AreaNameSystem>();
                 var worldEventSystem = moddingAPISystemRoot.AddComponent<WorldEventSystemManager>();
-                moddingAPISystemRoot.AddComponent<SaveGameSystem>();
+                //SaveGameSystem.Instance.OnLoad(ProviderAccess.GetSaveGameHandler().CurrentSavegame);
                 worldEventSystem.areaNameSystem = areaNameSystem;
 
                 moddingAPISystemRoot.SetActive(true);

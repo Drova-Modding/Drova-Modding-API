@@ -15,11 +15,12 @@ namespace Drova_Modding_API.Systems.Spawning
     public static class LazyActorCreator
     {
 
-        internal static void RestoreLazyActor(List<LazyActorSaveData> lazyActorSaveDatas)
+        internal static void RestoreLazyActor(List<LazyActorSaveDataManaged> lazyActorSaveDatas)
         {
-            foreach (var lazyActorSaveData in lazyActorSaveDatas)
+            for (int i = 0; i < lazyActorSaveDatas.Count; i++)
             {
-                GameObject gameObject = new();
+                LazyActorSaveDataManaged lazyActorSaveData = lazyActorSaveDatas[i];
+                GameObject gameObject = new(lazyActorSaveData.ActorName);
                 gameObject.SetActive(false);
                 var lazyActor = gameObject.AddComponent<LazyActor>();
                 var guidComponent = gameObject.AddComponent<GuidComponent>();
@@ -60,7 +61,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 lazyActor._health._currentHealth.Value = actorParams.CurrentHealth ?? 0;
                 lazyActor._health._currentHealth.IsActive = true;
             }
-            SaveGameSystem.Instance?.RegisterLazyActor(new LazyActorSaveDataManaged()
+            SaveGameSystem.Instance.RegisterLazyActor(new LazyActorSaveDataManaged()
             {
                 ActorEnitityInfoReferenceString = actorParams.EntityInfo.AssetGUID,
                 ActorGuid = guidComponent._guidString,
@@ -85,8 +86,9 @@ namespace Drova_Modding_API.Systems.Spawning
             lazyActor.enabled = true;
             lazyActor._guidComponent.enabled = true;
             var toDestroy = lazyActor.GetComponents<GuidComponent>();
-            foreach (var component in toDestroy)
+            for (int i = 0; i < toDestroy.Count; i++)
             {
+                GuidComponent component = toDestroy[i];
                 if (component._guidString != lazyActor._guidstring)
                     UnityEngine.Object.Destroy(component);
             }
