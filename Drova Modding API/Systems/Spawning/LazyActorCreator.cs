@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using System.Collections;
 using MelonLoader;
-using Drova_Modding_API.Systems.SaveGame;
 
 namespace Drova_Modding_API.Systems.Spawning
 {
@@ -14,12 +13,16 @@ namespace Drova_Modding_API.Systems.Spawning
     /// </summary>
     public static class LazyActorCreator
     {
+        /**
+         * The name of the lazy actor game object
+         */
+        public const string LAZY_ACTOR_NAME = "Modding_API_Lazy_Actor";
 
-        internal static void RestoreLazyActor(List<LazyActorSaveDataManaged> lazyActorSaveDatas)
+        internal static void RestoreLazyActor(List<LazyActorSaveData> lazyActorSaveDatas)
         {
             for (int i = 0; i < lazyActorSaveDatas.Count; i++)
             {
-                LazyActorSaveDataManaged lazyActorSaveData = lazyActorSaveDatas[i];
+                LazyActorSaveData lazyActorSaveData = lazyActorSaveDatas[i];
                 GameObject gameObject = new(lazyActorSaveData.ActorName);
                 gameObject.SetActive(false);
                 var lazyActor = gameObject.AddComponent<LazyActor>();
@@ -38,10 +41,10 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Creates a lazy actor for a creature
         /// </summary>
         /// <param name="actorParams">The params for how to create a lazy actor</param>
-        /// <returns>The created lazy actor</returns>
+        /// <returns>The created lazy actor, it is not fully initalized on the return, because we need to load things in the background</returns>
         public static LazyActor CreateLazyActorCreature(LazyActorParams actorParams)
         {
-            GameObject gameObject = new("Modding_API_Lazy_Actor");
+            GameObject gameObject = new(LAZY_ACTOR_NAME);
             gameObject.SetActive(false);
             var lazyActor = gameObject.AddComponent<LazyActor>();
             lazyActor._actorReference = actorParams.AssetReference;
@@ -61,13 +64,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 lazyActor._health._currentHealth.Value = actorParams.CurrentHealth ?? 0;
                 lazyActor._health._currentHealth.IsActive = true;
             }
-            SaveGameSystem.Instance.RegisterLazyActor(new LazyActorSaveDataManaged()
-            {
-                ActorEnitityInfoReferenceString = actorParams.EntityInfo.AssetGUID,
-                ActorGuid = guidComponent._guidString,
-                ActorName = gameObject.name,
-                ActorReferenceString = actorParams.AssetReference.AssetGUID
-            });
             MelonCoroutines.Start(LoadEntityInfo(lazyActor, actorParams.EntityInfo));
             return lazyActor;
         }
@@ -96,7 +92,7 @@ namespace Drova_Modding_API.Systems.Spawning
             ProviderAccess.GetEntityGameHandler().RegisterLazyActor(lazyActor);
         }
         /**
-         * Params for a Lazy Actor
+         * Params for a Lazy Actor to create
          */
         public struct LazyActorParams
         {

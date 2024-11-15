@@ -38,7 +38,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Starts the event and spawns the encounters. Also sets a random min and max range for the encounters to spawn.
         /// </summary>
-        public void StartEvent()
+        public virtual void StartEvent()
         {
             _isRunning = true;
             if (!PlayerAccess.TryGetPlayer(out var player))
@@ -70,7 +70,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /**
          * Coroutine to end the event after a certain amount of time as safety.
          */
-        public IEnumerator SelfEnd()
+        public virtual IEnumerator SelfEnd()
         {
             yield return new WaitForSeconds(selfEndInSecond);
             if (_isRunning)
@@ -82,7 +82,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /**
          * Called when the event ends and removes all the spawned encounters.
          */
-        public void EndEvent()
+        public virtual void EndEvent()
         {
             _isRunning = false;
             if (_melonCouroutineToken != null)

@@ -1,5 +1,7 @@
 ﻿
 using Il2CppDrova.Saveables;
+using Drova_Modding_API.Systems.SaveGame.Store;
+using System.Text.Json;
 
 namespace Drova_Modding_API.Systems.SaveGame
 {
@@ -34,16 +36,22 @@ namespace Drova_Modding_API.Systems.SaveGame
          */
         public static SaveGameSystem Instance { get; private set; } = new SaveGameSystem();
 
+        internal List<IStorable> stores = [];
 
-        internal List<LazyActorSaveDataManaged> lazyActors = [];
-
-        /**
-         * Saves the lazy actors to the savegame
-         * @param saveGame The savegame to save the lazy actors to
-         */
-        public void OnSave(Savegame saveGame)
+        private SaveGameSystem()
         {
-            
+            BeforeSaveGameSaving += OnSave;
+        }
+
+        private void OnSave(Savegame saveGame)
+        {
+
+            for (int i = 0; i < stores.Count; i++)
+            {
+                IStorable store = stores[i];
+                string saved = store.Save();
+                saveGame.Data.SetString(store.SaveGameKey, saved);
+            }
         }
 
         internal static void TriggerBeforeSaveGameSaving(Savegame saveGame)
@@ -61,22 +69,46 @@ namespace Drova_Modding_API.Systems.SaveGame
             AfterSaveGameLoaded?.Invoke(saveGame);
         }
 
-        /**
-         * Registers a lazy actor to be saved
-         * @param lazyActorSaveData The lazy actor to save
-         */
-        public void RegisterLazyActor(LazyActorSaveDataManaged lazyActorSaveData)
+        internal void OnLoad(Savegame saveGame)
         {
-            lazyActors.Add(lazyActorSaveData);
+            for (int i = 0; i < stores.Count; i++)
+            {
+                IStorable store = stores[i];
+                string loaded = "";
+                if(saveGame.Data.GetString(store.SaveGameKey, ref loaded))
+                {
+                    store.Load(loaded);
+                }
+            }
         }
 
-        /**
-         * Loads the lazy actors from the savegame
-         * @param saveGame The savegame to load the lazy actors from
-         */
-        public void OnLoad(Savegame saveGame)
+        /// <summary>
+        /// Register a new store to the save game system
+        /// </summary>
+        /// <param name="store">The store</param>
+        public void AddStore(IStorable store)
         {
-            
+            stores.Add(store);
+        }
+
+        /// <summary>
+        /// Get a store by type from the save game system
+        /// </summary>
+        /// <typeparam name="T">The store to get</typeparam>
+        /// <returns>Your store or default</returns>
+        public IStore<T> GetStore<T>()
+        {
+            return stores.OfType<IStore<T>>().FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Get a store by save game key from the save game system
+        /// </summary>
+        /// <param name="saveGameKey">The key of the Store</param>
+        /// <returns></returns>
+        public IStorable GetStore(string saveGameKey)
+        {
+            return stores.FirstOrDefault(x => x.SaveGameKey == saveGameKey);
         }
     }
 }

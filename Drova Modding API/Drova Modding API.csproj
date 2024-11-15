@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>disable</Nullable>
+		<Nullable>annotations</Nullable>
 		<RootNamespace>Drova_Modding_API</RootNamespace>
 		<LangVersion>latest</LangVersion>
 		<IsPackable>false</IsPackable>
@@ -471,7 +471,10 @@
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\ModdingUI\ModdingUI.cs" />
 		<Compile Include="Systems\Region.cs" />
-		<Compile Include="Systems\Spawning\LazyActorSaveDataManaged.cs" />
+		<Compile Include="Systems\SaveGame\Store\IStorable.cs" />
+		<Compile Include="Systems\SaveGame\Store\IStore.cs" />
+		<Compile Include="Systems\SaveGame\Store\LazyActorStore.cs" />
+		<Compile Include="Systems\Spawning\LazyActorSaveData.cs" />
 		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
 		<Compile Include="Systems\Spawning\ActorWorldLocator.cs" />
 		<Compile Include="Systems\Spawning\LazyActorCreator.cs" />

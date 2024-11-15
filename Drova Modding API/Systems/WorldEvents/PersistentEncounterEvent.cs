@@ -1,8 +1,6 @@
-﻿using Drova_Modding_API.Systems.Spawning;
-using Il2CppDrova;
-using Il2CppDrova.Utilities.LazyLoading;
-using UnityEngine;
-using UnityEngine.AddressableAssets;
+﻿using Drova_Modding_API.Systems.SaveGame;
+using Drova_Modding_API.Systems.SaveGame.Store;
+using Drova_Modding_API.Systems.Spawning;
 
 namespace Drova_Modding_API.Systems.WorldEvents
 {
@@ -14,18 +12,26 @@ namespace Drova_Modding_API.Systems.WorldEvents
     /// <param name="persitentEncounters">The list to spawn</param>
     public class PersistentEncounterEvent(List<LazyActorCreator.LazyActorParams> persitentEncounters) : IWorldEvent
     {
+        /**
+         * The store for the lazy actors
+         */
+        protected IStore<LazyActorSaveData> lazyActorStore;
+
         /// <inheritdoc/>
-        public void EndEvent()
+        public virtual void EndEvent()
         {
             // Do nothing
         }
 
         /// <inheritdoc/>
-        public void StartEvent()
+        public virtual void StartEvent()
         {
-            foreach (var encounter in persitentEncounters)
+            lazyActorStore ??= SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            for (int i = 0; i < persitentEncounters.Count; i++)
             {
-                LazyActorCreator.CreateLazyActorCreature(encounter);
+                LazyActorCreator.LazyActorParams encounter = persitentEncounters[i];
+                var lazyActor = LazyActorCreator.CreateLazyActorCreature(encounter);
+                lazyActorStore.Add(new LazyActorSaveData(LazyActorCreator.LAZY_ACTOR_NAME, encounter.AssetReference.AssetGUID, encounter.EntityInfo.AssetGUID, lazyActor._guidstring));
             }
             WorldEventSystemManager.Instance.EndEvent();
         }

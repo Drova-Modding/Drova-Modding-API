@@ -28,7 +28,7 @@ namespace Drova_Modding_API.Systems
         /**
          * The instance of the AreaNameSystem.
          */
-        public static AreaNameSystem Instance
+        public static AreaNameSystem? Instance
         {
             get
             {

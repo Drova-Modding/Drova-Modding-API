@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using MelonLoader;
-using Il2CppDrova;
 using Drova_Modding_API.Access;
 using System.Collections;
 using Drova_Modding_API.Systems.WorldEvents.Regional;
@@ -144,6 +143,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
             }
         }
 
+        [HideFromIl2Cpp]
         internal IEnumerator StartEventCooldown()
         {
             while (true)
