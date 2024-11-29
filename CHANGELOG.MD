@@ -5,6 +5,7 @@
 - Event System
 - Controller Bindings
 - Actor Spawning for creatures
+- Permanent Actor Spawning for creatures (Meaning they will save and load with the game)
 - Input Access to Rewired (Thanks to HanHan)
 - Area Name System, to know where the player is currently
 - Save System to hook in
