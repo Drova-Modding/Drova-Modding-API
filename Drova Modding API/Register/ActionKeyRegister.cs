@@ -9,6 +9,7 @@ namespace Drova_Modding_API.Register
     /**
      * This class is used to register the action keys for mods.
      */
+    [Obsolete("This class is deprecated and will be removed with future updates, use the new InputActionRegister instead.")]
     public class ActionKeyRegister
     {
         private readonly Dictionary<string, KeyCode> _actionKeys = [];
@@ -41,7 +42,7 @@ namespace Drova_Modding_API.Register
         {
             // Save the keycodes to a file.
 
-            var path = Path.Combine(Core.assemblyLocation, "..", "Modding_API");
+            var path = Path.Combine(Core.AssemblyLocation, "..", "Modding_API");
             try
             {
                 Directory.CreateDirectory(path);
@@ -65,7 +66,7 @@ namespace Drova_Modding_API.Register
         internal void LoadKeyCodes()
         {
             if (_isInitialized) return;
-            var path = Path.Combine(Core.assemblyLocation, "..", "Modding_API");
+            var path = Path.Combine(Core.AssemblyLocation, "..", "Modding_API");
             var file = Path.Combine(path, "keybinds.json");
             if (!File.Exists(file)) return;
             try

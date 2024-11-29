@@ -1,5 +1,4 @@
-﻿using Il2CppCustomFramework.InputHandling;
-using Il2CppRewired;
+﻿using Il2CppRewired;
 
 namespace Drova_Modding_API.Access
 {
@@ -11,7 +10,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Gets the current device in use
         /// </summary>
-        public static InputSystem.EDevice CurrentDevice => InputSystem.CurrentDevice;
+        public static Il2CppCustomFramework.InputHandling.InputSystem.EDevice CurrentDevice => Il2CppCustomFramework.InputHandling.InputSystem.CurrentDevice;
 
         /// <summary>
         /// True, if any button is down
@@ -19,7 +18,7 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static bool AnyButtonDown()
         {
-            return InputSystem.AnyButtonDown();
+            return Il2CppCustomFramework.InputHandling.InputSystem.AnyButtonDown();
         }
 
         /// <summary>
@@ -27,7 +26,7 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static float GetAxis(string actionName)
         {
-            return InputSystem.GetAxis(actionName);
+            return Il2CppCustomFramework.InputHandling.InputSystem.GetAxis(actionName);
         }
 
         /// <summary>
@@ -37,7 +36,7 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static bool IsActionClicked(string actionName)
         {
-            return InputSystem.IsActionClicked(actionName);
+            return Il2CppCustomFramework.InputHandling.InputSystem.IsActionClicked(actionName);
         }
 
         /// <summary>
@@ -47,7 +46,7 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static bool IsActionPressed(string actionName)
         {
-            return InputSystem.IsActionPressed(actionName);
+            return Il2CppCustomFramework.InputHandling.InputSystem.IsActionPressed(actionName);
         }
 
         /// <summary>
@@ -57,7 +56,7 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static bool IsActionReleased(string actionName)
         {
-            return InputSystem.IsActionReleased(actionName);
+            return Il2CppCustomFramework.InputHandling.InputSystem.IsActionReleased(actionName);
         }
 
         /// <summary>
@@ -68,7 +67,7 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static string GetLocalizedAnimText(string actionName)
         {
-            return InputSystem.GetLocalizedAnimText(actionName);
+            return Il2CppCustomFramework.InputHandling.InputSystem.GetLocalizedAnimText(actionName);
         }
 
         /// <summary>
@@ -82,7 +81,7 @@ namespace Drova_Modding_API.Access
         {
             var _inputMapper = new InputMapper();
             _inputMapper.add_InputMappedEvent(onInputMappedFinishedCallback);
-            _inputMapper.add_InputMappedEvent(new Action<InputMapper.InputMappedEventData>(SaveRemapping));
+            _inputMapper.add_InputMappedEvent(new System.Action<InputMapper.InputMappedEventData>(SaveRemapping));
             _inputMapper.options = new InputMapper.Options
             {
                 checkForConflicts = false,
@@ -120,7 +119,7 @@ namespace Drova_Modding_API.Access
 
         internal static ActionElementMap GetActionElementMap(string actionName, Il2CppSystem.Nullable<Pole> pole, Il2CppSystem.Nullable<ControllerType> controllerType)
         {
-            return InputSystem.GetActionElementMapFromActionName(actionName, pole, controllerType);
+            return Il2CppCustomFramework.InputHandling.InputSystem.GetActionElementMapFromActionName(actionName, pole, controllerType);
         }
 
         /// <summary>
@@ -134,7 +133,7 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Convert Function from Pole? to IL2CppSystem.Nullable<Pole>
+        /// Convert Function from Pole? to IL2CppSystem.Nullable{Pole}
         /// </summary>
         /// <param name="pole"></param>
         /// <returns></returns>

@@ -8,6 +8,8 @@ namespace Drova_Modding_API
      */
     public class Utils
     {
+
+        internal static string SavePath = Path.Combine(Core.AssemblyLocation, "..", "Modding_API");
         /**
          * Converts an enum to its index.
          */

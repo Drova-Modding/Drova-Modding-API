@@ -134,7 +134,6 @@ namespace Drova_Modding_API.Generation
             for (int i = 0; i < buckets.Length; i++)
                 keys[i] = ReadObjectFromByteArray(keyData, buckets[i].dataOffset);
             MelonLogger.Msg("Keys created");
-
             //var locator = new ResourceLocationMap("test", buckets.Length);
             int count = SerializationUtilities.ReadInt32FromByteArray(entryData, 0);
             using (FileStream stream = File.Create(Path.Combine(assembly.Location, "..", "test.txt")))

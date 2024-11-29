@@ -1,5 +1,6 @@
 ﻿using Il2Cpp;
 using Il2CppCustomFramework.Localization;
+using Il2CppInterop.Runtime.Injection;
 using MelonLoader;
 using System.Text;
 using static Il2CppCustomFramework.Localization.LocalizationDB;
@@ -39,6 +40,20 @@ namespace Drova_Modding_API.Access
         public static LocalizedString GetLocalizedString(string modName, string key)
         {
             return new LocalizedString(modName, key);
+        }
+
+        /// <summary>
+        /// Injects a new language enum value into the game.
+        /// </summary>
+        /// <param name="name">Short name of the language</param>
+        /// <param name="value">Int of the Enum, at the moment of writing this it would be something >35</param>
+        public static void InjectLanguageEnum(string name, int value)
+        {
+            var injection = new Dictionary<string, object>
+            {
+                { name, value }
+            };
+            EnumInjector.InjectEnumValues<ELanguage>(injection);
         }
 
 
