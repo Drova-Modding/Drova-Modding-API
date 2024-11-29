@@ -1,12 +1,4 @@
-﻿using Il2CppDrova;
-using Il2CppDrova.HitSystem;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Drova_Modding_API.Systems.WorldEvents.Regional
+﻿namespace Drova_Modding_API.Systems.WorldEvents.Regional
 {
     /// <summary>
     /// A regional event that will start when a player enters a region.

@@ -1,5 +1,4 @@
-﻿using Drova_Modding_API.GlobalFields;
-using Il2CppDrova;
+﻿using Il2CppDrova;
 
 namespace Drova_Modding_API.Access
 {
