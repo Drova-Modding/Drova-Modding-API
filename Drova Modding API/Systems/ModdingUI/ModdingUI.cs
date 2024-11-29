@@ -30,6 +30,9 @@ namespace Drova_Modding_API.Systems.ModdingUI
                 new LocalizationAccess.LocalizationEntry("ModdingUITitle", "Modding UI", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
                 new LocalizationAccess.LocalizationEntry("ModdingUITitle", "Modding UI", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
                 new LocalizationAccess.LocalizationEntry("ModdingUITitle", "Modding UI", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("ModdingSliderDisclaimer2", "Diese Einstellungen haben keine Auswirkung ohne einen Event Mod", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("ModdingSliderDisclaimer2", "These settings have no effect without an event mod", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("ModdingSliderDisclaimer2", "Ces paramètres n'ont aucun effet sans un Event Mod", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
                 new LocalizationAccess.LocalizationEntry("ModdingSliderDisclaimer", "Angabe in Minuten", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
                 new LocalizationAccess.LocalizationEntry("ModdingSliderDisclaimer", "Input is in Minutes", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
                 new LocalizationAccess.LocalizationEntry("ModdingSliderDisclaimer", "L'entrée est en minutes", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
@@ -47,6 +50,7 @@ namespace Drova_Modding_API.Systems.ModdingUI
             var builder = OptionMenuAccess.Instance.GetBuilder("ModdingUI");
             if (builder == null) return;
             var builded = builder.CreateTitle(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingUITitle"))
+                .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderDisclaimer2"))
                 .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderDisclaimer"))
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMinRandomness"), ModdingUIMinOptionKey, 1, 120, 30)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMaxRandomness"), ModdingUIMaxOptionKey, 2, 360, 60)

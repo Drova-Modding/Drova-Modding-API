@@ -9,6 +9,7 @@ namespace Drova_Modding_API.Register
     /**
      * This class is used to register the action keys for mods.
      */
+    [Obsolete("This class is deprecated and will be removed with future updates, use the new InputActionRegister instead.")]
     public class ActionKeyRegister
     {
         private readonly Dictionary<string, KeyCode> _actionKeys = [];

@@ -28,11 +28,5 @@ namespace Drova_Modding_API.Systems.SaveGame.Store
         /// Called when the savegame is loaded.
         /// </summary>
         void Load(string result);
-
-        /// <summary>
-        /// Gets all items from the store.
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<object> GetAll();
     }
 }

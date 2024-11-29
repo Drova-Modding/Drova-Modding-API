@@ -43,8 +43,6 @@ namespace Drova_Modding_API.Systems.SaveGame.Store
         /// Gets all items from the store.
         /// </summary>
         /// <returns></returns>
-        new IEnumerable<T> GetAll();
-
-        IEnumerable<object> IStorable.GetAll() => (IEnumerable<object>)GetAll();
+        IEnumerable<T> GetAll();
     }
 }

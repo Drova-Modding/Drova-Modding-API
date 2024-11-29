@@ -92,7 +92,7 @@ namespace Drova_Modding_API.Systems.Spawning
             ProviderAccess.GetEntityGameHandler().RegisterLazyActor(lazyActor);
         }
         /**
-         * Params for a Lazy Actor to create
+         * Params for a Lazy Actor to create, currently only supports creatures
          */
         public struct LazyActorParams
         {

@@ -465,9 +465,11 @@
 		<Compile Include="Generation\AddressableGeneration.cs" />
 		<Compile Include="GlobalFields\SceneNames.cs" />
 		<Compile Include="Patches\AreaNamePatch.cs" />
+		<Compile Include="Patches\GUI_Window_Options.cs" />
 		<Compile Include="Patches\GUI_Window_Patch.cs" />
 		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
 		<Compile Include="Register\ActionKeyRegister.cs" />
+		<Compile Include="Register\InputActionRegister.cs" />
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\ModdingUI\ModdingUI.cs" />
 		<Compile Include="Systems\Region.cs" />

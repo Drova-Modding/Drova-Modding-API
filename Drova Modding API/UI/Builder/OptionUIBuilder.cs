@@ -45,11 +45,6 @@ namespace Drova_Modding_API.UI.Builder
             return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Toggle).WaitForCompletion();
         }
 
-        private static GameObject GetSwitchWithMainTextObject()
-        {
-            return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Toggle).WaitForCompletion();
-        }
-
         private static GameObject GetSliderObject()
         {
             return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Slider).WaitForCompletion();
@@ -438,14 +433,13 @@ namespace Drova_Modding_API.UI.Builder
                 localized._localizedString = keybinding.Title;
                 localized.UpdateLocalizedText();
 
-                // We can't support at the moment controller keybindings. Fix me with MelonLoader 1.6.6
                 var controller = keyBinding.transform.FindChild("Controller/ChangeButton");
+                controller.gameObject.SetActiveRecursively(false);
                 if (!controller)
                 {
                     MelonLogger.Error("controller not found in keybinding prefab");
                     return this;
                 }
-                controller.gameObject.SetActive(false);
 
                 var keyboard = keyBinding.transform.FindChild("Keyboard");
                 if (!keyboard)
@@ -475,6 +469,62 @@ namespace Drova_Modding_API.UI.Builder
 
             var keybindingPrefab = GetKeyBinding();
             return BuildKeyBinding(keybindings, keybindingPrefab);
+        }
+
+        /// <summary>
+        /// Create a section with input actions.
+        /// </summary>
+        /// <param name="inputActions">The input actions to display</param>
+        /// <returns></returns>
+        public OptionUIBuilder CreateInputActionSection(List<InputActionTemplate> inputActions)
+        {
+            var keybindingPrefab = GetKeyBinding();
+            var exitButton = GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/GUI_Generic_Button_Exit_OnFrame");
+            for (int i = 0; i < inputActions.Count; i++)
+            {
+                InputActionTemplate inputAction = inputActions[i];
+                var keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, _parent);
+                var toDestroy = keyBinding.GetComponent<GUI_Option_Controls_KeyFieldElement>();
+                if (toDestroy)
+                {
+                    UnityEngine.Object.Destroy(toDestroy);
+                }
+                var components = keyBinding.GetComponentsInChildren<HorizontalLayoutGroup>();
+                foreach (var component in components)
+                {
+                    component.enabled = true;
+                }
+                var customKeyFieldElement = keyBinding.AddComponent<GUI_Options_Controls_KeyFieldElement_Custom>();
+                if (customKeyFieldElement != null)
+                {
+                    customKeyFieldElement.Init(inputAction.ActionName, false, exitButton);
+                }
+                else
+                {
+                    MelonLogger.Error("Failed to create custom keybinding element");
+                }
+
+                var leftChild = keyBinding.transform.FindChild("Left");
+                if (!leftChild)
+                {
+                    MelonLogger.Error("Left child not found in keybinding prefab");
+                    return this;
+                }
+                var textMeshPro = leftChild.GetComponentInChildren<TextMeshProUGUI>();
+                if (!textMeshPro)
+                {
+                    MelonLogger.Error("TextMeshPro not found in keybinding prefab");
+                    return this;
+                }
+
+                var textMeshProObject = textMeshPro.gameObject;
+                var localized = textMeshProObject.AddComponent<LocalizedTextMeshPro>();
+
+                localized._text = textMeshPro;
+                localized._localizedString = inputAction.Title;
+                localized.UpdateLocalizedText();
+            }
+            return this;
         }
 
         /// <summary>
@@ -601,6 +651,17 @@ namespace Drova_Modding_API.UI.Builder
          * A keybinding.
          * @param title The title of the keybinding.
          */
+        [Obsolete("This class is deprecated and will be removed with future updates, use the new InputActionRegister instead.")]
         public record Keybinding(LocalizedString Title, string ActionName, KeyCode DefaultActionKey);
+
+        /// <summary>
+        /// Create a keybinding.
+        /// Your action name should be the same as the action name in the <see cref="InputActionRegister"/>
+        /// </summary>
+        /// <param name="Title">The title to display</param>
+        /// <param name="ActionName">The actionname</param>
+        public record InputActionTemplate(LocalizedString Title, string ActionName);
+
+
     }
 }
