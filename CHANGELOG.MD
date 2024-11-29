@@ -15,6 +15,10 @@
 
 ### Changed
 - Changed from `KeyCode` to `InputAction` to support more input devices
+- Added a Release Package and Debug Package (For User and Developer)
+
+### Deprecated
+- Deprecated the `KeyCode` approach in favor of the `InputAction` approach
 
 ### Known Issues
 - In the console you will see 2 errors that something was not set properly regarding the Patches, it does not affect the Game from my investigations, but I will look into it in the future.
