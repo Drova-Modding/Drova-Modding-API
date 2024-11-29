@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.0 - 2024-11-29]
+### Added
+- Event System
+- Controller Bindings
+- Actor Spawning for creatures
+- Input Access to Rewired (Thanks to HanHan)
+- Area Name System, to know where the player is currently
+- Save System to hook in
+- GlobalFields added for common SceneNames
+
+### Fixed
+- Fixed a bug where option menu would not be open again after closing it
+
+### Changed
+- Changed from `KeyCode` to `InputAction` to support more input devices
+
+### Known Issues
+- In the console you will see 2 errors that something was not set properly regarding the Patches, it does not affect the Game from my investigations, but I will look into it in the future.
+
 ## [0.2.3 - 2024-11-04]
 ### Fixed
 - Fixed a bug where the KeyBinding default value did not get saved and was not accessible at runtime
