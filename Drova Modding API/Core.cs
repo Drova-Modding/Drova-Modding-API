@@ -8,6 +8,10 @@ using Drova_Modding_API.Systems;
 using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
 
+#if DEBUG
+using UnityEngine.InputSystem;
+#endif
+
 [assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.3.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 6, 6, true)]
@@ -23,10 +27,17 @@ namespace Drova_Modding_API
         internal static event Action OnMonoUpdate;
         internal bool _inMainMenu = false;
 
+#if DEBUG
+        private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
+#endif
+
         /// <inheritdoc/>
         public override void OnInitializeMelon()
         {
             base.OnInitializeMelon();
+#if DEBUG
+            consoleAction.Enable();
+#endif
             SystemInit.RegisterIl2Cpp();
             SystemInit.RegisterStores();
             LoggerInstance.Msg("Initialized Modding API.");
@@ -85,9 +96,13 @@ namespace Drova_Modding_API
         {
             base.OnUpdate();
 #if DEBUG
-            if (Input.GetKeyDown(KeyCode.BackQuote))
+            if (consoleAction.IsPressed())
             {
-                ProviderAccess.GetCheatGameHandler().EnableCheatMode(!ProviderAccess.GetCheatGameHandler()._cheatModeEnabled);
+                ProviderAccess.GetCheatGameHandler().EnableCheatMode(!ProviderAccess.GetCheatGameHandler().IsCheatModeEnabled);
+            }
+            if(Input.GetKeyDown(KeyCode.F1))
+            {
+                AddressableAccess.NPCs.Human_Template.InstantiateAsync(PlayerAccess.GetPlayer().gameObject.transform.position, Quaternion.identity);
             }
 #endif
             OnMonoUpdate?.Invoke();

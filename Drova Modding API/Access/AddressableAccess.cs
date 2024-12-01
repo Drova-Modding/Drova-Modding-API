@@ -1115,6 +1115,7 @@ namespace Drova_Modding_API.Access
             public readonly static AssetReferenceT<Item> Weapon_Slingshot_Coarsee = new("5ddf435e5ac0fdd4b98cb90a6b0a8ead");
             public readonly static AssetReferenceT<Item> Weapon_Slingshot_HeadSlingshot = new("479b5f22cfca15c4399637ab28d94156");
             public readonly static AssetReferenceT<Item> Weapon_Slingshot_HeavySlingshot = new("741da2ce7f773f44ca25eaca9b82effe");
+            public readonly static AssetReferenceT<Item> Weapon_Slingshot_LegendarySlingshot = new("dcd14c2843df87140845285cfbe078a7");
             public readonly static AssetReferenceT<Item> Weapon_Slingshot_Simplee = new("f2062fb103acd454f98f3f17d5885142");
             public readonly static AssetReferenceT<Item> Weapon_Spear_Ango = new("5744088916aa5254cb47486f3af30c5b");
             public readonly static AssetReferenceT<Item> Weapon_Spear_BloodBlade = new("7c1c763793ddd024fb43893d058a11bf");
@@ -1280,6 +1281,11 @@ namespace Drova_Modding_API.Access
             public readonly static AssetReference EntityInfo_NPC_WaterRat = new("2d1a533396feb2940bc8c92071aee386");
             public readonly static AssetReference EntityInfo_NPC_WaterRat_Young = new("2d49896360d00e84cb04b53a27bc7fef");
             public readonly static AssetReference EntityInfo_NPC_Worm = new("ea0454dc51927cb43b2cca5cc5558ace");
+        }
+
+        public static class NPCs
+        {
+            public readonly static AssetReferenceGameObject Human_Template = new("d88d3aa58bef51d47bc33a52306dac67");
         }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
