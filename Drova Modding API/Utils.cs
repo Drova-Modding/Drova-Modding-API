@@ -6,10 +6,14 @@ namespace Drova_Modding_API
     /**
      * A class with utility functions.
      */
-    public class Utils
+    public static class Utils
     {
+        /// <summary>
+        /// The folder name of the Modding API.
+        /// </summary>
+        public const string ModdingAPI_FolderName = "Modding_API";
 
-        internal static string SavePath = Path.Combine(Core.AssemblyLocation, "..", "Modding_API");
+        internal static string SavePath = Path.Combine(Core.AssemblyLocation, "..", ModdingAPI_FolderName);
         /**
          * Converts an enum to its index.
          */

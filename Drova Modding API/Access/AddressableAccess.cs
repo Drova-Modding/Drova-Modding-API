@@ -133,6 +133,17 @@ namespace Drova_Modding_API.Access
             public readonly static AssetReferenceGameObject Draugr_Sword_Shield_RedTower_Stage_03 = new("134ed053837b1b54b818cd5101674a6d");
             public readonly static AssetReferenceGameObject Critter_Rat = new("d1f30492047fe37428db886184506d79");
             public readonly static AssetReferenceGameObject Critter_Snake_Adder = new("3e24d9f9bca9f714b91cfc62062e55a8");
+
+            public static class CritterInteractions
+            {
+                public readonly static AssetReferenceGameObject AA_Cat_Sit = new("d015055c55add294186e29605032b659");
+                public readonly static AssetReferenceGameObject AA_Cat_Turn = new("e078e4df82de8fb4e89734d383384532");
+                public readonly static AssetReferenceGameObject AA_Dog_Sit = new("01d01e7265598bb42969afb86581674f");
+                public readonly static AssetReferenceGameObject AA_Grouse_Breed = new("f3305a47726291974cb1bcfffc11221d2");
+                public readonly static AssetReferenceGameObject AA_Interact_Critter_Sleep_Old = new("e544d8740b2c04a4ca5cdd3e028b4984");
+                public readonly static AssetReferenceGameObject AA_Interact_DiggerPig_Dig = new("db6a6def06d65d241a52fa87f16d27d2");
+                public readonly static AssetReferenceGameObject AA_Rat_Cleaning = new("a109c18933308454191318b49688d0f8");
+            }
         }
 
         public static class Bandits
@@ -1286,6 +1297,58 @@ namespace Drova_Modding_API.Access
         public static class NPCs
         {
             public readonly static AssetReferenceGameObject Human_Template = new("d88d3aa58bef51d47bc33a52306dac67");
+
+            public static class BaseInteractions
+            {
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Phasic_Base = new("1ff84cf0b3ebcf3409aa36c62de05aa1");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_State_Start_Base = new("7a5557cc55c23a94c96705a59da2897d");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_State_Timed_Base = new("93ec94536409cf347817e749ba28e8e5");
+            }
+
+            public static class Interactions
+            {
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Attack_Primary_Single = new("6d32a72d4784de64ea788b565bcc79d7");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Axe_MineVein = new("6a8f46ed053942b4dbb8e0eb55659b72");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_CalmDown_Single = new("5327ec609738c2e4bbd0a8b6c71b833e");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Cheer_Forever = new("b637672ecc742e34e85c4bc68cd9ba0b");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Cheer_Single = new("d0a6da79d7e691f4a81c0fb4fdbdf386");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_CoughBlood_Farlan = new("84f6041d8aff90f43b4eb453e5951380");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_CrossArms_Forever = new("eeb20665c45431341906a5e84af043ed");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_CrossArms_Single = new("2a4fe9bcb2c07ba4a98e1be1d6ed5ddf");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Cry_Single = new("4cbc7e6632f76724bbbedb17144cce0d");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Dance_Forever = new("09d015a2590082d4caf70bafe852fd24");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Dance_Ritual_Forever = new("7b52655cd45bff9409d77cf64abb115e");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Dodge = new("89d387e646833164485701e030f9113e");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Drink_Single = new("0db234e7f6c1f56409d432defa34691b");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Eat_Single = new("f602544492c9b3b46835bbb3ed390683");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Flex_Single = new("eae1cf338771ffe41afc3b0d2621eb2e");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Interact_Generic = new("1d235aeaf1b595f4dab76de466a70ab6");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Joy_Single = new("3e0fac71f6283814d838bde5eca9754a");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Kneel_Forever = new("0a96b7d05ddc66b4292c7f810a13cd2f");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Kneel_Still_Forever = new("c5cae34b5abc2a944ba6088fe2245247");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Laugh_Long_Single = new("deffebc5bd0ad9f46bbcf391b76a1fe1");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Laugh_Medium_Single = new("e410ea285a653e24f8df8d179681c643");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Laugh_Short_Single = new("1d374514071528d44876e71251d120f5");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_LookAround_Single = new("30671cf422cc5b949a9a609b629e72af");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Lyra_Forever = new("73c26b46832c4554a90a44afdba1f914");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Lyra_Single = new("84dffe8a7cbf8ac40a44913db20f106e");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_NemetonGesture_Single = new("af2557b9909918b40b0e1ada8cdb72a6");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Nod_Short_Single = new("e0c8247c43b14dc4ea1320c50c68472c");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Nod_Single = new("11a017ec8278dff42a8378f7e645ea22");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_PlayHorn_Single = new("05bea82297138674491d6723d6fcf17a");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_RuinenlagerGesture_Single = new("4fde7a87476ab7d46979fe4e54848294");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Scratch_Chin_Single = new("d3c5bfbcb79d5654e96b3bc6a3be3f3a");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_ScratchHead_Single = new("3f34bc1f9e3a41448b941965b4f3b170");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_ShakeHead_Single = new("cdb7341a688432d4f801e4aa9d4f7e1a");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_SitFloor_Forever = new("dbfe103423d454344ab5c66b919b7724");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Sleep_Forever = new("0820f4763652af54d8716b3f1eedd6a2");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Smoke_Forever = new("dd08eb566d04fbc449a3e514c17c6493");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Smoke_Single = new("11e9c6d709598e541953536441329f22");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Smoke_TakeHit_Single = new("ba5ede00a6b3d0b4ab8f3d5bac69186a");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Spit_Single = new("7c010cebe4009d347af7c46cbe50016b");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_Squad_Forever = new("4e0e09bdb0fba524193d5db9c59c57ac");
+                public readonly static AssetReferenceGameObject AA_Interact_NPC_ToNormal_Forever = new("891fa11ac2ade9e4aa8e481782337a48");
+            }
         }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
