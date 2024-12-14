@@ -1,6 +1,11 @@
-﻿using Il2Cpp;
+﻿using Drova_Modding_API.Systems.DebugUtils;
+using Drova_Modding_API.Systems.Dialogues.Editor.Nodes;
+using Il2Cpp;
+using Il2CppDrova;
+using Il2CppNodeCanvas.DialogueTrees;
 using MelonLoader;
 using UnityEngine;
+using Drova_Modding_API.Extensions;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -9,16 +14,77 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
     /// </summary>
     /// <param name="ptr">Do not try to create this object with new()!</param>
     [RegisterTypeInIl2Cpp]
-    internal class GraphEditorManager(IntPtr ptr): MonoBehaviour(ptr)
+    internal class GraphEditorManager(IntPtr ptr) : MonoBehaviour(ptr)
     {
+        private DialogueTree _dialogueTree;
+        // Reference to the dialogue tree being edited
+        public DialogueTree DialogueTree
+        {
+            get
+            {
+                return _dialogueTree;
+            }
+            set
+            {
+                if (value.IsLazyLoading || value.allNodes.Count == 0)
+                {
+                    value.SelfDeserialize();
+                }
+                BuildNodeEditorsFromFirstInit(value);
+                _dialogueTree = value;
+                DebugManager.AllowNpcSelection = false;
+                Time.timeScale = 0;
+            }
+        }
+
+        // Currently selected node for dragging
+        private DrawNodeEditor _selectedNode = null;
+
+        // Offset between the mouse position and node position
+        private Vector2 _dragOffset;
+
+        // Reference to the factory for creating node editors
+        public DrawNodeEditorFactory DrawNodeEditorFactory { get; set; }
+
         // Track whether the context menu is open
         private bool _showContextMenu = false;
+
+        // Track whether the sub-context menu is open
+        private bool _showSubContextMenu = false;
 
         // Position where the right-click occurred
         private Vector2 _contextMenuPosition;
 
+        // Current rect of the context menu
+        private Rect _rect;
+
+        private Color backgroundColor = new(0.1f, 0.1f, 0.1f, 0.7f); // Dark gray with 70% opacity
+
+        private float _scaleFactor = 1.0f;               // Zoom level
+        private Vector2 _panOffset = Vector2.zero;      // Offset for panning
+        private Vector2 _dragStart;                     // Start point for panning drag
+        private bool _isDragging = false;               // Is panning in progress?
+
         // List of context menu options
         private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate")];
+
+        private List<LocalizedString> _subContextMenuOptions = [new("Modding_API/GraphEditor", "CreateStatementNode")];
+
+        private readonly Dictionary<string, DrawNodeEditor> drawNodeEditors = [];
+
+        internal void Awake()
+        {
+            DrawNodeEditorFactory = new DrawNodeEditorFactory();
+            DebugManager.OnNpcSelected += DebugManager_OnNpcSelected;
+        }
+
+        private void DebugManager_OnNpcSelected(Actor actor)
+        {
+            var dialogueTreeController = actor.GetComponentInChildren<DS_DialogueTreeController>();
+            if (dialogueTreeController == null) return;
+            if (dialogueTreeController.graph == null) return;
+            DialogueTree = dialogueTreeController.graph.Cast<DialogueTree>();
+        }
 
         internal void Update()
         {
@@ -36,60 +102,388 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // Close the context menu when clicking elsewhere
             if (Input.GetMouseButtonDown(0))
             {
-                _showContextMenu = false;
+                Vector2 mousePosition = Input.mousePosition;
+                mousePosition.y = Screen.height - mousePosition.y;
+                if (!IsPointInRect(mousePosition, _rect))
+                {
+                    _showContextMenu = false;
+                    _showSubContextMenu = false;
+                }
             }
         }
 
-        internal void OnGUI()
+        bool IsPointInRect(Vector2 point, Rect rect)
         {
-            // Draw the context menu if it's open
-            if (_showContextMenu)
+            if (rect == default) return false;
+            return rect.Contains(point);
+        }
+
+        private void BuildNodeEditorsFromFirstInit(DialogueTree value)
+        {
+            for (int i = 0; i < value.allConnections.Count; i++)
             {
-                DrawContextMenu();
+                var connection = value.allConnections[i];
+                if (connection == null) continue;
+                if (connection.sourceNode == null || connection.targetNode == null) continue;
+                if (!drawNodeEditors.ContainsKey(connection.sourceNode.UID))
+                {
+                    var editorSource = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.sourceNode.GetIl2CppType());
+                    editorSource.Node = connection.sourceNode.Cast<DTNode>();
+                    drawNodeEditors.TryAdd(connection.sourceNode.UID, editorSource);
+                }
+                if (!drawNodeEditors.ContainsKey(connection.targetNode.UID))
+                {
+                    var editorTarget = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.targetNode.GetIl2CppType());
+                    editorTarget.Node = connection.targetNode.Cast<DTNode>();
+                    drawNodeEditors.TryAdd(connection.targetNode.UID, editorTarget);
+                }
+
+                if (drawNodeEditors.TryGetValue(connection.sourceNode.UID, out DrawNodeEditor sourceConnection) && drawNodeEditors.TryGetValue(connection.targetNode.UID, out DrawNodeEditor targetConnection))
+                {
+                    sourceConnection.ConnectedWith.Add(targetConnection);
+                }
             }
         }
+
+
+        internal void OnGUI()
+        {
+            if (DialogueTree == null) return;
+
+            // Define the visible screen rect for dynamic rendering
+            Rect visibleArea = new(
+                -_panOffset.x / _scaleFactor,
+                -_panOffset.y / _scaleFactor,
+                Screen.width / _scaleFactor,
+                Screen.height / _scaleFactor
+            );
+
+            // Handle user input for zoom and pan
+            HandleZoomAndPan();
+
+            // Handle node dragging
+            HandleNodeDragging();
+
+            // Apply transformations for zoom and pan
+            GUI.matrix = Matrix4x4.TRS(_panOffset, Quaternion.identity, Vector3.one * _scaleFactor);
+
+            // Draw the background
+            DrawInfiniteBackground();
+
+            // Draw only nodes and connections in the visible area
+            DrawNodesInArea(visibleArea);
+            DrawConnectionsInArea(visibleArea);
+
+            // Reset transformations
+            GUI.matrix = Matrix4x4.identity;
+
+            // Draw context menus if needed
+            if (_showContextMenu) DrawContextMenu();
+            if (_showSubContextMenu) DrawSubContextMenu();
+
+            // Draw close button
+            if (GUI.Button(new Rect(Screen.width - 110, 10, 100, 30), "Close Graph"))
+            {
+                CloseGraph();
+            }
+        }
+
+        private void CloseGraph()
+        {
+            DialogueTree = null;
+            _showContextMenu = false;
+            _showSubContextMenu = false;
+            drawNodeEditors.Clear();
+            DebugManager.AllowNpcSelection = true;
+            Time.timeScale = 1;
+        }
+
+        private void HandleZoomAndPan()
+        {
+            Event e = Event.current;
+
+            // Zoom with mouse scroll wheel
+            if (e.type == EventType.ScrollWheel)
+            {
+                float zoomDelta = e.delta.y * -0.01f;
+                float oldScaleFactor = _scaleFactor;
+                _scaleFactor = Mathf.Clamp(_scaleFactor + zoomDelta, 0.1f, 5.0f); // Allow more extreme zoom levels
+
+                // Adjust pan offset to zoom around the mouse position
+                Vector2 mousePosition = e.mousePosition;
+                _panOffset += (mousePosition - _panOffset) * (1 - oldScaleFactor / _scaleFactor);
+                e.Use();
+            }
+
+            // Pan with middle mouse button
+            if (e.type == EventType.MouseDown && e.button == 2)
+            {
+                _isDragging = true;
+                _dragStart = e.mousePosition - _panOffset;
+                e.Use();
+            }
+            if (e.type == EventType.MouseDrag && _isDragging)
+            {
+                _panOffset = e.mousePosition - _dragStart;
+                e.Use();
+            }
+            if (e.type == EventType.MouseUp && e.button == 2)
+            {
+                _isDragging = false;
+            }
+        }
+
+        void HandleNodeDragging()
+        {
+            Event e = Event.current;
+            Vector2 adjustedMousePosition = (e.mousePosition - _panOffset) / _scaleFactor;
+            // On mouse down, check if we clicked on a node
+            if (e.type == EventType.MouseDown && e.button == 0)
+            {
+                // Adjust the mouse position to account for zoom and pan
+                Debug.Log($"HandleNodeDragging called. Event: {e.type}");
+                foreach (var element in drawNodeEditors)
+                {
+                    var editor = element.Value;
+                    Rect nodeRect = new(editor.Position, editor.NodeSize);
+                    Debug.Log($"NodeRect: {nodeRect} , adjustedMousePosition: {adjustedMousePosition}");
+                    if (nodeRect.Contains(adjustedMousePosition))
+                    {
+                        _selectedNode = editor;
+                        _dragOffset = adjustedMousePosition - editor.Position;
+                        break;
+                    }
+                }
+            }
+
+            // On mouse drag, update the node's position
+            if (e.type == EventType.MouseDrag && _selectedNode != null)
+            {
+                Debug.Log($"Move Node from: {_selectedNode.Position} to: {adjustedMousePosition - _dragOffset}");
+                _selectedNode.Position = adjustedMousePosition - _dragOffset;
+                e.Use(); // Mark the event as used to prevent further processing
+            }
+
+            // On mouse up, stop dragging
+            if (_selectedNode != null && e.type == EventType.MouseUp && e.button == 0)
+            {
+                _selectedNode = null;
+            }
+        }
+
+        private void DrawInfiniteBackground()
+        {
+            float gridSize = 50; // Size of each grid cell
+            Color gridColor = new(0.7f, 0.7f, 0.7f, 0.5f); // Semi-transparent gray
+
+            // Calculate the top-left position of the grid based on the pan offset
+            float startX = Mathf.Floor((_panOffset.x / _scaleFactor) / gridSize) * gridSize;
+            float startY = Mathf.Floor((_panOffset.y / _scaleFactor) / gridSize) * gridSize;
+
+            // Calculate how many lines we need to draw on the screen
+            int verticalLinesCount = Mathf.CeilToInt(Screen.width / (_scaleFactor * gridSize)) + 2;
+            int horizontalLinesCount = Mathf.CeilToInt(Screen.height / (_scaleFactor * gridSize)) + 2;
+
+            // Draw vertical grid lines
+            for (int i = -1; i < verticalLinesCount; i++)
+            {
+                float x = startX + i * gridSize;
+                Vector2 start = new(x, -10000); // Extend far above the visible area
+                Vector2 end = new(x, 10000);   // Extend far below the visible area
+
+                GUIExtensions.DrawLine(start, end, gridColor, 1.0f); // Use the extension method
+            }
+
+            // Draw horizontal grid lines
+            for (int i = -1; i < horizontalLinesCount; i++)
+            {
+                float y = startY + i * gridSize;
+                Vector2 start = new(-10000, y); // Extend far to the left
+                Vector2 end = new(10000, y);    // Extend far to the right
+
+                GUIExtensions.DrawLine(start, end, gridColor, 1.0f); // Use the extension method
+            }
+        }
+
+        // Method to draw the nodes
+        private void DrawNodesInArea(Rect visibleArea)
+        {
+            for (int i = 0; i < drawNodeEditors.Values.Count; i++)
+            {
+                var element = drawNodeEditors.Values.ElementAt(i);
+                if (element == null) continue;
+
+                // Check if the node is within the visible area
+                Rect nodeRect = new(
+                    element.Position.x,
+                    element.Position.y,
+                    element.NodeSize.x,
+                    element.NodeSize.y
+                );
+
+                if (visibleArea.Overlaps(nodeRect))
+                {
+                    var rect = element.DrawNode(element.Position);
+                    element.Position = rect.position;
+                    element.NodeSize = rect.size;
+                }
+            }
+        }
+
+
+        #region ContextMenu
 
         // Method to draw the context menu
         void DrawContextMenu()
         {
-            float menuWidth = 100;
-            float menuHeight = 20 * _contextMenuOptions.Length;
+            float menuWidth = 120;
 
-            // Draw the background box
-            GUI.Box(new Rect(_contextMenuPosition.x, _contextMenuPosition.y, menuWidth, menuHeight), "");
+            DrawContextMenu(_contextMenuOptions.Length, menuWidth);
 
             // Display each option as a button
             for (int i = 0; i < _contextMenuOptions.Length; i++)
             {
                 if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + i * 20, menuWidth, 20), _contextMenuOptions[i].GetLocalizedString(null)))
                 {
-                    HandleContextMenuSelection((GraphEditorAction) i);
+                    HandleContextMenuSelection(i);
                     _showContextMenu = false; // Close the menu after selection
                 }
             }
         }
 
+        void DrawContextMenu(int length, float menuWidth)
+        {
+            float menuHeight = 20 * length;
+            _rect = new Rect(_contextMenuPosition.x, _contextMenuPosition.y, menuWidth, menuHeight);
+
+            // Draw the background box
+            GUI.Box(_rect, "");
+        }
+
+        void DrawSubContextMenu()
+        {
+
+            float menuWidth = 120;
+
+            DrawContextMenu(_subContextMenuOptions.Count, menuWidth);
+
+            // Display each option as a button
+            for (int i = 0; i < _subContextMenuOptions.Count; i++)
+            {
+                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + i * 20, menuWidth, 20), _subContextMenuOptions[i].GetLocalizedString(null)))
+                {
+                    HandleSubContextMenuSelection(i);
+                    _showSubContextMenu = false; // Close the menu after selection
+                }
+            }
+        }
+
+        // Handle the sub-context menu option selection
+        void HandleSubContextMenuSelection(int option)
+        {
+            MelonLogger.Msg(option + " created");
+            // Implement your logic for creating nodes here
+        }
+
         // Handle the context menu option selection
-        void HandleContextMenuSelection(GraphEditorAction option)
+        void HandleContextMenuSelection(int option)
         {
             switch (option)
             {
-                case GraphEditorAction.Create:
-                    Debug.Log("Create selected");
+                case (int)GraphEditorAction.Create:
+                    _showSubContextMenu = true;
                     break;
-                case GraphEditorAction.Delete:
-                    Debug.Log("Delete selected");
+                case (int)GraphEditorAction.Delete:
+                    MelonLogger.Msg("Delete selected");
                     break;
-                case GraphEditorAction.Duplicate:
-                    Debug.Log("Duplicate selected");
+                case (int)GraphEditorAction.Duplicate:
+                    MelonLogger.Msg("Duplicate selected");
                     break;
             }
         }
+
         enum GraphEditorAction
         {
             Create,
             Delete,
             Duplicate
         }
+        #endregion ContextMenu
+
+
+        #region LineDrawing
+
+        private void DrawConnectionsInArea(Rect visibleArea)
+        {
+            foreach (var element in drawNodeEditors)
+            {
+                var editor = element.Value;
+                if (editor == null || editor.ConnectedWith.Count == 0) continue;
+
+                for (int i = 0; i < editor.ConnectedWith.Count; i++)
+                {
+                    DrawNodeEditor connectedEditor = editor.ConnectedWith[i];
+                    if (connectedEditor == null) continue;
+
+                    Vector2 start = editor.Position + (editor.NodeSize / 2);
+                    Vector2 end = connectedEditor.Position + (connectedEditor.NodeSize / 2);
+
+                    if (visibleArea.Contains(start) || visibleArea.Contains(end))
+                    {
+                        DrawLine((start * _scaleFactor) + _panOffset, (end * _scaleFactor) + _panOffset, Color.white);
+                    }
+                }
+            }
+        }
+
+        // Method to draw a line connecting two points
+        void DrawLine(Vector2 pointA, Vector2 pointB, Color color)
+        {
+            Color previousColor = GUI.color; // Save the previous GUI color
+            GUI.color = color;               // Set the new color
+
+            // Calculate the difference vector
+            Vector2 delta = pointB - pointA;
+
+            // Calculate the angle and length of the line
+            float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
+            float length = delta.magnitude;
+
+            // Draw the line using a rotated rectangle (a thin box)
+            Matrix4x4 matrixBackup = GUI.matrix; // Save the current GUI matrix
+            GUIUtility.RotateAroundPivot(angle, pointA);
+            GUI.Box(new Rect(pointA.x, pointA.y, length, 2), ""); // Avoid scaling length here
+
+            GUI.matrix = matrixBackup;        // Restore the original matrix
+            GUI.color = previousColor;        // Restore the previous color
+        }
+
+        // Calculate the point on the edge of a node rectangle closest to a target point
+        Vector2 GetEdgePoint(Vector2 nodeCenter, Vector2 nodeSize, Vector2 target)
+        {
+            // Calculate the direction from the center to the target
+            Vector2 direction = target - nodeCenter;
+
+            // Handle cases where the direction vector is effectively zero
+            if (direction.sqrMagnitude < 0.0001f)
+            {
+                return nodeCenter; // Return the center if the target is at the same position
+            }
+
+            direction.Normalize(); // Normalize the direction vector
+
+            // Correctly calculate distances to the edges
+            Vector2 halfSize = nodeSize / 2;
+
+            float scaleX = Mathf.Abs(direction.x) > 0.0001f ? halfSize.x / Mathf.Abs(direction.x) : float.MaxValue;
+            float scaleY = Mathf.Abs(direction.y) > 0.0001f ? halfSize.y / Mathf.Abs(direction.y) : float.MaxValue;
+
+            // Use the smaller scale to find the intersection point
+            float scale = Mathf.Min(scaleX, scaleY);
+
+            return nodeCenter + direction * scale;
+        }
+
+        #endregion LineDrawing
     }
 }

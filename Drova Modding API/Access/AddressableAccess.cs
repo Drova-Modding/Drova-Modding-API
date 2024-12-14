@@ -1305,6 +1305,9 @@ namespace Drova_Modding_API.Access
                 public readonly static AssetReferenceGameObject AA_Interact_NPC_State_Timed_Base = new("93ec94536409cf347817e749ba28e8e5");
             }
 
+            /// <summary>
+            /// Contains all the interactions that are available for NPCs. Interactions ending with single are a one time interaction, while forever interactions are looped.
+            /// </summary>
             public static class Interactions
             {
                 public readonly static AssetReferenceGameObject AA_Interact_NPC_Attack_Primary_Single = new("6d32a72d4784de64ea788b565bcc79d7");

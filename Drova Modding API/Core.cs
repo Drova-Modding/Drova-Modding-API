@@ -10,6 +10,8 @@ using MelonLoader;
 using Il2CppDrova;
 using Drova_Modding_API.Systems.Dialogues;
 using Drova_Modding_API.Systems.Dialogues.Editor;
+using Drova_Modding_API.Systems.DebugUtils;
+
 
 
 #if DEBUG
@@ -118,8 +120,9 @@ namespace Drova_Modding_API
             if (Input.GetKeyDown(KeyCode.F6))
             {
                 GameObject gameObject = new("Test");
-                gameObject.AddComponent<NodeConnectorEditor>();
-                gameObject.AddComponent<GraphEditorManager>();
+                gameObject.AddComponent<NpcMouseRaycast>();
+                var component = gameObject.AddComponent<GraphEditorManager>();
+
             }
 #endif
             OnMonoUpdate?.Invoke();

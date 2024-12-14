@@ -461,6 +461,7 @@
 		<Compile Include="Access\ProviderAccess.cs" />
 		<Compile Include="Core.cs" />
 		<Compile Include="Access\OptionMenuAccess.cs" />
+		<Compile Include="Extensions\GUIExtensions.cs" />
 		<Compile Include="GlobalFields\InputActionFields.cs" />
 		<Compile Include="Extensions\ActorExtension.cs" />
 		<Compile Include="Generation\AddressableGeneration.cs" />
@@ -472,10 +473,17 @@
 		<Compile Include="Register\ActionKeyRegister.cs" />
 		<Compile Include="Register\InputActionRegister.cs" />
 		<Compile Include="Systems\AreaNameSystem.cs" />
+		<Compile Include="Systems\DebugUtils\DebugManager.cs" />
+		<Compile Include="Systems\DebugUtils\DebugUI.cs" />
+		<Compile Include="Systems\DebugUtils\NpcMouseRaycast.cs" />
 		<Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
+		<Compile Include="Systems\Dialogues\Editor\DrawNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\GraphEditorManager.cs" />
-		<Compile Include="Systems\Dialogues\Editor\NodeConnectorEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\DrawNodeEditorFactory.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_MultipleChoiceNodeEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_StatementNodeEditor.cs" />
 		<Compile Include="Systems\ModdingUI\ModdingUI.cs" />
+		<Compile Include="Systems\Morphing\MorphManager.cs" />
 		<Compile Include="Systems\Region.cs" />
 		<Compile Include="Systems\SaveGame\Store\IStorable.cs" />
 		<Compile Include="Systems\SaveGame\Store\IStore.cs" />

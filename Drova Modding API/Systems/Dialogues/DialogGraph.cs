@@ -41,14 +41,14 @@ namespace Drova_Modding_API.Systems.Dialogues
             endNode.availableChoices.Add(new Choice { statement = statement, isEndNode = true, UID = Il2CppSystem.Guid.NewGuid().ToString() });
             endNode.TryGenerateUID();
 
-            var additionalEndNode = dt.AddNode<DS_StatementNode>();
-            additionalEndNode.actorName = "Test";
-            additionalEndNode._actorParameterID = actorId;
-            additionalEndNode.statement = statement;
-            additionalEndNode.TryGenerateUID();
+            //var additionalEndNode = dt.AddNode<DS_StatementNode>();
+            //additionalEndNode.actorName = "Test";
+            //additionalEndNode._actorParameterID = actorId;
+            //additionalEndNode.statement = statement;
+            //additionalEndNode.TryGenerateUID();
 
             dt.ConnectNodes(startNode, endNode);
-            dt.ConnectNodes(endNode, additionalEndNode);
+            //dt.ConnectNodes(endNode, additionalEndNode);
 
             dt.name = "Generated";
             dt.primeNode = startNode;
