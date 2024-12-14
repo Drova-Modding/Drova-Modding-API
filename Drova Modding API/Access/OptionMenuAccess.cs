@@ -111,6 +111,7 @@ namespace Drova_Modding_API.Access
             {
                 MelonLogger.Error("Failed to get panel"); return null;
             }
+
             var componentToRegister = newHeader.GetComponent<GUI_ButtonNavigationAnimationElement>();
             if (!componentToRegister) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimationElement");
 

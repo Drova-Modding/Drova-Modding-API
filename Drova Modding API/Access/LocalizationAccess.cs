@@ -95,6 +95,65 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
+        /// Creates localization entries for a mod. The entries are grouped by language and copied to the respective language file.
+        /// Copys all content from the folder to the localization folder.
+        /// </summary>
+        internal static void CreateLocalizationEntriesFromFolder()
+        {
+            var localizationFolder = Path.Combine(Utils.SavePath, "Localization");
+            if (!Directory.Exists(localizationFolder))
+            {
+                MelonLogger.Msg("Localization folder not found. Created one for convient reason");
+                try { Directory.CreateDirectory(localizationFolder); }
+                catch (Exception e) { MelonLogger.Error(e.Message); }
+                return;
+            }
+
+            // collect all folders
+            var folders = Directory.GetDirectories(localizationFolder);
+            foreach (var folder in folders)
+            {
+                try
+                {
+                    var language = folder.Split(Path.DirectorySeparatorChar).Last();
+                    if (!Enum.TryParse(language, true, out ELanguage _))
+                    {
+                        // If language is not found, inject it to the enum
+                        var count = Enum.GetValues(typeof(ELanguage)).Length;
+                        InjectLanguageEnum(language, ++count);
+                    }
+                    // Here we should be safe and the language enum should contain the result
+                    if (Enum.TryParse(language, true, out ELanguage result))
+                    {
+                        var copyPath = LocalizationDB.Instance.GetLanguageFolderPath(result);
+                        // Copy all files and directories recursively
+                        CopyFilesRecursively(folder, copyPath);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MelonLogger.Error("Failed to load localiazations for {0}, because {1}", folder, e.Message);
+                }
+            }
+        }
+
+        static void CopyFilesRecursively(string sourcePath, string destinationPath)
+        {
+            foreach (var file in Directory.GetFiles(sourcePath))
+            {
+                var destFile = Path.Combine(destinationPath, Path.GetFileName(file));
+                File.Copy(file, destFile, true);
+            }
+
+            foreach (var dir in Directory.GetDirectories(sourcePath))
+            {
+                var destDir = Path.Combine(destinationPath, Path.GetFileName(dir));
+                Directory.CreateDirectory(destDir);
+                CopyFilesRecursively(dir, destDir);
+            }
+        }
+
+        /// <summary>
         /// Localization entry for a mod.
         /// </summary>
         /// <param name="Key"></param>
