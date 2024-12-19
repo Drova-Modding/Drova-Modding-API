@@ -1,4 +1,5 @@
 ﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.DebugUtils;
 using Drova_Modding_API.Systems.SaveGame;
 using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.WorldEvents;
@@ -26,6 +27,9 @@ namespace Drova_Modding_API.Systems
                 SceneManager.MoveGameObjectToScene(moddingAPISystemRoot, gameManager.gameObject.scene);
                 SaveGameSystem.Instance.OnLoad(Savegame.Current);
             }
+#if DEBUG
+            DebugUI.Init();
+#endif
         }
 
         internal static void RegisterStores()
