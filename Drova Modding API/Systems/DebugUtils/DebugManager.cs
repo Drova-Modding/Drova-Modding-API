@@ -42,6 +42,14 @@ namespace Drova_Modding_API.Systems.DebugUtils
             _lastInvoked = actor;
             OnNpcSelected?.Invoke(actor);
         }
+
+        /// <summary>
+        /// Reset the last NPC that was invoked to null
+        /// </summary>
+        public static void ResetLastInvoked()
+        {
+            TriggerNpcSelected(null);
+        }
 #endif
     }
 }

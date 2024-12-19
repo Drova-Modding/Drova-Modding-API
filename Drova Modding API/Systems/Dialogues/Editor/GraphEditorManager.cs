@@ -6,6 +6,8 @@ using Il2CppNodeCanvas.DialogueTrees;
 using MelonLoader;
 using UnityEngine;
 using Drova_Modding_API.Extensions;
+using UnityEngine.UIElements;
+using Il2CppMemoryPack.Internal;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -26,6 +28,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
             set
             {
+                if (value == null)
+                {
+                    _dialogueTree = value;
+                    return;
+                }
                 if (value.IsLazyLoading || value.allNodes.Count == 0)
                 {
                     value.SelfDeserialize();
@@ -46,6 +53,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         // Reference to the factory for creating node editors
         public DrawNodeEditorFactory DrawNodeEditorFactory { get; set; }
 
+
         // Track whether the context menu is open
         private bool _showContextMenu = false;
 
@@ -58,10 +66,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         // Current rect of the context menu
         private Rect _rect;
 
-        private Color backgroundColor = new(0.1f, 0.1f, 0.1f, 0.7f); // Dark gray with 70% opacity
-
-        private float _scaleFactor = 1.0f;               // Zoom level
-        private Vector2 _panOffset = Vector2.zero;      // Offset for panning
+        private readonly float _scaleFactor = 1f;               // Zoom level
+        private Vector2 _panOffset = new Vector2(200, -200);      // Offset for panning
         private Vector2 _dragStart;                     // Start point for panning drag
         private bool _isDragging = false;               // Is panning in progress?
 
@@ -78,8 +84,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             DebugManager.OnNpcSelected += DebugManager_OnNpcSelected;
         }
 
+        internal void OnDestroy()
+        {
+            DebugManager.OnNpcSelected -= DebugManager_OnNpcSelected;
+        }
+
         private void DebugManager_OnNpcSelected(Actor actor)
         {
+            if (actor == null) return;
             var dialogueTreeController = actor.GetComponentInChildren<DS_DialogueTreeController>();
             if (dialogueTreeController == null) return;
             if (dialogueTreeController.graph == null) return;
@@ -130,12 +142,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     var editorSource = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.sourceNode.GetIl2CppType());
                     editorSource.Node = connection.sourceNode.Cast<DTNode>();
                     drawNodeEditors.TryAdd(connection.sourceNode.UID, editorSource);
+                    editorSource.Position = new Vector2(Screen.width / 2, 100 * (i + 1));
+                    editorSource.NodeSize = new Vector2(10, 10);
                 }
                 if (!drawNodeEditors.ContainsKey(connection.targetNode.UID))
                 {
                     var editorTarget = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.targetNode.GetIl2CppType());
                     editorTarget.Node = connection.targetNode.Cast<DTNode>();
                     drawNodeEditors.TryAdd(connection.targetNode.UID, editorTarget);
+                    editorTarget.Position = new Vector2(Screen.width / 2 + (i * 50), 200 * (i + 1));
+                    editorTarget.NodeSize = new Vector2(10, 10);
                 }
 
                 if (drawNodeEditors.TryGetValue(connection.sourceNode.UID, out DrawNodeEditor sourceConnection) && drawNodeEditors.TryGetValue(connection.targetNode.UID, out DrawNodeEditor targetConnection))
@@ -165,7 +181,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             HandleNodeDragging();
 
             // Apply transformations for zoom and pan
-            GUI.matrix = Matrix4x4.TRS(_panOffset, Quaternion.identity, Vector3.one * _scaleFactor);
+            GUI.matrix = Matrix4x4.TRS(_panOffset, Quaternion.identity, new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
 
             // Draw the background
             DrawInfiniteBackground();
@@ -182,7 +198,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (_showSubContextMenu) DrawSubContextMenu();
 
             // Draw close button
-            if (GUI.Button(new Rect(Screen.width - 110, 10, 100, 30), "Close Graph"))
+            if (GUI.Button(new Rect(Screen.width - 110, 10, 100, 60), "Close Graph"))
             {
                 CloseGraph();
             }
@@ -195,7 +211,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             _showSubContextMenu = false;
             drawNodeEditors.Clear();
             DebugManager.AllowNpcSelection = true;
-            Time.timeScale = 1;
+            DebugManager.ResetLastInvoked();
+            // Restore the previous timescale if the game is paused which is the case when the graph is opened
+            if (Time.timeScale == 0)
+                Time.timeScale = 1;
         }
 
         private void HandleZoomAndPan()
@@ -207,7 +226,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 float zoomDelta = e.delta.y * -0.01f;
                 float oldScaleFactor = _scaleFactor;
-                _scaleFactor = Mathf.Clamp(_scaleFactor + zoomDelta, 0.1f, 5.0f); // Allow more extreme zoom levels
+                //_scaleFactor = Mathf.Clamp(_scaleFactor + zoomDelta, 0.1f, 5.0f); // Allow more extreme zoom levels
 
                 // Adjust pan offset to zoom around the mouse position
                 Vector2 mousePosition = e.mousePosition;
@@ -241,12 +260,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (e.type == EventType.MouseDown && e.button == 0)
             {
                 // Adjust the mouse position to account for zoom and pan
-                Debug.Log($"HandleNodeDragging called. Event: {e.type}");
+                MelonLogger.Msg($"HandleNodeDragging called. Event: {e.type}");
                 foreach (var element in drawNodeEditors)
                 {
                     var editor = element.Value;
                     Rect nodeRect = new(editor.Position, editor.NodeSize);
-                    Debug.Log($"NodeRect: {nodeRect} , adjustedMousePosition: {adjustedMousePosition}");
+
                     if (nodeRect.Contains(adjustedMousePosition))
                     {
                         _selectedNode = editor;
@@ -259,7 +278,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // On mouse drag, update the node's position
             if (e.type == EventType.MouseDrag && _selectedNode != null)
             {
-                Debug.Log($"Move Node from: {_selectedNode.Position} to: {adjustedMousePosition - _dragOffset}");
+                MelonLogger.Msg($"New Position: {adjustedMousePosition - _dragOffset} , adjustedMousePosition: {adjustedMousePosition}, dragOffset: {_dragOffset}");
+                MelonLogger.Msg($"PanOffset: {_panOffset}");
                 _selectedNode.Position = adjustedMousePosition - _dragOffset;
                 e.Use(); // Mark the event as used to prevent further processing
             }
@@ -277,8 +297,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             Color gridColor = new(0.7f, 0.7f, 0.7f, 0.5f); // Semi-transparent gray
 
             // Calculate the top-left position of the grid based on the pan offset
-            float startX = Mathf.Floor((_panOffset.x / _scaleFactor) / gridSize) * gridSize;
-            float startY = Mathf.Floor((_panOffset.y / _scaleFactor) / gridSize) * gridSize;
+            float startX = Mathf.Floor((-_panOffset.x / _scaleFactor) / gridSize) * gridSize;
+            float startY = Mathf.Floor((-_panOffset.y / _scaleFactor) / gridSize) * gridSize;
 
             // Calculate how many lines we need to draw on the screen
             int verticalLinesCount = Mathf.CeilToInt(Screen.width / (_scaleFactor * gridSize)) + 2;
@@ -288,20 +308,20 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             for (int i = -1; i < verticalLinesCount; i++)
             {
                 float x = startX + i * gridSize;
-                Vector2 start = new(x, -10000); // Extend far above the visible area
-                Vector2 end = new(x, 10000);   // Extend far below the visible area
+                Vector2 start = new(x, -10000);
+                Vector2 end = new(x, 10000);
 
-                GUIExtensions.DrawLine(start, end, gridColor, 1.0f); // Use the extension method
+                GUIExtensions.DrawLine(start, end, gridColor, 1.0f);
             }
 
             // Draw horizontal grid lines
             for (int i = -1; i < horizontalLinesCount; i++)
             {
                 float y = startY + i * gridSize;
-                Vector2 start = new(-10000, y); // Extend far to the left
-                Vector2 end = new(10000, y);    // Extend far to the right
+                Vector2 start = new(-10000, y);
+                Vector2 end = new(10000, y);
 
-                GUIExtensions.DrawLine(start, end, gridColor, 1.0f); // Use the extension method
+                GUIExtensions.DrawLine(start, end, gridColor, 1.0f);
             }
         }
 
@@ -320,6 +340,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     element.NodeSize.x,
                     element.NodeSize.y
                 );
+
 
                 if (visibleArea.Overlaps(nodeRect))
                 {
@@ -425,12 +446,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     DrawNodeEditor connectedEditor = editor.ConnectedWith[i];
                     if (connectedEditor == null) continue;
 
-                    Vector2 start = editor.Position + (editor.NodeSize / 2);
-                    Vector2 end = connectedEditor.Position + (connectedEditor.NodeSize / 2);
+                    // Get the transformed positions of the nodes
+                    Vector2 editorCenter = editor.Position + (editor.NodeSize / 2);
+                    Vector2 connectedCenter = connectedEditor.Position + (connectedEditor.NodeSize / 2);
 
-                    if (visibleArea.Contains(start) || visibleArea.Contains(end))
+
+                    // Draw the line if either point is in the visible area
+                    if (visibleArea.Contains(editorCenter) || visibleArea.Contains(connectedCenter))
                     {
-                        DrawLine((start * _scaleFactor) + _panOffset, (end * _scaleFactor) + _panOffset, Color.white);
+                        DrawLine(editorCenter, connectedCenter, Color.white);
                     }
                 }
             }
@@ -439,49 +463,22 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         // Method to draw a line connecting two points
         void DrawLine(Vector2 pointA, Vector2 pointB, Color color)
         {
-            Color previousColor = GUI.color; // Save the previous GUI color
-            GUI.color = color;               // Set the new color
+            Color previousColor = GUI.color;
+            GUI.color = color;
 
-            // Calculate the difference vector
             Vector2 delta = pointB - pointA;
 
-            // Calculate the angle and length of the line
             float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
             float length = delta.magnitude;
 
-            // Draw the line using a rotated rectangle (a thin box)
-            Matrix4x4 matrixBackup = GUI.matrix; // Save the current GUI matrix
-            GUIUtility.RotateAroundPivot(angle, pointA);
-            GUI.Box(new Rect(pointA.x, pointA.y, length, 2), ""); // Avoid scaling length here
+            Matrix4x4 matrixBackup = GUI.matrix;
 
-            GUI.matrix = matrixBackup;        // Restore the original matrix
-            GUI.color = previousColor;        // Restore the previous color
-        }
+            GUI.matrix = Matrix4x4.TRS(pointA + _panOffset, Quaternion.Euler(0f, 0f, angle), Vector3.one);
 
-        // Calculate the point on the edge of a node rectangle closest to a target point
-        Vector2 GetEdgePoint(Vector2 nodeCenter, Vector2 nodeSize, Vector2 target)
-        {
-            // Calculate the direction from the center to the target
-            Vector2 direction = target - nodeCenter;
+            GUI.Box(new Rect(0, 0, length, 2), "");
 
-            // Handle cases where the direction vector is effectively zero
-            if (direction.sqrMagnitude < 0.0001f)
-            {
-                return nodeCenter; // Return the center if the target is at the same position
-            }
-
-            direction.Normalize(); // Normalize the direction vector
-
-            // Correctly calculate distances to the edges
-            Vector2 halfSize = nodeSize / 2;
-
-            float scaleX = Mathf.Abs(direction.x) > 0.0001f ? halfSize.x / Mathf.Abs(direction.x) : float.MaxValue;
-            float scaleY = Mathf.Abs(direction.y) > 0.0001f ? halfSize.y / Mathf.Abs(direction.y) : float.MaxValue;
-
-            // Use the smaller scale to find the intersection point
-            float scale = Mathf.Min(scaleX, scaleY);
-
-            return nodeCenter + direction * scale;
+            GUI.matrix = matrixBackup;
+            GUI.color = previousColor;
         }
 
         #endregion LineDrawing
