@@ -38,6 +38,7 @@ See [Wiki](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
 
 - [Trello](https://trello.com/b/8sUEknxR/drova-modding-api)
 - [Discord](https://discord.com/channels/779751611756707890/1304552763761492089) It's the Drova Discord
+- [Nexusmods](https://www.nexusmods.com/drovaforsakenkin/mods/4)
 
 ## Features
 - Easier access to OptionsMenu, you can create your own Panel or use the exesting modding panel!
