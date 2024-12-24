@@ -34,6 +34,11 @@ And to your csproj:
 ## Wiki
 See [Wiki](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
 
+## Follow the Project
+
+- [Trello](https://trello.com/b/8sUEknxR/drova-modding-api)
+- [Discord](https://discord.com/channels/779751611756707890/1304552763761492089) It's the Drova Discord
+
 ## Features
 - Easier access to OptionsMenu, you can create your own Panel or use the exesting modding panel!
 - You can create persistent settings in there including, keyboard bindings, switches, dropdown, buttons and sliders. 
