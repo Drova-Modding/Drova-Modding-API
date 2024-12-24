@@ -7,11 +7,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_StatementNodeEditor: DrawNodeEditor
     {
         protected Vector2 nodeSize = new(200, 50);
+        DS_StatementNode CastedNode;
         public DS_StatementNodeEditor() { }
         public override Rect DrawNode(Vector2 position)
         {
-            var statementNode = Node.TryCast<DS_StatementNode>();
-            if (statementNode == null) return default;
+            CastedNode ??= Node.TryCast<DS_StatementNode>();
+            if (CastedNode == null) return default;
 
             Color previousColor = GUI.color;
             GUI.color = Color.green;
@@ -25,8 +26,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
 
             // Editable TextFields for type and property
-            statementNode.statement._globalPath = GUI.TextField(new Rect(position.x + 5, position.y + 25, nodeSize.x - 10, 20), statementNode.statement._globalPath);
-            statementNode.statement._locaKey = GUI.TextField(new Rect(position.x + 5, position.y + 55, nodeSize.x - 10, 20), statementNode.statement._locaKey);
+            CastedNode.statement._globalPath = GUI.TextField(new Rect(position.x + 5, position.y + 25, nodeSize.x - 10, 20), CastedNode.statement._globalPath);
+            CastedNode.statement._locaKey = GUI.TextField(new Rect(position.x + 5, position.y + 55, nodeSize.x - 10, 20), CastedNode.statement._locaKey);
 
             GUI.color = previousColor;
             GUI.backgroundColor = previousBackgroundColor;

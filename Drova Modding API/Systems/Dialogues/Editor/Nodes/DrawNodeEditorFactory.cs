@@ -1,9 +1,4 @@
 ﻿using MelonLoader;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
@@ -15,8 +10,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private readonly Dictionary<string, Type> nameToNodeMap = new()
         {
                 { "DS_StatementNode", typeof(DS_StatementNodeEditor) },
-                { "DS_MultipleChoiceNode", typeof(DS_MultipleChoiceNodeEditor) }
-            };
+                { "DS_MultipleChoiceNode", typeof(DS_MultipleChoiceNodeEditor) },
+                { "DS_GiveExp", typeof(DS_GiveExpNodeEditor) },
+                { "DS_ChangeStanceNode", typeof(DS_ChangeStanceNodeEditor) }
+        };
 
         /// <summary>
         /// Get a DrawNodeEditor by index
@@ -25,20 +22,23 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         /// <returns>The corosponding DrawNodeEditor</returns>
         public virtual DrawNodeEditor GetDrawNodeEditor(int index)
         {
-            switch (index)
+            return index switch
             {
-                case (int)DrawNodeType.StatementNode:
-                    return new DS_StatementNodeEditor();
-                case (int)DrawNodeType.MultipleChoiceNode:
-                    return null;
-                default:
-                    return null;
-            }
+                (int)DrawNodeType.StatementNode => new DS_StatementNodeEditor(),
+                (int)DrawNodeType.MultipleChoiceNode => null,
+                _ => null,
+            };
         }
 
+        /// <summary>
+        /// Get a DrawNodeEditor by type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public virtual DrawNodeEditor GetDrawNodeEditorFromType(Il2CppSystem.Type type)
         {
-            try {
+            try
+            {
                 if (nameToNodeMap.TryGetValue(type.Name, out Type v))
                 {
                     return (DrawNodeEditor)Activator.CreateInstance(v);
@@ -53,7 +53,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 MelonLogger.Error("Error creating DrawNodeEditor from type: " + e);
                 return null;
             }
-            
+
         }
 
         /// <summary>

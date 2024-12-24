@@ -21,15 +21,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// last Size of the node
         /// </summary>
-        internal Vector2 NodeSize;
+        public Vector2 NodeSize;
         /// <summary>
         /// last Position of the node
         /// </summary>
-        internal Vector2 Position;
+        public Vector2 Position;
         /// <summary>
         /// The node that is being drawn
         /// </summary>
-        internal DTNode Node;
+        public DTNode Node;
 
         /// <summary>
         /// Draw the node

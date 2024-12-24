@@ -374,6 +374,7 @@ namespace Drova_Modding_API.Access
             public readonly static AssetReferenceT<Item> Consumable_Potion_Potion_Flow_1 = new("06c4a20da0ad4d149ab03d12744aecb9");
             public readonly static AssetReferenceT<Item> Consumable_Potion_Potion_Health_0 = new("83ec18a43f1d2dc4784324f137b5fd10");
             public readonly static AssetReferenceT<Item> Consumable_Potion_Potion_Health_1 = new("5610af5ef8e8f654e91207c1ade4b8e1");
+            public readonly static AssetReferenceT<Item> Consumable_Potion_Potion_Respec = new("43dea3065ea61b547a3d362281b74663");
             public readonly static AssetReferenceT<Item> Consumable_Potion_Potion_Windwalker = new("ac97208333dbd844bab88d1a1bf40fec");
             public readonly static AssetReferenceT<Item> Consumable_Potion_Redmushroomtincture = new("420e5232b70fa5b458dd14aac5d5c32b");
             public readonly static AssetReferenceT<Item> Consumable_Potion_Rustymosspipe = new("23ac1341bebf71d43862dbf2f7fb584f");

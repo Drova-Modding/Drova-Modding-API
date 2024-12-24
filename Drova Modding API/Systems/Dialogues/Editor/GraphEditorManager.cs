@@ -6,8 +6,6 @@ using Il2CppNodeCanvas.DialogueTrees;
 using MelonLoader;
 using UnityEngine;
 using Drova_Modding_API.Extensions;
-using UnityEngine.UIElements;
-using Il2CppMemoryPack.Internal;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -19,6 +17,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
     internal class GraphEditorManager(IntPtr ptr) : MonoBehaviour(ptr)
     {
         private DialogueTree _dialogueTree;
+
         // Reference to the dialogue tree being edited
         public DialogueTree DialogueTree
         {
@@ -53,7 +52,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         // Reference to the factory for creating node editors
         public DrawNodeEditorFactory DrawNodeEditorFactory { get; set; }
 
-
         // Track whether the context menu is open
         private bool _showContextMenu = false;
 
@@ -66,8 +64,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         // Current rect of the context menu
         private Rect _rect;
 
-        private readonly float _scaleFactor = 1f;               // Zoom level
-        private Vector2 _panOffset = new Vector2(200, -200);      // Offset for panning
+        private float _scaleFactor = 1f;               // Zoom level
+        private Vector2 _panOffset = new(200, -200);      // Offset for panning
         private Vector2 _dragStart;                     // Start point for panning drag
         private bool _isDragging = false;               // Is panning in progress?
 
@@ -226,7 +224,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 float zoomDelta = e.delta.y * -0.01f;
                 float oldScaleFactor = _scaleFactor;
-                //_scaleFactor = Mathf.Clamp(_scaleFactor + zoomDelta, 0.1f, 5.0f); // Allow more extreme zoom levels
+                _scaleFactor = Mathf.Clamp(_scaleFactor + zoomDelta, 0.1f, 5.0f); // Allow more extreme zoom levels
 
                 // Adjust pan offset to zoom around the mouse position
                 Vector2 mousePosition = e.mousePosition;
@@ -361,13 +359,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             DrawContextMenu(_contextMenuOptions.Length, menuWidth);
 
-            // Display each option as a button
+       
             for (int i = 0; i < _contextMenuOptions.Length; i++)
             {
                 if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + i * 20, menuWidth, 20), _contextMenuOptions[i].GetLocalizedString(null)))
                 {
                     HandleContextMenuSelection(i);
-                    _showContextMenu = false; // Close the menu after selection
+                    _showContextMenu = false;
                 }
             }
         }
@@ -460,7 +458,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
-        // Method to draw a line connecting two points
+        /// <summary>
+        /// Draws a line between two points in the GUI.
+        /// </summary>
+        /// <param name="pointA">Line a</param>
+        /// <param name="pointB">Line b</param>
+        /// <param name="color">Which color it should have</param>
         void DrawLine(Vector2 pointA, Vector2 pointB, Color color)
         {
             Color previousColor = GUI.color;
@@ -473,7 +476,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             Matrix4x4 matrixBackup = GUI.matrix;
 
-            GUI.matrix = Matrix4x4.TRS(pointA + _panOffset, Quaternion.Euler(0f, 0f, angle), Vector3.one);
+            GUI.matrix = Matrix4x4.TRS((pointA * _scaleFactor) + _panOffset , Quaternion.Euler(0f, 0f, angle), new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
 
             GUI.Box(new Rect(0, 0, length, 2), "");
 
