@@ -9,10 +9,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         private readonly Dictionary<string, Type> nameToNodeMap = new()
         {
-                { "DS_StatementNode", typeof(DS_StatementNodeEditor) },
-                { "DS_MultipleChoiceNode", typeof(DS_MultipleChoiceNodeEditor) },
-                { "DS_GiveExp", typeof(DS_GiveExpNodeEditor) },
-                { "DS_ChangeStanceNode", typeof(DS_ChangeStanceNodeEditor) }
+            { "DS_StatementNode", typeof(DS_StatementNodeEditor) },
+            { "DS_MultipleChoiceNode", typeof(DS_MultipleChoiceNodeEditor) },
+            { "DS_GiveExp", typeof(DS_GiveExpNodeEditor) },
+            { "DS_ChangeStanceNode", typeof(DS_ChangeStanceNodeEditor) },
+            { "DS_DebugNode", typeof(DS_DebugNodeEditor) },
+            { "DS_HideDialogWindow", typeof(DS_HideDialogWindowNodeEditor) },
         };
 
         /// <summary>

@@ -70,18 +70,20 @@ namespace Drova_Modding_API.Systems.WorldEvents
             CurrentEvent.StartEvent();
         }
 
-        private void Awake()
+        internal void Awake()
         {
             _instance = this;
             MelonCoroutines.Start(_instance.StartEventCooldown());
             areaNameSystem.OnRegionChanged += OnRegionListener;
         }
 
-        private void OnDestroy()
+        internal void OnDestroy()
         {
             if (areaNameSystem != null)
                 areaNameSystem.OnRegionChanged -= OnRegionListener;
         }
+
+        [HideFromIl2Cpp]
 
         private void OnRegionListener(Region region, bool hasEntered)
         {
@@ -89,6 +91,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
             HandleRunningEvents(region, hasEntered);
         }
 
+        [HideFromIl2Cpp]
         private void HandleRunningEvents(Region region, bool hasEntered)
         {
             if (hasEntered && _regionEventDic.ContainsKey(region))
@@ -123,6 +126,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
             }
         }
 
+        [HideFromIl2Cpp]
         private static void HandleRegionChange(Region region, bool hasEntered)
         {
             if (hasEntered && _regionEventDic.ContainsKey(region))

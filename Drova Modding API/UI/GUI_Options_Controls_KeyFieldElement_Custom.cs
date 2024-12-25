@@ -41,7 +41,7 @@ namespace Drova_Modding_API.UI
         /**
          * Initialize the keybinding element.
          */
-        public void Init(string actionName, bool useObsolote = true, GameObject exitButton = null)
+        public void Init(string actionName, GameObject exitButton = null)
         {
             _exitButton = exitButton;
             _actionName = actionName;
@@ -79,14 +79,8 @@ namespace Drova_Modding_API.UI
                 MelonLogger.Error("ConflictMarker not found."); return;
             }
             conflictMarker = conflictMarkerChild.gameObject;
-            if (useObsolote)
-            {
-                InitObsolete();
-            }
-            else
-            {
-                InitNew();
-            }
+
+            Init();
             InputSystem.add_onDeviceChange(new Action<InputDevice, InputDeviceChange>(this.OnDeviceChange));
         }
 
@@ -135,7 +129,7 @@ namespace Drova_Modding_API.UI
 
 
 
-        private void InitNew()
+        private void Init()
         {
             
             if (Gamepad.current != null)
@@ -184,71 +178,6 @@ namespace Drova_Modding_API.UI
                 operation.Dispose();
             }));
             rebindOperation.Start();
-        }
-
-        private void InitObsolete()
-        {
-            _keybindingButton.onClick.AddListener(new Action(RegisterListenKey));
-            if (KeyAlreadyBound(ActionKeyRegister.Instance[_actionName])) conflictMarker.GetComponent<Image>().enabled = true;
-        }
-
-        [Obsolete("Removed with upcoming updates.")]
-        private bool KeyAlreadyBound(KeyCode code)
-        {
-            foreach (var key in ActionKeyRegister.Instance.KeyCodes)
-            {
-                if (key == ActionKeyRegister.Instance[_actionName]) continue;
-                if (key == code) return true;
-            }
-            if (_controls)
-            {
-                foreach (var key in _controls.RemapService._defaultMappingKeyboard.Values)
-                    if (Enum.TryParse(key.KeyboardValue.Replace(" ", ""), out KeyCode result))
-                    {
-                        if (result == code) return true;
-                    }
-            }
-            return false;
-        }
-
-        /**
-         * Register the listener for the keybinding.
-         */
-        [Obsolete("Removed with upcoming updates.")]
-        public void RegisterListenKey()
-        {
-            _keybindingText.text = "...";
-            Core.OnMonoUpdate += ListenForKey;
-        }
-
-        [Obsolete("Removed with upcoming updates.")]
-        private void ListenForKey()
-        {
-
-            foreach (var key in Keyboard.current.allKeys)
-                if (key.wasPressedThisFrame && char.IsLetterOrDigit(key.displayName[0]))
-                {
-                    // If escape is pressed, cancel the keybinding action.
-                    if (key.keyCode == Key.Escape)
-                    {
-                        _keybindingText.text = ActionKeyRegister.Instance[_actionName].ToString();
-                        Core.OnMonoUpdate -= ListenForKey; return;
-                    }
-                    KeyCode code = Utils.KeyToKeyCode(key.keyCode);
-                    if (code == KeyCode.None) return;
-                    if (KeyAlreadyBound(code))
-                    {
-                        Core.OnMonoUpdate -= ListenForKey;
-                        _keybindingText.text = code.ToString();
-                        ActionKeyRegister.Instance.AddAction(_actionName, code);
-                        conflictMarker.GetComponent<Image>().enabled = true;
-                        return;
-                    }
-                    conflictMarker.GetComponent<Image>().enabled = false;
-                    ActionKeyRegister.Instance.AddAction(_actionName, code);
-                    _keybindingText.text = code.ToString();
-                    Core.OnMonoUpdate -= ListenForKey;
-                }
         }
     }
 }

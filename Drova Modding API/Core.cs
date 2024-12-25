@@ -12,8 +12,6 @@ using Drova_Modding_API.Systems.Dialogues;
 using Drova_Modding_API.Systems.Dialogues.Editor;
 using Drova_Modding_API.Systems.DebugUtils;
 
-
-
 #if DEBUG
 using UnityEngine.InputSystem;
 using System.Collections;
@@ -31,7 +29,6 @@ namespace Drova_Modding_API
     public class Core : MelonMod
     {
         internal static string AssemblyLocation;
-        internal static event Action OnMonoUpdate;
         internal bool _inMainMenu = false;
 
 #if DEBUG
@@ -45,7 +42,6 @@ namespace Drova_Modding_API
 #if DEBUG
             consoleAction.Enable();
 #endif
-            SystemInit.RegisterIl2Cpp();
             SystemInit.RegisterStores();
             LoggerInstance.Msg("Initialized Modding API.");
             OptionMenuAccess.Instance.OnOptionMenuClose += () =>
@@ -93,7 +89,6 @@ namespace Drova_Modding_API
         {
             base.OnLateInitializeMelon();
             AssemblyLocation = MelonAssembly.Location;
-            ActionKeyRegister.Instance.LoadKeyCodes();
             GameObject gameObject = new("ModdingAPIRegister");
             gameObject.AddComponent<InputActionRegister>();
             UnityEngine.Object.DontDestroyOnLoad(gameObject);
@@ -125,7 +120,6 @@ namespace Drova_Modding_API
 
             }
 #endif
-            OnMonoUpdate?.Invoke();
         }
 
         private IEnumerator SetupNPC()

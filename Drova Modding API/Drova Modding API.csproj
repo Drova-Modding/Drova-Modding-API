@@ -470,7 +470,6 @@
 		<Compile Include="Patches\GUI_Window_Options.cs" />
 		<Compile Include="Patches\GUI_Window_Patch.cs" />
 		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
-		<Compile Include="Register\ActionKeyRegister.cs" />
 		<Compile Include="Register\InputActionRegister.cs" />
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\DebugUtils\DebugManager.cs" />
@@ -481,6 +480,7 @@
 		<Compile Include="Systems\Dialogues\Editor\GraphEditorManager.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DrawNodeEditorFactory.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_ChangeStanceNodeEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_DebugNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_GiveExpNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_HideDialogWindowNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_MultipleChoiceNodeEditor.cs" />

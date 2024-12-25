@@ -59,12 +59,23 @@ namespace Drova_Modding_API.Systems.Dialogues
             stanceNode._interactionMode = Actor.EInteractionMode.Smoke;
             stanceNode.TryGenerateUID();
 
+            var waitNode = dt.AddNode<DS_DebugNode>();
+            waitNode.actorName = "Test";
+            waitNode._actorParameterID = actorId;
+            waitNode._waitTime = 5;
+            waitNode.TryGenerateUID();
+
+            var hideDialogNode = dt.AddNode<DS_HideDialogWindow>();
+            hideDialogNode.TryGenerateUID();
+
 
 
             dt.ConnectNodes(startNode, endNode);
             dt.ConnectNodes(endNode, additionalEndNode);
             dt.ConnectNodes(additionalEndNode, experienceNode);
             dt.ConnectNodes(experienceNode, stanceNode);
+            dt.ConnectNodes(stanceNode, waitNode);
+            dt.ConnectNodes(waitNode, hideDialogNode);
 
             dt.name = "Generated";
             dt.primeNode = startNode;

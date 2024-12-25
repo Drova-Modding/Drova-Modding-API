@@ -365,112 +365,6 @@ namespace Drova_Modding_API.UI.Builder
             return this;
         }
 
-        /**
-         * Create a keybinding
-         * @param titleOfSection The title of the section.
-         * @param keybindings The keybindings to create.
-         */
-        public OptionUIBuilder CreateKeyBindingSection(List<Keybinding> keybindings, LocalizedString titleOfSection = null)
-        {
-            var keybindingPrefab = GetKeyBinding();
-            if (titleOfSection != null)
-            {
-                CreateTitle(titleOfSection);
-            };
-            return BuildKeyBinding(keybindings, keybindingPrefab);
-        }
-
-        private OptionUIBuilder BuildKeyBinding(List<Keybinding> keybindings, GameObject keybindingPrefab)
-        {
-            foreach (var keybinding in keybindings)
-            {
-                var keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, _parent);
-                var toDestroy = keyBinding.GetComponent<GUI_Option_Controls_KeyFieldElement>();
-                if (toDestroy)
-                {
-                    UnityEngine.Object.Destroy(toDestroy);
-
-                }
-                var components = keyBinding.GetComponentsInChildren<HorizontalLayoutGroup>();
-                foreach (var component in components)
-                {
-                    component.enabled = true;
-                }
-
-                var loadedKeycode = ActionKeyRegister.Instance.GetKeyCode(keybinding.ActionName);
-                if (loadedKeycode == KeyCode.None)
-                {
-                    ActionKeyRegister.Instance[keybinding.ActionName] = keybinding.DefaultActionKey;
-                }
-
-                var customKeyFieldElement = keyBinding.AddComponent<GUI_Options_Controls_KeyFieldElement_Custom>();
-                if (customKeyFieldElement != null)
-                {
-                    customKeyFieldElement.Init(keybinding.ActionName);
-                }
-                else
-                {
-                    MelonLogger.Error("Failed to create custom keybinding element");
-                }
-
-                var leftChild = keyBinding.transform.FindChild("Left");
-                if (!leftChild)
-                {
-                    MelonLogger.Error("Left child not found in keybinding prefab");
-                    return this;
-                }
-                var textMeshPro = leftChild.GetComponentInChildren<TextMeshProUGUI>();
-                if (!textMeshPro)
-                {
-                    MelonLogger.Error("TextMeshPro not found in keybinding prefab");
-                    return this;
-                }
-
-                var textMeshProObject = textMeshPro.gameObject;
-                var localized = textMeshProObject.AddComponent<LocalizedTextMeshPro>();
-
-                localized._text = textMeshPro;
-                localized._localizedString = keybinding.Title;
-                localized.UpdateLocalizedText();
-
-                var controller = keyBinding.transform.FindChild("Controller/ChangeButton");
-                controller.gameObject.SetActiveRecursively(false);
-                if (!controller)
-                {
-                    MelonLogger.Error("controller not found in keybinding prefab");
-                    return this;
-                }
-
-                var keyboard = keyBinding.transform.FindChild("Keyboard");
-                if (!keyboard)
-                {
-                    MelonLogger.Error("keyboard not found in keybinding prefab");
-                    return this;
-                }
-                var keyboardTitle = keyboard.GetComponentInChildren<TextMeshProUGUI>();
-                if (!keyboardTitle)
-                {
-                    MelonLogger.Error("keyboardTitle not found in keybinding prefab");
-                    return this;
-                }
-                keyboardTitle.text = loadedKeycode != KeyCode.None ? Enum.GetName(loadedKeycode) : Enum.GetName(keybinding.DefaultActionKey);
-                gameObjects.Add(keyBinding);
-            }
-            return this;
-        }
-
-        /**
-         * Create a keybinding section in the Controls Panel without a title.
-         * At the moment it is not working as intended, because the keybinding area recreates itself on the second time, which moves our elements from last to first!
-         * @param keybindings The keybindings to create.
-         */
-        public OptionUIBuilder CreateKeyBindingSection(List<Keybinding> keybindings)
-        {
-
-            var keybindingPrefab = GetKeyBinding();
-            return BuildKeyBinding(keybindings, keybindingPrefab);
-        }
-
         /// <summary>
         /// Create a section with input actions.
         /// </summary>
@@ -497,7 +391,7 @@ namespace Drova_Modding_API.UI.Builder
                 var customKeyFieldElement = keyBinding.AddComponent<GUI_Options_Controls_KeyFieldElement_Custom>();
                 if (customKeyFieldElement != null)
                 {
-                    customKeyFieldElement.Init(inputAction.ActionName, false, exitButton);
+                    customKeyFieldElement.Init(inputAction.ActionName, exitButton);
                 }
                 else
                 {
