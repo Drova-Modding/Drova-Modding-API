@@ -37,5 +37,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <param name="position">Position to add</param>
         /// <returns>Rect of its position</returns>
         public abstract Rect DrawNode(Vector2 position);
+
+        /// <summary>
+        /// Called when the node is clicked
+        /// </summary>
+        /// <param name="mousePosition">The mousePositíon when it was clicked (translated in gui cords)</param>
+        public virtual void OnClick(Vector2 mousePosition) { }
     }
 }

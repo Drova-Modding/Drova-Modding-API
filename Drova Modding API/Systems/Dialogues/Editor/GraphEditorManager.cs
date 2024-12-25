@@ -138,6 +138,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 if (!drawNodeEditors.ContainsKey(connection.sourceNode.UID))
                 {
                     var editorSource = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.sourceNode.GetIl2CppType());
+                    if (editorSource == null)
+                    {
+                        MelonLogger.Msg("Editor Source is null for {Type}", connection.sourceNode.GetIl2CppType());
+                        continue;
+                    }
                     editorSource.Node = connection.sourceNode.Cast<DTNode>();
                     drawNodeEditors.TryAdd(connection.sourceNode.UID, editorSource);
                     editorSource.Position = new Vector2(Screen.width / 2, 100 * (i + 1));
@@ -146,6 +151,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 if (!drawNodeEditors.ContainsKey(connection.targetNode.UID))
                 {
                     var editorTarget = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.targetNode.GetIl2CppType());
+                    if (editorTarget == null)
+                    {
+                        MelonLogger.Msg("Editor Target is null for {Type}", connection.targetNode.GetIl2CppType());
+                        continue;
+                    }
                     editorTarget.Node = connection.targetNode.Cast<DTNode>();
                     drawNodeEditors.TryAdd(connection.targetNode.UID, editorTarget);
                     editorTarget.Position = new Vector2(Screen.width / 2 + (i * 50), 200 * (i + 1));
@@ -195,10 +205,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (_showContextMenu) DrawContextMenu();
             if (_showSubContextMenu) DrawSubContextMenu();
 
-            // Draw close button
+            DrawControls();
+        }
+
+        private void DrawControls()
+        {
             if (GUI.Button(new Rect(Screen.width - 110, 10, 100, 60), "Close Graph"))
             {
                 CloseGraph();
+            }
+            if (GUI.Button(new Rect(Screen.width - 110, 70, 100, 60), "Save Graph"))
+            {
+                DialogueTree.Serialize(null);
             }
         }
 
@@ -359,7 +377,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             DrawContextMenu(_contextMenuOptions.Length, menuWidth);
 
-       
+
             for (int i = 0; i < _contextMenuOptions.Length; i++)
             {
                 if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + i * 20, menuWidth, 20), _contextMenuOptions[i].GetLocalizedString(null)))
@@ -448,14 +466,45 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     Vector2 editorCenter = editor.Position + (editor.NodeSize / 2);
                     Vector2 connectedCenter = connectedEditor.Position + (connectedEditor.NodeSize / 2);
 
+                    var editorEdge = GetEdgePoint(editorCenter, editor.NodeSize, connectedCenter);
+                    var connectedEdge = GetEdgePoint(connectedCenter, connectedEditor.NodeSize, editorCenter);
+
 
                     // Draw the line if either point is in the visible area
                     if (visibleArea.Contains(editorCenter) || visibleArea.Contains(connectedCenter))
                     {
-                        DrawLine(editorCenter, connectedCenter, Color.white);
+                        DrawLine(editorEdge, connectedEdge, Color.white);
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the point where the edge of the node intersects with the line to the target.
+        /// </summary>
+        /// <param name="nodeCenter">Center of the node</param>
+        /// <param name="nodeSize">Size of the node</param>
+        /// <param name="target">Node where the line will be drawn</param>
+        /// <returns>Edge point</returns>
+        static Vector2 GetEdgePoint(Vector2 nodeCenter, Vector2 nodeSize, Vector2 target)
+        {
+            Vector2 direction = target - nodeCenter;
+
+            if (direction.sqrMagnitude < 0.0001f)
+            {
+                return nodeCenter;
+            }
+
+            direction.Normalize();
+
+            Vector2 halfSize = nodeSize / 2;
+
+            float scaleX = Mathf.Abs(direction.x) > 0.0001f ? halfSize.x / Mathf.Abs(direction.x) : float.MaxValue;
+            float scaleY = Mathf.Abs(direction.y) > 0.0001f ? halfSize.y / Mathf.Abs(direction.y) : float.MaxValue;
+
+            float scale = Mathf.Min(scaleX, scaleY);
+
+            return nodeCenter + direction * scale;
         }
 
         /// <summary>
@@ -476,7 +525,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             Matrix4x4 matrixBackup = GUI.matrix;
 
-            GUI.matrix = Matrix4x4.TRS((pointA * _scaleFactor) + _panOffset , Quaternion.Euler(0f, 0f, angle), new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
+            GUI.matrix = Matrix4x4.TRS((pointA * _scaleFactor) + _panOffset, Quaternion.Euler(0f, 0f, angle), new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
 
             GUI.Box(new Rect(0, 0, length, 2), "");
 

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Drova_Modding_API.Extensions
 {
@@ -24,29 +19,25 @@ namespace Drova_Modding_API.Extensions
         /// <param name="width">The width of the line.</param>
         public static void DrawLine(Vector2 start, Vector2 end, Color color, float width = 1.0f)
         {
-            // Create a 1x1 texture if it doesn't exist
             if (_lineTexture == null)
             {
                 _lineTexture = new Texture2D(1, 1);
                 _lineTexture.SetPixel(0, 0, Color.white);
                 _lineTexture.Apply();
             }
-            // Save the previous GUI color
+
             Color previousColor = GUI.color;
             GUI.color = color;
 
-            // Calculate the direction and length of the line
             Vector2 delta = end - start;
             float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
             float length = delta.magnitude;
 
-            // Set the GUI matrix to rotate and scale the line
             Matrix4x4 originalMatrix = GUI.matrix;
             GUIUtility.RotateAroundPivot(angle, start);
             GUI.DrawTexture(new Rect(start.x, start.y, length, width), _lineTexture);
             GUI.matrix = originalMatrix;
 
-            // Restore the previous GUI color
             GUI.color = previousColor;
         }
     }
