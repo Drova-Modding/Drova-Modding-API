@@ -9,9 +9,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         protected Vector2 nodeSize = new(200, 50);
         DS_StatementNode CastedNode;
         public DS_StatementNodeEditor() { }
-        public override Rect DrawNode(Vector2 position)
+
+        public override void Init()
         {
             CastedNode ??= Node.TryCast<DS_StatementNode>();
+        }
+
+        public override Rect DrawNode(Vector2 position)
+        {
             if (CastedNode == null) return default;
 
             Color previousColor = GUI.color;

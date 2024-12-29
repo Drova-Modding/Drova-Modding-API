@@ -6,10 +6,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_MultipleChoiceNodeEditor : DrawNodeEditor
     {
         DS_MultipleChoiceNode CastedNode;
-        public override Rect DrawNode(Vector2 position)
+
+        public override void Init()
         {
             CastedNode ??= Node.TryCast<DS_MultipleChoiceNode>();
+        }
 
+        public override Rect DrawNode(Vector2 position)
+        {
             if (CastedNode == null)
             {
                 return default;

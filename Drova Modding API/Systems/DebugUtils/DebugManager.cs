@@ -23,6 +23,9 @@ namespace Drova_Modding_API.Systems.DebugUtils
         /// </summary>
         private static Actor _lastInvoked;
 
+        /// <summary>
+        /// Allow the selection of NPCs/Creatures
+        /// </summary>
         public static bool AllowNpcSelection { get; set; } = true;
 
         /// <summary>

@@ -6,6 +6,7 @@ using Il2CppNodeCanvas.DialogueTrees;
 using MelonLoader;
 using UnityEngine;
 using Drova_Modding_API.Extensions;
+using Drova_Modding_API.Access;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -39,6 +40,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 BuildNodeEditorsFromFirstInit(value);
                 _dialogueTree = value;
                 DebugManager.AllowNpcSelection = false;
+                InputAccess.ToggleGampeplayActionMaps(false);
                 Time.timeScale = 0;
             }
         }
@@ -63,11 +65,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
         // Current rect of the context menu
         private Rect _rect;
+        // Zoom level
+        private float _scaleFactor = 1f;
+        // Offset for panning
+        private Vector2 _panOffset = new(200, -200);
+        // Start point for panning drag
+        private Vector2 _dragStart;
+        // Is panning in progress?
+        private bool _isDragging = false;
 
-        private float _scaleFactor = 1f;               // Zoom level
-        private Vector2 _panOffset = new(200, -200);      // Offset for panning
-        private Vector2 _dragStart;                     // Start point for panning drag
-        private bool _isDragging = false;               // Is panning in progress?
+        private bool _isFirstDraw = true;
 
         // List of context menu options
         private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate")];
@@ -80,6 +87,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             DrawNodeEditorFactory = new DrawNodeEditorFactory();
             DebugManager.OnNpcSelected += DebugManager_OnNpcSelected;
+        }
+
+        internal void Start()
+        {
+            useGUILayout = false;
         }
 
         internal void OnDestroy()
@@ -174,6 +186,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             if (DialogueTree == null) return;
 
+            if (_isFirstDraw)
+            {
+                for (var i = 0; i < drawNodeEditors.Count; i++)
+                {
+                    drawNodeEditors.Values.ElementAt(i).Init();
+                }
+                _isFirstDraw = false;
+            }
+
             // Define the visible screen rect for dynamic rendering
             Rect visibleArea = new(
                 -_panOffset.x / _scaleFactor,
@@ -227,10 +248,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             _showSubContextMenu = false;
             drawNodeEditors.Clear();
             DebugManager.AllowNpcSelection = true;
+            _scaleFactor = 1;
+            _panOffset = new Vector2(200, -200);
+            _isFirstDraw = true;
             DebugManager.ResetLastInvoked();
             // Restore the previous timescale if the game is paused which is the case when the graph is opened
             if (Time.timeScale == 0)
                 Time.timeScale = 1;
+            InputAccess.ToggleGampeplayActionMaps(true);
         }
 
         private void HandleZoomAndPan()
@@ -241,12 +266,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (e.type == EventType.ScrollWheel)
             {
                 float zoomDelta = e.delta.y * -0.01f;
-                float oldScaleFactor = _scaleFactor;
+                //float oldScaleFactor = _scaleFactor;
                 _scaleFactor = Mathf.Clamp(_scaleFactor + zoomDelta, 0.1f, 5.0f); // Allow more extreme zoom levels
 
-                // Adjust pan offset to zoom around the mouse position
-                Vector2 mousePosition = e.mousePosition;
-                _panOffset += (mousePosition - _panOffset) * (1 - oldScaleFactor / _scaleFactor);
                 e.Use();
             }
 

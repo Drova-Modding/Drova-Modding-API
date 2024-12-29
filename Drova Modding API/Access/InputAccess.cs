@@ -71,6 +71,16 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
+        /// Toggles the gameplay action maps on or off
+        /// </summary>
+        /// <param name="state">true or false for on and off</param>
+        public static void ToggleGampeplayActionMaps(bool state)
+        {
+            var player = ReInput.players.GetPlayer(0);
+            player.controllers.maps.SetMapsEnabled(state, 0);
+        }
+
+        /// <summary>
         /// Start rebinding the input action with the given name. The action will be rebound with the next input clicked.
         /// </summary>
         /// <param name="actionName"></param>

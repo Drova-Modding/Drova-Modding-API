@@ -71,15 +71,18 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// </summary>
         /// <param name="baseInteractionPrefab">Which interaction to perform <see cref="Access.AddressableAccess.NPCs.Interactions"/></param>
         /// <param name="actorParameter">Which actor should perform this action</param>
+        /// <param name="waitForFinish">If the dialogue should wait for the action to finish</param>
+        /// <param name="waitTime">How long the dialogue should wait for the action to finish</param>
         /// <returns></returns>
-        public virtual DS_InteractAABaseNode CreateInteractionNode(AA_ABase baseInteractionPrefab, ActorParameter actorParameter)
+        public virtual DS_InteractAABaseNode CreateInteractionNode(AA_ABase baseInteractionPrefab, ActorParameter actorParameter, bool waitForFinish = true, float waitTime = 0)
         {
             var newNode = Tree.AddNode<DS_InteractAABaseNode>();
             newNode._actorName = actorParameter._keyName;
             newNode._actorParameterID = actorParameter._id;
             newNode._hideDialogueWindow = true;
             newNode._interactPrefab = baseInteractionPrefab;
-            newNode._waitForFinish = true;
+            newNode._waitForFinish = waitForFinish;
+            newNode._waitTime = waitTime;
             newNode.TryGenerateUID();
             return newNode;
         }

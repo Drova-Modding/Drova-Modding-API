@@ -15,29 +15,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             { "DS_ChangeStanceNode", typeof(DS_ChangeStanceNodeEditor) },
             { "DS_DebugNode", typeof(DS_DebugNodeEditor) },
             { "DS_HideDialogWindow", typeof(DS_HideDialogWindowNodeEditor) },
+            { "DS_SetFactionNode", typeof(DS_SetFactionNodeEditor) },
+            { "DS_SetFirstChapter", typeof(DS_SetFirstChapterNodeEditor) },
+            { "DS_InteractAABaseNode", typeof(DS_InteractAABaseNodeEditor) },
+            { "DS_GiveItemNode", typeof(DS_GiveItemNodeEditor) },
         };
-
-        /// <summary>
-        /// Get a DrawNodeEditor by index
-        /// </summary>
-        /// <param name="index"><see cref="DrawNodeType"/></param>
-        /// <returns>The corosponding DrawNodeEditor</returns>
-        public virtual DrawNodeEditor GetDrawNodeEditor(int index)
-        {
-            return index switch
-            {
-                (int)DrawNodeType.StatementNode => new DS_StatementNodeEditor(),
-                (int)DrawNodeType.MultipleChoiceNode => null,
-                _ => null,
-            };
-        }
 
         /// <summary>
         /// Get a DrawNodeEditor by type
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public virtual DrawNodeEditor GetDrawNodeEditorFromType(Il2CppSystem.Type type)
+        public virtual DrawNodeEditor? GetDrawNodeEditorFromType(Il2CppSystem.Type type)
         {
             try
             {
@@ -55,22 +44,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 MelonLogger.Error("Error creating DrawNodeEditor from type: " + e);
                 return null;
             }
-
-        }
-
-        /// <summary>
-        /// Enum for the different node types
-        /// </summary>
-        protected enum DrawNodeType
-        {
-            /**
-             * A node that contains a statement and makes the actor speak.
-             */
-            StatementNode,
-            /**
-             * A node that contains multiple choices that the player can select.
-             */
-            MultipleChoiceNode
         }
     }
 }

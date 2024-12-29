@@ -12,7 +12,6 @@ namespace Drova_Modding_API.Extensions
         /// <summary>
         /// Draws a line between two points in the GUI.
         /// </summary>
-        /// <param name="_">The GUI object.</param>
         /// <param name="start">The starting point of the line.</param>
         /// <param name="end">The ending point of the line.</param>
         /// <param name="color">The color of the line.</param>

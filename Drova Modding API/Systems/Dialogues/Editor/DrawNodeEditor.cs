@@ -39,6 +39,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         public abstract Rect DrawNode(Vector2 position);
 
         /// <summary>
+        /// Initialize the node editor when the <see cref="Node"/> is set and on the first draw
+        /// </summary>
+        public virtual void Init() { }
+
+        /// <summary>
         /// Called when the node is clicked
         /// </summary>
         /// <param name="mousePosition">The mousePositíon when it was clicked (translated in gui cords)</param>

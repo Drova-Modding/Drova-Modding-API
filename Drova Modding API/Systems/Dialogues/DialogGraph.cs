@@ -1,7 +1,11 @@
 ﻿using Il2CppDrova;
+using Il2CppDrova.ActorActions;
 using Il2CppDrova.DialogueNew;
+using Il2CppDrova.Factions;
+using Il2CppDrova.Items;
 using Il2CppNodeCanvas.DialogueTrees;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using static Il2CppNodeCanvas.DialogueTrees.DialogueTree;
 using static Il2CppNodeCanvas.DialogueTrees.DS_MultipleChoiceNode;
 
@@ -65,7 +69,33 @@ namespace Drova_Modding_API.Systems.Dialogues
             var hideDialogNode = dt.AddNode<DS_HideDialogWindow>();
             hideDialogNode.TryGenerateUID();
 
+            var interactionNode = dt.AddNode<DS_InteractAABaseNode>();
+            interactionNode.actorName = "Test";
+            interactionNode._actorParameterID = actorId;
+            interactionNode._hideDialogueWindow = true;
+            interactionNode._interactPrefab = Addressables.LoadAssetAsync<GameObject>(Access.AddressableAccess.NPCs.Interactions.AA_Interact_NPC_Axe_MineVein).WaitForCompletion().GetComponent<AA_ABase>();
+            interactionNode._waitForFinish = true;
+            interactionNode.TryGenerateUID();
 
+            var factionNode = dt.AddNode<DS_SetFactionNode>();
+            factionNode.actorName = "Test";
+            factionNode._actorParameterID = actorId;
+            factionNode._faction = Resources.FindObjectsOfTypeAll<Faction>()[0];
+            factionNode.TryGenerateUID();
+
+            var itemNode = dt.AddNode<DS_GiveItemNode>();
+            itemNode.ItemStacks = new Il2CppSystem.Collections.Generic.List<DialogItemsExchange>();
+
+            var itemStack = new DialogItemsExchange
+            {
+                Item = Resources.FindObjectsOfTypeAll<Item>()[0],
+                Exchange = DialogItemsExchange.ExchangeDirection.VoidToPlayer,
+                Mode = DialogItems.ValueMode.Int,
+                Amount = 1,
+                UseContainer = false
+            };
+            itemNode.ItemStacks.Add(itemStack);
+            itemNode.TryGenerateUID();
 
             dt.ConnectNodes(startNode, endNode);
             dt.ConnectNodes(endNode, additionalEndNode);
@@ -73,6 +103,9 @@ namespace Drova_Modding_API.Systems.Dialogues
             dt.ConnectNodes(experienceNode, stanceNode);
             dt.ConnectNodes(stanceNode, waitNode);
             dt.ConnectNodes(waitNode, hideDialogNode);
+            dt.ConnectNodes(hideDialogNode, interactionNode);
+            dt.ConnectNodes(interactionNode, factionNode);
+            dt.ConnectNodes(factionNode, itemNode);
 
             dt.name = "Generated";
             dt.primeNode = startNode;

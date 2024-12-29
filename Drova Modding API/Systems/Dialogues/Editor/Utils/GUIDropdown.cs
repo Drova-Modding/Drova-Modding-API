@@ -2,34 +2,80 @@
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 {
-    internal class GUIDropdown
+    /// <summary>
+    /// A simple dropdown UI element for Unity Editor GUI.
+    /// </summary>
+    public class GUIDropdown
     {
-        private bool showDropdown = false;
-        private int selectedIndex = 0;
-        private readonly string[] options;
-        private readonly GUIStyle defaultStyle;
-        private readonly GUIStyle highlightStyle;
+        /// <summary>
+        /// Whether the dropdown is currently shown.
+        /// </summary>
+        protected bool _showDropdown = false;
+        /// <summary>
+        /// The index of the selected option.
+        /// </summary>
+        protected int _selectedIndex = 0;
+        /// <summary>
+        /// The list of options for the dropdown.
+        /// </summary>
+        protected readonly string[] _options;
+        /// <summary>
+        /// The default styles for the dropdown.
+        /// </summary>
+        protected readonly GUIStyle _defaultStyle;
+        /// <summary>
+        /// The highlight style for the selected option.
+        /// </summary>
+        protected readonly GUIStyle _highlightStyle;
 
-        public int SelectedIndex => selectedIndex;
-        public string SelectedOption => options[selectedIndex];
+        /// <summary>
+        /// The message to show when no options are available.
+        /// </summary>
+        public string NoOptionsMessage = "No options available";
+
+        /// <summary>
+        /// The message to show when no option is selected.
+        /// </summary>
+        public string EmptyOptionMessage = "No option selected";
+
+        /// <summary>
+        /// The index of the selected option.
+        /// </summary>
+        public int SelectedIndex => _selectedIndex;
+        /// <summary>
+        /// The selected option.
+        /// </summary>
+        public string SelectedOption => _options[_selectedIndex];
+
+        /// <summary>
+        /// Whether the dropdown is currently shown.
+        /// </summary>
+        public bool IsDropdownShown => _showDropdown;
+
+        /// <summary>
+        /// The number of options in the dropdown.
+        /// </summary>
+        public int OptionsCount => _options.Length;
 
         /// <summary>
         /// Initializes a new instance of the GUIDropdown class.
         /// </summary>
         /// <param name="options">The list of options for the dropdown.</param>
-        /// <param name="selectedIndex">The index of the selected option.</param>
+        /// <param name="selectedIndex">The index of the selected option. Set -1 for no selection</param>
         public GUIDropdown(string[] options, int selectedIndex)
         {
-            this.options = options;
-            this.selectedIndex = selectedIndex;
+            _options = options;
+            _selectedIndex = selectedIndex;
 
             // Initialize default styles
-            defaultStyle = new GUIStyle(GUI.skin.button);
+            _defaultStyle = new GUIStyle(GUI.skin.button);
+            _defaultStyle.normal.textColor = Color.white;
+            _defaultStyle.normal.background = CreateTexture(2, 2, Color.black);
 
             // Highlight style with a different background color
-            highlightStyle = new GUIStyle(GUI.skin.button);
-            highlightStyle.normal.textColor = Color.yellow;
-            highlightStyle.normal.background = CreateTexture(2, 2, new Color(0.2f, 0.5f, 0.8f, 0.8f));
+            _highlightStyle = new GUIStyle(GUI.skin.button);
+            _highlightStyle.normal.textColor = Color.yellow;
+            _highlightStyle.normal.background = CreateTexture(2, 2, new Color(0.2f, 0.5f, 0.8f, 0.8f));
         }
 
         /// <summary>
@@ -37,31 +83,65 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// </summary>
         /// <param name="dropdownRect">The position and size of the dropdown.</param>
         /// <returns>True if the selected index changed; otherwise, false.</returns>
-        public bool Draw(Rect dropdownRect)
+        public virtual bool Draw(Rect dropdownRect)
         {
-            bool selectionChanged = false;
+            RenderSelectedOption(dropdownRect);
 
-            if (GUI.Button(new Rect(dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height), options[selectedIndex]))
-            {
-                showDropdown = !showDropdown;
+            if (_showDropdown)
+            {                
+                return RenderDropdownOptions(dropdownRect, _options);
             }
 
-            if (showDropdown)
+            return false;
+        }
+
+        /// <summary>
+        /// Renders the selected option.
+        /// If no options are available, a message is shown.
+        /// If no option is selected, then nothing is shown.
+        /// </summary>
+        /// <param name="dropdownRect"></param>
+        protected void RenderSelectedOption(Rect dropdownRect)
+        {
+
+            if (_options.Length == 0)
             {
-                for (int i = 0; i < options.Length; i++)
+                GUI.Label(new Rect(dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height), NoOptionsMessage);
+                return;
+            }
+
+            if (GUI.Button(new Rect(dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height), _selectedIndex == -1 ? EmptyOptionMessage : SelectedOption))
+            {
+                _showDropdown = !_showDropdown;
+            }
+        }
+
+        /// <summary>
+        /// Renders the dropdown options.
+        /// </summary>
+        /// <param name="dropdownRect"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        protected bool RenderDropdownOptions(Rect dropdownRect, string[] options)
+        {
+            int previousDepth = GUI.depth;
+            
+            GUI.depth = -1;
+            bool selectionChanged = false;
+            for (int i = 0; i < options.Length; i++)
+            {
+                GUIStyle style = (i == _selectedIndex) ? _highlightStyle : _defaultStyle;
+                if (GUI.Button(new Rect(dropdownRect.x, dropdownRect.y + dropdownRect.height * (i + 1), dropdownRect.width, dropdownRect.height), options[i], style))
                 {
-                    GUIStyle style = (i == selectedIndex) ? highlightStyle : defaultStyle;
-                    if (GUI.Button(new Rect(dropdownRect.x, dropdownRect.y + dropdownRect.height * (i + 1), dropdownRect.width, dropdownRect.height), options[i], style))
+                    if (i != _selectedIndex)
                     {
-                        if (i != selectedIndex)
-                        {
-                            selectedIndex = i;
-                            selectionChanged = true;
-                        }
-                        showDropdown = false;
+                        _selectedIndex = i;
+                        selectionChanged = true;
                     }
+                    _showDropdown = false;
                 }
             }
+            GUI.depth = previousDepth;
             return selectionChanged;
         }
 
@@ -80,7 +160,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
                 pixels[i] = color;
             }
 
-            Texture2D texture = new Texture2D(width, height);
+            Texture2D texture = new(width, height);
             texture.SetPixels(pixels);
             texture.Apply();
             return texture;
