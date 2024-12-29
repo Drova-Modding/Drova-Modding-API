@@ -14,7 +14,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
     /// <param name="filter">starting filter</param>
     public class GUIDropdownWithFilter(string[] options, int selectedIndex, int maxItems, string filter = "") : GUIDropdown(options, selectedIndex)
     {
-
         private string _filter = filter;
 
         private readonly int _maxItems = maxItems;

@@ -66,7 +66,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             float baseHeight = 60f;
             float rectHeight = baseHeight + itemCount * itemHeight + 30f;
 
-            var rect = new Rect(position.x, position.y, 440, rectHeight);
+            var rect = new Rect(position.x, position.y, 480, rectHeight);
 
             GUI.Box(rect, "DS_GiveItemNode");
 
@@ -79,6 +79,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
                 float yOffset = position.y + 30 + i * itemHeight;
 
+                float useContainerYOffset = yOffset + 60;
+                if (itemStack.Mode == DialogItems.ValueMode.GInt)
+                {
+                    useContainerYOffset += 120;
+                }
+
+                if (DrawDeleteButton(position, i, useContainerYOffset))
+                {
+                    break; // Break to avoid modifying collection during iteration
+                }
+
                 GUI.Label(new Rect(position.x + 10, yOffset, 100, 20), "Item:");
 
                 GUI.Label(new Rect(position.x + 10, yOffset + 20, 100, 20), "Valuemode:");
@@ -86,41 +97,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 if (itemStack.Mode != DialogItems.ValueMode.GInt)
                 {
                     GUI.Label(new Rect(position.x + 10, yOffset + 40, 100, 20), "Amount:");
-                }
-
-                DrawAmountEditFields(position, i, itemStack, yOffset + 40);
-
-                float useContainerYOffset = yOffset + 60;
-                if (itemStack.Mode == DialogItems.ValueMode.GInt)
-                {
-                    useContainerYOffset += 120;
-                }
-
-                itemStack.UseContainer = GUI.Toggle(
-                    new Rect(position.x + 10, useContainerYOffset, 150, 20),
-                    itemStack.UseContainer,
-                    "Use Container");
-
-                GUI.Label(new Rect(position.x + 10, useContainerYOffset + 20, 100, 20), "Direction:");
-
-                if (GUI.Button(new Rect(position.x + 240, useContainerYOffset + 50, 80, 20), "Delete"))
-                {
-                    CastedNode.ItemStacks.RemoveAt(i);
-                    _itemDropdowns.RemoveAt(i);
-                    _directionDropdowns.RemoveAt(i);
-                    _valueModeDropdowns.RemoveAt(i);
-                    _gvarSelectionEditors.Remove(i);
-
-                    for (int j = i; j < _gvarSelectionEditors.Count; j++)
-                    {
-                        if (_gvarSelectionEditors.ContainsKey(j + 1))
-                        {
-                            _gvarSelectionEditors[j] = _gvarSelectionEditors[j + 1];
-                            _gvarSelectionEditors.Remove(j + 1);
-                        }
-                    }
-                    // Break to avoid modifying collection during iteration
-                    break;
                 }
 
                 if (_directionDropdowns[i].Draw(new Rect(position.x + 120, useContainerYOffset + 20, 200, 20)))
@@ -140,6 +116,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                         _gvarSelectionEditors.Remove(i);
                     }
                 }
+
+                DrawAmountEditFields(position, i, itemStack, yOffset + 40);
+
+                itemStack.UseContainer = GUI.Toggle(
+                    new Rect(position.x + 10, useContainerYOffset, 150, 20),
+                    itemStack.UseContainer,
+                    "Use Container");
+
+                // Todo: Implement container selection
+
+                GUI.Label(new Rect(position.x + 10, useContainerYOffset + 20, 100, 20), "Direction:");
+
+
 
                 if (itemDropdown.Draw(new Rect(position.x + 120, yOffset, 300, 20)))
                 {
@@ -162,10 +151,38 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 _valueModeDropdowns.Add(new GUIDropdown(Enum.GetNames<DialogItems.ValueMode>(), 0));
             }
 
+            CastedNode._equip = GUI.Toggle(new Rect(position.x, position.y + rectHeight - 60, 150, 20), CastedNode._equip, "Equip Items");
+
+            CastedNode._equipInEmptyActiveSlot = GUI.Toggle(new Rect(position.x, position.y + rectHeight - 90, 200, 20), CastedNode._equipInEmptyActiveSlot, "Equip Items in empty slot");
+
             GUI.depth = previousDepth;
             GUI.color = previousColor;
 
             return rect;
+        }
+
+        private bool DrawDeleteButton(Vector2 position, int i, float useContainerYOffset)
+        {
+            if (GUI.Button(new Rect(position.x + 240, useContainerYOffset + 50, 80, 20), "Delete"))
+            {
+                CastedNode.ItemStacks.RemoveAt(i);
+                _itemDropdowns.RemoveAt(i);
+                _directionDropdowns.RemoveAt(i);
+                _valueModeDropdowns.RemoveAt(i);
+                _gvarSelectionEditors.Remove(i);
+
+                for (int j = i; j < _gvarSelectionEditors.Count; j++)
+                {
+                    if (_gvarSelectionEditors.ContainsKey(j + 1))
+                    {
+                        _gvarSelectionEditors[j] = _gvarSelectionEditors[j + 1];
+                        _gvarSelectionEditors.Remove(j + 1);
+                    }
+                }
+                return true;
+            }
+
+            return false;
         }
 
         private void DrawAmountEditFields(Vector2 position, int i, DialogItemsExchange itemStack, float yOffset)
@@ -187,9 +204,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     var percentLabelRect = new Rect(position.x + 305, yOffset, 20, 20);
                     var amountPercent = GUI.TextField(amountRect, itemStack.Amount.ToString());
                     GUI.Label(percentLabelRect, "%");
-                    if (int.TryParse(amountPercent, out int resultPercent))
+                    if (float.TryParse(amountPercent, out float resultPercent))
                     {
-                        itemStack.Amount = resultPercent;
+                        itemStack.Percentage = resultPercent;
                     }
                     break;
                 case DialogItems.ValueMode.GInt:
@@ -200,7 +217,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
                         if (gvarSelectionEditor.DrawGvarEditor(dropdownListRect, dropdownValueRect))
                         {
-                            itemStack.AmountVar = gvarSelectionEditor.CurrentSelectedGvar.Cast<GInt>();
+                            itemStack.AmountVar = gvarSelectionEditor.CurrentSelectedGvar.TryCast<GInt>();
                         }
                     }
                     else

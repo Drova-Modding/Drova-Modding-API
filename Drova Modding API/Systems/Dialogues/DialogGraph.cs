@@ -84,6 +84,8 @@ namespace Drova_Modding_API.Systems.Dialogues
             factionNode.TryGenerateUID();
 
             var itemNode = dt.AddNode<DS_GiveItemNode>();
+            itemNode.actorName = "Test";
+            itemNode._actorParameterID = actorId;
             itemNode.ItemStacks = new Il2CppSystem.Collections.Generic.List<DialogItemsExchange>();
 
             var itemStack = new DialogItemsExchange
