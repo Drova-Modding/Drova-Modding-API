@@ -84,6 +84,10 @@ namespace Drova_Modding_API.Systems.WorldEvents
          */
         public virtual void EndEvent()
         {
+            if(!_isRunning)
+            {
+                return;
+            }
             _isRunning = false;
             if (_melonCouroutineToken != null)
             {
@@ -97,6 +101,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 }
             }
             _spawnedEncounters.Clear();
+            WorldEventSystemManager.Instance.EndEvent();
 
         }
     }
