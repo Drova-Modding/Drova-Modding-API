@@ -1,5 +1,4 @@
 ﻿using Drova_Modding_API.Systems.DebugUtils;
-using Drova_Modding_API.Systems.Dialogues.Editor.Nodes;
 using Il2Cpp;
 using Il2CppDrova;
 using Il2CppNodeCanvas.DialogueTrees;
@@ -7,6 +6,7 @@ using MelonLoader;
 using UnityEngine;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -15,11 +15,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
     /// </summary>
     /// <param name="ptr">Do not try to create this object with new()!</param>
     [RegisterTypeInIl2Cpp]
-    internal class GraphEditorManager(IntPtr ptr) : MonoBehaviour(ptr)
+    public class GraphEditorManager(IntPtr ptr) : MonoBehaviour(ptr)
     {
         private DialogueTree _dialogueTree;
 
-        // Reference to the dialogue tree being edited
+        /// <summary>
+        /// The dialogue tree that is being edited
+        /// </summary>
         public DialogueTree DialogueTree
         {
             get
@@ -51,8 +53,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         // Offset between the mouse position and node position
         private Vector2 _dragOffset;
 
-        // Reference to the factory for creating node editors
+        /// <summary>
+        /// Factory for creating node editors
+        /// </summary>
         public DrawNodeEditorFactory DrawNodeEditorFactory { get; set; }
+
+        /// <summary>
+        /// Factory for creating task editors
+        /// </summary>
+        public DrawTaskEditorFactory DrawTaskEditorFactory { get; set; }
 
         // Track whether the context menu is open
         private bool _showContextMenu = false;
@@ -86,6 +95,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         internal void Awake()
         {
             DrawNodeEditorFactory = new DrawNodeEditorFactory();
+            DrawTaskEditorFactory = new DrawTaskEditorFactory();
             DebugManager.OnNpcSelected += DebugManager_OnNpcSelected;
         }
 
@@ -152,26 +162,28 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     var editorSource = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.sourceNode.GetIl2CppType());
                     if (editorSource == null)
                     {
-                        MelonLogger.Msg("Editor Source is null for {Type}", connection.sourceNode.GetIl2CppType());
+                        MelonLogger.Warning("Editor Source is null for {Type}", connection.sourceNode.GetIl2CppType());
                         continue;
                     }
                     editorSource.Node = connection.sourceNode.Cast<DTNode>();
                     drawNodeEditors.TryAdd(connection.sourceNode.UID, editorSource);
                     editorSource.Position = new Vector2(Screen.width / 2, 100 * (i + 1));
                     editorSource.NodeSize = new Vector2(10, 10);
+                    editorSource.GraphEditorManager = this;
                 }
                 if (!drawNodeEditors.ContainsKey(connection.targetNode.UID))
                 {
                     var editorTarget = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.targetNode.GetIl2CppType());
                     if (editorTarget == null)
                     {
-                        MelonLogger.Msg("Editor Target is null for {Type}", connection.targetNode.GetIl2CppType());
+                        MelonLogger.Warning("Editor Target is null for {Type}", connection.targetNode.GetIl2CppType());
                         continue;
                     }
                     editorTarget.Node = connection.targetNode.Cast<DTNode>();
                     drawNodeEditors.TryAdd(connection.targetNode.UID, editorTarget);
                     editorTarget.Position = new Vector2(Screen.width / 2 + (i * 50), 200 * (i + 1));
                     editorTarget.NodeSize = new Vector2(10, 10);
+                    editorTarget.GraphEditorManager = this;
                 }
 
                 if (drawNodeEditors.TryGetValue(connection.sourceNode.UID, out DrawNodeEditor sourceConnection) && drawNodeEditors.TryGetValue(connection.targetNode.UID, out DrawNodeEditor targetConnection))

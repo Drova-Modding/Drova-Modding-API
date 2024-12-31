@@ -1,6 +1,8 @@
-﻿using Il2CppDrova.ActorActions;
+﻿using Il2CppDrova;
+using Il2CppDrova.ActorActions;
 using Il2CppDrova.DialogueNew;
 using Il2CppDrova.Factions;
+using Il2CppDrova.GlobalVarSystem;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.Framework;
 using static Il2CppDrova.Actor;
@@ -191,7 +193,69 @@ namespace Drova_Modding_API.Systems.Dialogues
             newNode.TryGenerateUID();
             return newNode;
         }
+        /// <summary>
+        /// Create a node that revisits a multiple choice node.
+        /// </summary>
+        /// <param name="tag">node to revisit</param>
+        /// <param name="repeats">repeats</param>
+        /// <returns></returns>
+        public virtual DS_RevisitMultipleChoiceNode CreateRevisitMultipleChoiceNode(string tag, int repeats = 10)
+        {
+            var newNode = Tree.AddNode<DS_RevisitMultipleChoiceNode>();
+            newNode._tag = tag;
+            newNode._repeats = repeats;
+            newNode.TryGenerateUID();
+            return newNode;
+        }
 
+        /// <summary>
+        /// Create a node that defines active actors
+        /// </summary>
+        /// <param name="actors">Actors to define</param>
+        /// <returns></returns>
+        public virtual DS_DefineActiveActors CreateDefineActiveActorsNode(EntityInfo[] actors)
+        {
+            var newNode = Tree.AddNode<DS_DefineActiveActors>();
+            newNode.entityInfos = new Il2CppSystem.Collections.Generic.List<EntityInfo>();
+            for (int i = 0; i < actors.Length; i++)
+            {
+                newNode.entityInfos.Add(actors[i]);
+            }
+            newNode.TryGenerateUID();
+            return newNode;
+        }
+
+        /// <summary>
+        /// Created a node that holds multiple conditions
+        /// </summary>
+        /// <param name="conditions">Conditions</param>
+        /// <returns></returns>
+        public virtual MultipleConditionNode CreateMultipleConditionNode(ConditionTask[] conditions)
+        {
+            var newNode = Tree.AddNode<MultipleConditionNode>();
+            newNode.conditions = new Il2CppSystem.Collections.Generic.List<ConditionTask>();
+            for (int i = 0; i < conditions.Length; i++)
+            {
+                newNode.conditions.Add(conditions[i]);
+            }
+            newNode.TryGenerateUID();
+            return newNode;
+        }
+
+        /// <summary>
+        /// Creates a node that sets a global variable
+        /// </summary>
+        /// <param name="var">Variable to set</param>
+        /// <param name="value">Value to set</param>
+        /// <returns></returns>
+        public virtual DS_SetGBoolNode CreateSetGBoolNode(GBool var, bool value)
+        {
+            var newNode = Tree.AddNode<DS_SetGBoolNode>();
+            newNode.Variable = var;
+            newNode.Value = value;
+            newNode.TryGenerateUID();
+            return newNode;
+        }
 
     }
 

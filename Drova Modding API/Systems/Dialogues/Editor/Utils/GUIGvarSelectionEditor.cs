@@ -13,15 +13,22 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         private readonly GvarType _gvarType;
         private readonly SubDatabase_GVars _subDatabaseGVars;
         private readonly GUIDropdownWithFilter _GvarListDropdown;
+        private readonly bool _showOnlyList;
 
         private GVarList _currentSelectedGvarList;
         private List<AGVarBase> _selecteableGvars;
         private AGVarBase _currentSelectedGvar;
 
+
         /// <summary>
         /// The current selected Gvar. Can safe cast to the type of <see cref="GvarType"/>.
         /// </summary>
         public AGVarBase? CurrentSelectedGvar => _currentSelectedGvar;
+
+        /// <summary>
+        /// The current selected GvarList.
+        /// </summary>
+        public GVarList? CurrentSelectedGvarList => _currentSelectedGvarList;
 
         /// <summary>
         /// The number of options in the list dropdown.
@@ -40,35 +47,41 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// Initializes a new instance of the <see cref="GUIGvarSelectionEditor"/> class.
         /// </summary>
         /// <param name="gvarType">Which gvar type to use</param>
-        public GUIGvarSelectionEditor(GvarType gvarType)
+        /// <param name="nameOfList">Name of the list</param>
+        /// <param name="showOnlyList">Whether only the list should be shown</param>
+        /// <param name="selected">The selected gvar</param>
+        public GUIGvarSelectionEditor(GvarType gvarType, string nameOfList = null, bool showOnlyList = false, AGVarBase selected = null)
         {
+            _currentSelectedGvar = selected;
             _gvarType = gvarType;
+            _showOnlyList = showOnlyList;
             _subDatabaseGVars = ProviderAccess.GetGameDatabase().GVarDatabase;
-            _GvarListDropdown = new GUIDropdownWithFilter(_subDatabaseGVars.AllGVars.ToArray().Select(e => e.name).ToArray(), -1, 20);
+
+            var gvarLists = _subDatabaseGVars.AllGVars.ToArray().Select(e => e.name).ToArray();
+            var selectedIndex = -1;
+            if (nameOfList != null)
+            {
+                selectedIndex = gvarLists.ToList().IndexOf(nameOfList);
+                _currentSelectedGvarList = _subDatabaseGVars.AllGVars[selectedIndex];
+            }
+            _GvarListDropdown = new GUIDropdownWithFilter(gvarLists, selectedIndex, 20);
         }
 
         private void OnGvarListSelected()
         {
             _currentSelectedGvarList = _subDatabaseGVars.AllGVars[_GvarListDropdown.SelectedIndex];
-            switch (_gvarType)
+            
+            if (_showOnlyList) return;
+            List<AGVarBase> _selecteableGvars = _gvarType switch
             {
-                case GvarType.INT:
-                    _selecteableGvars = _currentSelectedGvarList.GetVarsOfType<GInt>().ToArray().ToList().OfType<AGVarBase>().ToList();
-                    _GvarValueDropdown = new GUIDropdownWithFilter(_selecteableGvars.Select(e => e.name).ToArray(), -1, 10);
-                    break;
-                case GvarType.FLOAT:
-                    _selecteableGvars = _currentSelectedGvarList.GetVarsOfType<GFloat>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList();
-                    _GvarValueDropdown = new GUIDropdownWithFilter(_selecteableGvars.Select(e => e.name).ToArray(), -1, 10);
-                    break;
-                case GvarType.STRING:
-                    _selecteableGvars = _currentSelectedGvarList.GetVarsOfType<GString>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList();
-                    _GvarValueDropdown = new GUIDropdownWithFilter(_selecteableGvars.Select(e => e.name).ToArray(), -1, 10);
-                    break;
-                case GvarType.BOOL:
-                    _selecteableGvars = _currentSelectedGvarList.GetVarsOfType<GBool>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList();
-                    _GvarValueDropdown = new GUIDropdownWithFilter(_selecteableGvars.Select(e => e.name).ToArray(), -1, 10);
-                    break;
-            }
+                GvarType.INT => _currentSelectedGvarList.GetVarsOfType<GInt>().ToArray().ToList().OfType<AGVarBase>().ToList(),
+                GvarType.FLOAT => _currentSelectedGvarList.GetVarsOfType<GFloat>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList(),
+                GvarType.STRING => _currentSelectedGvarList.GetVarsOfType<GString>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList(),
+                GvarType.BOOL => _currentSelectedGvarList.GetVarsOfType<GBool>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList(),
+                _ => [],
+            };
+            _GvarValueDropdown = new GUIDropdownWithFilter(_selecteableGvars.Select(e => e.name).ToArray(), -1, 10);
+
         }
 
         /// <summary>
@@ -76,15 +89,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// </summary>
         /// <param name="listDropdown">list dropdown rect</param>
         /// <param name="gvarsDropdown">value dropdown rect</param>
-        /// <returns>Whether the gvar value was changed</returns>
-        public bool DrawGvarEditor(Rect listDropdown, Rect gvarsDropdown)
+        /// <returns>Whether the gvar value was changed, if <see cref="_showOnlyList"/> is true, than wheter the list changed</returns>
+        public bool DrawGvarEditor(Rect listDropdown, Rect gvarsDropdown = default)
         {
             bool result = false;
             GUI.Label(new Rect(0, 0, 100, 20), "Gvarlist Name:");
             if (_GvarListDropdown.Draw(listDropdown))
             {
                 OnGvarListSelected();
+                result = _showOnlyList;
             }
+            if (_showOnlyList) return result;
             GUI.Label(new Rect(0, 30, 100, 20), "Gvar Name:");
             if (_GvarValueDropdown != null && _GvarValueDropdown.Draw(gvarsDropdown))
             {
@@ -115,6 +130,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// boolean type
         /// </summary>
-        BOOL
+        BOOL,
+        /// <summary>
+        /// no type
+        /// </summary>
+        NONE
     }
 }

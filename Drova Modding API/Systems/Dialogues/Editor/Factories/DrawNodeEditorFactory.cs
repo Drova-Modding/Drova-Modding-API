@@ -1,6 +1,7 @@
-﻿using MelonLoader;
+﻿using Drova_Modding_API.Systems.Dialogues.Editor.Nodes;
+using MelonLoader;
 
-namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
+namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
 {
     /// <summary>
     /// Factory class that helps creating DrawNodeEditors
@@ -19,6 +20,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             { "DS_SetFirstChapter", typeof(DS_SetFirstChapterNodeEditor) },
             { "DS_InteractAABaseNode", typeof(DS_InteractAABaseNodeEditor) },
             { "DS_GiveItemNode", typeof(DS_GiveItemNodeEditor) },
+            { "DS_RevisitMultipleChoiceNode", typeof(DS_RevisitMultipleChoiceNodeEditor) },
+            { "DS_DefineActiveActors", typeof(DS_DefineActiveActorsNodeEditor) },
+            { "MultipleConditionNode", typeof(MultipleConditionNodeEditor) },
+            { "DS_SetGBoolNode", typeof(DS_SetGBoolNodeEditor) },
+            { "ConditionNode", typeof(ConditionNodeEditor) },
         };
 
         /// <summary>

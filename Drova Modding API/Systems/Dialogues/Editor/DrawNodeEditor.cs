@@ -19,6 +19,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         public List<DrawNodeEditor> ConnectedWith = [];
 
         /// <summary>
+        /// The graph editor manager
+        /// </summary>
+        public GraphEditorManager GraphEditorManager;
+
+        /// <summary>
         /// last Size of the node
         /// </summary>
         public Vector2 NodeSize;

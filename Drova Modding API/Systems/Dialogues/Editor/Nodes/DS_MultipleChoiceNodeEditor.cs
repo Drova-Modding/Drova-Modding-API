@@ -20,7 +20,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             Color previousColor = GUI.color;
             CastedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
-            var additionalHeight = CastedNode.availableChoices.Count * 75 + 20;
+            var additionalHeight = CastedNode.availableChoices.Count * 75 + 55;
             Color previousBackgroundColor = GUI.backgroundColor;
             GUI.backgroundColor = Color.black;
             GUI.color = Color.white;
@@ -41,9 +41,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 }
                 additionalHeight += 20;
             }
+
+            GUI.Label(new Rect(position.x + 5, position.y + step, 50, 20), "Tag:");
+            CastedNode.tag = GUI.TextField(new Rect(position.x + 65, position.y + step, 200, 20), CastedNode.tag);
             GUI.backgroundColor = previousBackgroundColor;
             GUI.color = Color.green;
-            Rect rect = new(position.x, position.y, 220f, 10f + additionalHeight);
+            Rect rect = new(position.x, position.y, 290f, 10f + additionalHeight);
             GUI.Box(rect, "DS_MultipleChoiceNode");
             GUI.color = previousColor;
             return rect;

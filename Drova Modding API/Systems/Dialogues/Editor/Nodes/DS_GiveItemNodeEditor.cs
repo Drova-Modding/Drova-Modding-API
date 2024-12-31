@@ -43,7 +43,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
                 if (itemStack.Mode == DialogItems.ValueMode.GInt)
                 {
-                    _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT));
+                    _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT, itemStack.AmountVar.GetParent().name));
                 }
             }
         }
