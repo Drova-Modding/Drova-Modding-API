@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
-    internal class DS_StatementNodeEditor: DrawNodeEditor
+    internal class DS_StatementNodeEditor : DrawNodeEditor
     {
         protected Vector2 nodeSize = new(200, 50);
         DS_StatementNode CastedNode;
@@ -23,8 +23,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.green;
             Rect rect = new(position.x, position.y, nodeSize.x, nodeSize.y + 50);
 
-            // Draw the node as a rectangle
-            GUI.Box(rect, "DS_StatementNode");
+            GUI.Box(rect, new GUIContent("DS_StatementNode", CastedNode.GetLocalizedString()));
+
             Color previousBackgroundColor = GUI.backgroundColor;
 
             GUI.backgroundColor = Color.black;

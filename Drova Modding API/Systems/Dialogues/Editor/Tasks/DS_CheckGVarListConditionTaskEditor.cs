@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 {
+    /// <summary>
+    /// Task editor for <see cref="DS_CheckGVarListConditionTask"/>
+    /// </summary>
     internal class DS_CheckGVarListConditionTaskEditor : DrawTaskEditor
     {
         private DS_CheckGVarListConditionTask _castedTask;
@@ -24,15 +27,23 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
             Rect rect = new(position.x, position.y, 220, 20);
 
-
-            if (_gvarSelectionEditor.DrawGvarEditor(rect))
+            if (_gvarSelectionEditor.DrawGvarEditor(new(rect.x, rect.y + 20, rect.width, rect.height)))
             {
                 _castedTask.Target = _gvarSelectionEditor.CurrentSelectedGvarList;
             }
 
-            rect.height += 20 * 20; // 20 is the height of the dropdown list * 20 is the number of elements in the list
+            rect.height += 20 * (_gvarSelectionEditor.GvarListDropdown.IsDropdownShown ? 20 : 1); // 20 is the height of the dropdown list * 20 is the number of elements in the list
+            Color previousColor = GUI.color;
 
-            return rect;
+            GUI.color = Color.blue;
+
+            Rect drawRect = new(position.x, position.y, 400, rect.height);
+
+            GUI.Box(drawRect, "Check GVar List Condition Task");
+
+            GUI.color = previousColor;
+
+            return drawRect;
         }
     }
 }

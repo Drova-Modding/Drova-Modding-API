@@ -5,6 +5,7 @@ using Il2CppDrova.Factions;
 using Il2CppDrova.GlobalVarSystem;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.Framework;
+using UnityEngine;
 using static Il2CppDrova.Actor;
 using static Il2CppNodeCanvas.DialogueTrees.DialogueTree;
 
@@ -257,6 +258,68 @@ namespace Drova_Modding_API.Systems.Dialogues
             return newNode;
         }
 
+        /// <summary>
+        /// Creates a node that ends the dialog tree, mostly used for error cases / fallback
+        /// </summary>
+        /// <returns></returns>
+        public virtual FinishNode CreateFinishNode()
+        {
+            var newNode = Tree.AddNode<FinishNode>();
+            newNode.TryGenerateUID();
+            return newNode;
+        }
+
+        /// <summary>
+        /// Creates a node that jumps to a <see cref="DS_HubNode"/>
+        /// </summary>
+        /// <param name="hubTag">The tag of the <see cref="Node.tag"/></param>
+        /// <returns></returns>
+        public virtual DS_HubJumpNode CreateHubJumpNode(string hubTag)
+        {
+            var newNode = Tree.AddNode<DS_HubJumpNode>();
+            newNode._targetNodeTag = hubTag;
+            newNode.TryGenerateUID();
+            return newNode;
+        }
+
+        /// <summary>
+        /// Creates a hub node
+        /// </summary>
+        /// <param name="tag">Tag of the node, in case you want to jump here from <see cref="DS_HubJumpNode"/></param>
+        /// <param name="choices">Choices of the Hubnode</param>
+        /// <returns></returns>
+        public virtual DS_HubNode CreateHubNode(string tag, ChoiceCreationData[] choices)
+        {
+            var newNode = Tree.AddNode<DS_HubNode>();
+            newNode.availableChoices = new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
+            for (int i = 0; i < choices.Length; i++)
+            {
+                ChoiceCreationData choice = choices[i];
+                newNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice
+                {
+                    statement = choice.Statement,
+                    isEndNode = choice.IsEndNode,
+                    condition = choice.Condition,
+                    UID = Il2CppSystem.Guid.NewGuid().ToString()
+                });
+            }
+            newNode.tag = tag;
+            newNode.TryGenerateUID();
+            return newNode;
+        }
+
+        /// <summary>
+        /// Creates a sub dialogue tree
+        /// </summary>
+        /// <param name="tree">Created dialogueTree with <see cref="ScriptableObject.CreateInstance{DialogueTree}()"/> </param>
+        /// <returns></returns>
+        public virtual SubDialogueTree CreateSubDialogueTree(DialogueTree tree)
+        {
+            var newNode = Tree.AddNode<SubDialogueTree>();
+            newNode._subTree = tree;
+            newNode.TryGenerateUID();
+            return newNode;
+        }
     }
 
     /// <summary>

@@ -6,25 +6,26 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 {
-    internal class GBoolConditionTaskEditor : DrawTaskEditor
+    /// <summary>
+    /// Task editor for <see cref="GIntConditionTask"/>
+    /// </summary>
+    internal class GIntConditionTaskEditor : DrawTaskEditor
     {
-        private GBoolConditionTask _castedTask;
 
+        private GIntConditionTask _castedTask;
         private readonly List<GUIDropdown> _comparerDropdowns = [];
         private readonly List<GUIGvarSelectionEditor> _gvarEditors = [];
 
         public override void Init()
         {
-            _castedTask ??= Task.TryCast<GBoolConditionTask>();
+            _castedTask ??= Task.TryCast<GIntConditionTask>();
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
                 var task = _castedTask.Conditions[i];
-                _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GBool.Comparer>(), (int)task.Comparison.value));
-
-                _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.BOOL, task.Variable.GetValue().GetParent().name, false, task.Variable.GetValue()));
+                _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GInt.Comparer>(), (int)task.Comparison.value));
+                _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.INT, task.Variable.GetValue().GetParent().name, false, task.Variable.GetValue()));
             }
         }
-
         public override Rect DrawTask(Vector2 position)
         {
             if (_castedTask == null)
@@ -39,9 +40,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 var condition = _castedTask.Conditions[i];
                 var comparerDropdown = _comparerDropdowns[i];
                 var gvarEditor = _gvarEditors[i];
-                
 
-                if(GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
+
+                if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
                 {
                     _castedTask.Conditions.RemoveAt(i);
                     _comparerDropdowns.RemoveAt(i);
@@ -50,19 +51,25 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     continue;
                 }
 
-                Rect gvarRect = new(position.x, rect.y + 40, 220, 20);
+                Rect gvarRect = new(position.x, rect.y + 20, 220, 20);
 
                 if (gvarEditor.DrawGvarEditor(rect, gvarRect))
                 {
-                    condition.Variable.SetValue(gvarEditor.CurrentSelectedGvar.TryCast<GBool>());
+                    condition.Variable.SetValue(gvarEditor.CurrentSelectedGvar.TryCast<GInt>());
                 }
                 rect.y += 60;
                 if (comparerDropdown.Draw(rect))
                 {
-                    condition.Comparison = (GBool.Comparer)comparerDropdown.SelectedIndex;
+                    condition.Comparison = (GInt.Comparer)comparerDropdown.SelectedIndex;
                 }
                 rect.y += 20;
-                condition.Value.value = GUI.Toggle(rect, condition.Value.value, "Compare value");
+
+                GUI.Label(new Rect(rect.x + 5, rect.y, 70, 20), "Value:");
+                var tempInputValue = GUI.TextField(new Rect(rect.x + 80, rect.y, 220 - 70, 20), condition.Value.value.ToString());
+                if (int.TryParse(tempInputValue, out int result))
+                {
+                    condition.Value.value = result;
+                }
 
                 rect.y += 30;
 
@@ -73,9 +80,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
             if (GUI.Button(rect, "Add Condition"))
             {
-                _castedTask.Conditions.Add(new GraphGBoolCompService());
-                _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GBool.Comparer>(), 0));
-                _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.BOOL));
+                var service = new GraphGIntCompService
+                {
+                    Value = 0,
+                    Comparison = GInt.Comparer.Equals,
+                    GIntValue = default
+                };
+                _castedTask.Conditions.Add(service);
+                _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GInt.Comparer>(), 0));
+                _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.INT));
             }
 
             size.height += 30;
@@ -84,7 +97,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
             GUI.color = Color.blue;
             var drawRect = new Rect(position.x, position.y, 380, size.height);
-            GUI.Box(drawRect, "GBoolConditionTask");
+            GUI.Box(drawRect, "GIntConditionTask");
 
             GUI.color = previousColor;
 

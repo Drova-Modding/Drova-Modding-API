@@ -25,6 +25,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             { "MultipleConditionNode", typeof(MultipleConditionNodeEditor) },
             { "DS_SetGBoolNode", typeof(DS_SetGBoolNodeEditor) },
             { "ConditionNode", typeof(ConditionNodeEditor) },
+            { "DS_HubNode", typeof(DS_HubNodeEditor) },
+            { "DS_HubJumpNode", typeof(DS_HubJumpNodeEditor) },
+            { "FinishNode", typeof(FinishNodeEditor) },
+            { "SubDialogueTree", typeof(SubDialogueTreeEditor) },
+            { "DS_OverrideLookAtSpeaker", typeof(DS_OverrideLookAtSpeakerNodeEditor) },
+            { "DS_OverrideFixCamPos", typeof(DS_OverrideFixCamPosNodeEditor) },
+            { "CS_CutsceneActionNode", typeof(CS_CutsceneActionNodeEditor) }
         };
 
         /// <summary>

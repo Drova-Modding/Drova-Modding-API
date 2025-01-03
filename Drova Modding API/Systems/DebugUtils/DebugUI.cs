@@ -20,7 +20,7 @@ namespace Drova_Modding_API.Systems.DebugUtils
             var cheatCanvas = FindFirstObjectByType<GUI_CheatCanvas>();
             if (cheatCanvas == null)
             {
-                Debug.LogError("CheatCanvas not found");
+                MelonLogger.Error("CheatCanvas not found");
                 return;
             }
 

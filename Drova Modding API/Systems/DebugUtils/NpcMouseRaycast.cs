@@ -15,7 +15,7 @@ namespace Drova_Modding_API.Systems.DebugUtils
     {
 #if DEBUG
         private readonly Il2CppStructArray<RaycastHit2D> hits = new RaycastHit2D[10]; // Pre-allocated array for raycast results.
-        private readonly string[] IGNORED_LAYERs = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"]; // Layer to ignore when casting ray.
+        private readonly string[] IGNORED_LAYERS = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"]; // Layer to ignore when casting ray.
 
 
         internal void Update()
@@ -44,7 +44,7 @@ namespace Drova_Modding_API.Systems.DebugUtils
                 {
                     RaycastHit2D hit = hits[i];
                     MelonLogger.Msg("Hit Object: " + hit.collider.name);
-                    if (IGNORED_LAYERs.Any((ignore) => hit.collider.name == ignore)) continue;
+                    if (IGNORED_LAYERS.Any((ignore) => hit.collider.name == ignore)) continue;
                     var npc = hit.collider.GetComponent<Actor>();
                     // Npc Shadow
                     if (npc != null)

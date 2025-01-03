@@ -79,6 +79,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         }
 
         /// <summary>
+        /// Sets the selected index of the dropdown.
+        /// </summary>
+        /// <param name="index"></param>
+        public void SetSelectedIndex(int index)
+        {
+            if (index >= 0 && index < _options.Length)
+                _selectedIndex = index;
+        }
+
+        /// <summary>
         /// Draws the dropdown UI and handles interactions.
         /// </summary>
         /// <param name="dropdownRect">The position and size of the dropdown.</param>
@@ -88,7 +98,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             RenderSelectedOption(dropdownRect);
 
             if (_showDropdown)
-            {                
+            {
                 return RenderDropdownOptions(dropdownRect, _options);
             }
 
@@ -125,7 +135,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         protected bool RenderDropdownOptions(Rect dropdownRect, string[] options)
         {
             int previousDepth = GUI.depth;
-            
+
             GUI.depth = -1;
             bool selectionChanged = false;
             for (int i = 0; i < options.Length; i++)

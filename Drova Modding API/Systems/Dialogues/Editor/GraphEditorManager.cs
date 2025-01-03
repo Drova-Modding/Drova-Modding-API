@@ -7,6 +7,7 @@ using UnityEngine;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
+using Il2CppInterop.Runtime.Attributes;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -17,6 +18,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
     [RegisterTypeInIl2Cpp]
     public class GraphEditorManager(IntPtr ptr) : MonoBehaviour(ptr)
     {
+        /// <summary>
+        /// List of snapshots of the graph editor state
+        /// </summary>
+        protected List<GraphEditorSnapshot> GraphEditorSnapshots = [];
+
         private DialogueTree _dialogueTree;
 
         /// <summary>
@@ -144,12 +150,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
-        bool IsPointInRect(Vector2 point, Rect rect)
+        [HideFromIl2Cpp]
+        static bool IsPointInRect(Vector2 point, Rect rect)
         {
             if (rect == default) return false;
             return rect.Contains(point);
         }
 
+        [HideFromIl2Cpp]
         private void BuildNodeEditorsFromFirstInit(DialogueTree value)
         {
             for (int i = 0; i < value.allConnections.Count; i++)
@@ -162,7 +170,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     var editorSource = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.sourceNode.GetIl2CppType());
                     if (editorSource == null)
                     {
-                        MelonLogger.Warning("Editor Source is null for {Type}", connection.sourceNode.GetIl2CppType());
+                        MelonLogger.Warning("Editor Source is null for {0}", connection.sourceNode.GetIl2CppType().Name);
                         continue;
                     }
                     editorSource.Node = connection.sourceNode.Cast<DTNode>();
@@ -176,7 +184,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     var editorTarget = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.targetNode.GetIl2CppType());
                     if (editorTarget == null)
                     {
-                        MelonLogger.Warning("Editor Target is null for {Type}", connection.targetNode.GetIl2CppType());
+                        MelonLogger.Warning("Editor Target is null for {0}", connection.targetNode.GetIl2CppType().Name);
                         continue;
                     }
                     editorTarget.Node = connection.targetNode.Cast<DTNode>();
@@ -193,10 +201,28 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
+        /// <summary>
+        /// Go into a subgraph of a node
+        /// </summary>
+        /// <param name="node">The node to go into</param>
+        public void GoIntoSubGraph(SubDialogueTree node)
+        {
+            GraphEditorSnapshots.Add(new GraphEditorSnapshot(DialogueTree, _scaleFactor, _panOffset));
+            drawNodeEditors.Clear();
+            _scaleFactor = 1;
+            _panOffset = new Vector2(200, -200);
+            _isFirstDraw = true;
+            DialogueTree = node.subGraph;
+        }
 
         internal void OnGUI()
         {
             if (DialogueTree == null) return;
+
+            Color prevoiousBackgroundColor = GUI.backgroundColor;
+            GUI.backgroundColor = Color.grey;
+            GUI.Box(new Rect(0, 0, Screen.width, Screen.height), GUIContent.none);
+            GUI.backgroundColor = prevoiousBackgroundColor;
 
             if (_isFirstDraw)
             {
@@ -207,6 +233,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 _isFirstDraw = false;
             }
 
+            // Handle user input for zoom and pan
+            HandleZoomAndPan();
+
+            // Handle node dragging
+            HandleMouseClick();
+
             // Define the visible screen rect for dynamic rendering
             Rect visibleArea = new(
                 -_panOffset.x / _scaleFactor,
@@ -215,21 +247,29 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 Screen.height / _scaleFactor
             );
 
-            // Handle user input for zoom and pan
-            HandleZoomAndPan();
-
-            // Handle node dragging
-            HandleNodeDragging();
-
             // Apply transformations for zoom and pan
             GUI.matrix = Matrix4x4.TRS(_panOffset, Quaternion.identity, new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
 
             // Draw the background
-            DrawInfiniteBackground();
+            if (Event.current.type == EventType.Repaint)
+                DrawInfiniteBackground();
 
             // Draw only nodes and connections in the visible area
             DrawNodesInArea(visibleArea);
             DrawConnectionsInArea(visibleArea);
+
+            // Draw the tooltip
+            if (GUI.tooltip != "")
+            {
+                GUIStyle style = new(GUI.skin.label);
+                style.normal.textColor = Color.white;
+                style.fontSize = 12;
+                style.alignment = TextAnchor.MiddleCenter;
+
+                var width = style.CalcSize(new GUIContent(GUI.tooltip)).x;
+                var height = style.CalcHeight(new GUIContent(GUI.tooltip), width);
+                GUI.Label(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y - 50, width, height), GUI.tooltip, style);
+            }
 
             // Reset transformations
             GUI.matrix = Matrix4x4.identity;
@@ -241,18 +281,20 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             DrawControls();
         }
 
+        [HideFromIl2Cpp]
         private void DrawControls()
         {
-            if (GUI.Button(new Rect(Screen.width - 110, 10, 100, 60), "Close Graph"))
+            if (GUI.Button(new(Screen.width - 110, 10, 100, 60), "Close Graph"))
             {
                 CloseGraph();
             }
-            if (GUI.Button(new Rect(Screen.width - 110, 70, 100, 60), "Save Graph"))
+            if (GUI.Button(new(Screen.width - 110, 70, 100, 60), "Save Graph"))
             {
                 DialogueTree.Serialize(null);
             }
         }
 
+        [HideFromIl2Cpp]
         private void CloseGraph()
         {
             DialogueTree = null;
@@ -261,7 +303,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             drawNodeEditors.Clear();
             DebugManager.AllowNpcSelection = true;
             _scaleFactor = 1;
-            _panOffset = new Vector2(200, -200);
+            _panOffset = new(200, -200);
             _isFirstDraw = true;
             DebugManager.ResetLastInvoked();
             // Restore the previous timescale if the game is paused which is the case when the graph is opened
@@ -270,6 +312,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             InputAccess.ToggleGampeplayActionMaps(true);
         }
 
+        [HideFromIl2Cpp]
         private void HandleZoomAndPan()
         {
             Event e = Event.current;
@@ -302,15 +345,20 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
-        void HandleNodeDragging()
+        /// <summary>
+        /// Handles mouse clicks for selecting and dragging nodes
+        /// </summary>
+        [HideFromIl2Cpp]
+        void HandleMouseClick()
         {
             Event e = Event.current;
             Vector2 adjustedMousePosition = (e.mousePosition - _panOffset) / _scaleFactor;
+
             // On mouse down, check if we clicked on a node
             if (e.type == EventType.MouseDown && e.button == 0)
             {
-                // Adjust the mouse position to account for zoom and pan
-                MelonLogger.Msg($"HandleNodeDragging called. Event: {e.type}");
+                bool isDoubleClick = e.clickCount == 2;
+
                 foreach (var element in drawNodeEditors)
                 {
                     var editor = element.Value;
@@ -318,8 +366,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
                     if (nodeRect.Contains(adjustedMousePosition))
                     {
-                        _selectedNode = editor;
-                        _dragOffset = adjustedMousePosition - editor.Position;
+                        if (isDoubleClick)
+                        {
+                            editor.OnDoubleClick(adjustedMousePosition);
+                            e.Use();
+                        }
+                        else
+                        {
+                            _selectedNode = editor;
+                            _dragOffset = adjustedMousePosition - editor.Position;
+                        }
                         break;
                     }
                 }
@@ -328,23 +384,22 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // On mouse drag, update the node's position
             if (e.type == EventType.MouseDrag && _selectedNode != null)
             {
-                MelonLogger.Msg($"New Position: {adjustedMousePosition - _dragOffset} , adjustedMousePosition: {adjustedMousePosition}, dragOffset: {_dragOffset}");
-                MelonLogger.Msg($"PanOffset: {_panOffset}");
                 _selectedNode.Position = adjustedMousePosition - _dragOffset;
-                e.Use(); // Mark the event as used to prevent further processing
+                e.Use();
             }
 
             // On mouse up, stop dragging
-            if (_selectedNode != null && e.type == EventType.MouseUp && e.button == 0)
+            if (e.type == EventType.MouseUp && e.button == 0)
             {
                 _selectedNode = null;
             }
         }
 
+        [HideFromIl2Cpp]
         private void DrawInfiniteBackground()
         {
-            float gridSize = 50; // Size of each grid cell
-            Color gridColor = new(0.7f, 0.7f, 0.7f, 0.5f); // Semi-transparent gray
+            float gridSize = 50;
+            Color gridColor = new(0.7f, 0.7f, 0.7f, 0.5f); // semi-transparent gray
 
             // Calculate the top-left position of the grid based on the pan offset
             float startX = Mathf.Floor((-_panOffset.x / _scaleFactor) / gridSize) * gridSize;
@@ -375,7 +430,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
-        // Method to draw the nodes
+        [HideFromIl2Cpp]
         private void DrawNodesInArea(Rect visibleArea)
         {
             for (int i = 0; i < drawNodeEditors.Values.Count; i++)
@@ -383,14 +438,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 var element = drawNodeEditors.Values.ElementAt(i);
                 if (element == null) continue;
 
-                // Check if the node is within the visible area
                 Rect nodeRect = new(
                     element.Position.x,
                     element.Position.y,
                     element.NodeSize.x,
                     element.NodeSize.y
                 );
-
 
                 if (visibleArea.Overlaps(nodeRect))
                 {
@@ -404,7 +457,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
         #region ContextMenu
 
-        // Method to draw the context menu
+        [HideFromIl2Cpp]
         void DrawContextMenu()
         {
             float menuWidth = 120;
@@ -421,7 +474,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 }
             }
         }
-
+        [HideFromIl2Cpp]
         void DrawContextMenu(int length, float menuWidth)
         {
             float menuHeight = 20 * length;
@@ -431,6 +484,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             GUI.Box(_rect, "");
         }
 
+        [HideFromIl2Cpp]
         void DrawSubContextMenu()
         {
 
@@ -449,14 +503,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
-        // Handle the sub-context menu option selection
+
+        [HideFromIl2Cpp]
         void HandleSubContextMenuSelection(int option)
         {
             MelonLogger.Msg(option + " created");
             // Implement your logic for creating nodes here
         }
 
-        // Handle the context menu option selection
+        [HideFromIl2Cpp]
         void HandleContextMenuSelection(int option)
         {
             switch (option)
@@ -484,6 +539,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
         #region LineDrawing
 
+        [HideFromIl2Cpp]
         private void DrawConnectionsInArea(Rect visibleArea)
         {
             foreach (var element in drawNodeEditors)
@@ -503,11 +559,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     var editorEdge = GetEdgePoint(editorCenter, editor.NodeSize, connectedCenter);
                     var connectedEdge = GetEdgePoint(connectedCenter, connectedEditor.NodeSize, editorCenter);
 
+                    var overlap = new Rect(editorEdge, connectedEdge - editorEdge);
 
                     // Draw the line if either point is in the visible area
-                    if (visibleArea.Contains(editorCenter) || visibleArea.Contains(connectedCenter))
+                    if (visibleArea.Contains(editorCenter) || visibleArea.Contains(connectedCenter) || visibleArea.Overlaps(overlap))
                     {
-                        DrawLine(editorEdge, connectedEdge, Color.white);
+                        DrawLine(editorEdge, connectedEdge, Color.white, i + 1);
                     }
                 }
             }
@@ -520,6 +577,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <param name="nodeSize">Size of the node</param>
         /// <param name="target">Node where the line will be drawn</param>
         /// <returns>Edge point</returns>
+        [HideFromIl2Cpp]
         static Vector2 GetEdgePoint(Vector2 nodeCenter, Vector2 nodeSize, Vector2 target)
         {
             Vector2 direction = target - nodeCenter;
@@ -547,7 +605,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <param name="pointA">Line a</param>
         /// <param name="pointB">Line b</param>
         /// <param name="color">Which color it should have</param>
-        void DrawLine(Vector2 pointA, Vector2 pointB, Color color)
+        /// <param name="index">Index of the line</param>
+        [HideFromIl2Cpp]
+        void DrawLine(Vector2 pointA, Vector2 pointB, Color color, int index)
         {
             Color previousColor = GUI.color;
             GUI.color = color;
@@ -562,6 +622,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             GUI.matrix = Matrix4x4.TRS((pointA * _scaleFactor) + _panOffset, Quaternion.Euler(0f, 0f, angle), new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
 
             GUI.Box(new Rect(0, 0, length, 2), "");
+
+            // Draw a box with the index in the middle of the line
+            Vector2 midPoint = (pointA + pointB) / 2;
+            GUI.matrix = Matrix4x4.TRS((midPoint * _scaleFactor) + _panOffset, Quaternion.identity, new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
+            GUI.color = Color.yellow;
+            GUI.Box(new Rect(-10, -10, 20, 20), index.ToString());
 
             GUI.matrix = matrixBackup;
             GUI.color = previousColor;

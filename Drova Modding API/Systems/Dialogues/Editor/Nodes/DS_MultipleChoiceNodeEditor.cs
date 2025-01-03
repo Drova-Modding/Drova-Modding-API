@@ -5,7 +5,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     internal class DS_MultipleChoiceNodeEditor : DrawNodeEditor
     {
-        DS_MultipleChoiceNode CastedNode;
+        private DS_MultipleChoiceNode CastedNode;
 
         public override void Init()
         {
@@ -20,7 +20,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             Color previousColor = GUI.color;
             CastedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
-            var additionalHeight = CastedNode.availableChoices.Count * 75 + 55;
+            var additionalHeight = CastedNode.availableChoices.Count * 75 + 65;
             Color previousBackgroundColor = GUI.backgroundColor;
             GUI.backgroundColor = Color.black;
             GUI.color = Color.white;
@@ -28,13 +28,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             for (int i = 0; i < CastedNode.availableChoices.Count; i++)
             {
                 var choice = CastedNode.availableChoices[i];
-                choice.statement._globalPath = GUI.TextField(new Rect(position.x + 5, position.y + step, 200, 20), choice.statement._globalPath);
+                GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Globapath:");
+                choice.statement._globalPath = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._globalPath);
                 step += 35;
-                choice.statement._locaKey = GUI.TextField(new Rect(position.x + 5, position.y + step, 200, 20), choice.statement._locaKey);
+                GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Statement:");
+                choice.statement._locaKey = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._locaKey);
                 step += 35;
             }
             // Add choice button if there are less than 8 choices
-            if (CastedNode.availableChoices.Count < 8) {
+            if (CastedNode.availableChoices.Count < 8)
+            {
                 if (GUI.Button(new Rect(position.x, position.y + CastedNode.availableChoices.Count * 70 + 20, 200, 20), "Add Choice"))
                 {
                     CastedNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice(new DS_Statement()));
@@ -42,13 +45,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 additionalHeight += 20;
             }
 
-            GUI.Label(new Rect(position.x + 5, position.y + step, 50, 20), "Tag:");
-            CastedNode.tag = GUI.TextField(new Rect(position.x + 65, position.y + step, 200, 20), CastedNode.tag);
+            GUI.Label(new Rect(position.x + 5, position.y + step + 40, 50, 20), "Tag:");
+            CastedNode.tag = GUI.TextField(new Rect(position.x + 110, position.y + step + 40, 200, 20), CastedNode.tag);
             GUI.backgroundColor = previousBackgroundColor;
             GUI.color = Color.green;
-            Rect rect = new(position.x, position.y, 290f, 10f + additionalHeight);
+            Rect rect = new(position.x, position.y, 350, additionalHeight);
+            int prevoiusDepth = GUI.depth;
+
+            GUI.depth = 15;
             GUI.Box(rect, "DS_MultipleChoiceNode");
+
             GUI.color = previousColor;
+            GUI.depth = prevoiusDepth;
             return rect;
         }
     }

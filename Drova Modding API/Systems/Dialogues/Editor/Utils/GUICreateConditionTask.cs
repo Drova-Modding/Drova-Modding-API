@@ -15,6 +15,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         {
             {"DS_CheckGVarListConditionTask", typeof(DS_CheckGVarListConditionTask) },
             {"GBoolConditionTask", typeof(GBoolConditionTask) },
+            {"GIntConditionTask", typeof(GIntConditionTask) },
         };
 
         private readonly string[] tooltips =

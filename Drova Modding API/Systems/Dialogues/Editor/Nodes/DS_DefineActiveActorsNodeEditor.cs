@@ -11,6 +11,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private DS_DefineActiveActors _castedNode;
         private List<EntityInfo> _entityInfos;
         private List<GUIDropdownWithFilter> _entityInfoDropdowns;
+        private const int _maxEntityInfos = 20;
 
 
         public override void Init()
@@ -24,7 +25,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             for (int i = 0; i < _castedNode.entityInfos.Count; i++)
             {
                 var entityInfo = _castedNode.entityInfos[i];
-                _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), _entityInfos.IndexOf(entityInfo), 20));
+                _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), _entityInfos.IndexOf(entityInfo), _maxEntityInfos));
             }
         }
 
@@ -34,7 +35,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 return default;
             }
-            var rect = new Rect(position.x, position.y, 350, 70 + _entityInfoDropdowns.Sum(d => (d.IsDropdownShown ? 20 * d.OptionsCount : 0) + 30));
+            var rect = new Rect(position.x, position.y, 350, 70 + _entityInfoDropdowns.Sum(d => (d.IsDropdownShown ? 20 * _maxEntityInfos : 0) + 30));
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
             GUI.depth = 10;

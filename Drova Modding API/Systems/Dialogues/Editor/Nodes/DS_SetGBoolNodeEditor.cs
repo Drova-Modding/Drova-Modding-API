@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
+    /// <summary>
+    /// Node editor for <see cref="DS_SetGBoolNode"/>
+    /// </summary>
     internal class DS_SetGBoolNodeEditor : DrawNodeEditor
     {
         private DS_SetGBoolNode _castedNode;
@@ -25,10 +28,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return default;
             }
 
-            Rect rect = new(position.x, position.y + 20, 220, 20);
-
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
+
+            Rect rect = new(position.x, position.y + 20, 220, 20);
 
             GUI.color = Color.white;
             GUI.depth = 10;
@@ -37,12 +40,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 _castedNode.Variable = _gvarSelectionEditor.CurrentSelectedGvar.TryCast<GBool>();
             }
 
+            rect.y = position.y;
+
             _castedNode.Value = GUI.Toggle(new Rect(position.x + 10, position.y + 60, 200, 20), _castedNode.Value.value, "Value to set");
 
-            rect.height += 100;
-
             GUI.color = Color.green;
-            GUI.Box(new Rect(position.x, position.y, 220, rect.height), "DS_SetGBoolNode");
+            GUI.Box(new Rect(position.x, position.y, 450, rect.height + 100), "DS_SetGBoolNode");
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;

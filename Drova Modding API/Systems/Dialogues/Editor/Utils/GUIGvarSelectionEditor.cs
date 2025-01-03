@@ -18,6 +18,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         private GVarList _currentSelectedGvarList;
         private List<AGVarBase> _selecteableGvars;
         private AGVarBase _currentSelectedGvar;
+        private GUIDropdownWithFilter _GvarValueDropdown;
+
+        /// <summary>
+        /// The list dropdown.
+        /// </summary>
+        public GUIDropdownWithFilter GvarListDropdown => _GvarListDropdown;
+
+        /// <summary>
+        /// The value dropdown.
+        /// </summary>
+        public GUIDropdownWithFilter? GvarValueDropdown => _GvarValueDropdown;
 
 
         /// <summary>
@@ -41,7 +52,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         public int? OptionsCountValue => _GvarValueDropdown?.OptionsCount;
 
 
-        private GUIDropdownWithFilter _GvarValueDropdown;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GUIGvarSelectionEditor"/> class.
@@ -65,19 +75,29 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
                 _currentSelectedGvarList = _subDatabaseGVars.AllGVars[selectedIndex];
             }
             _GvarListDropdown = new GUIDropdownWithFilter(gvarLists, selectedIndex, 20);
+
+            if (_showOnlyList || selectedIndex == -1) return;
+
+            OnGvarListSelected();
+
+            if (selected != null)
+            {
+                int selectionIndex = _selecteableGvars.FindIndex(gvar => gvar.Id == selected.Id);
+                _GvarValueDropdown.SetSelectedIndex(selectionIndex);
+            }
         }
 
         private void OnGvarListSelected()
         {
             _currentSelectedGvarList = _subDatabaseGVars.AllGVars[_GvarListDropdown.SelectedIndex];
-            
+
             if (_showOnlyList) return;
-            List<AGVarBase> _selecteableGvars = _gvarType switch
+            _selecteableGvars = _gvarType switch
             {
                 GvarType.INT => _currentSelectedGvarList.GetVarsOfType<GInt>().ToArray().ToList().OfType<AGVarBase>().ToList(),
-                GvarType.FLOAT => _currentSelectedGvarList.GetVarsOfType<GFloat>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList(),
-                GvarType.STRING => _currentSelectedGvarList.GetVarsOfType<GString>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList(),
-                GvarType.BOOL => _currentSelectedGvarList.GetVarsOfType<GBool>().Cast<Il2CppSystem.Collections.Generic.List<AGVarBase>>().ToArray().ToList(),
+                GvarType.FLOAT => _currentSelectedGvarList.GetVarsOfType<GFloat>().ToArray().ToList().OfType<AGVarBase>().ToList(),
+                GvarType.STRING => _currentSelectedGvarList.GetVarsOfType<GString>().ToArray().ToList().OfType<AGVarBase>().ToList(),
+                GvarType.BOOL => _currentSelectedGvarList.GetVarsOfType<GBool>().ToArray().ToList().OfType<AGVarBase>().ToList(),
                 _ => [],
             };
             _GvarValueDropdown = new GUIDropdownWithFilter(_selecteableGvars.Select(e => e.name).ToArray(), -1, 10);
@@ -93,15 +113,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         public bool DrawGvarEditor(Rect listDropdown, Rect gvarsDropdown = default)
         {
             bool result = false;
-            GUI.Label(new Rect(0, 0, 100, 20), "Gvarlist Name:");
-            if (_GvarListDropdown.Draw(listDropdown))
+            GUI.Label(new Rect(listDropdown.x, listDropdown.y, 100, 20), "Gvarlist Name:");
+            if (_GvarListDropdown.Draw(new Rect(listDropdown.x + 110, listDropdown.y, listDropdown.width, listDropdown.height)))
             {
                 OnGvarListSelected();
                 result = _showOnlyList;
             }
             if (_showOnlyList) return result;
-            GUI.Label(new Rect(0, 30, 100, 20), "Gvar Name:");
-            if (_GvarValueDropdown != null && _GvarValueDropdown.Draw(gvarsDropdown))
+            GUI.Label(new Rect(gvarsDropdown.x, gvarsDropdown.y, 100, 20), "Gvar Name:");
+            if (_GvarValueDropdown != null && _GvarValueDropdown.Draw(new Rect(gvarsDropdown.x + 110, gvarsDropdown.y, gvarsDropdown.width, gvarsDropdown.height)))
             {
                 _currentSelectedGvar = _selecteableGvars[_GvarValueDropdown.SelectedIndex];
                 result = true;

@@ -1,12 +1,5 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor.Nodes;
-using Drova_Modding_API.Systems.Dialogues.Editor.Tasks;
-using Il2CppDrova.DialogueNew;
+﻿using Drova_Modding_API.Systems.Dialogues.Editor.Tasks;
 using MelonLoader;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
 {
@@ -17,8 +10,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
     {
         private readonly Dictionary<string, Type> nameToTaskMap = new()
         {
-            {"DS_CheckGVarListConditionTask", typeof(DS_CheckGVarListConditionTask) },
+            {"DS_CheckGVarListConditionTask", typeof(DS_CheckGVarListConditionTaskEditor) },
             {"GBoolConditionTask", typeof(GBoolConditionTaskEditor) },
+            {"GIntConditionTask", typeof(GIntConditionTaskEditor) },
         };
 
         /// <summary>
@@ -33,6 +27,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             {
                 return new NullTaskEditor();
             }
+            MelonLogger.Msg("Type: " + type.Name);
             try
             {
                 if (nameToTaskMap.TryGetValue(type.Name, out Type v))
