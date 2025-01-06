@@ -1,5 +1,4 @@
-﻿
-using Il2CppDrova.Saveables;
+﻿using Il2CppDrova.Saveables;
 using Drova_Modding_API.Systems.SaveGame.Store;
 
 namespace Drova_Modding_API.Systems.SaveGame

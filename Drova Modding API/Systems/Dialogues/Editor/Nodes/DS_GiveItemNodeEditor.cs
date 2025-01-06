@@ -15,7 +15,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
 
         DS_GiveItemNode CastedNode;
-        private System.Collections.Immutable.ImmutableList<Item> _items;
+        private Item[] _items;
         private readonly List<GUIDropdownWithFilter> _itemDropdowns = [];
         private readonly List<GUIDropdown> _directionDropdowns = [];
         private readonly List<GUIDropdown> _valueModeDropdowns = [];
@@ -24,13 +24,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             CastedNode ??= Node.TryCast<DS_GiveItemNode>();
-            _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray().ToImmutableList();
+            _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
 
             for (int i = 0; i < CastedNode.ItemStacks.Count; i++)
             {
                 var itemStack = CastedNode.ItemStacks[i];
                 var direction = itemStack.Exchange;
-                var selectedIndex = _items.FindIndex(id => id.Guid == itemStack.Item.Guid);
+                var selectedIndex = Array.FindIndex(_items, id => id.Guid == itemStack.Item.Guid);
                 if (selectedIndex == -1)
                 {
                     selectedIndex = 0;

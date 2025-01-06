@@ -5,7 +5,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
     /// <summary>
     /// Abstract class that helps creating custom task editors for the graph editor
-    /// They are used in the nodes to draw the tasks, the node should take care of the styling
+    /// They are used in the nodes to draw the tasks
     /// </summary>
     public abstract class DrawTaskEditor
     {

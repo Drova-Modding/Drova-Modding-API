@@ -23,6 +23,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// </summary>
         protected List<GraphEditorSnapshot> GraphEditorSnapshots = [];
 
+
         private DialogueTree _dialogueTree;
 
         /// <summary>
@@ -93,8 +94,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
         // List of context menu options
         private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate")];
-
-        private List<LocalizedString> _subContextMenuOptions = [new("Modding_API/GraphEditor", "CreateStatementNode")];
 
         private readonly Dictionary<string, DrawNodeEditor> drawNodeEditors = [];
 
@@ -487,17 +486,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         void DrawSubContextMenu()
         {
+            float menuWidth = 200;
+            var _subContextMenuOptions = DrawNodeEditorFactory.GetNodeNames();
 
-            float menuWidth = 120;
-
-            DrawContextMenu(_subContextMenuOptions.Count, menuWidth);
+            DrawContextMenu(_subContextMenuOptions.Length, menuWidth);
 
             // Display each option as a button
-            for (int i = 0; i < _subContextMenuOptions.Count; i++)
+            for (int i = 0; i < _subContextMenuOptions.Length; i++)
             {
-                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + i * 20, menuWidth, 20), _subContextMenuOptions[i].GetLocalizedString(null)))
+                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + i * 20, menuWidth, 20), _subContextMenuOptions[i]))
                 {
-                    HandleSubContextMenuSelection(i);
+                    HandleSubContextMenuSelection(_subContextMenuOptions[i]);
                     _showSubContextMenu = false; // Close the menu after selection
                 }
             }
@@ -505,10 +504,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
 
         [HideFromIl2Cpp]
-        void HandleSubContextMenuSelection(int option)
+        void HandleSubContextMenuSelection(string option)
         {
-            MelonLogger.Msg(option + " created");
-            // Implement your logic for creating nodes here
+            var drawNodeEditor = DrawNodeEditorFactory.GetDrawNodeEditorByName(option);
+            if (drawNodeEditor != null)
+            {
+
+            }
         }
 
         [HideFromIl2Cpp]

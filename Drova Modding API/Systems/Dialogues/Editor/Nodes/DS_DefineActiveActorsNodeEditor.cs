@@ -9,7 +9,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
 
         private DS_DefineActiveActors _castedNode;
-        private List<EntityInfo> _entityInfos;
+        private EntityInfo[] _entityInfos;
         private List<GUIDropdownWithFilter> _entityInfoDropdowns;
         private const int _maxEntityInfos = 20;
 
@@ -20,12 +20,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>()
                                     .GroupBy(e => e.name)
                                     .Select(g => g.First())
-                                    .ToList();
+                                    .ToArray();
             _entityInfoDropdowns = [];
             for (int i = 0; i < _castedNode.entityInfos.Count; i++)
             {
                 var entityInfo = _castedNode.entityInfos[i];
-                _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), _entityInfos.IndexOf(entityInfo), _maxEntityInfos));
+                _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.FindIndex(_entityInfos, (e) => e.GUID == entityInfo.GUID), _maxEntityInfos));
             }
         }
 

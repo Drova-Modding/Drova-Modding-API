@@ -100,5 +100,18 @@ namespace Drova_Modding_API.Access
 
             return null;
         }
+
+        /// <summary>
+        /// Gets the player's attribute stats.
+        /// </summary>
+        /// <returns></returns>
+        public static PlayerAttributeStats GetPlayerAttributeStats()
+        {
+            if (TryGetPlayer(out var player))
+            {
+                return player.GetStats().TryCast<PlayerAttributeStats>();
+            }
+            return null;
+        }
     }
 }

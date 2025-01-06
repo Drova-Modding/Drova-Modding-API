@@ -13,6 +13,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             {"DS_CheckGVarListConditionTask", typeof(DS_CheckGVarListConditionTaskEditor) },
             {"GBoolConditionTask", typeof(GBoolConditionTaskEditor) },
             {"GIntConditionTask", typeof(GIntConditionTaskEditor) },
+            {"DS_HasItems", typeof(DS_HasItemsTaskEditor) },
+            {"DS_HasAttribute", typeof(DS_HasAttributeTaskEditor) },
         };
 
         /// <summary>
@@ -27,7 +29,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             {
                 return new NullTaskEditor();
             }
-            MelonLogger.Msg("Type: " + type.Name);
             try
             {
                 if (nameToTaskMap.TryGetValue(type.Name, out Type v))

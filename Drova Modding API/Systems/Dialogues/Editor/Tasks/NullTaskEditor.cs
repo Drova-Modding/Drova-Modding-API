@@ -2,6 +2,9 @@
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 {
+    /// <summary>
+    /// Task editor for <code>null</code> tasks
+    /// </summary>
     internal class NullTaskEditor : DrawTaskEditor
     {
         public override Rect DrawTask(Vector2 position)

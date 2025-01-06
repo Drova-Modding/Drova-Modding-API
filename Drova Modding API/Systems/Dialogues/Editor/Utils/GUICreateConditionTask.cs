@@ -16,12 +16,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             {"DS_CheckGVarListConditionTask", typeof(DS_CheckGVarListConditionTask) },
             {"GBoolConditionTask", typeof(GBoolConditionTask) },
             {"GIntConditionTask", typeof(GIntConditionTask) },
+            {"DS_HasItems", typeof(DS_HasItems) },
+            {"DS_HasAttribute", typeof(DS_HasAttribute) },
         };
 
         private readonly string[] tooltips =
         [
             "Check if any bool in the list is value",
-            "Check if all bools are value"
+            "Check if all bools are value",
+            "Check if all int are value",
+            "Check if the target or player has the items",
+            "Check if the player has the attributes",
         ];
 
         /// <summary>

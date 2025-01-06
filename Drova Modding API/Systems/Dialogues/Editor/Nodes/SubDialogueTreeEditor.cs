@@ -16,6 +16,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode ??= Node.TryCast<SubDialogueTree>();
         }
+
         public override Rect DrawNode(Vector2 position)
         {
             if (_castedNode == null)

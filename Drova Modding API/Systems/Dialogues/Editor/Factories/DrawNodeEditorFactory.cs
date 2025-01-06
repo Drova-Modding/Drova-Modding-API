@@ -31,8 +31,70 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             { "SubDialogueTree", typeof(SubDialogueTreeEditor) },
             { "DS_OverrideLookAtSpeaker", typeof(DS_OverrideLookAtSpeakerNodeEditor) },
             { "DS_OverrideFixCamPos", typeof(DS_OverrideFixCamPosNodeEditor) },
-            { "CS_CutsceneActionNode", typeof(CS_CutsceneActionNodeEditor) }
+            { "CS_CutsceneActionNode", typeof(CS_CutsceneActionNodeEditor) },
+            { "DS_SetDialogueRequirementsNode", typeof(DS_SetDialogueRequirementsNodeEditor) },
+            { "DS_OpenTradeWindowNode", typeof(DS_OpenTradeWindowNodeEditor) },
+            { "DS_SetTextSpeedNode", typeof(DS_SetTextSpeedNodeEditor) },
+            { "DS_CanTeachAnything", typeof(DS_CanTeachAnythingNodeEditor) },
+            { "DS_HealActor", typeof(DS_CanTeachAnythingNodeEditor) },
+            { "DS_UnEquipNodeEditor", typeof(DS_UnEquipNodeEditor) },
+            { "DS_KatsaSilverMine", typeof(DS_KatsaSilverMineNodeEditor) },
+            { "DS_LearnStatNode", typeof(DS_LearnStatNodeEditor) },
+            { "DS_LearnTalentNode", typeof(DS_LearnTalentNodeEditor) },
+            { "DS_ReleaseActiveActors", typeof(DS_ReleaseActiveActorsNodeEditor) },
+            { "DS_RestartNode", typeof(DS_RestartNodeEditor) }
         };
+
+        /// <summary>
+        /// Get all the node names
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetNodeNames()
+        {
+            return [.. nameToNodeMap.Keys];
+        }
+
+        /// <summary>
+        /// Add a <see cref="DrawNodeEditor"/> type to the factory
+        /// </summary>
+        /// <param name="name">Name of the il2cpp type<see cref="Il2CppSystem.Reflection.MemberInfo.Name"/></param>
+        /// <param name="type">DrawNodEditor type</param>
+        public void AddNodeEditorType(string name, Type type)
+        {
+            if (type.IsSubclassOf(typeof(DrawNodeEditor)))
+            {
+                nameToNodeMap.TryAdd(name, type);
+            }
+            else
+            {
+                MelonLogger.Error("Type {0} is not a subclass of DrawNodeEditor", type.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Get a DrawNodeEditor by name
+        /// </summary>
+        /// <param name="name">The Name of the Node</param>
+        /// <returns></returns>
+        public DrawNodeEditor? GetDrawNodeEditorByName(string name)
+        {
+            try
+            {
+                if (nameToNodeMap.TryGetValue(name, out Type v))
+                {
+                    return (DrawNodeEditor)Activator.CreateInstance(v);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("Error creating DrawNodeEditor from type: " + e);
+                return null;
+            }
+        }
 
         /// <summary>
         /// Get a DrawNodeEditor by type
