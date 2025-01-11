@@ -8,22 +8,26 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_ChangeStanceNodeEditor : DrawNodeEditor
     {
 
-        GUIDropdown StanceDropdown;
+        private GUIDropdown _stanceDropdown;
+        private DS_ChangeStanceNode _castedNode;
 
-        DS_ChangeStanceNode CastedNode;
+        public DS_ChangeStanceNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(220, 80);
+        }
 
         public override void Init()
         {
-            CastedNode = Node.TryCast<DS_ChangeStanceNode>();
+            _castedNode = Node.TryCast<DS_ChangeStanceNode>();
             var options = Enum.GetNames<EInteractionMode>();
-            StanceDropdown = new GUIDropdown(options, (int)CastedNode._interactionMode);
+            _stanceDropdown = new GUIDropdown(options, (int)_castedNode._interactionMode);
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
-            if (CastedNode == null)
+            if (_castedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             Color previousBackgroundColor = GUI.backgroundColor;
@@ -31,18 +35,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.green;
             GUI.backgroundColor = Color.black;
 
-            Rect rect = new(position.x, position.y, 220, 80 + (StanceDropdown.IsDropdownShown ? 20 * StanceDropdown.OptionsCount : 0));
+            Rect rect = new(position.x, position.y, 220, 80 + (_stanceDropdown.IsDropdownShown ? 20 * _stanceDropdown.OptionsCount : 0));
             GUI.Box(rect, "DS_ChangeStanceNode");
 
             GUI.color = Color.white;
             GUI.Label(new Rect(position.x + 5, position.y + 25, 200, 20), "Stance");
-            if (StanceDropdown.Draw(new Rect(position.x + 5, position.y + 45, 200, 20)))
+            if (_stanceDropdown.Draw(new Rect(position.x + 5, position.y + 45, 200, 20)))
             {
-                CastedNode._interactionMode = (EInteractionMode)StanceDropdown.SelectedIndex;
+                _castedNode._interactionMode = (EInteractionMode)_stanceDropdown.SelectedIndex;
             }
             GUI.color = previousColor;
             GUI.backgroundColor = previousBackgroundColor;
-            return rect;
         }
     }
 }

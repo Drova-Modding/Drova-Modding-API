@@ -12,6 +12,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private GUIDropdown _factionDropdown;
         private Faction[] _factions;
 
+        public DS_SetFactionNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(340, 70);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_SetFactionNode>();
@@ -24,17 +29,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _factionDropdown = new GUIDropdown(_factions.Select(e => e.name).ToArray(), selectedIndex);
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if(_castedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             GUI.color = Color.green;
-            var additionalHeight = _factionDropdown.IsDropdownShown ? 20 * _factionDropdown.OptionsCount : 0;
-            var rect = new Rect(position.x, position.y, 340, 70 + additionalHeight);
-            GUI.Box(rect, "DS_SetFactionNode");
+            GUI.Box(new Rect(position.x, position.y, 340, 70), "DS_SetFactionNode");
 
             GUI.color = Color.white;
             GUI.Label(new Rect(position.x + 10, position.y + 30, 100, 20), "Faction:");
@@ -43,7 +46,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 _castedNode._faction = _factions[_factionDropdown.SelectedIndex];
             }
             GUI.color = previousColor;
-            return rect;
         }
     }
 }

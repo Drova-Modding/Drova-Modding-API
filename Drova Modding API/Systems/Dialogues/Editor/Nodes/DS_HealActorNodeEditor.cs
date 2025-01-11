@@ -14,6 +14,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private EntityInfo[] _entityInfos;
         private GUIDropdownWithFilter _entityInfoDropdown;
 
+        public DS_HealActorNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(400, 60);
+        }
+
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_HealActor>();
@@ -25,18 +30,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.FindIndex(_entityInfos, e => e.GUID == entityInfo.GUID), 20);
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            var rect = new Rect(position.x, position.y, 400, 60);
-            GUI.Box(rect, "DS_HealActor");
+            GUI.Box(new Rect(position.x, position.y, 400, 60), "DS_HealActor");
             GUI.color = Color.white;
             GUI.Label(new Rect(position.x + 10, position.y + 20, 130, 20), "Entity to heal:");
             if (_entityInfoDropdown.Draw(new Rect(position.x + 145, position.y + 20, 250, 25)))
@@ -45,7 +49,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-            return rect;
 
         }
     }

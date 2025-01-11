@@ -17,6 +17,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private GUIDropdownWithFilter _cutsceneDropdown;
         private GUIDropdownWithFilter _actionIdDropdown;
 
+        public CS_CutsceneActionNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(340, 70);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<CS_CutsceneActionNode>();
@@ -34,11 +39,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
             Color previousColor = GUI.color;
@@ -66,7 +71,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
 
             GUI.color = previousColor;
-            return rect;
         }
     }
 }

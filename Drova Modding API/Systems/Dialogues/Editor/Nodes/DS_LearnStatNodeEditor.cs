@@ -12,17 +12,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_LearnStatNodeEditor : DrawNodeEditor
     {
-        public override Rect DrawNode(Vector2 position)
+
+        public DS_LearnStatNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(250, 30);
+        }
+
+        public override void DrawNode(Vector2 position)
         {
             Color color = GUI.color;
             int depth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            Rect rect = new(position.x, position.y, 250, 30);
-            GUI.Box(rect, "DS_LearnStatNode");
+            GUI.Box(new(position.x, position.y, 250, 30), "DS_LearnStatNode");
             GUI.color = color;
             GUI.depth = depth;
-            return rect;
 
         }
     }

@@ -20,16 +20,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _hubRatingDropdown ??= new GUIDropdown(Enum.GetNames<DS_HubNode.HubRating>(), (int)_castedNode.ratingCache);
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
-            var rect = base.DrawNode(new Vector2(position.x, position.y + 30));
-
-            rect.y = position.y;
+            base.DrawNode(new Vector2(position.x, position.y + 30));
 
             int previousDepth = GUI.depth;
             Color previousColor = GUI.color;
@@ -37,8 +35,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = 10;
             GUI.color = Color.white;
 
-            Vector2 nextPosition = new(position.x, position.y + rect.height + 40);
-            rect.height += 40;
+            Vector2 nextPosition = new(position.x, position.y + NodeSizeInternal.y + 40);
 
             GUI.Label(new Rect(nextPosition.x + 5, nextPosition.y, 100, 20), "Rating:");
 
@@ -46,20 +43,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 _castedNode.ratingCache = (DS_HubNode.HubRating)_hubRatingDropdown.SelectedIndex;            
             }
-
-            rect.height += 20 * (_hubRatingDropdown.IsDropdownShown ? _hubRatingDropdown.OptionsCount : 1);
             
             GUI.color = Color.green;
             GUI.depth = 20;
 
-            GUI.Box(new Rect(position.x, position.y, rect.width, rect.height + 10), "DS_HubNode");
+            GUI.Box(new Rect(position.x, position.y, NodeSizeInternal.x, NodeSizeInternal.y + 50), "DS_HubNode");
 
 
             GUI.depth = previousDepth;
             GUI.color = previousColor;
 
 
-            return rect;
         }
     }
 }

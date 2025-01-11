@@ -17,6 +17,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private string[] _clothItemNames;
         private readonly List<GUIDropdownWithFilter> _clothItemDropdowns = [];
 
+        public DS_PreloadClothNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(350, 180);
+        }
+
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_PreloadCloth>();
@@ -32,19 +37,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            var rect = new Rect(position.x, position.y, 350, 80 + 100 * _castedNode.ClothItems.Count);
-            GUI.Box(rect, "DS_PreloadCloth");
+            NodeSizeInternal = new Vector2(350, 80 + 100 * _castedNode.ClothItems.Count);
+            GUI.Box(new Rect(position.x, position.y, 350, 80 + 100 * _castedNode.ClothItems.Count), "DS_PreloadCloth");
             GUI.color = Color.white;
             if (_clothModeDropdown.Draw(new Rect(position.x + 5, position.y + 20, 250, 25)))
             {
@@ -74,7 +79,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-            return rect;
         }
     }
 }

@@ -8,22 +8,23 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         protected Vector2 nodeSize = new(200, 50);
         DS_StatementNode CastedNode;
-        public DS_StatementNodeEditor() { }
+        public DS_StatementNodeEditor() { 
+            NodeSizeInternal = new Vector2(200, 100);
+        }
 
         public override void Init()
         {
             CastedNode ??= Node.TryCast<DS_StatementNode>();
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
-            if (CastedNode == null) return default;
+            if (CastedNode == null) return;
 
             Color previousColor = GUI.color;
             GUI.color = Color.green;
-            Rect rect = new(position.x, position.y, nodeSize.x, nodeSize.y + 50);
 
-            GUI.Box(rect, new GUIContent("DS_StatementNode", CastedNode.GetLocalizedString()));
+            GUI.Box(new(position.x, position.y, nodeSize.x, nodeSize.y + 50), new GUIContent("DS_StatementNode", CastedNode.GetLocalizedString()));
 
             Color previousBackgroundColor = GUI.backgroundColor;
 
@@ -36,8 +37,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.color = previousColor;
             GUI.backgroundColor = previousBackgroundColor;
-
-            return rect;
         }
     }
 }

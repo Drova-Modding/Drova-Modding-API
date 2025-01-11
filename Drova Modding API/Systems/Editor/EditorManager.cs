@@ -1,11 +1,11 @@
 ﻿using Il2CppDrova;
 
-namespace Drova_Modding_API.Systems.DebugUtils
+namespace Drova_Modding_API.Systems.Editor
 {
     /// <summary>
-    /// Manager for the Debug Build
+    /// Manager for the editing actions
     /// </summary>
-    public static class DebugManager
+    public static class EditorManager
     {
 #if DEBUG
         /// <summary>

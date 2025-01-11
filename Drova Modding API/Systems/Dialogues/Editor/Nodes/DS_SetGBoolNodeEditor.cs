@@ -13,6 +13,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private DS_SetGBoolNode _castedNode;
         private GUIGvarSelectionEditor _gvarSelectionEditor;
 
+        public DS_SetGBoolNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(450, 120);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_SetGBoolNode>();
@@ -20,37 +25,35 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
 
-            Rect rect = new(position.x, position.y + 20, 220, 20);
+            Rect drawRect = new(position.x, position.y, 450, 120);
+            GUI.Box(drawRect, "DS_SetGBoolNode");
 
             GUI.color = Color.white;
             GUI.depth = 10;
-            if (_gvarSelectionEditor.DrawGvarEditor(rect))
+            Rect gvarDropdownRect = new(position.x, position.y + 40, 220, 20);
+            if (_gvarSelectionEditor.DrawGvarEditor(new(position.x, position.y + 20, 220, 20), gvarDropdownRect))
             {
                 _castedNode.Variable = _gvarSelectionEditor.CurrentSelectedGvar.TryCast<GBool>();
             }
 
-            rect.y = position.y;
-
             _castedNode.Value = GUI.Toggle(new Rect(position.x + 10, position.y + 60, 200, 20), _castedNode.Value.value, "Value to set");
 
             GUI.color = Color.green;
-            Rect drawRect = new(position.x, position.y, 450, rect.height + 100);
-            GUI.Box(drawRect, "DS_SetGBoolNode");
+            
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;
 
-            return drawRect;
 
         }
     }

@@ -17,6 +17,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private GUIGvarSelectionEditor _defaultAmountEditor;
         private GUIGvarSelectionEditor _angryAmountEditor;
 
+        public DS_KatsaSilverMineNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(500, 400);
+        }
+
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_KatsaSilverMine>();
@@ -27,18 +32,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _defaultAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.DefaultAmount.GetParent().name, false, _castedNode.DefaultAmount);
             _angryAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.AngryAmount.GetParent().name, false, _castedNode.AngryAmount);
         }
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            var rect = new Rect(position.x, position.y, 500, 400);
-            GUI.Box(rect, "DS_KatsaSilverMine");
+            GUI.Box(new Rect(position.x, position.y, 500, 400), "DS_KatsaSilverMine");
             GUI.color = Color.white;
 
             GUI.Label(new Rect(position.x + 5, position.y + 270, 250, 20), "Friendly Percentage:");
@@ -70,7 +74,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-            return rect;
 
         }
     }

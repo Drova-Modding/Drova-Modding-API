@@ -10,15 +10,20 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         private DS_OpenTradeWindowNode _castedNode;
 
+        public DS_OpenTradeWindowNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(350, 60);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_OpenTradeWindowNode>();
         }
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
             Color previousColor = GUI.color;
@@ -27,9 +32,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = 10;
             GUI.color = Color.green;
 
-            var rect = new Rect(position.x, position.y, 350, 60);
 
-            GUI.Box(rect, "DS_OpenTradeWindowNode");
+            GUI.Box(new Rect(position.x, position.y, 350, 60), "DS_OpenTradeWindowNode");
 
             GUI.color = Color.white;
 
@@ -38,7 +42,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = previousDepth;
             GUI.color = previousColor;
 
-            return rect;
         }
     }
 }

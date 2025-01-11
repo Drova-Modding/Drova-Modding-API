@@ -42,7 +42,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             { "DS_LearnStatNode", typeof(DS_LearnStatNodeEditor) },
             { "DS_LearnTalentNode", typeof(DS_LearnTalentNodeEditor) },
             { "DS_ReleaseActiveActors", typeof(DS_ReleaseActiveActorsNodeEditor) },
-            { "DS_RestartNode", typeof(DS_RestartNodeEditor) }
+            { "DS_RestartNode", typeof(DS_RestartNodeEditor) },
+            { "DS_LearnAttributeNode_Single", typeof(DS_LearnAttributeNode_SingleNodeEditor) },
+            { "DS_PlaySfx", typeof(DS_PlaySfxNodeEditor) },
+            { "DS_DelayedTeach_Statement", typeof(DS_DelayedTeach_StatementNodeEditor) },
         };
 
         /// <summary>

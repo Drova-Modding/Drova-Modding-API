@@ -13,6 +13,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private List<GUIDropdownWithFilter> _entityInfoDropdowns;
         private const int _maxEntityInfos = 20;
 
+        public DS_DefineActiveActorsNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(350, 150);
+        }
+
 
         public override void Init()
         {
@@ -29,11 +34,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
             var rect = new Rect(position.x, position.y, 350, 70 + _entityInfoDropdowns.Sum(d => (d.IsDropdownShown ? 20 * _maxEntityInfos : 0) + 30));
             Color previousColor = GUI.color;
@@ -59,7 +64,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 }
             }
 
-            if (GUI.Button(new Rect(position.x + 10, position.y + 30 + 20 * _castedNode.entityInfos.Count, 130, 20), "Add Actor"))
+            if (GUI.Button(new Rect(position.x + 10, position.y + 30 + 20 * (_castedNode.entityInfos.Count + 1), 130, 20), "Add Actor"))
             {
                 _castedNode.entityInfos.Add(EntityGameHandler.TryGet()._undefinedEntityInfo);
                 _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), -1, 20));
@@ -67,8 +72,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-            return rect;
 
+            NodeSizeInternal = new Vector2(rect.width, rect.height);
         }
     }
 }

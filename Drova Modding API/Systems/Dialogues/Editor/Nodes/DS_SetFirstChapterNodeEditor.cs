@@ -4,14 +4,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     internal class DS_SetFirstChapterNodeEditor : DrawNodeEditor
     {
-        public override Rect DrawNode(Vector2 position)
+
+        public DS_SetFirstChapterNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(200, 20);
+        }
+
+        public override void DrawNode(Vector2 position)
         {
             Color previousColor = GUI.color;
             GUI.color = Color.green;
-            Rect rect = new(position.x, position.y, 200, 20);
-            GUI.Box(rect, "DS_SetFirstChapter");
+            GUI.Box(new(position.x, position.y, 200, 20), "DS_SetFirstChapter");
             GUI.color = previousColor;
-            return rect;
         }
     }
 }

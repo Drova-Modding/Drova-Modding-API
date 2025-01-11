@@ -15,6 +15,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private GUIDropdown _styleDropdown;
         private GUIDropdown _tempoDropdown;
 
+        public DS_SetDialogueRequirementsNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(320, 150);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_SetDialogueRequirementsNode>();
@@ -22,17 +27,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _tempoDropdown = new GUIDropdown(Enum.GetNames<Tempo>(), (int)_castedNode.tempo);
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
 
-            Rect rect = new(position.x, position.y, 320, 20);
+             GUI.color = Color.green;
+
+            GUI.Box(new(position.x, position.y, 320, 150), "DS_SetDialogueRequirementsNode");
 
             GUI.color = Color.white;
             GUI.depth = 10;
@@ -55,18 +62,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 _castedNode.style = (Style)_styleDropdown.SelectedIndex;
             }
 
-            GUI.color = Color.green;
-            bool anyDropdownShown = _styleDropdown.IsDropdownShown || _tempoDropdown.IsDropdownShown;
-            int additionalHeight = anyDropdownShown ? 20 * 5 : 20;
-
-            Rect drawRect = new(position.x, position.y, 320, rect.height + additionalHeight);
-
-            GUI.Box(drawRect, "DS_SetDialogueRequirementsNode");
+           
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;
-
-            return drawRect;
 
         }
     }

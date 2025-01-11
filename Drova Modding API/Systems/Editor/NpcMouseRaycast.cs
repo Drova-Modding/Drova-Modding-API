@@ -4,7 +4,7 @@ using MelonLoader;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
-namespace Drova_Modding_API.Systems.DebugUtils
+namespace Drova_Modding_API.Systems.Editor
 {
     /// <summary>
     /// A class that casts a ray from the mouse position and detects if it hits an NPC.
@@ -43,25 +43,21 @@ namespace Drova_Modding_API.Systems.DebugUtils
                 for (int i = 0; i < hitCount; i++)
                 {
                     RaycastHit2D hit = hits[i];
-                    MelonLogger.Msg("Hit Object: " + hit.collider.name);
                     if (IGNORED_LAYERS.Any((ignore) => hit.collider.name == ignore)) continue;
                     var npc = hit.collider.GetComponent<Actor>();
                     // Npc Shadow
                     if (npc != null)
                     {
-                        MelonLogger.Msg("NPC Name: " + npc.name);
-                        DebugManager.TriggerNpcSelected(npc);
+                        EditorManager.TriggerNpcSelected(npc);
                         return;
                     }
                     npc = hit.collider.transform.parent.GetComponent<Actor>();
                     // NPC trigger colliders
-                    if(npc != null)
+                    if (npc != null)
                     {
-                        DebugManager.TriggerNpcSelected(npc);
-                        MelonLogger.Msg("NPC Name hit 2: " + npc.name);
+                        EditorManager.TriggerNpcSelected(npc);
                         return;
                     }
-
                 }
             }
         }

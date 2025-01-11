@@ -10,21 +10,28 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_RestartNodeEditor : DrawNodeEditor
     {
         private DS_RestartNode _castedNode;
+        private DialogueTree[] _dialogueTrees;
         private string[] _dialogueTreeNames;
         private GUIDropdownWithFilter _dialogueTreeDropdown;
+
+        public DS_RestartNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(275, 90);
+        }
 
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_RestartNode>();
-            _dialogueTreeNames = Il2CppNodeCanvas.Framework.Graph._runningGraphs.ToArray().ToList().Select(g => g.name).ToArray();
+            _dialogueTrees = Resources.FindObjectsOfTypeAll<DialogueTree>();
+            _dialogueTreeNames = _dialogueTrees.Select(e => e.name).ToArray();
             _dialogueTreeDropdown = new GUIDropdownWithFilter(_dialogueTreeNames, Array.FindIndex(_dialogueTreeNames, (e) => e == _castedNode.GraphToRestart?.name), 20);
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
@@ -38,12 +45,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 if (_dialogueTreeDropdown.Draw(new Rect(position.x + 5, position.y + 50, 200, 20)))
                 {
-                    _castedNode.GraphToRestart = Il2CppNodeCanvas.Framework.Graph._runningGraphs[_dialogueTreeDropdown.SelectedIndex].TryCast<DialogueTree>();
+                    _castedNode.GraphToRestart = _dialogueTrees[_dialogueTreeDropdown.SelectedIndex];
                 }
             }
             GUI.color = previousColor;
             GUI.depth = previousDepth;
-            return rect;
 
         }
     }

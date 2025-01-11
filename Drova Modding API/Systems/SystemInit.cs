@@ -1,9 +1,10 @@
 ﻿using Drova_Modding_API.Access;
-using Drova_Modding_API.Systems.DebugUtils;
+using Drova_Modding_API.Systems.Editor;
 using Drova_Modding_API.Systems.SaveGame;
 using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.WorldEvents;
 using Drova_Modding_API.UI;
+using Il2CppDrova.MapDatabases;
 using Il2CppDrova.Saveables;
 using Il2CppInterop.Runtime.Injection;
 using UnityEngine;
@@ -28,7 +29,7 @@ namespace Drova_Modding_API.Systems
                 SaveGameSystem.Instance.OnLoad(Savegame.Current);
             }
 #if DEBUG
-            DebugUI.Init();
+            EditorUI.Init();
 #endif
         }
 

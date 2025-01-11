@@ -14,6 +14,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private EquipmentSlotType[] equipmentSlotTypes;
         private readonly List<GUIDropdown> _equipmentSlotDropdowns = [];
 
+        public DS_UnEquipNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(350, 100);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_UnEquipNode>();
@@ -26,18 +31,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            var rect = new Rect(position.x, position.y, 350, 40 + 60 * _castedNode._slotTypes.Count);
-            GUI.Box(rect, "DS_UnEquipNode");
+            NodeSizeInternal = new Vector2(350, 40 + 60 * _castedNode._slotTypes.Count);
+            GUI.Box(new Rect(position.x, position.y, 350, 40 + 60 * _castedNode._slotTypes.Count), "DS_UnEquipNode");
             GUI.color = Color.white;
             for (int i = 0; i < _castedNode._slotTypes.Count; i++)
             {
@@ -65,7 +70,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-            return rect;
         }
     }
 }

@@ -14,6 +14,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private readonly GUICreateConditionTask _guiCreateConditionTask = new();
         private const int _spaceBetweenTasks = 50;
 
+        public MultipleConditionNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(350, 170);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<MultipleConditionNode>();
@@ -39,11 +44,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
@@ -80,11 +85,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.green;
             GUI.depth = 20;
             GUI.Box(rect, "MultipleConditionNode");
+            NodeSizeInternal = new Vector2(rect.width, rect.height);
 
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-
-            return rect;
         }
     }
 }

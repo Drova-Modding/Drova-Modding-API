@@ -11,12 +11,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         private DS_HubJumpNode _castedNode;
 
+        public DS_HubJumpNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(420, 60);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_HubJumpNode>();
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             int previousDepth = GUI.depth;
             Color previousColor = GUI.color;
@@ -24,9 +29,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = 10;
             GUI.color = Color.green;
 
-            var rect = new Rect(position.x, position.y, 420, 60);
-
-            GUI.Box(rect, "DS_HubJumpNode");
+            GUI.Box(new Rect(position.x, position.y, 420, 60), "DS_HubJumpNode");
 
             GUI.color = Color.white;
 
@@ -35,8 +38,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;
-
-            return rect;
         }
     }
 }

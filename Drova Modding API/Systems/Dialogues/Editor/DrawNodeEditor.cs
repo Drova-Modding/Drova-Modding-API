@@ -23,12 +23,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// </summary>
         public GraphEditorManager GraphEditorManager;
 
+
         /// <summary>
-        /// last Size of the node
+        /// Size of the node
         /// </summary>
-        public Vector2 NodeSize;
+        protected Vector2 NodeSizeInternal;
+
         /// <summary>
-        /// last Position of the node
+        /// Size of the node
+        /// </summary>
+        public Vector2 NodeSize => NodeSizeInternal;
+        
+        /// <summary>
+        /// Position of the node
         /// </summary>
         public Vector2 Position;
         /// <summary>
@@ -45,8 +52,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// Draw the node
         /// </summary>
         /// <param name="position">Position to add</param>
-        /// <returns>Rect of its position</returns>
-        public abstract Rect DrawNode(Vector2 position);
+        public abstract void DrawNode(Vector2 position);
 
         /// <summary>
         /// Initialize the node editor when the <see cref="Node"/> is set and on the first draw

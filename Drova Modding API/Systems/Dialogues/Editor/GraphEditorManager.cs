@@ -1,5 +1,4 @@
-﻿using Drova_Modding_API.Systems.DebugUtils;
-using Il2Cpp;
+﻿using Il2Cpp;
 using Il2CppDrova;
 using Il2CppNodeCanvas.DialogueTrees;
 using MelonLoader;
@@ -8,6 +7,7 @@ using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
 using Il2CppInterop.Runtime.Attributes;
+using Drova_Modding_API.Systems.Editor;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -46,9 +46,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 {
                     value.SelfDeserialize();
                 }
+                value.DeserializeIfNotDoneYet(true);
                 BuildNodeEditorsFromFirstInit(value);
                 _dialogueTree = value;
-                DebugManager.AllowNpcSelection = false;
+                EditorManager.AllowNpcSelection = false;
                 InputAccess.ToggleGampeplayActionMaps(false);
                 Time.timeScale = 0;
             }
@@ -101,7 +102,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             DrawNodeEditorFactory = new DrawNodeEditorFactory();
             DrawTaskEditorFactory = new DrawTaskEditorFactory();
-            DebugManager.OnNpcSelected += DebugManager_OnNpcSelected;
         }
 
         internal void Start()
@@ -109,12 +109,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             useGUILayout = false;
         }
 
-        internal void OnDestroy()
-        {
-            DebugManager.OnNpcSelected -= DebugManager_OnNpcSelected;
-        }
-
-        private void DebugManager_OnNpcSelected(Actor actor)
+        /// <summary>
+        /// Initialize the graph editor with the actor
+        /// </summary>
+        /// <param name="actor">Actor to initalize</param>
+        public void Init(Actor actor)
         {
             if (actor == null) return;
             var dialogueTreeController = actor.GetComponentInChildren<DS_DialogueTreeController>();
@@ -175,7 +174,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     editorSource.Node = connection.sourceNode.Cast<DTNode>();
                     drawNodeEditors.TryAdd(connection.sourceNode.UID, editorSource);
                     editorSource.Position = new Vector2(Screen.width / 2, 100 * (i + 1));
-                    editorSource.NodeSize = new Vector2(10, 10);
                     editorSource.GraphEditorManager = this;
                 }
                 if (!drawNodeEditors.ContainsKey(connection.targetNode.UID))
@@ -189,7 +187,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     editorTarget.Node = connection.targetNode.Cast<DTNode>();
                     drawNodeEditors.TryAdd(connection.targetNode.UID, editorTarget);
                     editorTarget.Position = new Vector2(Screen.width / 2 + (i * 50), 200 * (i + 1));
-                    editorTarget.NodeSize = new Vector2(10, 10);
                     editorTarget.GraphEditorManager = this;
                 }
 
@@ -300,11 +297,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             _showContextMenu = false;
             _showSubContextMenu = false;
             drawNodeEditors.Clear();
-            DebugManager.AllowNpcSelection = true;
+            EditorManager.AllowNpcSelection = true;
             _scaleFactor = 1;
             _panOffset = new(200, -200);
             _isFirstDraw = true;
-            DebugManager.ResetLastInvoked();
+            EditorManager.ResetLastInvoked();
             // Restore the previous timescale if the game is paused which is the case when the graph is opened
             if (Time.timeScale == 0)
                 Time.timeScale = 1;
@@ -446,9 +443,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
                 if (visibleArea.Overlaps(nodeRect))
                 {
-                    var rect = element.DrawNode(element.Position);
-                    element.Position = rect.position;
-                    element.NodeSize = rect.size;
+                    element.DrawNode(element.Position);
                 }
             }
         }

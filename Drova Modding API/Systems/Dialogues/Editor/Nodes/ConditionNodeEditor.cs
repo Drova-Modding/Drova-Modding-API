@@ -11,6 +11,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private GUICreateConditionTask _guiCreateConditionTask;
         private DrawTaskEditor _drawTaskEditor;
 
+        public ConditionNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(350, 120);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<ConditionNode>();
@@ -21,11 +26,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
             var rect = new Rect(position.x, position.y, 350, 120);
@@ -51,7 +56,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedNode._condition.GetIl2CppType());
                 }
             }
-            return rect;
         }
     }
 }

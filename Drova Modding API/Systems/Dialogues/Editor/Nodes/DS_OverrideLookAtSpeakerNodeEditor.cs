@@ -14,6 +14,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private readonly Dictionary<string, string> _speakersNameToGuid = [];
         private readonly List<LookDirectionEditor> _lookDirectionEditors = [];
 
+        public DS_OverrideLookAtSpeakerNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(220, 40);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_OverrideLookAtSpeaker>();
@@ -25,34 +30,33 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
 
+            GUI.color = Color.green;
+            NodeSizeInternal = new Vector2(220, (_lookDirectionEditors.Count * 20) + 20);
+
+            GUI.Box(new(position.x, position.y + 20, 220, NodeSizeInternal.y), "DS_OverrideLookAtSpeaker");
+
             GUI.color = Color.white;
             GUI.depth = 10;
+          
 
-            Rect rect = new(position.x, position.y + 20, 220, 20);
 
             for (int i = 0; i < _lookDirectionEditors.Count; i++)
             {
                 var lookDirectionEditor = _lookDirectionEditors[i];
                 lookDirectionEditor.DrawLookDirectionEditor(new Vector2(position.x, position.y + 20 * (i + 1)));
-                rect.height += lookDirectionEditor.Size.y;
             }
-
-            GUI.color = Color.green;
-            GUI.Box(new Rect(position.x, position.y, 220, rect.height + 20), "DS_OverrideLookAtSpeaker");
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;
-
-            return rect;
         }
 
     }
@@ -63,7 +67,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private readonly Dictionary<string, string> _speakersNameToGuid;
         private readonly LookDirectionsOverrides.ActorLookParam _actorLookParam;
         private Vector2 _size = new(200, 20);
-        private readonly int _countOfNames;
 
         public Vector2 Size => _size;
 
@@ -72,7 +75,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _actorLookParam = actorLookParam;
             _speakersNameToGuid = speakersNameToGuid;
             var nameList = _speakersNameToGuid.Keys.ToList();
-            _countOfNames = nameList.Count;
             _actorsDropdown.Add(new GUIDropdown([.. nameList], nameList.FindIndex(name => name == _actorLookParam._fromActor.name)));
             _actorsDropdown.Add(new GUIDropdown([.. nameList], nameList.FindIndex(name => name == _actorLookParam._toActor.name)));
         }
@@ -98,9 +100,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     _actorLookParam._fromActor.name = selectedName;
                 }
             }
-
-            var anyDrodpownOpen = _actorsDropdown.Any(dropdown => dropdown.IsDropdownShown);
-            _size = new Vector2(200, 20 * (anyDrodpownOpen ? _countOfNames : 1));
         }
 
 

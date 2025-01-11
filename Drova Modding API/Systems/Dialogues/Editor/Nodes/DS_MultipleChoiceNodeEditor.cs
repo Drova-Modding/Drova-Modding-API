@@ -7,21 +7,33 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         private DS_MultipleChoiceNode CastedNode;
 
+        public DS_MultipleChoiceNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(350, 150);
+        }
+
         public override void Init()
         {
             CastedNode ??= Node.TryCast<DS_MultipleChoiceNode>();
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (CastedNode == null)
             {
-                return default;
+                return;
             }
             Color previousColor = GUI.color;
             CastedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
             var additionalHeight = CastedNode.availableChoices.Count * 75 + 65;
             Color previousBackgroundColor = GUI.backgroundColor;
+
+            GUI.color = Color.green;
+            Rect rect = new(position.x, position.y, 350, additionalHeight);
+            NodeSizeInternal = new Vector2(350, additionalHeight);
+            GUI.Box(rect, "DS_MultipleChoiceNode");
+
+
             GUI.backgroundColor = Color.black;
             GUI.color = Color.white;
             int step = 20;
@@ -42,22 +54,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 {
                     CastedNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice(new DS_Statement()));
                 }
-                additionalHeight += 20;
             }
 
             GUI.Label(new Rect(position.x + 5, position.y + step + 40, 50, 20), "Tag:");
             CastedNode.tag = GUI.TextField(new Rect(position.x + 110, position.y + step + 40, 200, 20), CastedNode.tag);
             GUI.backgroundColor = previousBackgroundColor;
-            GUI.color = Color.green;
-            Rect rect = new(position.x, position.y, 350, additionalHeight);
-            int prevoiusDepth = GUI.depth;
-
-            GUI.depth = 15;
-            GUI.Box(rect, "DS_MultipleChoiceNode");
 
             GUI.color = previousColor;
-            GUI.depth = prevoiusDepth;
-            return rect;
         }
     }
 }

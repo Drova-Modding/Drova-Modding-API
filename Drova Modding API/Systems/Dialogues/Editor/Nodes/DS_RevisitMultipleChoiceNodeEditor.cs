@@ -7,16 +7,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         private DS_RevisitMultipleChoiceNode _castedNode;
 
+        public DS_RevisitMultipleChoiceNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(350, 70);
+        }
+
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_RevisitMultipleChoiceNode>();
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
             var rect = new Rect(position.x, position.y, 350, 70);
@@ -35,7 +40,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.color = previousColor;
 
-            return rect;
         }
     }
 }

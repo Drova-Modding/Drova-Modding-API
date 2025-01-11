@@ -10,7 +10,10 @@ using MelonLoader;
 using Il2CppDrova;
 using Drova_Modding_API.Systems.Dialogues;
 using Drova_Modding_API.Systems.Dialogues.Editor;
-using Drova_Modding_API.Systems.DebugUtils;
+using Il2CppDrova.MapDatabases;
+using Drova_Modding_API.Systems.Editor;
+
+
 
 #if DEBUG
 using UnityEngine.InputSystem;
@@ -110,14 +113,19 @@ namespace Drova_Modding_API
             }
             if (Input.GetKeyDown(KeyCode.F4))
             {
-                AddressableAccess.Bandits.Human_Bandit_Mine_01.InstantiateAsync(PlayerAccess.GetPlayer().gameObject.transform.position, Quaternion.identity);
-            }
-            if (Input.GetKeyDown(KeyCode.F6))
-            {
-                GameObject gameObject = new("Test");
-                gameObject.AddComponent<NpcMouseRaycast>();
-                var component = gameObject.AddComponent<GraphEditorManager>();
-
+                var db = MapDatabaseProvider.Database.TryCast<MapDatabase>();
+                var enumerator = db._dataCache.GetEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    MelonLogger.Msg("Masterkey: " + enumerator.Current.Key);
+                    var nextEnumerator = enumerator.Current.Value.GetEnumerator();
+                    while (nextEnumerator.MoveNext())
+                    {
+                        MelonLogger.Msg(nextEnumerator.Current.Key);
+                        MelonLogger.Msg(nextEnumerator.Current.Value);
+                    }
+                }
+                //AddressableAccess.Bandits.Human_Bandit_Mine_01.InstantiateAsync(PlayerAccess.GetPlayer().gameObject.transform.position, Quaternion.identity);
             }
 #endif
         }

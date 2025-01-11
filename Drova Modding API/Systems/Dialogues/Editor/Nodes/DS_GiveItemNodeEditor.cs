@@ -14,21 +14,26 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_GiveItemNodeEditor : DrawNodeEditor
     {
 
-        DS_GiveItemNode CastedNode;
+        private DS_GiveItemNode _castedNode;
         private Item[] _items;
         private readonly List<GUIDropdownWithFilter> _itemDropdowns = [];
         private readonly List<GUIDropdown> _directionDropdowns = [];
         private readonly List<GUIDropdown> _valueModeDropdowns = [];
         private readonly Dictionary<int, GUIGvarSelectionEditor> _gvarSelectionEditors = [];
 
+        public DS_GiveItemNodeEditor()
+        {
+            NodeSizeInternal = new Vector2(480, 290);
+        }
+
         public override void Init()
         {
-            CastedNode ??= Node.TryCast<DS_GiveItemNode>();
+            _castedNode ??= Node.TryCast<DS_GiveItemNode>();
             _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
 
-            for (int i = 0; i < CastedNode.ItemStacks.Count; i++)
+            for (int i = 0; i < _castedNode.ItemStacks.Count; i++)
             {
-                var itemStack = CastedNode.ItemStacks[i];
+                var itemStack = _castedNode.ItemStacks[i];
                 var direction = itemStack.Exchange;
                 var selectedIndex = Array.FindIndex(_items, id => id.Guid == itemStack.Item.Guid);
                 if (selectedIndex == -1)
@@ -48,11 +53,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        public override Rect DrawNode(Vector2 position)
+        public override void DrawNode(Vector2 position)
         {
-            if (CastedNode == null)
+            if (_castedNode == null)
             {
-                return default;
+                return;
             }
 
             int previousDepth = GUI.depth;
@@ -61,20 +66,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             Color previousColor = GUI.color;
             GUI.color = Color.green;
 
-            int itemCount = CastedNode.ItemStacks.Count;
+            int itemCount = _castedNode.ItemStacks.Count;
             float itemHeight = 260f;
             float baseHeight = 60f;
             float rectHeight = baseHeight + itemCount * itemHeight + 30f;
 
-            var rect = new Rect(position.x, position.y, 480, rectHeight);
-
-            GUI.Box(rect, "DS_GiveItemNode");
+            GUI.Box(new Rect(position.x, position.y, 480, rectHeight), "DS_GiveItemNode");
+            NodeSizeInternal = new Vector2(480, rectHeight);
 
             GUI.color = Color.white;
 
-            for (int i = 0; i < CastedNode.ItemStacks.Count; i++)
+            for (int i = 0; i < _castedNode.ItemStacks.Count; i++)
             {
-                var itemStack = CastedNode.ItemStacks[i];
+                var itemStack = _castedNode.ItemStacks[i];
                 var itemDropdown = _itemDropdowns[i];
 
                 float yOffset = position.y + 30 + i * itemHeight;
@@ -144,28 +148,26 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     Mode = DialogItems.ValueMode.Int,
                     Amount = 1
                 };
-                CastedNode.ItemStacks.Add(newItemStack);
+                _castedNode.ItemStacks.Add(newItemStack);
 
                 _itemDropdowns.Add(new GUIDropdownWithFilter(_items.Select(e => e.ReadableId).ToArray(), 0, 20));
                 _directionDropdowns.Add(new GUIDropdown(Enum.GetNames<DialogItemsExchange.ExchangeDirection>(), 0));
                 _valueModeDropdowns.Add(new GUIDropdown(Enum.GetNames<DialogItems.ValueMode>(), 0));
             }
 
-            CastedNode._equip = GUI.Toggle(new Rect(position.x, position.y + rectHeight - 60, 150, 20), CastedNode._equip, "Equip Items");
+            _castedNode._equip = GUI.Toggle(new Rect(position.x, position.y + rectHeight - 60, 150, 20), _castedNode._equip, "Equip Items");
 
-            CastedNode._equipInEmptyActiveSlot = GUI.Toggle(new Rect(position.x, position.y + rectHeight - 90, 200, 20), CastedNode._equipInEmptyActiveSlot, "Equip Items in empty slot");
+            _castedNode._equipInEmptyActiveSlot = GUI.Toggle(new Rect(position.x, position.y + rectHeight - 90, 200, 20), _castedNode._equipInEmptyActiveSlot, "Equip Items in empty slot");
 
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-
-            return rect;
         }
 
         private bool DrawDeleteButton(Vector2 position, int i, float useContainerYOffset)
         {
             if (GUI.Button(new Rect(position.x + 240, useContainerYOffset + 50, 80, 20), "Delete"))
             {
-                CastedNode.ItemStacks.RemoveAt(i);
+                _castedNode.ItemStacks.RemoveAt(i);
                 _itemDropdowns.RemoveAt(i);
                 _directionDropdowns.RemoveAt(i);
                 _valueModeDropdowns.RemoveAt(i);
