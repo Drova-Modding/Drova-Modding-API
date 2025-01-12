@@ -473,6 +473,9 @@
 		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
 		<Compile Include="Register\InputActionRegister.cs" />
 		<Compile Include="Systems\AreaNameSystem.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetGIntNodeEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\ProbabilitySelectorNodeEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Tasks\ConditionListTaskEditor.cs" />
 		<Compile Include="Systems\Editor\EditorManager.cs" />
 		<Compile Include="Systems\Editor\EditorUI.cs" />
 		<Compile Include="Systems\Editor\NpcMouseRaycast.cs" />

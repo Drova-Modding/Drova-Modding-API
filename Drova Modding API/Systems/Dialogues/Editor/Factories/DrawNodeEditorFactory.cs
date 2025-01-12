@@ -46,6 +46,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             { "DS_LearnAttributeNode_Single", typeof(DS_LearnAttributeNode_SingleNodeEditor) },
             { "DS_PlaySfx", typeof(DS_PlaySfxNodeEditor) },
             { "DS_DelayedTeach_Statement", typeof(DS_DelayedTeach_StatementNodeEditor) },
+            { "ProbabilitySelector", typeof(ProbabilitySelectorNodeEditor) },
+            { "DS_SetGIntNode", typeof(DS_SetGIntNodeEditor) },
         };
 
         /// <summary>

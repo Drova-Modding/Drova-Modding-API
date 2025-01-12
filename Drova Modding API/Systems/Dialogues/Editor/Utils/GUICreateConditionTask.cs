@@ -18,6 +18,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             {"GIntConditionTask", typeof(GIntConditionTask) },
             {"DS_HasItems", typeof(DS_HasItems) },
             {"DS_HasAttribute", typeof(DS_HasAttribute) },
+            {"ConditionList", typeof(ConditionList) }
         };
 
         private readonly string[] tooltips =
@@ -27,6 +28,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             "Check if all int are value",
             "Check if the target or player has the items",
             "Check if the player has the attributes",
+            "Collection of Condition Tasks"
         ];
 
         /// <summary>

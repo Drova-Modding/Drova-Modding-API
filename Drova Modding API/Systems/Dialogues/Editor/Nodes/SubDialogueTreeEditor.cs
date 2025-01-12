@@ -40,7 +40,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
 
             StringBuilder sb = new();
-            sb.Append("Full name: ").Append(_castedNode.subGraph.Key).Append(" ( ").Append(_castedNode.subGraph.name).Append(" )");
+            if (_castedNode.subGraph == null)
+            {
+                sb.Append("No Sub Dialogue Tree selected");
+            }
+            else
+                sb.Append("Full name: ").Append(_castedNode.subGraph.Key).Append(" ( ").Append(_castedNode.subGraph.name).Append(" )");
 
             GUI.Label(new Rect(position.x, position.y + 25, 800, 50), sb.ToString());
 

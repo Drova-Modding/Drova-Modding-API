@@ -136,7 +136,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         {
             int previousDepth = GUI.depth;
 
-            GUI.depth = -1;
+            GUI.depth = 0;
             bool selectionChanged = false;
             for (int i = 0; i < options.Length; i++)
             {

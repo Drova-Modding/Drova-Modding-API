@@ -25,6 +25,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
 
         private DialogueTree _dialogueTree;
+        private bool _isActive = false;
 
         /// <summary>
         /// The dialogue tree that is being edited
@@ -49,9 +50,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 value.DeserializeIfNotDoneYet(true);
                 BuildNodeEditorsFromFirstInit(value);
                 _dialogueTree = value;
+                if (_isActive) return;
                 EditorManager.AllowNpcSelection = false;
                 InputAccess.ToggleGampeplayActionMaps(false);
                 Time.timeScale = 0;
+                _isActive = true;
             }
         }
 
@@ -251,8 +254,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 DrawInfiniteBackground();
 
             // Draw only nodes and connections in the visible area
-            DrawNodesInArea(visibleArea);
             DrawConnectionsInArea(visibleArea);
+            DrawNodesInArea(visibleArea);
 
             // Draw the tooltip
             if (GUI.tooltip != "")
@@ -288,11 +291,26 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 DialogueTree.Serialize(null);
             }
+            if (GraphEditorSnapshots.Count > 0)
+            {
+                var snapshot = GraphEditorSnapshots[^1];
+                if (GUI.Button(new(10, 10, 550, 60), $"Go back to {snapshot.DialogueTree.name}"))
+                {
+                    drawNodeEditors.Clear();
+                    _isFirstDraw = true;
+                    _scaleFactor = snapshot.ScaleFactor;
+                    _panOffset = snapshot.PanOffset;
+                    DialogueTree = snapshot.DialogueTree;
+                    GraphEditorSnapshots.RemoveAt(GraphEditorSnapshots.Count - 1);
+                }
+            }
+            GUI.Label(new(10, 80, 550, 25), $"Current Editor: {DialogueTree.name}");
         }
 
         [HideFromIl2Cpp]
         private void CloseGraph()
         {
+            _isActive = false;
             DialogueTree = null;
             _showContextMenu = false;
             _showSubContextMenu = false;
@@ -539,6 +557,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         private void DrawConnectionsInArea(Rect visibleArea)
         {
+            int previuosDepth = GUI.depth;
+            GUI.depth = 50;
             foreach (var element in drawNodeEditors)
             {
                 var editor = element.Value;
@@ -565,6 +585,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     }
                 }
             }
+            GUI.depth = previuosDepth;
         }
 
         /// <summary>

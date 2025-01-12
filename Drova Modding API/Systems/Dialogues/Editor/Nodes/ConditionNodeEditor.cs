@@ -10,6 +10,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private ConditionNode _castedNode;
         private GUICreateConditionTask _guiCreateConditionTask;
         private DrawTaskEditor _drawTaskEditor;
+        private bool _changeCondition = false;
 
         public ConditionNodeEditor()
         {
@@ -23,6 +24,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             if (_castedNode._condition != null)
             {
                 _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedNode._condition.GetIl2CppType());
+                _drawTaskEditor.Task = _castedNode._condition;
+                _drawTaskEditor.GraphEditorManager = GraphEditorManager;
+                _drawTaskEditor.Init();
+            }
+            else
+            {
+                _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(null);
+                _drawTaskEditor.Task = null;
+                _drawTaskEditor.GraphEditorManager = GraphEditorManager;
+                _drawTaskEditor.Init();
             }
         }
 
@@ -39,12 +50,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.Box(rect, "ConditionNode");
             GUI.color = previousColor;
 
-            if (_castedNode._condition != null)
+            if (!_changeCondition)
             {
                 _drawTaskEditor.DrawTask(new Vector2(position.x, position.y + 20));
-                if(GUI.Button(new Rect(position.x + 10, position.y + 60, 200, 20), "Change Condition"))
+                if (GUI.Button(new Rect(position.x + 10, position.y + 60, 200, 20), "Change Condition"))
                 {
-                    _castedNode._condition = null;
+                    _changeCondition = true;
                 }
             }
             else
@@ -52,8 +63,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 var conditionTask = _guiCreateConditionTask.Draw(new Vector2(position.x, position.y + 20));
                 if (conditionTask != null)
                 {
+                    _changeCondition = false;
                     _castedNode._condition = conditionTask;
                     _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedNode._condition.GetIl2CppType());
+                    _drawTaskEditor.Task = _castedNode._condition;
+                    _drawTaskEditor.GraphEditorManager = GraphEditorManager;
+                    _drawTaskEditor.Init();
                 }
             }
         }

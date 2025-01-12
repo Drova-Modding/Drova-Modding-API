@@ -40,7 +40,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 return;
             }
-            var rect = new Rect(position.x, position.y, 350, 70 + _entityInfoDropdowns.Sum(d => (d.IsDropdownShown ? 20 * _maxEntityInfos : 0) + 30));
+            var rect = new Rect(position.x, position.y, 350, 70 + _entityInfoDropdowns.Sum(d => 20 + 30));
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
             GUI.depth = 10;

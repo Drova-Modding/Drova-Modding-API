@@ -32,6 +32,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
             if (_showDropdown)
             {
+                GUI.depth = 0;
+
                 RenderFilter(dropdownRect);
 
                 return RenderDropdownOptions(new Rect(dropdownRect.x, dropdownRect.y + 20, dropdownRect.width, dropdownRect.height), _filteredOptions);
