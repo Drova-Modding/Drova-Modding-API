@@ -1,6 +1,6 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppNodeCanvas.DialogueTrees;
-
+using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
@@ -52,8 +52,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             if (!_changeCondition)
             {
-                _drawTaskEditor.DrawTask(new Vector2(position.x, position.y + 20));
-                if (GUI.Button(new Rect(position.x + 10, position.y + 60, 200, 20), "Change Condition"))
+                var size = _drawTaskEditor.DrawTask(new Vector2(position.x, position.y + 20));
+                if (GUI.Button(new Rect(position.x + 10, position.y + 60 + size.y, 200, 20), "Change Condition"))
                 {
                     _changeCondition = true;
                 }
@@ -65,8 +65,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 {
                     _changeCondition = false;
                     _castedNode._condition = conditionTask;
-                    _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedNode._condition.GetIl2CppType());
-                    _drawTaskEditor.Task = _castedNode._condition;
+                    _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(conditionTask.GetIl2CppType());
+                    _drawTaskEditor.Task = conditionTask;
                     _drawTaskEditor.GraphEditorManager = GraphEditorManager;
                     _drawTaskEditor.Init();
                 }

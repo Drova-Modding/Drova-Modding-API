@@ -161,43 +161,74 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         private void BuildNodeEditorsFromFirstInit(DialogueTree value)
         {
-            for (int i = 0; i < value.allConnections.Count; i++)
+            var lastPosition = new Vector2(100, 0);
+            for (int i = 0; i < value.allNodes.Count; i++)
             {
-                var connection = value.allConnections[i];
-                if (connection == null) continue;
-                if (connection.sourceNode == null || connection.targetNode == null) continue;
-                if (!drawNodeEditors.ContainsKey(connection.sourceNode.UID))
+                var node = value.allNodes[i];
+                if (node == null) continue;
+                if (!drawNodeEditors.ContainsKey(node.UID))
                 {
-                    var editorSource = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.sourceNode.GetIl2CppType());
-                    if (editorSource == null)
+                    var editor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(node.GetIl2CppType());
+                    if (editor == null)
                     {
-                        MelonLogger.Warning("Editor Source is null for {0}", connection.sourceNode.GetIl2CppType().Name);
+                        MelonLogger.Warning("Editor is null for {0}", node.GetIl2CppType().Name);
                         continue;
                     }
-                    editorSource.Node = connection.sourceNode.Cast<DTNode>();
-                    drawNodeEditors.TryAdd(connection.sourceNode.UID, editorSource);
-                    editorSource.Position = new Vector2(Screen.width / 2, 100 * (i + 1));
-                    editorSource.GraphEditorManager = this;
-                }
-                if (!drawNodeEditors.ContainsKey(connection.targetNode.UID))
-                {
-                    var editorTarget = DrawNodeEditorFactory.GetDrawNodeEditorFromType(connection.targetNode.GetIl2CppType());
-                    if (editorTarget == null)
-                    {
-                        MelonLogger.Warning("Editor Target is null for {0}", connection.targetNode.GetIl2CppType().Name);
-                        continue;
-                    }
-                    editorTarget.Node = connection.targetNode.Cast<DTNode>();
-                    drawNodeEditors.TryAdd(connection.targetNode.UID, editorTarget);
-                    editorTarget.Position = new Vector2(Screen.width / 2 + (i * 50), 200 * (i + 1));
-                    editorTarget.GraphEditorManager = this;
-                }
+                    editor.Node = node.Cast<DTNode>();
+                    drawNodeEditors.TryAdd(node.UID, editor);
+                    var newPosition = new Vector2(lastPosition.x, lastPosition.y + editor.NodeSize.y);
+                    editor.Position = newPosition;
+                    editor.GraphEditorManager = this;
 
-                if (drawNodeEditors.TryGetValue(connection.sourceNode.UID, out DrawNodeEditor sourceConnection) && drawNodeEditors.TryGetValue(connection.targetNode.UID, out DrawNodeEditor targetConnection))
+
+                    var connections = node.outConnections;
+                    int highestHeight = CreateOutConnections(editor, newPosition, connections);
+                    lastPosition = new Vector2(newPosition.x, newPosition.y + highestHeight + 100);
+                }
+                else if (drawNodeEditors.TryGetValue(node.UID, out DrawNodeEditor editor))
                 {
-                    sourceConnection.ConnectedWith.Add(targetConnection);
+                    var newPosition = new Vector2(lastPosition.x, lastPosition.y + editor.NodeSize.y);
+                    int highestHeight = CreateOutConnections(editor, newPosition, node.outConnections);
+                    lastPosition = new Vector2(newPosition.x, newPosition.y + highestHeight + 100);
                 }
             }
+        }
+
+        private int CreateOutConnections(DrawNodeEditor editor, Vector2 newPosition, Il2CppSystem.Collections.Generic.List<Il2CppNodeCanvas.Framework.Connection> connections)
+        {
+            var connectionPosition = new Vector2(newPosition.x, newPosition.y + 100);
+            var highestHeight = 0;
+            for (int j = 0; j < connections.Count; j++)
+            {
+                var connection = connections[j];
+                if (connection == null) continue;
+                if (connection.targetNode == null) continue;
+                var targetNode = connection.targetNode;
+                if (drawNodeEditors.TryGetValue(targetNode.UID, out DrawNodeEditor targetConnection))
+                {
+                    editor.ConnectedWith.Add(targetConnection);
+                }
+                else
+                {
+                    var connectedEditor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(targetNode.GetIl2CppType());
+                    if (connectedEditor == null)
+                    {
+                        MelonLogger.Warning("Editor is null for {0}", targetNode.GetIl2CppType().Name);
+                        continue;
+                    }
+                    connectedEditor.Node = targetNode.Cast<DTNode>();
+                    connectedEditor.GraphEditorManager = this;
+                    drawNodeEditors.TryAdd(targetNode.UID, connectedEditor);
+                    connectedEditor.Position = connectionPosition;
+                    connectionPosition = new Vector2(connectionPosition.x + connectedEditor.NodeSize.x + 100, connectionPosition.y);
+                    editor.ConnectedWith.Add(connectedEditor);
+                    if (connectedEditor.NodeSize.y > highestHeight)
+                    {
+                        highestHeight = (int)connectedEditor.NodeSize.y;
+                    }
+                }
+            }
+            return highestHeight;
         }
 
         /// <summary>

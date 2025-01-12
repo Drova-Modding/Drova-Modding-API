@@ -15,7 +15,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         public DS_DefineActiveActorsNodeEditor()
         {
-            NodeSizeInternal = new Vector2(350, 150);
+            NodeSizeInternal = new Vector2(350, 180);
         }
 
 

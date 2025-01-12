@@ -16,7 +16,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         public MultipleConditionNodeEditor()
         {
-            NodeSizeInternal = new Vector2(350, 170);
+            NodeSizeInternal = new Vector2(350, 500);
         }
 
         public override void Init()
@@ -79,7 +79,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 editor.Init();
             }
 
-            rect.height += 20 + _spaceBetweenTasks;
+            rect.height += 100 + _spaceBetweenTasks;
 
 
             GUI.color = Color.green;

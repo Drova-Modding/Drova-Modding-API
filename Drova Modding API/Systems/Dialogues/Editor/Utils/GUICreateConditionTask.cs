@@ -1,6 +1,4 @@
-﻿using Il2CppDrova.DialogueNew;
-using Il2CppDrova.QuestSystem.Graphs;
-using Il2CppNodeCanvas.Framework;
+﻿using Il2CppNodeCanvas.Framework;
 using MelonLoader;
 using UnityEngine;
 
@@ -11,14 +9,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
     /// </summary>
     public class GUICreateConditionTask
     {
-        private readonly Dictionary<string, Type> nameToTaskMap = new()
+        private readonly Dictionary<string, Il2CppSystem.Type> nameToTaskMap = new()
         {
-            {"DS_CheckGVarListConditionTask", typeof(DS_CheckGVarListConditionTask) },
-            {"GBoolConditionTask", typeof(GBoolConditionTask) },
-            {"GIntConditionTask", typeof(GIntConditionTask) },
-            {"DS_HasItems", typeof(DS_HasItems) },
-            {"DS_HasAttribute", typeof(DS_HasAttribute) },
-            {"ConditionList", typeof(ConditionList) }
+            {"DS_CheckGVarListConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckGVarListConditionTask") },
+            {"GBoolConditionTask", Il2CppSystem.Type.GetType("Drova.QuestSystem.Graphs.GBoolConditionTask") },
+            {"GIntConditionTask", Il2CppSystem.Type.GetType("Drova.QuestSystem.Graphs.GIntConditionTask") },
+            {"DS_HasItems", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasItems") },
+            {"DS_HasAttribute", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasAttribute") },
+            {"ConditionList", Il2CppSystem.Type.GetType("NodeCanvas.Framework.ConditionList") }
         };
 
         private readonly string[] tooltips =
@@ -68,9 +66,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         {
             try
             {
-                if (nameToTaskMap.TryGetValue(name, out Type v))
+                if (nameToTaskMap.TryGetValue(name, out var type))
                 {
-                    return (ConditionTask)Activator.CreateInstance(v);
+                    return Il2CppSystem.Activator.CreateInstance(type).TryCast<ConditionTask>();
                 }
                 else
                 {

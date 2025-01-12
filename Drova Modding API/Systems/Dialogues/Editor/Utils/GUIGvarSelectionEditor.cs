@@ -152,7 +152,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// </summary>
         BOOL,
         /// <summary>
-        /// no type
+        /// no type, used for only showing the lists
         /// </summary>
         NONE
     }
