@@ -6,7 +6,7 @@
     /// <typeparam name="T">The specific type to store</typeparam>
     public interface IStore<T> : IStorable
     {
-       
+
 
         /// <summary>
         /// Adds an item to the store.

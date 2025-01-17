@@ -46,21 +46,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
 
             GUI.Label(new Rect(position.x + 5, position.y + 270, 250, 20), "Friendly Percentage:");
-            var tempFriendlyPercentage = GUI.TextField(new Rect(position.x + 255, position.y + 270, 200, 20), _castedNode.FriendlyPercentage.ToString());
-            if (float.TryParse(tempFriendlyPercentage, out var friendlyPercentage))
+            string tempFriendlyPercentage = GUI.TextField(new Rect(position.x + 255, position.y + 270, 200, 20), _castedNode.FriendlyPercentage.ToString());
+            if (float.TryParse(tempFriendlyPercentage, out float friendlyPercentage))
             {
                 _castedNode.FriendlyPercentage = friendlyPercentage;
             }
 
             GUI.Label(new Rect(position.x + 5, position.y + 300, 250, 20), "Angry Percentage:");
-            var tempAngryPercentage = GUI.TextField(new Rect(position.x + 255, position.y + 300, 200, 20), _castedNode.HatePercentage.ToString());
-            if (float.TryParse(tempAngryPercentage, out var angryPercentage))
+            string tempAngryPercentage = GUI.TextField(new Rect(position.x + 255, position.y + 300, 200, 20), _castedNode.HatePercentage.ToString());
+            if (float.TryParse(tempAngryPercentage, out float angryPercentage))
             {
                 _castedNode.HatePercentage = angryPercentage;
             }
             GUI.Label(new Rect(position.x + 5, position.y + 330, 250, 20), "Default Percentage:");
-            var tempDefaultPercentage = GUI.TextField(new Rect(position.x + 255, position.y + 330, 200, 20), _castedNode.DefaultPercentage.ToString());
-            if (float.TryParse(tempDefaultPercentage, out var defaultPercentage))
+            string tempDefaultPercentage = GUI.TextField(new Rect(position.x + 255, position.y + 330, 200, 20), _castedNode.DefaultPercentage.ToString());
+            if (float.TryParse(tempDefaultPercentage, out float defaultPercentage))
             {
                 _castedNode.DefaultPercentage = defaultPercentage;
             }

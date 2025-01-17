@@ -1,13 +1,14 @@
-﻿using Il2Cpp;
+﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Extensions;
+using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
+using Drova_Modding_API.Systems.Dialogues.Store;
+using Drova_Modding_API.Systems.Editor;
+using Il2Cpp;
 using Il2CppDrova;
+using Il2CppInterop.Runtime.Attributes;
 using Il2CppNodeCanvas.DialogueTrees;
 using MelonLoader;
 using UnityEngine;
-using Drova_Modding_API.Extensions;
-using Drova_Modding_API.Access;
-using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
-using Il2CppInterop.Runtime.Attributes;
-using Drova_Modding_API.Systems.Editor;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -26,6 +27,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
         private DialogueTree _dialogueTree;
         private bool _isActive = false;
+        private DialogueStore _dialogueStore = new();
 
         /// <summary>
         /// The dialogue tree that is being edited
@@ -119,7 +121,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         public void Init(Actor actor)
         {
             if (actor == null) return;
-            var dialogueTreeController = actor.GetComponentInChildren<DS_DialogueTreeController>();
+            DS_DialogueTreeController dialogueTreeController = actor.GetComponentInChildren<DS_DialogueTreeController>();
             if (dialogueTreeController == null) return;
             if (dialogueTreeController.graph == null) return;
             DialogueTree = dialogueTreeController.graph.Cast<DialogueTree>();
@@ -161,14 +163,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         private void BuildNodeEditorsFromFirstInit(DialogueTree value)
         {
-            var lastPosition = new Vector2(100, 0);
+            Vector2 lastPosition = new(100, 0);
             for (int i = 0; i < value.allNodes.Count; i++)
             {
-                var node = value.allNodes[i];
+                Il2CppNodeCanvas.Framework.Node node = value.allNodes[i];
                 if (node == null) continue;
                 if (!drawNodeEditors.ContainsKey(node.UID))
                 {
-                    var editor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(node.GetIl2CppType());
+                    DrawNodeEditor editor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(node.GetIl2CppType());
                     if (editor == null)
                     {
                         MelonLogger.Warning("Editor is null for {0}", node.GetIl2CppType().Name);
@@ -176,18 +178,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     }
                     editor.Node = node.Cast<DTNode>();
                     drawNodeEditors.TryAdd(node.UID, editor);
-                    var newPosition = new Vector2(lastPosition.x, lastPosition.y + editor.NodeSize.y);
+                    Vector2 newPosition = new(lastPosition.x, lastPosition.y + editor.NodeSize.y);
                     editor.Position = newPosition;
                     editor.GraphEditorManager = this;
 
 
-                    var connections = node.outConnections;
+                    Il2CppSystem.Collections.Generic.List<Il2CppNodeCanvas.Framework.Connection> connections = node.outConnections;
                     int highestHeight = CreateOutConnections(editor, newPosition, connections);
                     lastPosition = new Vector2(newPosition.x, newPosition.y + highestHeight + 100);
                 }
                 else if (drawNodeEditors.TryGetValue(node.UID, out DrawNodeEditor editor))
                 {
-                    var newPosition = new Vector2(lastPosition.x, lastPosition.y + editor.NodeSize.y);
+                    Vector2 newPosition = new(lastPosition.x, lastPosition.y + editor.NodeSize.y);
                     int highestHeight = CreateOutConnections(editor, newPosition, node.outConnections);
                     lastPosition = new Vector2(newPosition.x, newPosition.y + highestHeight + 100);
                 }
@@ -196,21 +198,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
         private int CreateOutConnections(DrawNodeEditor editor, Vector2 newPosition, Il2CppSystem.Collections.Generic.List<Il2CppNodeCanvas.Framework.Connection> connections)
         {
-            var connectionPosition = new Vector2(newPosition.x, newPosition.y + 100);
-            var highestHeight = 0;
+            Vector2 connectionPosition = new(newPosition.x, newPosition.y + 100);
+            int highestHeight = 0;
             for (int j = 0; j < connections.Count; j++)
             {
-                var connection = connections[j];
+                Il2CppNodeCanvas.Framework.Connection connection = connections[j];
                 if (connection == null) continue;
                 if (connection.targetNode == null) continue;
-                var targetNode = connection.targetNode;
+                Il2CppNodeCanvas.Framework.Node targetNode = connection.targetNode;
                 if (drawNodeEditors.TryGetValue(targetNode.UID, out DrawNodeEditor targetConnection))
                 {
                     editor.ConnectedWith.Add(targetConnection);
                 }
                 else
                 {
-                    var connectedEditor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(targetNode.GetIl2CppType());
+                    DrawNodeEditor connectedEditor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(targetNode.GetIl2CppType());
                     if (connectedEditor == null)
                     {
                         MelonLogger.Warning("Editor is null for {0}", targetNode.GetIl2CppType().Name);
@@ -256,7 +258,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             if (_isFirstDraw)
             {
-                for (var i = 0; i < drawNodeEditors.Count; i++)
+                for (int i = 0; i < drawNodeEditors.Count; i++)
                 {
                     drawNodeEditors.Values.ElementAt(i).Init();
                 }
@@ -296,8 +298,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 style.fontSize = 12;
                 style.alignment = TextAnchor.MiddleCenter;
 
-                var width = style.CalcSize(new GUIContent(GUI.tooltip)).x;
-                var height = style.CalcHeight(new GUIContent(GUI.tooltip), width);
+                float width = style.CalcSize(new GUIContent(GUI.tooltip)).x;
+                float height = style.CalcHeight(new GUIContent(GUI.tooltip), width);
                 GUI.Label(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y - 50, width, height), GUI.tooltip, style);
             }
 
@@ -321,10 +323,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (GUI.Button(new(Screen.width - 110, 70, 100, 60), "Save Graph"))
             {
                 DialogueTree.Serialize(null);
+                this._dialogueStore.SaveDialogue(DialogueTree);
             }
             if (GraphEditorSnapshots.Count > 0)
             {
-                var snapshot = GraphEditorSnapshots[^1];
+                GraphEditorSnapshot snapshot = GraphEditorSnapshots[^1];
                 if (GUI.Button(new(10, 10, 550, 60), $"Go back to {snapshot.DialogueTree.name}"))
                 {
                     drawNodeEditors.Clear();
@@ -404,9 +407,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 bool isDoubleClick = e.clickCount == 2;
 
-                foreach (var element in drawNodeEditors)
+                foreach (KeyValuePair<string, DrawNodeEditor> element in drawNodeEditors)
                 {
-                    var editor = element.Value;
+                    DrawNodeEditor editor = element.Value;
                     Rect nodeRect = new(editor.Position, editor.NodeSize);
 
                     if (nodeRect.Contains(adjustedMousePosition))
@@ -480,7 +483,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             for (int i = 0; i < drawNodeEditors.Values.Count; i++)
             {
-                var element = drawNodeEditors.Values.ElementAt(i);
+                DrawNodeEditor element = drawNodeEditors.Values.ElementAt(i);
                 if (element == null) continue;
 
                 Rect nodeRect = new(
@@ -531,7 +534,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         void DrawSubContextMenu()
         {
             float menuWidth = 200;
-            var _subContextMenuOptions = DrawNodeEditorFactory.GetNodeNames();
+            string[] _subContextMenuOptions = DrawNodeEditorFactory.GetNodeNames();
 
             DrawContextMenu(_subContextMenuOptions.Length, menuWidth);
 
@@ -550,7 +553,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         void HandleSubContextMenuSelection(string option)
         {
-            var drawNodeEditor = DrawNodeEditorFactory.GetDrawNodeEditorByName(option);
+            DrawNodeEditor drawNodeEditor = DrawNodeEditorFactory.GetDrawNodeEditorByName(option);
             if (drawNodeEditor != null)
             {
 
@@ -590,9 +593,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             int previuosDepth = GUI.depth;
             GUI.depth = 50;
-            foreach (var element in drawNodeEditors)
+            foreach (KeyValuePair<string, DrawNodeEditor> element in drawNodeEditors)
             {
-                var editor = element.Value;
+                DrawNodeEditor editor = element.Value;
                 if (editor == null || editor.ConnectedWith.Count == 0) continue;
 
                 for (int i = 0; i < editor.ConnectedWith.Count; i++)
@@ -604,10 +607,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     Vector2 editorCenter = editor.Position + (editor.NodeSize / 2);
                     Vector2 connectedCenter = connectedEditor.Position + (connectedEditor.NodeSize / 2);
 
-                    var editorEdge = GetEdgePoint(editorCenter, editor.NodeSize, connectedCenter);
-                    var connectedEdge = GetEdgePoint(connectedCenter, connectedEditor.NodeSize, editorCenter);
+                    Vector2 editorEdge = GetEdgePoint(editorCenter, editor.NodeSize, connectedCenter);
+                    Vector2 connectedEdge = GetEdgePoint(connectedCenter, connectedEditor.NodeSize, editorCenter);
 
-                    var overlap = new Rect(editorEdge, connectedEdge - editorEdge);
+                    Rect overlap = new(editorEdge, connectedEdge - editorEdge);
 
                     // Draw the line if either point is in the visible area
                     if (visibleArea.Contains(editorCenter) || visibleArea.Contains(connectedCenter) || visibleArea.Overlaps(overlap))

@@ -33,7 +33,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// Size of the node
         /// </summary>
         public Vector2 NodeSize => NodeSizeInternal;
-        
+
         /// <summary>
         /// Position of the node
         /// </summary>

@@ -27,14 +27,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _castedNode ??= Node.TryCast<CS_CutsceneActionNode>();
             _cutsceneDatas = Resources.FindObjectsOfTypeAll<CS_CutsceneData>();
 
-            var cutsceneNames = _cutsceneDatas.Select(e => e.name).ToArray();
-            var cutsceneIndex = Array.FindIndex(_cutsceneDatas, cutscene => cutscene.name == _castedNode.cutscene.name);
+            string[] cutsceneNames = _cutsceneDatas.Select(e => e.name).ToArray();
+            int cutsceneIndex = Array.FindIndex(_cutsceneDatas, cutscene => cutscene.name == _castedNode.cutscene.name);
             _cutsceneDropdown = new GUIDropdownWithFilter(cutsceneNames, cutsceneIndex, 20);
 
             if (_castedNode.cutsceneActionID >= 0)
             {
                 _cutsceneActions = _castedNode.cutscene.GetCutsceneActions().ToArray();
-                var cutsceneActionIndex = Array.FindIndex(_cutsceneActions, action => action.ID == _castedNode.cutsceneActionID);
+                int cutsceneActionIndex = Array.FindIndex(_cutsceneActions, action => action.ID == _castedNode.cutsceneActionID);
                 _actionIdDropdown = new GUIDropdownWithFilter(_cutsceneActions.Select((act) => act.Name).ToArray(), cutsceneActionIndex, 20);
             }
         }
@@ -48,8 +48,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             Color previousColor = GUI.color;
             GUI.color = Color.green;
-            var additionalHeight = _cutsceneDropdown.IsDropdownShown ? 20 * 20 : 0;
-            var rect = new Rect(position.x, position.y, 340, 70 + additionalHeight);
+            int additionalHeight = _cutsceneDropdown.IsDropdownShown ? 20 * 20 : 0;
+            Rect rect = new(position.x, position.y, 340, 70 + additionalHeight);
             GUI.Box(rect, "CS_CutsceneActionNode");
 
             GUI.color = Color.white;

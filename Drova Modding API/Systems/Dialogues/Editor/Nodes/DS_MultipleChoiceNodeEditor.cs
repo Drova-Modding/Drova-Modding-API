@@ -25,7 +25,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             Color previousColor = GUI.color;
             CastedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
-            var additionalHeight = CastedNode.availableChoices.Count * 75 + 65;
+            int additionalHeight = CastedNode.availableChoices.Count * 75 + 65;
             Color previousBackgroundColor = GUI.backgroundColor;
 
             GUI.color = Color.green;
@@ -39,7 +39,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             int step = 20;
             for (int i = 0; i < CastedNode.availableChoices.Count; i++)
             {
-                var choice = CastedNode.availableChoices[i];
+                DS_MultipleChoiceNode.Choice choice = CastedNode.availableChoices[i];
                 GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Globapath:");
                 choice.statement._globalPath = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._globalPath);
                 step += 35;

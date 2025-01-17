@@ -24,8 +24,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _allStats = Resources.FindObjectsOfTypeAll<GenericStatDesc>();
             for (int i = 0; i < _castedTask.Attributes.Count; i++)
             {
-                var attribute = _castedTask.Attributes[i];
-                var selectedIndex = Array.FindIndex(_allStats, id => id.Guid == attribute.Attribute.Guid);
+                DialogAttributeStat attribute = _castedTask.Attributes[i];
+                int selectedIndex = Array.FindIndex(_allStats, id => id.Guid == attribute.Attribute.Guid);
                 _attributeDropdowns.Add(new GUIDropdownWithFilter(_allStats.Select(e => e.GetLocaName()).ToArray(), selectedIndex, 20));
                 _attributeComparers.Add(new GUIDropdown(Enum.GetNames<DialogAttributeStat.AttributeComparer>(), (int)attribute.Comparison));
                 _attributeMode.Add(new GUIDropdown(Enum.GetNames<DialogAttributeStat.ValueMode>(), (int)attribute.Mode));
@@ -41,10 +41,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
             for (int i = 0; i < _castedTask.Attributes.Count; i++)
             {
-                var attribute = _castedTask.Attributes[i];
-                var attributeDropdown = _attributeDropdowns[i];
-                var attributeComparer = _attributeComparers[i];
-                var attributeMode = _attributeMode[i];
+                DialogAttributeStat attribute = _castedTask.Attributes[i];
+                GUIDropdownWithFilter attributeDropdown = _attributeDropdowns[i];
+                GUIDropdown attributeComparer = _attributeComparers[i];
+                GUIDropdown attributeMode = _attributeMode[i];
 
                 if (GUI.Button(new Rect(position.x, position.y + 100, 120, 20), "Remove"))
                 {
@@ -87,7 +87,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 else
                 {
                     GUI.Label(new Rect(attributeRect.x + 5, attributeRect.y, 70, 20), "Amount:");
-                    var tempInputValue = GUI.TextField(new Rect(attributeRect.x + 80, attributeRect.y, 220 - 70, 20), attribute.Amount.ToString());
+                    string tempInputValue = GUI.TextField(new Rect(attributeRect.x + 80, attributeRect.y, 220 - 70, 20), attribute.Amount.ToString());
                     if (int.TryParse(tempInputValue, out int result))
                     {
                         attribute.Amount = result;
@@ -103,7 +103,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 _attributeMode.Add(new GUIDropdown(Enum.GetNames<DialogAttributeStat.ValueMode>(), 0));
             }
 
-            var drawRect = new Rect(position.x, position.y, 450, 40 + _castedTask.Attributes.Count * 120);
+            Rect drawRect = new(position.x, position.y, 450, 40 + _castedTask.Attributes.Count * 120);
             Color previousColor = GUI.color;
             GUI.color = Color.green;
             GUI.Box(drawRect, "DS_HasAttribute");

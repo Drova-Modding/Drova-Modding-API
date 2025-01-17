@@ -37,7 +37,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
 
-             GUI.color = Color.green;
+            GUI.color = Color.green;
 
             GUI.Box(new(position.x, position.y, 320, 150), "DS_SetDialogueRequirementsNode");
 
@@ -62,7 +62,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 _castedNode.style = (Style)_styleDropdown.SelectedIndex;
             }
 
-           
+
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;

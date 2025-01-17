@@ -1,9 +1,5 @@
 ﻿using Drova_Modding_API.Access;
-using System;
 using System.Collections;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Spawning
@@ -21,13 +17,13 @@ namespace Drova_Modding_API.Systems.Spawning
         /// <returns></returns>
         public static IEnumerator CreateNpc(string name, Vector2 spawnPosition)
         {
-            var operation = AddressableAccess.NPCs.Human_Template.InstantiateAsync(spawnPosition, Quaternion.identity);
+            UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<GameObject> operation = AddressableAccess.NPCs.Human_Template.InstantiateAsync(spawnPosition, Quaternion.identity);
             while (!operation.IsDone)
             {
                 yield return new WaitForSeconds(0.5f);
             }
 
-            var npc = operation.Result;
+            GameObject npc = operation.Result;
             npc.name = name;
         }
     }

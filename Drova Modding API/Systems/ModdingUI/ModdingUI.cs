@@ -47,9 +47,9 @@ namespace Drova_Modding_API.Systems.ModdingUI
 
         private static void Instance_OnOptionMenuOpen()
         {
-            var builder = OptionMenuAccess.Instance.GetBuilder("ModdingUI");
+            UI.Builder.OptionUIBuilder builder = OptionMenuAccess.Instance.GetBuilder("ModdingUI");
             if (builder == null) return;
-            var builded = builder.CreateTitle(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingUITitle"))
+            List<GameObject> builded = builder.CreateTitle(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingUITitle"))
                 .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderDisclaimer2"))
                 .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderDisclaimer"))
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMinRandomness"), ModdingUIMinOptionKey, 1, 120, 30)
@@ -57,10 +57,10 @@ namespace Drova_Modding_API.Systems.ModdingUI
                 .Build();
             if (builded != null && builded.Count == 4)
             {
-                var minSlider = builded[2].GetComponentInChildren<Slider>();
-                var minSliderOptions = builded[2].GetComponentInChildren<GUI_ConfigOption_Slider>();
-                var maxSlider = builded[3].GetComponentInChildren<Slider>();
-                var maxSliderOptions = builded[3].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                Slider minSlider = builded[2].GetComponentInChildren<Slider>();
+                GUI_ConfigOption_Slider minSliderOptions = builded[2].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                Slider maxSlider = builded[3].GetComponentInChildren<Slider>();
+                GUI_ConfigOption_Slider maxSliderOptions = builded[3].GetComponentInChildren<GUI_ConfigOption_Slider>();
                 minSlider.onValueChanged.AddListener(new Action<float>((value) =>
                 {
                     if (value >= maxSlider.value)

@@ -21,7 +21,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _conditionsCheckModeDropdown = new GUIDropdown(Enum.GetNames<ConditionsCheckMode>(), (int)_castedTask.checkMode);
             for (int i = 0; i < _castedTask.conditions.Count; i++)
             {
-                var drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedTask.conditions[i].GetIl2CppType());
+                DrawTaskEditor drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedTask.conditions[i].GetIl2CppType());
                 if (drawTaskEditor != null)
                 {
                     drawTaskEditor.Task = _castedTask.conditions[i];
@@ -41,10 +41,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 _drawTaskEditors[i].DrawTask(new Vector2(position.x, position.y + 20 + i * 20));
             }
 
-            var task = _createConditionTask.Draw(new Vector2(position.x, position.y + (_drawTaskEditors.Count * 30)));
+            ConditionTask task = _createConditionTask.Draw(new Vector2(position.x, position.y + (_drawTaskEditors.Count * 30)));
             if (task != null)
             {
-                var editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(task.GetIl2CppType());
+                DrawTaskEditor editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(task.GetIl2CppType());
                 editor.Task = task;
                 editor.GraphEditorManager = GraphEditorManager;
                 editor.Init();

@@ -76,7 +76,7 @@ namespace Drova_Modding_API.Access
         /// <param name="state">true or false for on and off</param>
         public static void ToggleGampeplayActionMaps(bool state)
         {
-            var player = ReInput.players.GetPlayer(0);
+            Player player = ReInput.players.GetPlayer(0);
             player.controllers.maps.SetMapsEnabled(state, 0);
         }
 
@@ -89,7 +89,7 @@ namespace Drova_Modding_API.Access
         /// <param name="onInputMappedFinishedCallback"></param>
         public static void RebindKeyboardInputAction(string actionName, Pole? pole = null, AxisRange axisRange = AxisRange.Full, Il2CppSystem.Action<InputMapper.InputMappedEventData> onInputMappedFinishedCallback = null)
         {
-            var _inputMapper = new InputMapper();
+            InputMapper _inputMapper = new();
             _inputMapper.add_InputMappedEvent(onInputMappedFinishedCallback);
             _inputMapper.add_InputMappedEvent(new System.Action<InputMapper.InputMappedEventData>(SaveRemapping));
             _inputMapper.options = new InputMapper.Options
@@ -103,9 +103,9 @@ namespace Drova_Modding_API.Access
                 allowAxes = false
             };
 
-            var actionMap = GetActionKeyboardElementMap(actionName, ConvertPole(pole));
+            ActionElementMap actionMap = GetActionKeyboardElementMap(actionName, ConvertPole(pole));
 
-            var context = new InputMapper.Context
+            InputMapper.Context context = new()
             {
                 actionName = actionName,
                 actionElementMapToReplace = actionMap,

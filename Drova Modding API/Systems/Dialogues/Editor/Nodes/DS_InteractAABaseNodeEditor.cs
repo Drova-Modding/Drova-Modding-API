@@ -25,8 +25,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode ??= Node.TryCast<DS_InteractAABaseNode>();
             _interactions = Resources.FindObjectsOfTypeAll<AA_ABase>().Where(e => e.name.StartsWith("AA_Interact_NPC") && !e.name.EndsWith("(Clone)")).ToImmutableList();
-            var selectionIndex = _interactions.FindIndex(AA_ABase => AA_ABase.name == _castedNode._interactPrefab.name);
-            if(selectionIndex == -1)
+            int selectionIndex = _interactions.FindIndex(AA_ABase => AA_ABase.name == _castedNode._interactPrefab.name);
+            if (selectionIndex == -1)
             {
                 selectionIndex = 0;
             }
@@ -43,10 +43,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             Color previousColor = GUI.color;
             GUI.color = Color.green;
 
-            var extraHeight = (!_castedNode._waitForFinish) ? 20 : 0;
-            var rectHeight = 100 + extraHeight;
+            int extraHeight = (!_castedNode._waitForFinish) ? 20 : 0;
+            int rectHeight = 100 + extraHeight;
 
-            var rect = new Rect(position.x, position.y, 435, rectHeight);
+            Rect rect = new(position.x, position.y, 435, rectHeight);
             NodeSizeInternal = new Vector2(435, rectHeight);
             GUI.Box(rect, "DS_InteractAABaseNode");
 
@@ -61,7 +61,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             if (!_castedNode._waitForFinish)
             {
                 GUI.Label(new Rect(position.x + 10, position.y + 80, 100, 20), "Wait time");
-                var value = GUI.TextField(new Rect(position.x + 110, position.y + 80, 200, 20), _castedNode._waitTime.ToString());
+                string value = GUI.TextField(new Rect(position.x + 110, position.y + 80, 200, 20), _castedNode._waitTime.ToString());
                 if (float.TryParse(value, out float result))
                 {
                     _castedNode._waitTime = result;

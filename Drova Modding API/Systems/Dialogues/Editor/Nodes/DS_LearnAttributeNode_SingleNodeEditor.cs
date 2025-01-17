@@ -42,7 +42,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
             GUI.depth = 10;
             GUI.Label(new Rect(position.x + 10, position.y + 20, 85, 20), "Amount:");
-            var tempAmount = GUI.TextField(new Rect(position.x + 100, position.y + 20, 200, 20), _castedNode._amount.ToString());
+            string tempAmount = GUI.TextField(new Rect(position.x + 100, position.y + 20, 200, 20), _castedNode._amount.ToString());
             if (int.TryParse(tempAmount, out int result))
             {
                 _castedNode._amount = result;

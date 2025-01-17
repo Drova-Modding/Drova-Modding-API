@@ -26,7 +26,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                                     .GroupBy(e => e.name)
                                     .Select(g => g.First())
                                     .ToArray();
-            var entityInfo = _castedNode._entityInfo;
+            EntityInfo entityInfo = _castedNode._entityInfo;
             _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.FindIndex(_entityInfos, e => e.GUID == entityInfo.GUID), 20);
         }
 

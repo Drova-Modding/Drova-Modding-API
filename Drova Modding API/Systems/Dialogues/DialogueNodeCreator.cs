@@ -35,7 +35,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_StatementNode CreateStatementNode(DS_Statement statement, ActorParameter actorParameter)
         {
-            var newNode = Tree.AddNode<DS_StatementNode>();
+            DS_StatementNode newNode = Tree.AddNode<DS_StatementNode>();
             newNode.statement = statement;
             newNode._actorName = actorParameter._keyName;
             newNode._actorParameterID = actorParameter.ID;
@@ -50,7 +50,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_MultipleChoiceNode CreateMultipleChoices(ChoiceCreationData[] choices)
         {
-            var newNode = Tree.AddNode<DS_MultipleChoiceNode>();
+            DS_MultipleChoiceNode newNode = Tree.AddNode<DS_MultipleChoiceNode>();
             newNode.availableChoices = new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
             for (int i = 0; i < choices.Length; i++)
             {
@@ -79,7 +79,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_InteractAABaseNode CreateInteractionNode(AA_ABase baseInteractionPrefab, ActorParameter actorParameter, bool waitForFinish = true, float waitTime = 0)
         {
-            var newNode = Tree.AddNode<DS_InteractAABaseNode>();
+            DS_InteractAABaseNode newNode = Tree.AddNode<DS_InteractAABaseNode>();
             newNode._actorName = actorParameter._keyName;
             newNode._actorParameterID = actorParameter._id;
             newNode._hideDialogueWindow = true;
@@ -97,7 +97,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_HideDialogWindow CreateDialogWindowHideNode(UnityEngine.Coroutine? coroutine)
         {
-            var newNode = Tree.AddNode<DS_HideDialogWindow>();
+            DS_HideDialogWindow newNode = Tree.AddNode<DS_HideDialogWindow>();
             newNode._routine = coroutine;
             newNode.TryGenerateUID();
             return newNode;
@@ -111,7 +111,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_ChangeStanceNode CreateChangeStanceNode(EInteractionMode interactionMode, ActorParameter actor)
         {
-            var newNode = Tree.AddNode<DS_ChangeStanceNode>();
+            DS_ChangeStanceNode newNode = Tree.AddNode<DS_ChangeStanceNode>();
             newNode._interactionMode = interactionMode;
             newNode._actorName = actor._keyName;
             newNode._actorParameterID = actor.ID;
@@ -126,7 +126,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_GiveExp CreateExpNode(int exp)
         {
-            var newNode = Tree.AddNode<DS_GiveExp>();
+            DS_GiveExp newNode = Tree.AddNode<DS_GiveExp>();
             newNode.ExpPoints = exp;
             newNode.TryGenerateUID();
             return newNode;
@@ -142,7 +142,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_GiveItemNode CreateGiveItemNode(ICollection<DialogItemsExchange> itemsExchanges, ActorParameter actor, bool equip = false, bool equipInEmptyActiveSlot = false)
         {
-            var newNode = Tree.AddNode<DS_GiveItemNode>();
+            DS_GiveItemNode newNode = Tree.AddNode<DS_GiveItemNode>();
             newNode.ItemStacks = new Il2CppSystem.Collections.Generic.List<DialogItemsExchange>();
             for (int i = 0; i < itemsExchanges.Count; i++)
             {
@@ -163,7 +163,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_DebugNode CreateWaitNode(float time)
         {
-            var newNode = Tree.AddNode<DS_DebugNode>();
+            DS_DebugNode newNode = Tree.AddNode<DS_DebugNode>();
             newNode._waitTime = time;
             newNode.TryGenerateUID();
             return newNode;
@@ -175,7 +175,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_SetFirstChapter CreateSetFirstChapterNode()
         {
-            var newNode = Tree.AddNode<DS_SetFirstChapter>();
+            DS_SetFirstChapter newNode = Tree.AddNode<DS_SetFirstChapter>();
             newNode.TryGenerateUID();
             return newNode;
         }
@@ -187,7 +187,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_SetFactionNode CreateSetFactionNode(Faction faction)
         {
-            var newNode = Tree.AddNode<DS_SetFactionNode>();
+            DS_SetFactionNode newNode = Tree.AddNode<DS_SetFactionNode>();
             newNode._actorName = PlayerParameter._keyName;
             newNode._actorParameterID = PlayerParameter.ID;
             newNode._faction = faction;
@@ -202,7 +202,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_RevisitMultipleChoiceNode CreateRevisitMultipleChoiceNode(string tag, int repeats = 10)
         {
-            var newNode = Tree.AddNode<DS_RevisitMultipleChoiceNode>();
+            DS_RevisitMultipleChoiceNode newNode = Tree.AddNode<DS_RevisitMultipleChoiceNode>();
             newNode._tag = tag;
             newNode._repeats = repeats;
             newNode.TryGenerateUID();
@@ -216,7 +216,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_DefineActiveActors CreateDefineActiveActorsNode(EntityInfo[] actors)
         {
-            var newNode = Tree.AddNode<DS_DefineActiveActors>();
+            DS_DefineActiveActors newNode = Tree.AddNode<DS_DefineActiveActors>();
             newNode.entityInfos = new Il2CppSystem.Collections.Generic.List<EntityInfo>();
             for (int i = 0; i < actors.Length; i++)
             {
@@ -233,7 +233,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual MultipleConditionNode CreateMultipleConditionNode(ConditionTask[] conditions)
         {
-            var newNode = Tree.AddNode<MultipleConditionNode>();
+            MultipleConditionNode newNode = Tree.AddNode<MultipleConditionNode>();
             newNode.conditions = new Il2CppSystem.Collections.Generic.List<ConditionTask>();
             for (int i = 0; i < conditions.Length; i++)
             {
@@ -251,7 +251,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_SetGBoolNode CreateSetGBoolNode(GBool var, bool value)
         {
-            var newNode = Tree.AddNode<DS_SetGBoolNode>();
+            DS_SetGBoolNode newNode = Tree.AddNode<DS_SetGBoolNode>();
             newNode.Variable = var;
             newNode.Value = value;
             newNode.TryGenerateUID();
@@ -264,7 +264,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual FinishNode CreateFinishNode()
         {
-            var newNode = Tree.AddNode<FinishNode>();
+            FinishNode newNode = Tree.AddNode<FinishNode>();
             newNode.TryGenerateUID();
             return newNode;
         }
@@ -276,7 +276,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_HubJumpNode CreateHubJumpNode(string hubTag)
         {
-            var newNode = Tree.AddNode<DS_HubJumpNode>();
+            DS_HubJumpNode newNode = Tree.AddNode<DS_HubJumpNode>();
             newNode._targetNodeTag = hubTag;
             newNode.TryGenerateUID();
             return newNode;
@@ -290,7 +290,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual DS_HubNode CreateHubNode(string tag, ChoiceCreationData[] choices)
         {
-            var newNode = Tree.AddNode<DS_HubNode>();
+            DS_HubNode newNode = Tree.AddNode<DS_HubNode>();
             newNode.availableChoices = new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
             for (int i = 0; i < choices.Length; i++)
             {
@@ -315,7 +315,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <returns></returns>
         public virtual SubDialogueTree CreateSubDialogueTree(DialogueTree tree)
         {
-            var newNode = Tree.AddNode<SubDialogueTree>();
+            SubDialogueTree newNode = Tree.AddNode<SubDialogueTree>();
             newNode._subTree = tree;
             newNode.TryGenerateUID();
             return newNode;

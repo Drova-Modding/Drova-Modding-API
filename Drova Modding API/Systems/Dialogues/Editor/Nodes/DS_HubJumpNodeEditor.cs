@@ -23,7 +23,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         public override void DrawNode(Vector2 position)
         {
-            if(_castedNode == null)
+            if (_castedNode == null)
             {
                 return;
             }

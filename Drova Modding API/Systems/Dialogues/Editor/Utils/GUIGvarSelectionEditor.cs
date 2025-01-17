@@ -1,6 +1,5 @@
 ﻿using Drova_Modding_API.Access;
 using Il2CppDrova.GlobalVarSystem;
-using System.Linq;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
@@ -67,8 +66,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             _showOnlyList = showOnlyList;
             _subDatabaseGVars = ProviderAccess.GetGameDatabase().GVarDatabase;
 
-            var gvarLists = _subDatabaseGVars.AllGVars.ToArray().Select(e => e.name).ToArray();
-            var selectedIndex = -1;
+            string[] gvarLists = _subDatabaseGVars.AllGVars.ToArray().Select(e => e.name).ToArray();
+            int selectedIndex = -1;
             if (nameOfList != null)
             {
                 selectedIndex = gvarLists.ToList().IndexOf(nameOfList);

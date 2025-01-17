@@ -45,13 +45,13 @@ namespace Drova_Modding_API.Access
 
         internal static void OnOptionOpen()
         {
-            var guiWindow = _instance.GetGUIWindow();
+            GameObject guiWindow = _instance.GetGUIWindow();
             if (!guiWindow)
             {
                 return;
             }
             _instance.OnOptionMenuOpen.Invoke();
-            var manager = guiWindow.GetComponent<GUI_Window_Options>();
+            GUI_Window_Options manager = guiWindow.GetComponent<GUI_Window_Options>();
             // Workaround for Update 1.0.2.1 where the modded panel is not activated for whatever reason.
             if (manager._currentPanelIndex == -1 || manager._currentPanelIndex >= 5)
             {
@@ -61,7 +61,7 @@ namespace Drova_Modding_API.Access
 
         internal static void OnOptionClose()
         {
-            var window = _instance.GetGUIWindow();
+            GameObject window = _instance.GetGUIWindow();
             if (!window)
             {
                 _instance.idsAdded.Clear();
@@ -91,13 +91,13 @@ namespace Drova_Modding_API.Access
             if (!root) return null;
             if (GetHeader(name)) return null;
 
-            var prefabForHeader = root.transform.GetChild(0);
+            Transform prefabForHeader = root.transform.GetChild(0);
             if (!prefabForHeader) { MelonLogger.Error("Failed to get prefabForHeader"); return null; }
             GameObject newHeader = UnityEngine.Object.Instantiate(prefabForHeader.gameObject, root.transform);
 
             if (icon)
             {
-                var headerChildIcon = newHeader.transform.GetChild(0);
+                Transform headerChildIcon = newHeader.transform.GetChild(0);
                 if (!headerChildIcon) { MelonLogger.Error("Failed to get headerChildIcon"); return null; }
                 Image image = headerChildIcon.GetComponent<Image>();
                 if (!image) { MelonLogger.Error("Failed to get Image"); return null; }
@@ -106,28 +106,28 @@ namespace Drova_Modding_API.Access
                 image.MarkDirty();
             }
             newHeader.name = name;
-            var panel = AddPanel(newHeader);
+            GameObject panel = AddPanel(newHeader);
             if (!panel)
             {
                 MelonLogger.Error("Failed to get panel"); return null;
             }
 
-            var componentToRegister = newHeader.GetComponent<GUI_ButtonNavigationAnimationElement>();
+            GUI_ButtonNavigationAnimationElement componentToRegister = newHeader.GetComponent<GUI_ButtonNavigationAnimationElement>();
             if (!componentToRegister) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimationElement");
 
-            var scrollbar = GetScrollBar(panel);
+            GameObject scrollbar = GetScrollBar(panel);
             if (!scrollbar) MelonLogger.Error("Failed to get scrollbar");
             scrollbar.name = ScrollBarName;
 
-            var layoutGroup = scrollbar.transform.GetChild(0);
+            Transform layoutGroup = scrollbar.transform.GetChild(0);
             if (!layoutGroup) MelonLogger.Error("Failed to get LayoutGroup");
             layoutGroup?.DestroyAllChildren();
 
-            var nagivation = root.GetComponent<GUI_ButtonNavigationAnimation>();
+            GUI_ButtonNavigationAnimation nagivation = root.GetComponent<GUI_ButtonNavigationAnimation>();
             if (!nagivation) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimation");
             nagivation?.AddElement(componentToRegister);
 
-            var window = GetGUIWindow();
+            GameObject window = GetGUIWindow();
             if (window)
             {
                 window.GetComponent<GUI_GameMenu_NavigationSwitcher>().legacyElements.Add(componentToRegister);
@@ -152,7 +152,7 @@ namespace Drova_Modding_API.Access
          */
         private void OverrideNavigation(GameObject header, GameObject panel)
         {
-            var manager = GetGUIWindow().GetComponent<GUI_Window_Options>();
+            GUI_Window_Options manager = GetGUIWindow().GetComponent<GUI_Window_Options>();
             if (!manager) { MelonLogger.Error("Failed to get manager to override the navigation"); return; }
             guiPanel = new GUI_Window_ATabManager.GUI_TabPanel
             {
@@ -173,13 +173,13 @@ namespace Drova_Modding_API.Access
          */
         private static GameObject AddPanel(GameObject header)
         {
-            var root = GetRootOfOptionWindow();
-            var panelPrefab = root.transform.GetChild(4);
+            GameObject root = GetRootOfOptionWindow();
+            Transform panelPrefab = root.transform.GetChild(4);
             if (!panelPrefab) { MelonLogger.Error("Failed to get panelPrefab"); return null; }
-            var newPanel = UnityEngine.Object.Instantiate(panelPrefab.gameObject, root.transform);
+            GameObject newPanel = UnityEngine.Object.Instantiate(panelPrefab.gameObject, root.transform);
             newPanel.transform.SetSiblingIndex(newPanel.transform.GetSiblingIndex() - 1);
             newPanel.name = string.Concat("Panel", header.name.AsSpan(header.name.LastIndexOf('_')));
-            var nextKey = root.transform.FindChild("NextKey");
+            Transform nextKey = root.transform.FindChild("NextKey");
             if (nextKey)
                 nextKey.localPosition += new Vector3(20f, 0f);
             else MelonLogger.Warning("Failed to adjust position of NextKey");
@@ -224,8 +224,8 @@ namespace Drova_Modding_API.Access
             {
                 return _GUI_Window.gameObject;
             }
-            var allWindows = UnityEngine.Object.FindObjectsByType<GUI_Window>(FindObjectsSortMode.None);
-            foreach (var window in allWindows)
+            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<GUI_Window> allWindows = UnityEngine.Object.FindObjectsByType<GUI_Window>(FindObjectsSortMode.None);
+            foreach (GUI_Window window in allWindows)
             {
                 if (window.gameObject.scene.name == OptionSceneName && window.name == "GUI_Window_Options(Clone)")
                 {

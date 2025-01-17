@@ -1,12 +1,11 @@
-﻿using Il2CppDrova;
+﻿using Drova_Modding_API.Systems.Dialogues.Editor;
+using Il2CppDrova;
 using Il2CppDrova.GUI.Cheat;
 using Il2CppInterop.Runtime.Attributes;
 using Il2CppTMPro;
+using MelonLoader;
 using UnityEngine;
 using UnityEngine.UI;
-using MelonLoader;
-using Drova_Modding_API.Systems.Dialogues.Editor;
-using System.Collections;
 
 namespace Drova_Modding_API.Systems.Editor
 {
@@ -22,7 +21,7 @@ namespace Drova_Modding_API.Systems.Editor
         [HideFromIl2Cpp]
         internal static void Init()
         {
-            var cheatCanvas = FindFirstObjectByType<GUI_CheatCanvas>();
+            GUI_CheatCanvas cheatCanvas = FindFirstObjectByType<GUI_CheatCanvas>();
             if (cheatCanvas == null)
             {
                 MelonLogger.Error("CheatCanvas not found");
@@ -35,7 +34,7 @@ namespace Drova_Modding_API.Systems.Editor
             gameObject.AddComponent<EditorUI>();
             gameObject.AddComponent<NpcMouseRaycast>();
             gameObject.AddComponent<GraphicRaycaster>();
-            var verticalLayoutGroup = gameObject.AddComponent<VerticalLayoutGroup>();
+            VerticalLayoutGroup verticalLayoutGroup = gameObject.AddComponent<VerticalLayoutGroup>();
             verticalLayoutGroup.childControlHeight = false;
             verticalLayoutGroup.childControlWidth = false;
             verticalLayoutGroup.childForceExpandHeight = false;
@@ -107,7 +106,7 @@ namespace Drova_Modding_API.Systems.Editor
 
             GameObject text = new("TextForButton");
             text.transform.parent = npcEdit.transform;
-            var textComponent = text.AddComponent<TextMeshProUGUI>();
+            TextMeshProUGUI textComponent = text.AddComponent<TextMeshProUGUI>();
             textComponent.text = "Edit NPC";
             RectTransform textRectTransform = textComponent.GetComponent<RectTransform>() ?? text.AddComponent<RectTransform>();
             SetRectTransform(textRectTransform, new Vector2(300, 100));

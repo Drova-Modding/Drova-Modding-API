@@ -15,16 +15,16 @@ namespace Drova_Modding_API.Systems.Dialogues
     {
         internal static void AddDialogGraph(Actor actor)
         {
-            var dt = ScriptableObject.CreateInstance<DialogueTree>();
+            DialogueTree dt = ScriptableObject.CreateInstance<DialogueTree>();
             dt.actorParameters = new Il2CppSystem.Collections.Generic.List<ActorParameter>();
-            var actorId = Il2CppSystem.Guid.NewGuid().ToString();
-            var dialogTree = actor.GetComponentInChildren<DS_DialogueTreeController>();
-            var playerActor = ActorParameterHelper.GetPlayerActorParameters();
+            string actorId = Il2CppSystem.Guid.NewGuid().ToString();
+            DS_DialogueTreeController dialogTree = actor.GetComponentInChildren<DS_DialogueTreeController>();
+            ActorParameter playerActor = ActorParameterHelper.GetPlayerActorParameters();
 
             dt.actorParameters.Add(new ActorParameter { _keyName = "Test", Actor = null, ActorGuid = actor.GetGuidComponent()._guidString, _id = actorId });
             dt.actorParameters.Add(playerActor);
-            var startNode = dt.AddNode<DS_StatementNode>();
-            var statement = new DS_Statement
+            DS_StatementNode startNode = dt.AddNode<DS_StatementNode>();
+            DS_Statement statement = new()
             {
                 useGlobalLoca = true,
                 GlobalLocaPath = "Test/Human",
@@ -34,7 +34,7 @@ namespace Drova_Modding_API.Systems.Dialogues
             startNode.actorName = "Test";
             startNode._actorParameterID = actorId;
             startNode.TryGenerateUID();
-            var endNode = dt.AddNode<DS_MultipleChoiceNode>();
+            DS_MultipleChoiceNode endNode = dt.AddNode<DS_MultipleChoiceNode>();
             endNode.actorName = playerActor._keyName;
             endNode._actorParameterID = playerActor.ID;
             endNode.availableChoices = new Il2CppSystem.Collections.Generic.List<Choice>();
@@ -42,34 +42,34 @@ namespace Drova_Modding_API.Systems.Dialogues
             endNode.availableChoices.Add(new Choice { statement = statement, isEndNode = true, UID = Il2CppSystem.Guid.NewGuid().ToString() });
             endNode.TryGenerateUID();
 
-            var additionalEndNode = dt.AddNode<DS_StatementNode>();
+            DS_StatementNode additionalEndNode = dt.AddNode<DS_StatementNode>();
             additionalEndNode.actorName = "Test";
             additionalEndNode._actorParameterID = actorId;
             additionalEndNode.statement = statement;
             additionalEndNode.TryGenerateUID();
 
-            var experienceNode = dt.AddNode<DS_GiveExp>();
+            DS_GiveExp experienceNode = dt.AddNode<DS_GiveExp>();
             experienceNode.actorName = "Test";
             experienceNode._actorParameterID = actorId;
             experienceNode.ExpPoints = 500;
             experienceNode.TryGenerateUID();
 
-            var stanceNode = dt.AddNode<DS_ChangeStanceNode>();
+            DS_ChangeStanceNode stanceNode = dt.AddNode<DS_ChangeStanceNode>();
             stanceNode.actorName = "Test";
             stanceNode._actorParameterID = actorId;
             stanceNode._interactionMode = Actor.EInteractionMode.Smoke;
             stanceNode.TryGenerateUID();
 
-            var waitNode = dt.AddNode<DS_DebugNode>();
+            DS_DebugNode waitNode = dt.AddNode<DS_DebugNode>();
             waitNode.actorName = "Test";
             waitNode._actorParameterID = actorId;
             waitNode._waitTime = 5;
             waitNode.TryGenerateUID();
 
-            var hideDialogNode = dt.AddNode<DS_HideDialogWindow>();
+            DS_HideDialogWindow hideDialogNode = dt.AddNode<DS_HideDialogWindow>();
             hideDialogNode.TryGenerateUID();
 
-            var interactionNode = dt.AddNode<DS_InteractAABaseNode>();
+            DS_InteractAABaseNode interactionNode = dt.AddNode<DS_InteractAABaseNode>();
             interactionNode.actorName = "Test";
             interactionNode._actorParameterID = actorId;
             interactionNode._hideDialogueWindow = true;
@@ -77,18 +77,18 @@ namespace Drova_Modding_API.Systems.Dialogues
             interactionNode._waitForFinish = true;
             interactionNode.TryGenerateUID();
 
-            var factionNode = dt.AddNode<DS_SetFactionNode>();
+            DS_SetFactionNode factionNode = dt.AddNode<DS_SetFactionNode>();
             factionNode.actorName = "Test";
             factionNode._actorParameterID = actorId;
             factionNode._faction = Resources.FindObjectsOfTypeAll<Faction>()[0];
             factionNode.TryGenerateUID();
 
-            var itemNode = dt.AddNode<DS_GiveItemNode>();
+            DS_GiveItemNode itemNode = dt.AddNode<DS_GiveItemNode>();
             itemNode.actorName = "Test";
             itemNode._actorParameterID = actorId;
             itemNode.ItemStacks = new Il2CppSystem.Collections.Generic.List<DialogItemsExchange>();
 
-            var itemStack = new DialogItemsExchange
+            DialogItemsExchange itemStack = new()
             {
                 Item = Resources.FindObjectsOfTypeAll<Item>()[0],
                 Exchange = DialogItemsExchange.ExchangeDirection.VoidToPlayer,

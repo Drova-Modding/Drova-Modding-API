@@ -24,7 +24,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return;
             }
 
-            var rect = new Rect(position.x, position.y, 350, 70);
+            Rect rect = new(position.x, position.y, 350, 70);
             Color previousColor = GUI.color;
             GUI.color = Color.green;
             GUI.Box(rect, "DS_RevisitMultipleChoiceNode");

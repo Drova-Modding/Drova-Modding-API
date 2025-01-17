@@ -27,7 +27,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _entityInfoNames = _entityInfos.Select(e => e.name).ToArray();
             for (int i = 0; i < _castedNode._entityInfos.Count; i++)
             {
-                var entityInfo = _castedNode._entityInfos[i];
+                EntityInfo entityInfo = _castedNode._entityInfos[i];
                 _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfoNames, Array.FindIndex(_entityInfos, (e) => e.GUID == entityInfo.GUID), 20));
             }
         }
@@ -47,7 +47,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
             for (int i = 0; i < _castedNode._entityInfos.Count; i++)
             {
-                var entityInfoDropdown = _entityInfoDropdowns[i];
+                GUIDropdownWithFilter entityInfoDropdown = _entityInfoDropdowns[i];
                 if (GUI.Button(new Rect(position.x + 220, position.y + 50 + 20 * i, 20, 20), "X"))
                 {
                     _castedNode._entityInfos.RemoveAt(i);

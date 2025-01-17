@@ -46,8 +46,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
             for (int i = 0; i < nameToTaskMap.Count; i++)
             {
-                var item = nameToTaskMap.ElementAt(i);
-                var content = new GUIContent(item.Key, tooltips[i]);
+                KeyValuePair<string, Il2CppSystem.Type> item = nameToTaskMap.ElementAt(i);
+                GUIContent content = new(item.Key, tooltips[i]);
                 if (GUI.Button(rect, content))
                 {
                     return CreateConditionTask(item.Key);
@@ -66,7 +66,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         {
             try
             {
-                if (nameToTaskMap.TryGetValue(name, out var type))
+                if (nameToTaskMap.TryGetValue(name, out Il2CppSystem.Type type))
                 {
                     return Il2CppSystem.Activator.CreateInstance(type).TryCast<ConditionTask>();
                 }

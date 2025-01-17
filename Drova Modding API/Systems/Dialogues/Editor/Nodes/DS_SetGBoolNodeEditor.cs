@@ -49,7 +49,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _castedNode.Value = GUI.Toggle(new Rect(position.x + 10, position.y + 60, 200, 20), _castedNode.Value.value, "Value to set");
 
             GUI.color = Color.green;
-            
+
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;

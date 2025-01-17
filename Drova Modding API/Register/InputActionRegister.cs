@@ -56,14 +56,14 @@ namespace Drova_Modding_API.Register
 
         internal void SaveActions()
         {
-            var json = _inputActionAsset.Value.ToJson();
-            var rebindingsJson = _inputActionAsset.Value.Cast<IInputActionCollection2>().SaveBindingOverridesAsJson();
+            string json = _inputActionAsset.Value.ToJson();
+            string rebindingsJson = _inputActionAsset.Value.Cast<IInputActionCollection2>().SaveBindingOverridesAsJson();
             try
             {
-                var path = Utils.SavePath;
+                string path = Utils.SavePath;
                 Directory.CreateDirectory(path);
-                var file = Path.Combine(path, "actions.json");
-                var rebindingsFile = Path.Combine(path, "rebindings.json");
+                string file = Path.Combine(path, "actions.json");
+                string rebindingsFile = Path.Combine(path, "rebindings.json");
                 File.WriteAllText(file, json);
                 File.WriteAllText(rebindingsFile, rebindingsJson);
             }
@@ -77,8 +77,8 @@ namespace Drova_Modding_API.Register
         {
             try
             {
-                var path = Utils.SavePath;
-                var file = Path.Combine(path, "actions.json");
+                string path = Utils.SavePath;
+                string file = Path.Combine(path, "actions.json");
                 if (!File.Exists(file))
                 {
                     return;
@@ -87,10 +87,10 @@ namespace Drova_Modding_API.Register
                 _inputActionAsset.Value.LoadFromJson(json);
                 gameplayMap = _inputActionAsset.Value.FindActionMap(GAMEPLAY_ACTION_MAP_NAME);
 
-                var rebindingFile = Path.Combine(path, "rebindings.json");
+                string rebindingFile = Path.Combine(path, "rebindings.json");
                 if (File.Exists(rebindingFile))
                 {
-                    var rebindingsJson = File.ReadAllText(rebindingFile);
+                    string rebindingsJson = File.ReadAllText(rebindingFile);
                     _inputActionAsset.Value.Cast<IInputActionCollection2>().LoadBindingOverridesFromJson(rebindingsJson);
                 }
             }

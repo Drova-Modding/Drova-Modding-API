@@ -1,8 +1,8 @@
-﻿using Il2CppDrova;
+﻿using Drova_Modding_API.Systems.SaveGame;
 using HarmonyLib;
-using Drova_Modding_API.Systems.SaveGame;
-using Il2CppDrova.Saveables;
 using Il2Cpp;
+using Il2CppDrova;
+using Il2CppDrova.Saveables;
 using UnityEngine.SceneManagement;
 
 [HarmonyPatch(typeof(SavegameGameHandler), nameof(SavegameGameHandler.LoadSavegameFromSavegame), [typeof(SavegameIdentifier), typeof(bool), typeof(Savegame)])]
@@ -20,7 +20,7 @@ internal static class SaveGameHandlerPatch
             string loadedSceneName = "";
             if (savegame.Data.GetActiveSceneName(ref loadedSceneName))
             {
-                var loadedScene = SceneManager.GetSceneByName(loadedSceneName);
+                Scene loadedScene = SceneManager.GetSceneByName(loadedSceneName);
                 if (!loadedScene.IsValid() || !loadedScene.isLoaded)
                 {
                     sceneLoad = true;

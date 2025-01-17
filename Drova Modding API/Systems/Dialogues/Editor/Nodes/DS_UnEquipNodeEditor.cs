@@ -26,7 +26,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             for (int i = 0; i < _castedNode._slotTypes.Count; i++)
             {
-                var slotType = _castedNode._slotTypes[i];
+                EquipmentSlotType slotType = _castedNode._slotTypes[i];
                 _equipmentSlotDropdowns.Add(new GUIDropdown(equipmentSlotTypes.Select(e => e.name).ToArray(), Array.FindIndex(equipmentSlotTypes, (e) => e.GUID == slotType.GUID)));
             }
         }
@@ -46,8 +46,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
             for (int i = 0; i < _castedNode._slotTypes.Count; i++)
             {
-                var slotType = _castedNode._slotTypes[i];
-                var equipmentSlotDropdown = _equipmentSlotDropdowns[i];
+                EquipmentSlotType slotType = _castedNode._slotTypes[i];
+                GUIDropdown equipmentSlotDropdown = _equipmentSlotDropdowns[i];
                 if (GUI.Button(new Rect(position.x + 220, position.y + 40 + 20 * i, 20, 20), "X"))
                 {
                     _castedNode._slotTypes.RemoveAt(i);

@@ -1,10 +1,10 @@
 ﻿using Drova_Modding_API.Register;
+using Il2CppDrova.GUI;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using Il2CppDrova.GUI;
 using static UnityEngine.InputSystem.InputActionRebindingExtensions;
 
 namespace Drova_Modding_API.UI
@@ -73,7 +73,7 @@ namespace Drova_Modding_API.UI
                 MelonLogger.Error("Keybinding button or text not found."); return;
             }
 
-            var conflictMarkerChild = _keyboard.transform.FindChild("ConflictMarker");
+            Transform conflictMarkerChild = _keyboard.transform.FindChild("ConflictMarker");
             if (conflictMarkerChild == null)
             {
                 MelonLogger.Error("ConflictMarker not found."); return;
@@ -86,7 +86,7 @@ namespace Drova_Modding_API.UI
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            var isGamePad = device.TryCast<Gamepad>() != null;
+            bool isGamePad = device.TryCast<Gamepad>() != null;
             if ((change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected || change == InputDeviceChange.Enabled) && isGamePad)
             {
                 InitGamepad();
@@ -100,9 +100,9 @@ namespace Drova_Modding_API.UI
         private void InitGamepad()
         {
             _controllerButton.gameObject.SetActive(true);
-            var action = InputActionRegister.Instance[_actionName];
+            InputAction action = InputActionRegister.Instance[_actionName];
             _controllerButton.onClick.AddListener(new Action(RegisterListenController));
-            var bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(GamePadGroup));
+            int bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(GamePadGroup));
             if (bindingIndex == -1)
             {
                 _controllerButton.interactable = false;
@@ -122,7 +122,7 @@ namespace Drova_Modding_API.UI
         private void InitKeyboard()
         {
             _keyboard.SetActive(true);
-            var action = InputActionRegister.Instance[_actionName];
+            InputAction action = InputActionRegister.Instance[_actionName];
             _keybindingButton.onClick.AddListener(new Action(RegisterListen));
             _keybindingText.text = action.GetBindingDisplayString((InputBinding.DisplayStringOptions)0, KeyboardGroup);
         }
@@ -131,16 +131,17 @@ namespace Drova_Modding_API.UI
 
         private void Init()
         {
-            
+
             if (Gamepad.current != null)
             {
                 InitGamepad();
-            } else
+            }
+            else
             {
                 RemoveGamepad();
             }
             InitKeyboard();
-            
+
         }
 
         private void RegisterListen()
@@ -157,15 +158,15 @@ namespace Drova_Modding_API.UI
 
         private void ListenForRebinding(TextMeshProUGUI textMesh, string group, string excludeGroup, string secondaryExcludeGroup = null)
         {
-            var action = InputActionRegister.Instance[_actionName];
-            var bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(group));
+            InputAction action = InputActionRegister.Instance[_actionName];
+            int bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(group));
             if (bindingIndex == -1)
             {
                 MelonLogger.Error($"Binding index not found for action {_actionName} and group {group}.");
                 return;
             }
             InputActionRegister.isMappingCurrently = true;
-            var rebindOperation = action.PerformInteractiveRebinding(bindingIndex).WithControlsExcluding(excludeGroup).WithBindingMask(new Il2CppSystem.Nullable<InputBinding>(InputBinding.MaskByGroup(group))).WithTimeout(30);
+            RebindingOperation rebindOperation = action.PerformInteractiveRebinding(bindingIndex).WithControlsExcluding(excludeGroup).WithBindingMask(new Il2CppSystem.Nullable<InputBinding>(InputBinding.MaskByGroup(group))).WithTimeout(30);
             if (secondaryExcludeGroup != null)
             {
                 rebindOperation.WithControlsExcluding(secondaryExcludeGroup);

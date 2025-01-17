@@ -9,7 +9,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     {
         public override Rect DrawTask(Vector2 position)
         {
-            var rect = new Rect(position.x, position.y, 200, 20);
+            Rect rect = new(position.x, position.y, 200, 20);
 
             GUI.Box(rect, "Null Task");
 

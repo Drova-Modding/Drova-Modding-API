@@ -1,7 +1,6 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppDrova.Factions;
 using Il2CppNodeCanvas.DialogueTrees;
-using System.Collections.Immutable;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
@@ -21,7 +20,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode ??= Node.TryCast<DS_SetFactionNode>();
             _factions = Resources.FindObjectsOfTypeAll<Faction>().ToArray();
-            var selectedIndex = Array.FindIndex(_factions, Faction => Faction.name == _castedNode._faction.name);
+            int selectedIndex = Array.FindIndex(_factions, Faction => Faction.name == _castedNode._faction.name);
             if (selectedIndex == -1)
             {
                 selectedIndex = 0;
@@ -31,7 +30,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         public override void DrawNode(Vector2 position)
         {
-            if(_castedNode == null)
+            if (_castedNode == null)
             {
                 return;
             }

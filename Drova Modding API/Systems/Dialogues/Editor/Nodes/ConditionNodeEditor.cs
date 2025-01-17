@@ -1,6 +1,5 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppNodeCanvas.DialogueTrees;
-using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
@@ -44,7 +43,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return;
             }
 
-            var rect = new Rect(position.x, position.y, 350, 120);
+            Rect rect = new(position.x, position.y, 350, 120);
             Color previousColor = GUI.color;
             GUI.color = Color.green;
             GUI.Box(rect, "ConditionNode");
@@ -52,7 +51,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             if (!_changeCondition)
             {
-                var size = _drawTaskEditor.DrawTask(new Vector2(position.x, position.y + 20));
+                Rect size = _drawTaskEditor.DrawTask(new Vector2(position.x, position.y + 20));
                 if (GUI.Button(new Rect(position.x + 10, position.y + 60 + size.y, 200, 20), "Change Condition"))
                 {
                     _changeCondition = true;
@@ -60,7 +59,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             else
             {
-                var conditionTask = _guiCreateConditionTask.Draw(new Vector2(position.x, position.y + 20));
+                Il2CppNodeCanvas.Framework.ConditionTask conditionTask = _guiCreateConditionTask.Draw(new Vector2(position.x, position.y + 20));
                 if (conditionTask != null)
                 {
                     _changeCondition = false;

@@ -29,7 +29,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _entityInfoDropdowns = [];
             for (int i = 0; i < _castedNode.entityInfos.Count; i++)
             {
-                var entityInfo = _castedNode.entityInfos[i];
+                EntityInfo entityInfo = _castedNode.entityInfos[i];
                 _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.FindIndex(_entityInfos, (e) => e.GUID == entityInfo.GUID), _maxEntityInfos));
             }
         }
@@ -40,7 +40,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 return;
             }
-            var rect = new Rect(position.x, position.y, 350, 70 + _entityInfoDropdowns.Sum(d => 20 + 30));
+            Rect rect = new(position.x, position.y, 350, 70 + _entityInfoDropdowns.Sum(d => 20 + 30));
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
             GUI.depth = 10;

@@ -1,10 +1,10 @@
 ﻿using Drova_Modding_API.Access;
 using Il2CppDrova;
 using Il2CppDrova.Utilities.LazyLoading;
+using MelonLoader;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using System.Collections;
-using MelonLoader;
 
 namespace Drova_Modding_API.Systems.Spawning
 {
@@ -25,8 +25,8 @@ namespace Drova_Modding_API.Systems.Spawning
                 LazyActorSaveData lazyActorSaveData = lazyActorSaveDatas[i];
                 GameObject gameObject = new(lazyActorSaveData.ActorName);
                 gameObject.SetActive(false);
-                var lazyActor = gameObject.AddComponent<LazyActor>();
-                var guidComponent = gameObject.AddComponent<GuidComponent>();
+                LazyActor lazyActor = gameObject.AddComponent<LazyActor>();
+                GuidComponent guidComponent = gameObject.AddComponent<GuidComponent>();
                 guidComponent._guid = new Il2CppSystem.Guid(lazyActorSaveData.ActorGuid);
                 guidComponent._guidString = lazyActorSaveData.ActorGuid;
                 lazyActor._guidComponent = guidComponent;
@@ -46,12 +46,12 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             GameObject gameObject = new(LAZY_ACTOR_NAME);
             gameObject.SetActive(false);
-            var lazyActor = gameObject.AddComponent<LazyActor>();
+            LazyActor lazyActor = gameObject.AddComponent<LazyActor>();
             lazyActor._actorReference = actorParams.AssetReference;
             lazyActor._health = new CustomActorHealth();
             lazyActor.transform.position = actorParams.Position;
             lazyActor._spawnPos = actorParams.Position;
-            var guidComponent = gameObject.AddComponent<GuidComponent>();
+            GuidComponent guidComponent = gameObject.AddComponent<GuidComponent>();
             guidComponent.CreateGuid();
             lazyActor._guidComponent = guidComponent;
             lazyActor._guid = guidComponent._guid;
@@ -73,7 +73,7 @@ namespace Drova_Modding_API.Systems.Spawning
          */
         public static IEnumerator LoadEntityInfo(LazyActor lazyActor, AssetReference assetReference)
         {
-            var handle = Addressables.LoadAssetAsync<EntityInfo>(assetReference);
+            UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<EntityInfo> handle = Addressables.LoadAssetAsync<EntityInfo>(assetReference);
             while (!handle.IsDone)
                 yield return null;
             lazyActor._entityInfo = handle.Result;
@@ -81,7 +81,7 @@ namespace Drova_Modding_API.Systems.Spawning
             lazyActor._playerActor = PlayerAccess.GetPlayer();
             lazyActor.enabled = true;
             lazyActor._guidComponent.enabled = true;
-            var toDestroy = lazyActor.GetComponents<GuidComponent>();
+            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<GuidComponent> toDestroy = lazyActor.GetComponents<GuidComponent>();
             for (int i = 0; i < toDestroy.Count; i++)
             {
                 GuidComponent component = toDestroy[i];

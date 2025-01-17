@@ -1,7 +1,7 @@
 ﻿using Il2CppDrova.GUI.Options;
+using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine.UI;
-using Il2CppTMPro;
 
 
 namespace Drova_Modding_API.UI
@@ -24,12 +24,12 @@ namespace Drova_Modding_API.UI
         public void Init()
         {
             _amountText = gameObject.transform.parent.GetComponentInChildren<TextMeshProUGUI>();
-            if(_amountText == null)
+            if (_amountText == null)
             {
                 MelonLogger.Error("Amount text not found");
             }
-            var slider = GetComponent<Slider>();
-            if(slider == null)
+            Slider slider = GetComponent<Slider>();
+            if (slider == null)
             {
                 MelonLogger.Error("Slider not found"); return;
             }

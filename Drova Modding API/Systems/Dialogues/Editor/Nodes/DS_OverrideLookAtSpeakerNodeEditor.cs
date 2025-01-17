@@ -25,7 +25,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GraphEditorManager.DialogueTree.actorParameters.ForEach(new Action<DialogueTree.ActorParameter>(actor => _speakersNameToGuid.Add(actor.name, actor.ID)));
             for (int i = 0; i < _castedNode._lookDirectionOverrides._lookDirections.Count; i++)
             {
-                var lookDirection = _castedNode._lookDirectionOverrides._lookDirections[i];
+                LookDirectionsOverrides.ActorLookParam lookDirection = _castedNode._lookDirectionOverrides._lookDirections[i];
                 _lookDirectionEditors.Add(new LookDirectionEditor(lookDirection, _speakersNameToGuid));
             }
         }
@@ -46,12 +46,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.color = Color.white;
             GUI.depth = 10;
-          
+
 
 
             for (int i = 0; i < _lookDirectionEditors.Count; i++)
             {
-                var lookDirectionEditor = _lookDirectionEditors[i];
+                LookDirectionEditor lookDirectionEditor = _lookDirectionEditors[i];
                 lookDirectionEditor.DrawLookDirectionEditor(new Vector2(position.x, position.y + 20 * (i + 1)));
             }
 
@@ -74,7 +74,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _actorLookParam = actorLookParam;
             _speakersNameToGuid = speakersNameToGuid;
-            var nameList = _speakersNameToGuid.Keys.ToList();
+            List<string> nameList = _speakersNameToGuid.Keys.ToList();
             _actorsDropdown.Add(new GUIDropdown([.. nameList], nameList.FindIndex(name => name == _actorLookParam._fromActor.name)));
             _actorsDropdown.Add(new GUIDropdown([.. nameList], nameList.FindIndex(name => name == _actorLookParam._toActor.name)));
         }
@@ -83,7 +83,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             if (_actorsDropdown[1].Draw(new Rect(position.x + 10, position.y + 40, 200, 20)))
             {
-                var selectedName = _actorsDropdown[1].SelectedOption;
+                string selectedName = _actorsDropdown[1].SelectedOption;
                 if (_speakersNameToGuid.TryGetValue(selectedName, out string id))
                 {
                     _actorLookParam._toActor._actorParameterID = id;
@@ -93,7 +93,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             if (_actorsDropdown[0].Draw(new Rect(position.x + 10, position.y + 20, 200, 20)))
             {
-                var selectedName = _actorsDropdown[0].SelectedOption;
+                string selectedName = _actorsDropdown[0].SelectedOption;
                 if (_speakersNameToGuid.TryGetValue(selectedName, out string id))
                 {
                     _actorLookParam._fromActor._actorParameterID = id;

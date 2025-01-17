@@ -35,12 +35,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                                     .ToArray();
             _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
 
-            var entityInfo = _castedTask.Target;
+            EntityInfo entityInfo = _castedTask.Target;
             _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.IndexOf(_entityInfos, entityInfo), 20);
             for (int i = 0; i < _castedTask.Items.Count; i++)
             {
-                var item = _castedTask.Items[i];
-                var selectedIndex = Array.FindIndex(_items, id => id.Guid == item.Item.Guid);
+                DialogItems item = _castedTask.Items[i];
+                int selectedIndex = Array.FindIndex(_items, id => id.Guid == item.Item.Guid);
                 _itemDropdowns.Add(new GUIDropdownWithFilter(_items.Select(e => e.ReadableId).ToArray(), selectedIndex, 20));
                 _valueModeDropdowns.Add(new GUIDropdown(Enum.GetNames<DialogItems.ValueMode>(), (int)item.Mode));
                 if (item.Mode == DialogItems.ValueMode.GInt)
@@ -67,7 +67,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
             for (int i = 0; i < _castedTask.Items.Count; i++)
             {
-                var item = _castedTask.Items[i];
+                DialogItems item = _castedTask.Items[i];
 
                 if (GUI.Button(new(rect.x + 10, rect.y + 120 + 20 * i, 20, 20), "X"))
                 {
@@ -143,7 +143,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             switch (itemStack.Mode)
             {
                 case DialogItems.ValueMode.Int:
-                    var amountInt = GUI.TextField(
+                    string amountInt = GUI.TextField(
                         new Rect(position.x + 120, yOffset, 200, 20),
                         itemStack.Amount.ToString());
                     if (int.TryParse(amountInt, out int resultInt))
@@ -153,9 +153,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     break;
 
                 case DialogItems.ValueMode.Percentage:
-                    var amountRect = new Rect(position.x + 120, yOffset, 180, 20);
-                    var percentLabelRect = new Rect(position.x + 305, yOffset, 20, 20);
-                    var amountPercent = GUI.TextField(amountRect, itemStack.Amount.ToString());
+                    Rect amountRect = new(position.x + 120, yOffset, 180, 20);
+                    Rect percentLabelRect = new(position.x + 305, yOffset, 20, 20);
+                    string amountPercent = GUI.TextField(amountRect, itemStack.Amount.ToString());
                     GUI.Label(percentLabelRect, "%");
                     if (float.TryParse(amountPercent, out float resultPercent))
                     {
@@ -163,10 +163,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     }
                     break;
                 case DialogItems.ValueMode.GInt:
-                    if (_gvarSelectionEditors.TryGetValue(i, out var gvarSelectionEditor))
+                    if (_gvarSelectionEditors.TryGetValue(i, out GUIGvarSelectionEditor gvarSelectionEditor))
                     {
-                        var dropdownListRect = new Rect(position.x + 120, yOffset, 300, 20);
-                        var dropdownValueRect = new Rect(position.x + 120, yOffset + 20, 300, 20);
+                        Rect dropdownListRect = new(position.x + 120, yOffset, 300, 20);
+                        Rect dropdownValueRect = new(position.x + 120, yOffset + 20, 300, 20);
 
                         if (gvarSelectionEditor.DrawGvarEditor(dropdownListRect, dropdownValueRect))
                         {

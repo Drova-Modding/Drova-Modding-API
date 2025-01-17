@@ -24,20 +24,20 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _castedNode ??= Node.TryCast<MultipleConditionNode>();
             for (int i = 0; i < _castedNode.Conditions.Count; i++)
             {
-                var condition = _castedNode.Conditions[i];
+                Il2CppNodeCanvas.Framework.ConditionTask condition = _castedNode.Conditions[i];
                 if (condition != null)
                 {
-                    var editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(condition.GetIl2CppType());
+                    DrawTaskEditor editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(condition.GetIl2CppType());
                     if (editor == null) continue;
 
-                    var task = condition.TryCast<Il2CppNodeCanvas.Framework.Task>();
+                    Il2CppNodeCanvas.Framework.Task task = condition.TryCast<Il2CppNodeCanvas.Framework.Task>();
                     _drawTaskEditors.Add(editor);
                     editor.Task = task;
                     editor.Init();
                 }
                 else
                 {
-                    var editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(null);
+                    DrawTaskEditor editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(null);
                     _drawTaskEditors.Add(editor);
                     editor.Init();
                 }
@@ -55,12 +55,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = 10;
             GUI.color = Color.white;
             Vector2 taskStartPosition = new(position.x, position.y + 30);
-            var rect = new Rect(position.x, position.y, 350, 70);
+            Rect rect = new(position.x, position.y, 350, 70);
 
             for (int i = 0; i < _drawTaskEditors.Count; i++)
             {
-                var taskEditor = _drawTaskEditors[i];
-                var size = taskEditor.DrawTask(taskStartPosition);
+                DrawTaskEditor taskEditor = _drawTaskEditors[i];
+                Rect size = taskEditor.DrawTask(taskStartPosition);
                 taskStartPosition.y += size.height + _spaceBetweenTasks;
                 rect.height += size.height + _spaceBetweenTasks;
                 if (size.width > rect.width)
@@ -69,11 +69,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 }
             }
 
-            var conditionTask = _guiCreateConditionTask.Draw(new Vector2(position.x, position.y + rect.height));
+            Il2CppNodeCanvas.Framework.ConditionTask conditionTask = _guiCreateConditionTask.Draw(new Vector2(position.x, position.y + rect.height));
             if (conditionTask != null)
             {
                 _castedNode.Conditions.Add(conditionTask);
-                var editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(conditionTask.GetIl2CppType());
+                DrawTaskEditor editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(conditionTask.GetIl2CppType());
                 _drawTaskEditors.Add(editor);
                 editor.Task = conditionTask;
                 editor.Init();

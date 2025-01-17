@@ -18,7 +18,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<GBoolConditionTask>();
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
-                var task = _castedTask.Conditions[i];
+                GraphGBoolCompService task = _castedTask.Conditions[i];
                 _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GBool.Comparer>(), (int)task.Comparison.value));
 
                 _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.BOOL, task.Variable.GetValue().GetParent().name, false, task.Variable.GetValue()));
@@ -36,12 +36,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             Rect size = new(position.x, position.y, 220, 40);
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
-                var condition = _castedTask.Conditions[i];
-                var comparerDropdown = _comparerDropdowns[i];
-                var gvarEditor = _gvarEditors[i];
-                
+                GraphGBoolCompService condition = _castedTask.Conditions[i];
+                GUIDropdown comparerDropdown = _comparerDropdowns[i];
+                GUIGvarSelectionEditor gvarEditor = _gvarEditors[i];
 
-                if(GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
+
+                if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
                 {
                     _castedTask.Conditions.RemoveAt(i);
                     _comparerDropdowns.RemoveAt(i);
@@ -83,7 +83,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             Color previousColor = GUI.color;
 
             GUI.color = Color.blue;
-            var drawRect = new Rect(position.x, position.y, 380, size.height);
+            Rect drawRect = new(position.x, position.y, 380, size.height);
             GUI.Box(drawRect, "GBoolConditionTask");
 
             GUI.color = previousColor;

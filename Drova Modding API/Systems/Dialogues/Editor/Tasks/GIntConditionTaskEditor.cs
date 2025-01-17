@@ -21,7 +21,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<GIntConditionTask>();
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
-                var task = _castedTask.Conditions[i];
+                GraphGIntCompService task = _castedTask.Conditions[i];
                 _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GInt.Comparer>(), (int)task.Comparison.value));
                 _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.INT, task.Variable.GetValue().GetParent().name, false, task.Variable.GetValue()));
             }
@@ -37,9 +37,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             Rect size = new(position.x, position.y, 220, 40);
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
-                var condition = _castedTask.Conditions[i];
-                var comparerDropdown = _comparerDropdowns[i];
-                var gvarEditor = _gvarEditors[i];
+                GraphGIntCompService condition = _castedTask.Conditions[i];
+                GUIDropdown comparerDropdown = _comparerDropdowns[i];
+                GUIGvarSelectionEditor gvarEditor = _gvarEditors[i];
 
 
                 if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
@@ -65,7 +65,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 rect.y += 20;
 
                 GUI.Label(new Rect(rect.x + 5, rect.y, 70, 20), "Value:");
-                var tempInputValue = GUI.TextField(new Rect(rect.x + 80, rect.y, 220 - 70, 20), condition.Value.value.ToString());
+                string tempInputValue = GUI.TextField(new Rect(rect.x + 80, rect.y, 220 - 70, 20), condition.Value.value.ToString());
                 if (int.TryParse(tempInputValue, out int result))
                 {
                     condition.Value.value = result;
@@ -80,7 +80,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
             if (GUI.Button(rect, "Add Condition"))
             {
-                var service = new GraphGIntCompService
+                GraphGIntCompService service = new()
                 {
                     Value = 0,
                     Comparison = GInt.Comparer.Equals,
@@ -96,7 +96,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             Color previousColor = GUI.color;
 
             GUI.color = Color.blue;
-            var drawRect = new Rect(position.x, position.y, 380, size.height);
+            Rect drawRect = new(position.x, position.y, 380, size.height);
             GUI.Box(drawRect, "GIntConditionTask");
 
             GUI.color = previousColor;

@@ -1,8 +1,8 @@
 ﻿
-using UnityEngine;
-using MelonLoader;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
+using MelonLoader;
+using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Editor
 {
@@ -44,7 +44,7 @@ namespace Drova_Modding_API.Systems.Editor
                 {
                     RaycastHit2D hit = hits[i];
                     if (IGNORED_LAYERS.Any((ignore) => hit.collider.name == ignore)) continue;
-                    var npc = hit.collider.GetComponent<Actor>();
+                    Actor npc = hit.collider.GetComponent<Actor>();
                     // Npc Shadow
                     if (npc != null)
                     {

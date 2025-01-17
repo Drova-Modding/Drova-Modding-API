@@ -6,7 +6,6 @@ using Il2CppDrova.Items;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppSystem.Collections.Immutable;
 using Il2CppSystem.Linq;
-using System.Collections.Immutable;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
@@ -33,9 +32,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             for (int i = 0; i < _castedNode.ItemStacks.Count; i++)
             {
-                var itemStack = _castedNode.ItemStacks[i];
-                var direction = itemStack.Exchange;
-                var selectedIndex = Array.FindIndex(_items, id => id.Guid == itemStack.Item.Guid);
+                DialogItemsExchange itemStack = _castedNode.ItemStacks[i];
+                DialogItemsExchange.ExchangeDirection direction = itemStack.Exchange;
+                int selectedIndex = Array.FindIndex(_items, id => id.Guid == itemStack.Item.Guid);
                 if (selectedIndex == -1)
                 {
                     selectedIndex = 0;
@@ -78,8 +77,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             for (int i = 0; i < _castedNode.ItemStacks.Count; i++)
             {
-                var itemStack = _castedNode.ItemStacks[i];
-                var itemDropdown = _itemDropdowns[i];
+                DialogItemsExchange itemStack = _castedNode.ItemStacks[i];
+                GUIDropdownWithFilter itemDropdown = _itemDropdowns[i];
 
                 float yOffset = position.y + 30 + i * itemHeight;
 
@@ -142,7 +141,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             if (GUI.Button(new Rect(position.x + 10, position.y + rectHeight - 30, 80, 20), "Add"))
             {
-                var newItemStack = new DialogItemsExchange
+                DialogItemsExchange newItemStack = new()
                 {
                     Item = _items.FirstOrDefault(),
                     Mode = DialogItems.ValueMode.Int,
@@ -192,7 +191,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             switch (itemStack.Mode)
             {
                 case DialogItems.ValueMode.Int:
-                    var amountInt = GUI.TextField(
+                    string amountInt = GUI.TextField(
                         new Rect(position.x + 120, yOffset, 200, 20),
                         itemStack.Amount.ToString());
                     if (int.TryParse(amountInt, out int resultInt))
@@ -202,9 +201,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     break;
 
                 case DialogItems.ValueMode.Percentage:
-                    var amountRect = new Rect(position.x + 120, yOffset, 180, 20);
-                    var percentLabelRect = new Rect(position.x + 305, yOffset, 20, 20);
-                    var amountPercent = GUI.TextField(amountRect, itemStack.Amount.ToString());
+                    Rect amountRect = new(position.x + 120, yOffset, 180, 20);
+                    Rect percentLabelRect = new(position.x + 305, yOffset, 20, 20);
+                    string amountPercent = GUI.TextField(amountRect, itemStack.Amount.ToString());
                     GUI.Label(percentLabelRect, "%");
                     if (float.TryParse(amountPercent, out float resultPercent))
                     {
@@ -212,10 +211,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     }
                     break;
                 case DialogItems.ValueMode.GInt:
-                    if (_gvarSelectionEditors.TryGetValue(i, out var gvarSelectionEditor))
+                    if (_gvarSelectionEditors.TryGetValue(i, out GUIGvarSelectionEditor gvarSelectionEditor))
                     {
-                        var dropdownListRect = new Rect(position.x + 120, yOffset, 300, 20);
-                        var dropdownValueRect = new Rect(position.x + 120, yOffset + 20, 300, 20);
+                        Rect dropdownListRect = new(position.x + 120, yOffset, 300, 20);
+                        Rect dropdownValueRect = new(position.x + 120, yOffset + 20, 300, 20);
 
                         if (gvarSelectionEditor.DrawGvarEditor(dropdownListRect, dropdownValueRect))
                         {

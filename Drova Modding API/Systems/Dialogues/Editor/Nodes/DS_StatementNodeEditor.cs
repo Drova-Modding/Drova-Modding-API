@@ -8,7 +8,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         protected Vector2 nodeSize = new(200, 50);
         DS_StatementNode CastedNode;
-        public DS_StatementNodeEditor() { 
+        public DS_StatementNodeEditor()
+        {
             NodeSizeInternal = new Vector2(200, 100);
         }
 

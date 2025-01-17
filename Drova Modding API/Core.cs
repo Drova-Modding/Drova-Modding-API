@@ -9,9 +9,7 @@ using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
 using Il2CppDrova;
 using Drova_Modding_API.Systems.Dialogues;
-using Drova_Modding_API.Systems.Dialogues.Editor;
 using Il2CppDrova.MapDatabases;
-using Drova_Modding_API.Systems.Editor;
 
 
 
@@ -113,12 +111,12 @@ namespace Drova_Modding_API
             }
             if (Input.GetKeyDown(KeyCode.F4))
             {
-                var db = MapDatabaseProvider.Database.TryCast<MapDatabase>();
-                var enumerator = db._dataCache.GetEnumerator();
+                MapDatabase db = MapDatabaseProvider.Database.TryCast<MapDatabase>();
+                Il2CppSystem.Collections.Generic.Dictionary<string, Il2CppSystem.Collections.Generic.Dictionary<string, BaseMapDatabaseObject>>.Enumerator enumerator = db._dataCache.GetEnumerator();
                 while (enumerator.MoveNext())
                 {
                     MelonLogger.Msg("Masterkey: " + enumerator.Current.Key);
-                    var nextEnumerator = enumerator.Current.Value.GetEnumerator();
+                    Il2CppSystem.Collections.Generic.Dictionary<string, BaseMapDatabaseObject>.Enumerator nextEnumerator = enumerator.Current.Value.GetEnumerator();
                     while (nextEnumerator.MoveNext())
                     {
                         MelonLogger.Msg(nextEnumerator.Current.Key);
@@ -132,7 +130,7 @@ namespace Drova_Modding_API
 
         private IEnumerator SetupNPC()
         {
-            var npc = AddressableAccess.NPCs.Human_Template.InstantiateAsync(PlayerAccess.GetPlayer().gameObject.transform.position, Quaternion.identity);
+            UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<GameObject> npc = AddressableAccess.NPCs.Human_Template.InstantiateAsync(PlayerAccess.GetPlayer().gameObject.transform.position, Quaternion.identity);
             while (!npc.IsDone)
             {
                 yield return new WaitForSeconds(0.1f);

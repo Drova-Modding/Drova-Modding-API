@@ -67,7 +67,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             else
             {
-                var tempValue = GUI.TextField(new Rect(position.x + 10, position.y + 60, 200, 20), _castedNode.Value.GetValue().ToString());
+                string tempValue = GUI.TextField(new Rect(position.x + 10, position.y + 60, 200, 20), _castedNode.Value.GetValue().ToString());
                 if (int.TryParse(tempValue, out int result))
                 {
                     _castedNode.Value = result;

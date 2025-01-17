@@ -19,7 +19,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_ChangeStanceNode>();
-            var options = Enum.GetNames<EInteractionMode>();
+            string[] options = Enum.GetNames<EInteractionMode>();
             _stanceDropdown = new GUIDropdown(options, (int)_castedNode._interactionMode);
         }
 

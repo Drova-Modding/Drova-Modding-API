@@ -41,9 +41,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             if (_hubRatingDropdown.Draw(new Rect(nextPosition.x + 110, nextPosition.y, 220, 20)))
             {
-                _castedNode.ratingCache = (DS_HubNode.HubRating)_hubRatingDropdown.SelectedIndex;            
+                _castedNode.ratingCache = (DS_HubNode.HubRating)_hubRatingDropdown.SelectedIndex;
             }
-            
+
             GUI.color = Color.green;
             GUI.depth = 20;
 

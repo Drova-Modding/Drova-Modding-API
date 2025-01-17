@@ -1,9 +1,9 @@
-﻿using UnityEngine;
-using MelonLoader;
-using Drova_Modding_API.Access;
-using System.Collections;
+﻿using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.WorldEvents.Regional;
 using Il2CppInterop.Runtime.Attributes;
+using MelonLoader;
+using System.Collections;
+using UnityEngine;
 
 namespace Drova_Modding_API.Systems.WorldEvents
 {
@@ -96,14 +96,14 @@ namespace Drova_Modding_API.Systems.WorldEvents
         {
             if (hasEntered && _regionEventDic.ContainsKey(region))
             {
-                var regionalEvents = _regionEventDic[region];
+                List<ARegionalEvent> regionalEvents = _regionEventDic[region];
                 if (regionalEvents.Count > 0)
                 {
-                    var randomEvent = regionalEvents[UnityEngine.Random.Range(0, regionalEvents.Count)];
+                    ARegionalEvent randomEvent = regionalEvents[UnityEngine.Random.Range(0, regionalEvents.Count)];
                     randomEvent.StartEvent();
                     _runningRegionalEvents.Add(randomEvent);
                 }
-                foreach (var regionalEvent in regionalEvents)
+                foreach (ARegionalEvent regionalEvent in regionalEvents)
                 {
                     if (!regionalEvent.IsRunning && regionalEvent.CanRunParallel())
                     {
@@ -115,7 +115,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
             }
             else if (_regionEventDic.ContainsKey(region))
             {
-                foreach (var runningEvent in _runningRegionalEvents)
+                foreach (ARegionalEvent runningEvent in _runningRegionalEvents)
                 {
                     if (runningEvent.Region == region)
                     {
@@ -131,16 +131,16 @@ namespace Drova_Modding_API.Systems.WorldEvents
         {
             if (hasEntered && _regionEventDic.ContainsKey(region))
             {
-                var regionalEvents = _regionEventDic[region];
-                foreach (var regionalEvent in regionalEvents)
+                List<ARegionalEvent> regionalEvents = _regionEventDic[region];
+                foreach (ARegionalEvent regionalEvent in regionalEvents)
                 {
                     regionalEvent.OnRegionEntered();
                 }
             }
             else if (!hasEntered && _regionEventDic.ContainsKey(region))
             {
-                var regionalEvents = _regionEventDic[region];
-                foreach (var regionalEvent in regionalEvents)
+                List<ARegionalEvent> regionalEvents = _regionEventDic[region];
+                foreach (ARegionalEvent regionalEvent in regionalEvents)
                 {
                     regionalEvent.OnRegionLeft();
                 }
@@ -152,8 +152,8 @@ namespace Drova_Modding_API.Systems.WorldEvents
         {
             while (true)
             {
-                var optionFoundForMin = ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMinOptionKey, out int min);
-                var optionFoundForMax = ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMaxOptionKey, out int max);
+                bool optionFoundForMin = ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMinOptionKey, out int min);
+                bool optionFoundForMax = ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMaxOptionKey, out int max);
                 if (optionFoundForMin && optionFoundForMax)
                 {
 #if DEBUG
@@ -171,7 +171,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 if (CurrentEvent == null && _worldEvents.Count > 0)
                 {
                     _skipOnEvents = 0;
-                    var worldEvent = _worldEvents[UnityEngine.Random.Range(0, _worldEvents.Count)];
+                    IWorldEvent worldEvent = _worldEvents[UnityEngine.Random.Range(0, _worldEvents.Count)];
                     StartEvent(worldEvent);
                 }
                 else
@@ -183,7 +183,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     EndEvent();
                 }
 
-               
+
             }
         }
 
@@ -223,7 +223,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
          */
         public static void RegisterRegionalEvents(IEnumerable<ARegionalEvent> regionalEvents)
         {
-            foreach (var regionalEvent in regionalEvents)
+            foreach (ARegionalEvent regionalEvent in regionalEvents)
             {
                 RegisterRegionalEvent(regionalEvent);
             }

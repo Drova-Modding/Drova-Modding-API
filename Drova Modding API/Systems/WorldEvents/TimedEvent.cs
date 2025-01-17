@@ -37,7 +37,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// </summary>
         public virtual void StartEvent()
         {
-             _endEvent = MelonCoroutines.Start(RunEvent());
+            _endEvent = MelonCoroutines.Start(RunEvent());
         }
 
         /// <summary>

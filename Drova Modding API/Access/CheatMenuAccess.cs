@@ -36,8 +36,8 @@ namespace Drova_Modding_API.Access
             {
                 if (!Terminal._isInitialized)
                     Terminal.Init();
-                var shell = Terminal.Shell;
-                var autoComplete = Terminal.Autocomplete;
+                CommandShell shell = Terminal.Shell;
+                CommandAutocomplete autoComplete = Terminal.Autocomplete;
                 shell.AddCommand(name, new CommandInfo()
                 {
                     proc = action,

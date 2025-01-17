@@ -12,7 +12,7 @@ namespace Drova_Modding_API.Systems
     public class AreaNameSystem(IntPtr ptr) : MonoBehaviour(ptr)
     {
         private static AreaNameSystem _instance;
-        
+
         private readonly List<Region> regions = [];
 
         /**

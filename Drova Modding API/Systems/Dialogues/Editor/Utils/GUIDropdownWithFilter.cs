@@ -43,8 +43,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
         private void RenderFilter(Rect dropdownRect)
         {
-            var filterRect = new Rect(dropdownRect.x, dropdownRect.y + 20, dropdownRect.width, dropdownRect.height);
-            var previous_filter = _filter;
+            Rect filterRect = new(dropdownRect.x, dropdownRect.y + 20, dropdownRect.width, dropdownRect.height);
+            string previous_filter = _filter;
             GUI.Label(filterRect, "Filter:");
             filterRect.x += 35;
             _filter = GUI.TextField(filterRect, _filter);

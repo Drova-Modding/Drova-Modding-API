@@ -49,7 +49,7 @@ namespace Drova_Modding_API.Access
         /// <param name="value">Int of the Enum, at the moment of writing this it would be something >35</param>
         public static void InjectLanguageEnum(string name, int value)
         {
-            var injection = new Dictionary<string, object>
+            Dictionary<string, object> injection = new()
             {
                 { name, value }
             };
@@ -64,14 +64,14 @@ namespace Drova_Modding_API.Access
         /// <param name="modName">The name of the mod (must be unique to other mod names).</param> 
         public static void CreateLocalizationEntries(List<LocalizationEntry> entries, string modName)
         {
-            var groups = entries.GroupBy(x => x.Language);
-            var map = new Dictionary<ELanguage, StringBuilder>();
+            IEnumerable<IGrouping<ELanguage, LocalizationEntry>> groups = entries.GroupBy(x => x.Language);
+            Dictionary<ELanguage, StringBuilder> map = new();
 
-            foreach (var entry in groups)
+            foreach (IGrouping<ELanguage, LocalizationEntry> entry in groups)
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new();
 
-                foreach (var item in entry)
+                foreach (LocalizationEntry item in entry)
                 {
                     sb.AppendLine($"{item.Key} {{ {item.Value} }}");
                     sb.AppendLine();
@@ -79,9 +79,9 @@ namespace Drova_Modding_API.Access
                 map.Add(entry.Key, sb);
             }
 
-            foreach (var item in map)
+            foreach (KeyValuePair<ELanguage, StringBuilder> item in map)
             {
-                var path = LocalizationDB.Instance.GetLanguageFolderPath(item.Key);
+                string path = LocalizationDB.Instance.GetLanguageFolderPath(item.Key);
                 try
                 {
                     File.WriteAllText(Path.Combine(path, modName + $"_{Enum.GetName(typeof(ELanguage), item.Key)}.loc"), item.Value.ToString());
@@ -100,7 +100,7 @@ namespace Drova_Modding_API.Access
         /// </summary>
         internal static void CreateLocalizationEntriesFromFolder()
         {
-            var localizationFolder = Path.Combine(Utils.SavePath, "Localization");
+            string localizationFolder = Path.Combine(Utils.SavePath, "Localization");
             if (!Directory.Exists(localizationFolder))
             {
                 MelonLogger.Msg("Localization folder not found. Created one for convient reason");
@@ -110,22 +110,22 @@ namespace Drova_Modding_API.Access
             }
 
             // collect all folders
-            var folders = Directory.GetDirectories(localizationFolder);
-            foreach (var folder in folders)
+            string[] folders = Directory.GetDirectories(localizationFolder);
+            foreach (string folder in folders)
             {
                 try
                 {
-                    var language = folder.Split(Path.DirectorySeparatorChar).Last();
+                    string language = folder.Split(Path.DirectorySeparatorChar).Last();
                     if (!Enum.TryParse(language, true, out ELanguage _))
                     {
                         // If language is not found, inject it to the enum
-                        var count = Enum.GetValues(typeof(ELanguage)).Length;
+                        int count = Enum.GetValues(typeof(ELanguage)).Length;
                         InjectLanguageEnum(language, ++count);
                     }
                     // Here we should be safe and the language enum should contain the result
                     if (Enum.TryParse(language, true, out ELanguage result))
                     {
-                        var copyPath = LocalizationDB.Instance.GetLanguageFolderPath(result);
+                        string copyPath = LocalizationDB.Instance.GetLanguageFolderPath(result);
                         // Copy all files and directories recursively
                         CopyFilesRecursively(folder, copyPath);
                     }
@@ -139,15 +139,15 @@ namespace Drova_Modding_API.Access
 
         static void CopyFilesRecursively(string sourcePath, string destinationPath)
         {
-            foreach (var file in Directory.GetFiles(sourcePath))
+            foreach (string file in Directory.GetFiles(sourcePath))
             {
-                var destFile = Path.Combine(destinationPath, Path.GetFileName(file));
+                string destFile = Path.Combine(destinationPath, Path.GetFileName(file));
                 File.Copy(file, destFile, true);
             }
 
-            foreach (var dir in Directory.GetDirectories(sourcePath))
+            foreach (string dir in Directory.GetDirectories(sourcePath))
             {
-                var destDir = Path.Combine(destinationPath, Path.GetFileName(dir));
+                string destDir = Path.Combine(destinationPath, Path.GetFileName(dir));
                 Directory.CreateDirectory(destDir);
                 CopyFilesRecursively(dir, destDir);
             }

@@ -37,7 +37,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             int previousDepth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            var rect = new Rect(position.x, position.y, 275, 90);
+            Rect rect = new(position.x, position.y, 275, 90);
             GUI.Box(rect, "DS_RestartNode");
             _castedNode.useRoot = GUI.Toggle(new Rect(position.x + 5, position.y + 20, 250, 25), _castedNode.useRoot, "Use root");
 

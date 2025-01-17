@@ -44,15 +44,15 @@ namespace Drova_Modding_API.Systems.Spawning
         /// <returns>Null when nothing found</returns>
         public Vector2? GetRandomFreePosition(Vector2 origin)
         {
-            var dir = UnityEngine.Random.insideUnitCircle.normalized;
+            Vector2 dir = UnityEngine.Random.insideUnitCircle.normalized;
             Vector2? result = null;
 
             for (int i = 0; i < 360 / _stepAngle; i++)
             {
-                var direction = dir.RotatedDegree(i * _stepAngle);
-                var helpOrigin = origin + direction * _minMaxRange.x;
-                var checkPosition = helpOrigin + direction * (_minMaxRange.RandomValueBetween() - _minMaxRange.x);
-                if (IsPositionFree(helpOrigin, checkPosition, out var curTarget))
+                Vector2 direction = dir.RotatedDegree(i * _stepAngle);
+                Vector2 helpOrigin = origin + direction * _minMaxRange.x;
+                Vector2 checkPosition = helpOrigin + direction * (_minMaxRange.RandomValueBetween() - _minMaxRange.x);
+                if (IsPositionFree(helpOrigin, checkPosition, out Vector2 curTarget))
                 {
                     result = curTarget;
                     break;
@@ -69,16 +69,16 @@ namespace Drova_Modding_API.Systems.Spawning
 
         private bool IsPositionFreeObstacle(Vector2 origin, Vector2 position, out Vector2 target)
         {
-            var raycastMask = RaycastUtil.GetSmallObstacleMask() | RaycastUtil.ObstacleLayer.Mask;
+            int raycastMask = RaycastUtil.GetSmallObstacleMask() | RaycastUtil.ObstacleLayer.Mask;
             //check if target position is free
-            var hit = Physics2D.CircleCastNonAlloc(position, 12.0f, Vector2.zero, _circleHits, 0.0f, raycastMask);
+            int hit = Physics2D.CircleCastNonAlloc(position, 12.0f, Vector2.zero, _circleHits, 0.0f, raycastMask);
 
             if (hit == 0)
             {
                 //check if line from origin to target position is free:
-                var dir = position - origin;
-                dir = Vec2Util.Normalized(dir, out var magnitude);
-                var rHit = Physics2D.RaycastNonAlloc(origin, dir, _directionHits, magnitude, raycastMask);
+                Vector2 dir = position - origin;
+                dir = Vec2Util.Normalized(dir, out float magnitude);
+                int rHit = Physics2D.RaycastNonAlloc(origin, dir, _directionHits, magnitude, raycastMask);
 
                 if (rHit == 0)
                 {
@@ -89,7 +89,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 {
                     //spawn at collision point from origin to position
                     target = _directionHits[0].point;
-                    var safetyHits = Physics2D.CircleCastNonAlloc(target, 12.0f, Vector2.zero, _circleHits, 0.0f, raycastMask);
+                    int safetyHits = Physics2D.CircleCastNonAlloc(target, 12.0f, Vector2.zero, _circleHits, 0.0f, raycastMask);
 
                     if (safetyHits == 0)
                     {

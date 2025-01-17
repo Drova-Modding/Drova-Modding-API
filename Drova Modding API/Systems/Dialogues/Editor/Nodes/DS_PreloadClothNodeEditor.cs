@@ -32,7 +32,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _clothItemNames = _clothItems.Select(e => e.name).ToArray();
             for (int i = 0; i < _castedNode.ClothItems.Count; i++)
             {
-                var clothItem = _castedNode.ClothItems[i];
+                Item clothItem = _castedNode.ClothItems[i];
                 _clothItemDropdowns.Add(new GUIDropdownWithFilter(_clothItemNames, Array.FindIndex(_clothItems, (e) => e.Guid == clothItem.Guid), 20));
             }
         }
@@ -57,8 +57,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             for (int i = 0; i < _castedNode.ClothItems.Count; i++)
             {
-                var clothItem = _castedNode.ClothItems[i];
-                var clothItemDropdown = _clothItemDropdowns[i];
+                Item clothItem = _castedNode.ClothItems[i];
+                GUIDropdownWithFilter clothItemDropdown = _clothItemDropdowns[i];
                 if (GUI.Button(new Rect(position.x + 220, position.y + 80 + 20 * i, 20, 20), "X"))
                 {
                     _castedNode.ClothItems.RemoveAt(i);
