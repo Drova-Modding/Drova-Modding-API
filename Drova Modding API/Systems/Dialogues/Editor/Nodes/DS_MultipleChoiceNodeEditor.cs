@@ -5,7 +5,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     internal class DS_MultipleChoiceNodeEditor : DrawNodeEditor
     {
-        private DS_MultipleChoiceNode CastedNode;
+        private DS_MultipleChoiceNode _castedNode;
+        private readonly Dictionary<int, DrawTaskEditor> _choices = [];
 
         public DS_MultipleChoiceNodeEditor()
         {
@@ -14,18 +15,30 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         public override void Init()
         {
-            CastedNode ??= Node.TryCast<DS_MultipleChoiceNode>();
+            _castedNode ??= Node.TryCast<DS_MultipleChoiceNode>();
+            for (int i = 0; i < _castedNode.availableChoices.Count; i++)
+            {
+                DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
+                if (choice.condition != null)
+                {
+                    var taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(choice.condition.GetIl2CppType());
+                    taskEditor.Task = choice.condition;
+                    taskEditor.GraphEditorManager = GraphEditorManager;
+                    taskEditor.Init();
+                    _choices.TryAdd(i, taskEditor);
+                }
+            }
         }
 
         public override void DrawNode(Vector2 position)
         {
-            if (CastedNode == null)
+            if (_castedNode == null)
             {
                 return;
             }
             Color previousColor = GUI.color;
-            CastedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
-            int additionalHeight = CastedNode.availableChoices.Count * 75 + 65;
+            _castedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
+            int additionalHeight = _castedNode.availableChoices.Count * 75 + 65;
             Color previousBackgroundColor = GUI.backgroundColor;
 
             GUI.color = Color.green;
@@ -37,27 +50,34 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.backgroundColor = Color.black;
             GUI.color = Color.white;
             int step = 20;
-            for (int i = 0; i < CastedNode.availableChoices.Count; i++)
+            for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
-                DS_MultipleChoiceNode.Choice choice = CastedNode.availableChoices[i];
+                DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
+                GUI.Box(new Rect(position.x + 5, position.y + step, 340, 70), $"Choice {i}:", _castedNode.GetLocalizedString(choice.statement));
+                step += 5;
                 GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Globapath:");
                 choice.statement._globalPath = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._globalPath);
                 step += 35;
                 GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Statement:");
                 choice.statement._locaKey = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._locaKey);
                 step += 35;
+                if (_choices.TryGetValue(i, out DrawTaskEditor editor))
+                {
+                    var size = editor.DrawTask(new Vector2(position.x + 5, position.y + step));
+                    step += (int)size.height + 35;
+                }
             }
             // Add choice button if there are less than 8 choices
-            if (CastedNode.availableChoices.Count < 8)
+            if (_castedNode.availableChoices.Count < 8)
             {
-                if (GUI.Button(new Rect(position.x, position.y + CastedNode.availableChoices.Count * 70 + 20, 200, 20), "Add Choice"))
+                if (GUI.Button(new Rect(position.x, position.y + _castedNode.availableChoices.Count * 70 + 20, 200, 20), "Add Choice"))
                 {
-                    CastedNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice(new DS_Statement()));
+                    _castedNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice(new DS_Statement()));
                 }
             }
 
             GUI.Label(new Rect(position.x + 5, position.y + step + 40, 50, 20), "Tag:");
-            CastedNode.tag = GUI.TextField(new Rect(position.x + 110, position.y + step + 40, 200, 20), CastedNode.tag);
+            _castedNode.tag = GUI.TextField(new Rect(position.x + 110, position.y + step + 40, 200, 20), _castedNode.tag);
             GUI.backgroundColor = previousBackgroundColor;
 
             GUI.color = previousColor;

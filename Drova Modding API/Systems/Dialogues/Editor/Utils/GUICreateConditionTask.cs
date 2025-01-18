@@ -16,7 +16,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             {"GIntConditionTask", Il2CppSystem.Type.GetType("Drova.QuestSystem.Graphs.GIntConditionTask") },
             {"DS_HasItems", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasItems") },
             {"DS_HasAttribute", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasAttribute") },
-            {"ConditionList", Il2CppSystem.Type.GetType("NodeCanvas.Framework.ConditionList") }
+            {"ConditionList", Il2CppSystem.Type.GetType("NodeCanvas.Framework.ConditionList") },
+            {"GQuestStateConditionTask", Il2CppSystem.Type.GetType("Drova.QuestSystem.Graphs.GQuestStateConditionTask") }
         };
 
         private readonly string[] tooltips =
@@ -26,7 +27,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             "Check if all int are value",
             "Check if the target or player has the items",
             "Check if the player has the attributes",
-            "Collection of Condition Tasks"
+            "Collection of Condition Tasks",
+            "Check if the quest state is the same as value"
         ];
 
         /// <summary>

@@ -476,6 +476,8 @@
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetGIntNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\ProbabilitySelectorNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Tasks\ConditionListTaskEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Tasks\DS_IsUniqueConditionTaskEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Tasks\GQuestStateConditionTaskEditor.cs" />
 		<Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
 		<Compile Include="Systems\Editor\EditorManager.cs" />
 		<Compile Include="Systems\Editor\EditorUI.cs" />
@@ -542,6 +544,7 @@
 		<Compile Include="Systems\Editor\Relocators\GVarBoolRelocator.cs" />
 		<Compile Include="Systems\Editor\Relocators\GVarIntRelocator.cs" />
 		<Compile Include="Systems\Editor\Relocators\GVarListRelocator.cs" />
+		<Compile Include="Systems\Editor\Relocators\GVarQuestStateRelocator.cs" />
 		<Compile Include="Systems\Editor\Relocators\IObjectRelocator.cs" />
 		<Compile Include="Systems\Editor\Relocators\ItemRelocator.cs" />
 		<Compile Include="Systems\Editor\Relocators\ObjectRelocatorFactory.cs" />

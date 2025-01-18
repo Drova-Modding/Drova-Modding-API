@@ -319,6 +319,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (GUI.Button(new(Screen.width - 110, 10, 100, 60), "Close Graph"))
             {
                 CloseGraph();
+                return;
             }
             if (GUI.Button(new(Screen.width - 110, 70, 100, 60), "Save Graph"))
             {

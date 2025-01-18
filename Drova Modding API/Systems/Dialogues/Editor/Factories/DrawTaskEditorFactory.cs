@@ -16,6 +16,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             {"DS_HasItems", typeof(DS_HasItemsTaskEditor) },
             {"DS_HasAttribute", typeof(DS_HasAttributeTaskEditor) },
             {"ConditionList", typeof(ConditionListTaskEditor) },
+            {"GQuestStateConditionTask", typeof(GQuestStateConditionTaskEditor) },
         };
 
         /// <summary>

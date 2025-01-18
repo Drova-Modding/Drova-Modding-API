@@ -97,6 +97,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
                 GvarType.FLOAT => _currentSelectedGvarList.GetVarsOfType<GFloat>().ToArray().ToList().OfType<AGVarBase>().ToList(),
                 GvarType.STRING => _currentSelectedGvarList.GetVarsOfType<GString>().ToArray().ToList().OfType<AGVarBase>().ToList(),
                 GvarType.BOOL => _currentSelectedGvarList.GetVarsOfType<GBool>().ToArray().ToList().OfType<AGVarBase>().ToList(),
+                GvarType.QUEST => _currentSelectedGvarList.IsQuestVarList ? [_currentSelectedGvarList._questState] : [],
                 _ => [],
             };
             _GvarValueDropdown = new GUIDropdownWithFilter(_selecteableGvars.Select(e => e.name).ToArray(), -1, 10);
@@ -150,6 +151,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// boolean type
         /// </summary>
         BOOL,
+        /// <summary>
+        /// quest type
+        /// </summary>
+        QUEST,
         /// <summary>
         /// no type, used for only showing the lists
         /// </summary>

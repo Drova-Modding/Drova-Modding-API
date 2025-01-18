@@ -10,6 +10,8 @@ using MelonLoader;
 using Il2CppDrova;
 using Drova_Modding_API.Systems.Dialogues;
 using Il2CppDrova.MapDatabases;
+using Il2CppDrova.Items;
+
 
 
 
@@ -45,6 +47,7 @@ namespace Drova_Modding_API
 #endif
             SystemInit.RegisterStores();
             LoggerInstance.Msg("Initialized Modding API.");
+            LoggerInstance.Msg(typeof(Item));
             OptionMenuAccess.Instance.OnOptionMenuClose += () =>
             {
                 if (!_inMainMenu) InputActionRegister.Instance.EnableGameplayActions();
