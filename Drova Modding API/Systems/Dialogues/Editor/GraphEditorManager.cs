@@ -24,10 +24,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// </summary>
         protected List<GraphEditorSnapshot> GraphEditorSnapshots = [];
 
-
         private DialogueTree _dialogueTree;
         private bool _isActive = false;
-        private DialogueStore _dialogueStore = new();
+        private readonly DialogueStore _dialogueStore = new();
 
         /// <summary>
         /// The dialogue tree that is being edited
@@ -181,7 +180,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     Vector2 newPosition = new(lastPosition.x, lastPosition.y + editor.NodeSize.y);
                     editor.Position = newPosition;
                     editor.GraphEditorManager = this;
-
 
                     Il2CppSystem.Collections.Generic.List<Il2CppNodeCanvas.Framework.Connection> connections = node.outConnections;
                     int highestHeight = CreateOutConnections(editor, newPosition, connections);
@@ -451,8 +449,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             Color gridColor = new(0.7f, 0.7f, 0.7f, 0.5f); // semi-transparent gray
 
             // Calculate the top-left position of the grid based on the pan offset
-            float startX = Mathf.Floor((-_panOffset.x / _scaleFactor) / gridSize) * gridSize;
-            float startY = Mathf.Floor((-_panOffset.y / _scaleFactor) / gridSize) * gridSize;
+            float startX = Mathf.Floor(-_panOffset.x / _scaleFactor / gridSize) * gridSize;
+            float startY = Mathf.Floor(-_panOffset.y / _scaleFactor / gridSize) * gridSize;
 
             // Calculate how many lines we need to draw on the screen
             int verticalLinesCount = Mathf.CeilToInt(Screen.width / (_scaleFactor * gridSize)) + 2;
@@ -461,7 +459,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // Draw vertical grid lines
             for (int i = -1; i < verticalLinesCount; i++)
             {
-                float x = startX + i * gridSize;
+                float x = startX + (i * gridSize);
                 Vector2 start = new(x, -10000);
                 Vector2 end = new(x, 10000);
 
@@ -471,7 +469,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // Draw horizontal grid lines
             for (int i = -1; i < horizontalLinesCount; i++)
             {
-                float y = startY + i * gridSize;
+                float y = startY + (i * gridSize);
                 Vector2 start = new(-10000, y);
                 Vector2 end = new(10000, y);
 
@@ -501,7 +499,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
-
         #region ContextMenu
 
         [HideFromIl2Cpp]
@@ -511,10 +508,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             DrawContextMenu(_contextMenuOptions.Length, menuWidth);
 
-
             for (int i = 0; i < _contextMenuOptions.Length; i++)
             {
-                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + i * 20, menuWidth, 20), _contextMenuOptions[i].GetLocalizedString(null)))
+                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), _contextMenuOptions[i].GetLocalizedString(null)))
                 {
                     HandleContextMenuSelection(i);
                     _showContextMenu = false;
@@ -542,14 +538,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // Display each option as a button
             for (int i = 0; i < _subContextMenuOptions.Length; i++)
             {
-                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + i * 20, menuWidth, 20), _subContextMenuOptions[i]))
+                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), _subContextMenuOptions[i]))
                 {
                     HandleSubContextMenuSelection(_subContextMenuOptions[i]);
                     _showSubContextMenu = false; // Close the menu after selection
                 }
             }
         }
-
 
         [HideFromIl2Cpp]
         void HandleSubContextMenuSelection(string option)
@@ -585,7 +580,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             Duplicate
         }
         #endregion ContextMenu
-
 
         #region LineDrawing
 
@@ -649,7 +643,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             float scale = Mathf.Min(scaleX, scaleY);
 
-            return nodeCenter + direction * scale;
+            return nodeCenter + (direction * scale);
         }
 
         /// <summary>

@@ -29,7 +29,6 @@ namespace Drova_Modding_API.UI
         private const string GamePadGroup = "Gamepad";
         private const string KeyboardGroup = "Keyboard;Mouse";
 
-
         /// <summary>
         /// OnDestory method.
         /// </summary>
@@ -109,7 +108,7 @@ namespace Drova_Modding_API.UI
                 MelonLogger.Warning($"Binding index not found for action {_actionName} and group {GamePadGroup}. This could be intenional if you don't want this action to be rebindable");
                 return;
             }
-            _controllerKeybindingText.text = action.GetBindingDisplayString((InputBinding.DisplayStringOptions)0, GamePadGroup);
+            _controllerKeybindingText.text = action.GetBindingDisplayString(0, GamePadGroup);
         }
 
         private void RemoveGamepad()
@@ -124,10 +123,8 @@ namespace Drova_Modding_API.UI
             _keyboard.SetActive(true);
             InputAction action = InputActionRegister.Instance[_actionName];
             _keybindingButton.onClick.AddListener(new Action(RegisterListen));
-            _keybindingText.text = action.GetBindingDisplayString((InputBinding.DisplayStringOptions)0, KeyboardGroup);
+            _keybindingText.text = action.GetBindingDisplayString(0, KeyboardGroup);
         }
-
-
 
         private void Init()
         {

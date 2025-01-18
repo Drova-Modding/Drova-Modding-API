@@ -12,7 +12,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private SubDialogueTree _castedNode;
         private readonly GUIContent GUIContent = new("SubDialogueTree", "Execute a Sub Dialogue Tree. When that Dialogue Tree is finished, this node will continue either in Success or Failure if it has any connections. Useful for making reusable and self-contained Dialogue Trees.");
 
-
         public SubDialogueTreeEditor()
         {
             NodeSizeInternal = new Vector2(850, 90);

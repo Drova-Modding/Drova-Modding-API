@@ -21,7 +21,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
                 if (choice.condition != null)
                 {
-                    var taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(choice.condition.GetIl2CppType());
+                    DrawTaskEditor taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(choice.condition.GetIl2CppType());
                     taskEditor.Task = choice.condition;
                     taskEditor.GraphEditorManager = GraphEditorManager;
                     taskEditor.Init();
@@ -38,14 +38,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             Color previousColor = GUI.color;
             _castedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
-            int additionalHeight = _castedNode.availableChoices.Count * 75 + 65;
+            int additionalHeight = (_castedNode.availableChoices.Count * 75) + 65;
             Color previousBackgroundColor = GUI.backgroundColor;
 
             GUI.color = Color.green;
             Rect rect = new(position.x, position.y, 350, additionalHeight);
             NodeSizeInternal = new Vector2(350, additionalHeight);
             GUI.Box(rect, "DS_MultipleChoiceNode");
-
 
             GUI.backgroundColor = Color.black;
             GUI.color = Color.white;
@@ -63,14 +62,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 step += 35;
                 if (_choices.TryGetValue(i, out DrawTaskEditor editor))
                 {
-                    var size = editor.DrawTask(new Vector2(position.x + 5, position.y + step));
+                    Rect size = editor.DrawTask(new Vector2(position.x + 5, position.y + step));
                     step += (int)size.height + 35;
                 }
             }
             // Add choice button if there are less than 8 choices
             if (_castedNode.availableChoices.Count < 8)
             {
-                if (GUI.Button(new Rect(position.x, position.y + _castedNode.availableChoices.Count * 70 + 20, 200, 20), "Add Choice"))
+                if (GUI.Button(new Rect(position.x, position.y + (_castedNode.availableChoices.Count * 70) + 20, 200, 20), "Add Choice"))
                 {
                     _castedNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice(new DS_Statement()));
                 }

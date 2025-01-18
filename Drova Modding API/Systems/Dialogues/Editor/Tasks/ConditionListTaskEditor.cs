@@ -38,7 +38,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             GUI.Box(rect, "Condition List");
             for (int i = 0; i < _drawTaskEditors.Count; i++)
             {
-                _drawTaskEditors[i].DrawTask(new Vector2(position.x, position.y + 20 + i * 20));
+                _drawTaskEditors[i].DrawTask(new Vector2(position.x, position.y + 20 + (i * 20)));
             }
 
             ConditionTask task = _createConditionTask.Draw(new Vector2(position.x, position.y + (_drawTaskEditors.Count * 30)));

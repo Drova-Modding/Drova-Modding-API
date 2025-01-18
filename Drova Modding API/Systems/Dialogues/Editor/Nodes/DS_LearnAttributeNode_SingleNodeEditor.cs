@@ -26,7 +26,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _attributeDropdown = new GUIDropdown(_genericStatDecs.Select(s => s.name).ToArray(), Array.FindIndex(_genericStatDecs, (s) => s.Guid == _castedNode._stat.Guid));
         }
 
-
         public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null)

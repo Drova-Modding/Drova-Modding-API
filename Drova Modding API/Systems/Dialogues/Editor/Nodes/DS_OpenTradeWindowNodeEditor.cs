@@ -32,7 +32,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = 10;
             GUI.color = Color.green;
 
-
             GUI.Box(new Rect(position.x, position.y, 350, 60), "DS_OpenTradeWindowNode");
 
             GUI.color = Color.white;

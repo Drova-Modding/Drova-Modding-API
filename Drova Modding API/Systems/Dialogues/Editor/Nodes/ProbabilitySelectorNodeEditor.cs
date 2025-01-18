@@ -21,7 +21,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _castedNode = Node.TryCast<ProbabilitySelector>();
         }
 
-
         public override void DrawNode(Vector2 position)
         {
             if (_castedNode == null) return;
@@ -34,8 +33,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             for (int i = 0; i < _castedNode.childOptions.Count; i++)
             {
                 Il2CppNodeCanvas.Framework.BBParameter<float> option = _castedNode.childOptions[i].weight;
-                GUI.Label(new Rect(position.x + 10, position.y + 20 + i * 20, 200, 20), $"Option {i + 1} Weight:");
-                string tempWeigth = GUI.TextField(new Rect(position.x + 220, position.y + 20 + i * 20, 100, 20), option.value.ToString());
+                GUI.Label(new Rect(position.x + 10, position.y + 20 + (i * 20), 200, 20), $"Option {i + 1} Weight:");
+                string tempWeigth = GUI.TextField(new Rect(position.x + 220, position.y + 20 + (i * 20), 100, 20), option.value.ToString());
                 if (float.TryParse(tempWeigth, out float result))
                 {
                     option.value = result;

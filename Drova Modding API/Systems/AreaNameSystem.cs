@@ -25,7 +25,6 @@ namespace Drova_Modding_API.Systems
         [HideFromIl2Cpp]
         public event RegionChanged OnRegionChanged;
 
-
         /**
          * The instance of the AreaNameSystem.
          */

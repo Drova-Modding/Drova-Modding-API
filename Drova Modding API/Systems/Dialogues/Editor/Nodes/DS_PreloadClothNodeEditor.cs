@@ -48,8 +48,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             int previousDepth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            NodeSizeInternal = new Vector2(350, 80 + 100 * _castedNode.ClothItems.Count);
-            GUI.Box(new Rect(position.x, position.y, 350, 80 + 100 * _castedNode.ClothItems.Count), "DS_PreloadCloth");
+            NodeSizeInternal = new Vector2(350, 80 + (100 * _castedNode.ClothItems.Count));
+            GUI.Box(new Rect(position.x, position.y, 350, 80 + (100 * _castedNode.ClothItems.Count)), "DS_PreloadCloth");
             GUI.color = Color.white;
             if (_clothModeDropdown.Draw(new Rect(position.x + 5, position.y + 20, 250, 25)))
             {
@@ -59,7 +59,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 Item clothItem = _castedNode.ClothItems[i];
                 GUIDropdownWithFilter clothItemDropdown = _clothItemDropdowns[i];
-                if (GUI.Button(new Rect(position.x + 220, position.y + 80 + 20 * i, 20, 20), "X"))
+                if (GUI.Button(new Rect(position.x + 220, position.y + 80 + (20 * i), 20, 20), "X"))
                 {
                     _castedNode.ClothItems.RemoveAt(i);
                     _clothItemDropdowns.RemoveAt(i);
@@ -67,12 +67,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     continue;
                 }
 
-                if (clothItemDropdown.Draw(new Rect(position.x + 10, position.y + 40 + 20 * i, 200, 20)))
+                if (clothItemDropdown.Draw(new Rect(position.x + 10, position.y + 40 + (20 * i), 200, 20)))
                 {
                     _castedNode.ClothItems[i] = _clothItems[clothItemDropdown.SelectedIndex];
                 }
             }
-            if (GUI.Button(new Rect(position.x, position.y + 40 + 100 * _castedNode.ClothItems.Count, 120, 20), "Add Cloth"))
+            if (GUI.Button(new Rect(position.x, position.y + 40 + (100 * _castedNode.ClothItems.Count), 120, 20), "Add Cloth"))
             {
                 _castedNode.ClothItems.Add(_clothItems[0]);
                 _clothItemDropdowns.Add(new GUIDropdownWithFilter(_clothItemNames, 0, 20));

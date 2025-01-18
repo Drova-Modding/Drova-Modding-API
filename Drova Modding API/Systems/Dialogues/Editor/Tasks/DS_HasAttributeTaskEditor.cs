@@ -95,7 +95,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 }
             }
 
-            if (GUI.Button(new Rect(position.x, position.y + 20 + _castedTask.Attributes.Count * 120, 120, 20), "Add Attribute"))
+            if (GUI.Button(new Rect(position.x, position.y + 20 + (_castedTask.Attributes.Count * 120), 120, 20), "Add Attribute"))
             {
                 _castedTask.Attributes.Add(new DialogAttributeStat());
                 _attributeDropdowns.Add(new GUIDropdownWithFilter(_allStats.Select(e => e.GetLocaName()).ToArray(), 0, 20));
@@ -103,7 +103,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 _attributeMode.Add(new GUIDropdown(Enum.GetNames<DialogAttributeStat.ValueMode>(), 0));
             }
 
-            Rect drawRect = new(position.x, position.y, 450, 40 + _castedTask.Attributes.Count * 120);
+            Rect drawRect = new(position.x, position.y, 450, 40 + (_castedTask.Attributes.Count * 120));
             Color previousColor = GUI.color;
             GUI.color = Color.green;
             GUI.Box(drawRect, "DS_HasAttribute");

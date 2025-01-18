@@ -50,8 +50,8 @@ namespace Drova_Modding_API.Systems.Spawning
             for (int i = 0; i < 360 / _stepAngle; i++)
             {
                 Vector2 direction = dir.RotatedDegree(i * _stepAngle);
-                Vector2 helpOrigin = origin + direction * _minMaxRange.x;
-                Vector2 checkPosition = helpOrigin + direction * (_minMaxRange.RandomValueBetween() - _minMaxRange.x);
+                Vector2 helpOrigin = origin + (direction * _minMaxRange.x);
+                Vector2 checkPosition = helpOrigin + (direction * (_minMaxRange.RandomValueBetween() - _minMaxRange.x));
                 if (IsPositionFree(helpOrigin, checkPosition, out Vector2 curTarget))
                 {
                     result = curTarget;

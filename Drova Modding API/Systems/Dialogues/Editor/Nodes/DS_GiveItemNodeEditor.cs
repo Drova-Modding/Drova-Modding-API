@@ -68,7 +68,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             int itemCount = _castedNode.ItemStacks.Count;
             float itemHeight = 260f;
             float baseHeight = 60f;
-            float rectHeight = baseHeight + itemCount * itemHeight + 30f;
+            float rectHeight = baseHeight + (itemCount * itemHeight) + 30f;
 
             GUI.Box(new Rect(position.x, position.y, 480, rectHeight), "DS_GiveItemNode");
             NodeSizeInternal = new Vector2(480, rectHeight);
@@ -80,7 +80,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 DialogItemsExchange itemStack = _castedNode.ItemStacks[i];
                 GUIDropdownWithFilter itemDropdown = _itemDropdowns[i];
 
-                float yOffset = position.y + 30 + i * itemHeight;
+                float yOffset = position.y + 30 + (i * itemHeight);
 
                 float useContainerYOffset = yOffset + 60;
                 if (itemStack.Mode == DialogItems.ValueMode.GInt)
@@ -130,8 +130,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 // Todo: Implement container selection
 
                 GUI.Label(new Rect(position.x + 10, useContainerYOffset + 20, 100, 20), "Direction:");
-
-
 
                 if (itemDropdown.Draw(new Rect(position.x + 120, yOffset, 300, 20)))
                 {

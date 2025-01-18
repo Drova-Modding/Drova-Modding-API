@@ -23,7 +23,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// </summary>
         public GraphEditorManager GraphEditorManager;
 
-
         /// <summary>
         /// Size of the node
         /// </summary>

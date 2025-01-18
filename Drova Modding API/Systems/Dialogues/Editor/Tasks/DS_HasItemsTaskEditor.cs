@@ -69,7 +69,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             {
                 DialogItems item = _castedTask.Items[i];
 
-                if (GUI.Button(new(rect.x + 10, rect.y + 120 + 20 * i, 20, 20), "X"))
+                if (GUI.Button(new(rect.x + 10, rect.y + 120 + (20 * i), 20, 20), "X"))
                 {
                     _castedTask.Items.RemoveAt(i);
                     _itemDropdowns.RemoveAt(i);
@@ -78,7 +78,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     i--;
                     continue;
                 }
-                float yOffset = position.y + 30 + i * itemHeight;
+                float yOffset = position.y + 30 + (i * itemHeight);
 
                 if (item.Mode == DialogItems.ValueMode.GInt)
                 {
@@ -94,24 +94,24 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     GUI.Label(new Rect(position.x + 10, yOffset + 40, 100, 20), "Amount:");
                 }
 
-                DrawAmountEditFields(rect.position, i, item, rect.y + 0 + 20 * i);
+                DrawAmountEditFields(rect.position, i, item, rect.y + 0 + (20 * i));
 
-                item.UseContainer = GUI.Toggle(new Rect(rect.x + 10, rect.y + 100 + 20 * i, 100, 20), item.UseContainer, "Use Container");
+                item.UseContainer = GUI.Toggle(new Rect(rect.x + 10, rect.y + 100 + (20 * i), 100, 20), item.UseContainer, "Use Container");
 
                 if (item.Mode == DialogItems.ValueMode.GInt)
                 {
-                    if (_gvarSelectionEditors[i].DrawGvarEditor(new(rect.x, rect.y + 80 + 20 * i, rect.width, rect.height)))
+                    if (_gvarSelectionEditors[i].DrawGvarEditor(new(rect.x, rect.y + 80 + (20 * i), rect.width, rect.height)))
                     {
                         item.AmountVar = _gvarSelectionEditors[i].CurrentSelectedGvar.TryCast<GInt>();
                     }
                 }
 
-                if (_valueModeDropdowns[i].Draw(new(rect.x, rect.y + 60 + 20 * i, rect.width, rect.height)))
+                if (_valueModeDropdowns[i].Draw(new(rect.x, rect.y + 60 + (20 * i), rect.width, rect.height)))
                 {
                     item.Mode = (DialogItems.ValueMode)_valueModeDropdowns[i].SelectedIndex;
                 }
 
-                if (_itemDropdowns[i].Draw(new(rect.x, rect.y + 40 + 20 * i, rect.width, rect.height)))
+                if (_itemDropdowns[i].Draw(new(rect.x, rect.y + 40 + (20 * i), rect.width, rect.height)))
                 {
                     item.Item = _items[_itemDropdowns[i].SelectedIndex];
                 }

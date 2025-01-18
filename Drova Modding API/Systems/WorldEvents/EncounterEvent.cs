@@ -21,7 +21,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         private object _melonCouroutineToken;
         private bool _isRunning = false;
 
-
         /// <summary>
         /// Called when the event starts. Checks if the player is alive and not teleporting.
         /// </summary>

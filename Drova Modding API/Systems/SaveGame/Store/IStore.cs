@@ -7,7 +7,6 @@
     public interface IStore<T> : IStorable
     {
 
-
         /// <summary>
         /// Adds an item to the store.
         /// </summary>

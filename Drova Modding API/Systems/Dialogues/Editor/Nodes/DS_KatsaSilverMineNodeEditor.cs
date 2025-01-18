@@ -71,7 +71,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _playerMineSilverAmountEditor.DrawGvarEditor(new Rect(position.x + 5, position.y + 70, 250, 25));
             _playerAmountEditor.DrawGvarEditor(new Rect(position.x + 5, position.y + 20, 250, 25));
 
-
             GUI.depth = previousDepth;
             GUI.color = previousColor;
 

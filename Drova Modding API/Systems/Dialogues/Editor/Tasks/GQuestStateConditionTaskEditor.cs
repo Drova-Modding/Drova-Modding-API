@@ -25,10 +25,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<GQuestStateConditionTask>();
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
-                var condition = _castedTask.Conditions[i];
+                GraphGQuestCompService condition = _castedTask.Conditions[i];
                 _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, condition.Variable.GetValue().GetParent().name, false, condition.Variable.GetValue()));
-                
-                var comparision = condition.Comparison;
+
+                BBParameter<AGEnum<QuestState>.Comparer> comparision = condition.Comparison;
                 //_comparisionDropdowns.Add(new GUIDropdown(Enum.GetNames<AGEnum<QuestState>.Comparer>(), (int)comparision.TryCast<BBParameter<GQuestState.Comparer>>().GetValue()));
                 _valueDropdown.Add(new GUIDropdown(Enum.GetNames<QuestState>(), (int)condition.Value.GetValue()));
             }
@@ -45,10 +45,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             Rect size = new(position.x, position.y, 220, (120 * _castedTask.Conditions.Count) + 120);
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
-                var condition = _castedTask.Conditions[i];
-                var gvarEditor = _gvarSelectionEditors[i];
+                GraphGQuestCompService condition = _castedTask.Conditions[i];
+                GUIGvarSelectionEditor gvarEditor = _gvarSelectionEditors[i];
                 //var comparerDropdown = _comparisionDropdowns[i];
-                var valueDropdown = _valueDropdown[i];
+                GUIDropdown valueDropdown = _valueDropdown[i];
                 if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
                 {
                     _castedTask.Conditions.RemoveAt(i);

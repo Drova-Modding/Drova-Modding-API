@@ -6,7 +6,6 @@ using UnityEngine.AddressableAssets.Utility;
 using UnityEngine.ResourceManagement.Util;
 using static UnityEngine.AddressableAssets.ResourceLocators.ContentCatalogData;
 
-
 namespace Drova_Modding_API.Generation
 {
     /// <summary>
@@ -34,7 +33,6 @@ namespace Drova_Modding_API.Generation
             public string m_EntryDataString { get; set; }
 
             public string m_ExtraDataString { get; set; }
-
 
             public SerializedType[] m_resourceTypes { get; set; }
 
@@ -141,7 +139,7 @@ namespace Drova_Modding_API.Generation
                 StringBuilder sb = new();
                 for (int i = 0; i < count; i++)
                 {
-                    int index = kBytesPerInt32 + i * (kBytesPerInt32 * k_EntryDataItemPerEntry);
+                    int index = kBytesPerInt32 + (i * kBytesPerInt32 * k_EntryDataItemPerEntry);
                     int internalId = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
                     int providerIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);

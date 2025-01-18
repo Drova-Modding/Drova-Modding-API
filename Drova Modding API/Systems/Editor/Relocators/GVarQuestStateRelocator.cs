@@ -26,8 +26,8 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
         /// <inheritdoc/>
         public GQuestState DeserializeObjectFromJson(string json)
         {
-            var data = JsonSerializer.Deserialize<SaveData>(json);
-            var gVarList = ProviderAccess.GVarDatabase.GetGVarListByGuid(data.GVarListGuid);
+            SaveData data = JsonSerializer.Deserialize<SaveData>(json);
+            GVarList gVarList = ProviderAccess.GVarDatabase.GetGVarListByGuid(data.GVarListGuid);
             return gVarList.GetQuestState();
         }
 

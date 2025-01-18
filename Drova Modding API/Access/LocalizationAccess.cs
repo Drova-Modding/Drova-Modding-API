@@ -23,7 +23,6 @@ namespace Drova_Modding_API.Access
             LocalizationDB.Instance.LoadLanguage(language);
         }
 
-
         /// <summary>
         /// Gets a localized string for a mod.
         /// <example>
@@ -55,7 +54,6 @@ namespace Drova_Modding_API.Access
             };
             EnumInjector.InjectEnumValues<ELanguage>(injection);
         }
-
 
         /// <summary>
         /// Creates localization entries for a mod. The entries are grouped by language and written to the respective language file.

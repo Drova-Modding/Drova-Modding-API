@@ -141,7 +141,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             for (int i = 0; i < options.Length; i++)
             {
                 GUIStyle style = (i == _selectedIndex) ? _highlightStyle : _defaultStyle;
-                if (GUI.Button(new Rect(dropdownRect.x, dropdownRect.y + dropdownRect.height * (i + 1), dropdownRect.width, dropdownRect.height), options[i], style))
+                if (GUI.Button(new Rect(dropdownRect.x, dropdownRect.y + (dropdownRect.height * (i + 1)), dropdownRect.width, dropdownRect.height), options[i], style))
                 {
                     if (i != _selectedIndex)
                     {

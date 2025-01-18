@@ -31,7 +31,6 @@ namespace Drova_Modding_API
             }
         }
 
-
         /**
          * Converts an index to an enum.
          */
@@ -48,7 +47,6 @@ namespace Drova_Modding_API
                 return default;
             }
         }
-
 
         /**
          * Converts a Key to a KeyCode.

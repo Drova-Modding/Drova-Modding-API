@@ -34,7 +34,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Size of the selection
         /// </summary>
-        public Vector2Int Size => new(220, 20 + nameToTaskMap.Count * 20);
+        public Vector2Int Size => new(220, 20 + (nameToTaskMap.Count * 20));
 
         /// <summary>
         /// Draw the condition task selection

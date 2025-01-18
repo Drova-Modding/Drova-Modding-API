@@ -183,7 +183,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     EndEvent();
                 }
 
-
             }
         }
 

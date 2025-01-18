@@ -42,27 +42,27 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             int previousDepth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            NodeSizeInternal = new Vector2(350, 80 + 100 * _castedNode._entityInfos.Count);
-            GUI.Box(new Rect(position.x, position.y, 350, 80 + 100 * _castedNode._entityInfos.Count), "DS_ReleaseActiveActors");
+            NodeSizeInternal = new Vector2(350, 80 + (100 * _castedNode._entityInfos.Count));
+            GUI.Box(new Rect(position.x, position.y, 350, 80 + (100 * _castedNode._entityInfos.Count)), "DS_ReleaseActiveActors");
             GUI.color = Color.white;
             for (int i = 0; i < _castedNode._entityInfos.Count; i++)
             {
                 GUIDropdownWithFilter entityInfoDropdown = _entityInfoDropdowns[i];
-                if (GUI.Button(new Rect(position.x + 220, position.y + 50 + 20 * i, 20, 20), "X"))
+                if (GUI.Button(new Rect(position.x + 220, position.y + 50 + (20 * i), 20, 20), "X"))
                 {
                     _castedNode._entityInfos.RemoveAt(i);
                     _entityInfoDropdowns.RemoveAt(i);
                 }
-                if (entityInfoDropdown.Draw(new Rect(position.x + 5, position.y + 20 + 20 * i, 200, 20)))
+                if (entityInfoDropdown.Draw(new Rect(position.x + 5, position.y + 20 + (20 * i), 200, 20)))
                 {
                     _castedNode._entityInfos[i] = _entityInfos[entityInfoDropdown.SelectedIndex];
                 }
             }
 
-            _castedNode._canRemoveOwner = GUI.Toggle(new Rect(position.x + 5, position.y + 60 + 100 * _castedNode._entityInfos.Count, 250, 25), _castedNode._canRemoveOwner, "Can remove owner");
-            _castedNode._removeOwner = GUI.Toggle(new Rect(position.x + 5, position.y + 90 + 100 * _castedNode._entityInfos.Count, 250, 25), _castedNode._removeOwner, "Remove owner");
+            _castedNode._canRemoveOwner = GUI.Toggle(new Rect(position.x + 5, position.y + 60 + (100 * _castedNode._entityInfos.Count), 250, 25), _castedNode._canRemoveOwner, "Can remove owner");
+            _castedNode._removeOwner = GUI.Toggle(new Rect(position.x + 5, position.y + 90 + (100 * _castedNode._entityInfos.Count), 250, 25), _castedNode._removeOwner, "Remove owner");
 
-            if (GUI.Button(new Rect(position.x + 5, position.y + 30 + 100 * _castedNode._entityInfos.Count, 200, 20), "Add EntityInfo"))
+            if (GUI.Button(new Rect(position.x + 5, position.y + 30 + (100 * _castedNode._entityInfos.Count), 200, 20), "Add EntityInfo"))
             {
                 _castedNode._entityInfos.Add(_entityInfos[0]);
                 _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfoNames, 0, 20));

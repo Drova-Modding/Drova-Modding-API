@@ -49,10 +49,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.Box(new Rect(position.x, position.y, NodeSizeInternal.x, NodeSizeInternal.y + 50), "DS_HubNode");
 
-
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-
 
         }
     }

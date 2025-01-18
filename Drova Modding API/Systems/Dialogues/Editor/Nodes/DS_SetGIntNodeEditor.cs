@@ -17,7 +17,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private GUIGvarSelectionEditor _gvarSelectionEditor;
         private GUIGvarSelectionEditor _valueSelectionEditor;
 
-
         public DS_SetGIntNodeEditor()
         {
             NodeSizeInternal = new Vector2(480, 110);

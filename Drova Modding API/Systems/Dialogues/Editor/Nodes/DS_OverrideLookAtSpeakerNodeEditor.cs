@@ -47,12 +47,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
             GUI.depth = 10;
 
-
-
             for (int i = 0; i < _lookDirectionEditors.Count; i++)
             {
                 LookDirectionEditor lookDirectionEditor = _lookDirectionEditors[i];
-                lookDirectionEditor.DrawLookDirectionEditor(new Vector2(position.x, position.y + 20 * (i + 1)));
+                lookDirectionEditor.DrawLookDirectionEditor(new Vector2(position.x, position.y + (20 * (i + 1))));
             }
 
             GUI.color = previousColor;
@@ -101,7 +99,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 }
             }
         }
-
 
     }
 }

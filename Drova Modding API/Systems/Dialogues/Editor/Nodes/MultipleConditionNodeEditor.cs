@@ -81,7 +81,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             rect.height += 100 + _spaceBetweenTasks;
 
-
             GUI.color = Color.green;
             GUI.depth = 20;
             GUI.Box(rect, "MultipleConditionNode");

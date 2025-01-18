@@ -29,7 +29,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// </summary>
         public GUIDropdownWithFilter? GvarValueDropdown => _GvarValueDropdown;
 
-
         /// <summary>
         /// The current selected Gvar. Can safe cast to the type of <see cref="GvarType"/>.
         /// </summary>
@@ -49,8 +48,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// The number of options in the value dropdown. Can be null if no value dropdown is shown.
         /// </summary>
         public int? OptionsCountValue => _GvarValueDropdown?.OptionsCount;
-
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GUIGvarSelectionEditor"/> class.

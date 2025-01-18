@@ -10,7 +10,6 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
-
 namespace Drova_Modding_API.UI.Builder
 {
     /// <summary>
@@ -242,7 +241,6 @@ namespace Drova_Modding_API.UI.Builder
                 MelonLogger.Error("Failed to destroy old slider component");
             }
 
-
             sliderOption.Init();
             if (!sliderOption._configHandler)
             {
@@ -268,7 +266,6 @@ namespace Drova_Modding_API.UI.Builder
             gameObjects.Add(slider);
             return this;
         }
-
 
         /**
          * Create a switch.
@@ -555,7 +552,6 @@ namespace Drova_Modding_API.UI.Builder
         /// <param name="Title">The title to display</param>
         /// <param name="ActionName">The actionname</param>
         public record InputActionTemplate(LocalizedString Title, string ActionName);
-
 
     }
 }

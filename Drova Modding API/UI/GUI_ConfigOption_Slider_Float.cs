@@ -3,7 +3,6 @@ using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine.UI;
 
-
 namespace Drova_Modding_API.UI
 {
     /// <summary>
@@ -36,7 +35,6 @@ namespace Drova_Modding_API.UI
             slider.onValueChanged.AddListener(new Action<float>(OnValueChangedListener));
             _showPercentSign = false;
         }
-
 
         /// <summary>
         /// Set the value of the slider and text.

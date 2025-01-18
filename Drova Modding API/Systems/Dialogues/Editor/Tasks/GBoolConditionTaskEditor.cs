@@ -40,7 +40,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 GUIDropdown comparerDropdown = _comparerDropdowns[i];
                 GUIGvarSelectionEditor gvarEditor = _gvarEditors[i];
 
-
                 if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
                 {
                     _castedTask.Conditions.RemoveAt(i);

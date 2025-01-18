@@ -17,7 +17,6 @@ namespace Drova_Modding_API.Systems.Editor
         private readonly Il2CppStructArray<RaycastHit2D> hits = new RaycastHit2D[10]; // Pre-allocated array for raycast results.
         private readonly string[] IGNORED_LAYERS = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"]; // Layer to ignore when casting ray.
 
-
         internal void Update()
         {
             // Detect left mouse button click.
@@ -35,7 +34,6 @@ namespace Drova_Modding_API.Systems.Editor
 
             // Cast a ray from the mouse position.
             int hitCount = Physics2D.RaycastNonAlloc(mousePosition2D, Vector2.down, hits, 10f);
-
 
             // Check if the ray hits something.
             if (hitCount > 0)

@@ -50,10 +50,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.color = Color.green;
 
-
             GUI.color = previousColor;
             GUI.depth = previousDepth;
-
 
         }
     }

@@ -41,14 +41,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             int previousDepth = GUI.depth;
             GUI.depth = 10;
             GUI.color = Color.green;
-            NodeSizeInternal = new Vector2(350, 40 + 60 * _castedNode._slotTypes.Count);
-            GUI.Box(new Rect(position.x, position.y, 350, 40 + 60 * _castedNode._slotTypes.Count), "DS_UnEquipNode");
+            NodeSizeInternal = new Vector2(350, 40 + (60 * _castedNode._slotTypes.Count));
+            GUI.Box(new Rect(position.x, position.y, 350, 40 + (60 * _castedNode._slotTypes.Count)), "DS_UnEquipNode");
             GUI.color = Color.white;
             for (int i = 0; i < _castedNode._slotTypes.Count; i++)
             {
                 EquipmentSlotType slotType = _castedNode._slotTypes[i];
                 GUIDropdown equipmentSlotDropdown = _equipmentSlotDropdowns[i];
-                if (GUI.Button(new Rect(position.x + 220, position.y + 40 + 20 * i, 20, 20), "X"))
+                if (GUI.Button(new Rect(position.x + 220, position.y + 40 + (20 * i), 20, 20), "X"))
                 {
                     _castedNode._slotTypes.RemoveAt(i);
                     _equipmentSlotDropdowns.RemoveAt(i);
@@ -56,13 +56,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     continue;
                 }
 
-                if (equipmentSlotDropdown.Draw(new Rect(position.x + 10, position.y + 20 + 20 * i, 200, 20)))
+                if (equipmentSlotDropdown.Draw(new Rect(position.x + 10, position.y + 20 + (20 * i), 200, 20)))
                 {
                     _castedNode._slotTypes[i] = equipmentSlotTypes[equipmentSlotDropdown.SelectedIndex];
                 }
             }
 
-            if (GUI.Button(new Rect(position.x, position.y + 20 + 60 * _castedNode._slotTypes.Count, 120, 20), "Add Slot"))
+            if (GUI.Button(new Rect(position.x, position.y + 20 + (60 * _castedNode._slotTypes.Count), 120, 20), "Add Slot"))
             {
                 _castedNode._slotTypes.Add(equipmentSlotTypes[0]);
                 _equipmentSlotDropdowns.Add(new GUIDropdown(equipmentSlotTypes.Select(e => e.name).ToArray(), 0));
