@@ -450,6 +450,16 @@
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+		<PackageReadmeFile>README.MD</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/Drova-Modding/Drova-Modding-API</RepositoryUrl>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -574,6 +584,13 @@
 		<Compile Include="UI\GUI_ConfigOption_Slider_Float.cs" />
 		<Compile Include="UI\GUI_Options_Controls_KeyFieldElement_Custom.cs" />
 		<Compile Include="Utils.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\README.MD">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
