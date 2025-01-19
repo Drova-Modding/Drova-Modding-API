@@ -483,6 +483,8 @@
 		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
 		<Compile Include="Register\InputActionRegister.cs" />
 		<Compile Include="Systems\AreaNameSystem.cs" />
+		<Compile Include="Systems\Dialogues\Editor\ActionStrategies\ConnectActionStrategy.cs" />
+		<Compile Include="Systems\Dialogues\Editor\ActionStrategies\IActionStrategy.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetGIntNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\ProbabilitySelectorNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Tasks\ConditionListTaskEditor.cs" />

@@ -24,7 +24,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             Color previousColor = GUI.color;
             GUI.color = Color.green;
-
             GUI.Box(new(position.x, position.y, nodeSize.x, nodeSize.y + 50), new GUIContent("DS_StatementNode", CastedNode.GetLocalizedString()));
 
             Color previousBackgroundColor = GUI.backgroundColor;

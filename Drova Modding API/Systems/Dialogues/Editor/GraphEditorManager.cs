@@ -1,5 +1,6 @@
 ﻿using Drova_Modding_API.Access;
 using Drova_Modding_API.Extensions;
+using Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies;
 using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
 using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.Editor;
@@ -9,6 +10,7 @@ using Il2CppInterop.Runtime.Attributes;
 using Il2CppNodeCanvas.DialogueTrees;
 using MelonLoader;
 using UnityEngine;
+using static Il2CppDrova.GUI.GUI_JoystickNavigation_Jump;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
@@ -27,6 +29,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         private DialogueTree _dialogueTree;
         private bool _isActive = false;
         private readonly DialogueStore _dialogueStore = new();
+        private IActionStrategy _activeAction;
 
         /// <summary>
         /// The dialogue tree that is being edited
@@ -59,7 +62,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
-        // Currently selected node for dragging
+        // Currently selected node
         private DrawNodeEditor _selectedNode = null;
 
         // Offset between the mouse position and node position
@@ -98,9 +101,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         private bool _isFirstDraw = true;
 
         // List of context menu options
-        private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate")];
+        private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate"), new("Modding_API/GraphEditor", "Connect")];
 
         private readonly Dictionary<string, DrawNodeEditor> drawNodeEditors = [];
+
+        /// <summary>
+        /// List of node editors
+        /// </summary>
+        public Dictionary<string, DrawNodeEditor> DrawNodeEditors => drawNodeEditors;
 
         internal void Awake()
         {
@@ -111,19 +119,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         internal void Start()
         {
             useGUILayout = false;
-        }
-
-        /// <summary>
-        /// Initialize the graph editor with the actor
-        /// </summary>
-        /// <param name="actor">Actor to initalize</param>
-        public void Init(Actor actor)
-        {
-            if (actor == null) return;
-            DS_DialogueTreeController dialogueTreeController = actor.GetComponentInChildren<DS_DialogueTreeController>();
-            if (dialogueTreeController == null) return;
-            if (dialogueTreeController.graph == null) return;
-            DialogueTree = dialogueTreeController.graph.Cast<DialogueTree>();
         }
 
         internal void Update()
@@ -137,8 +132,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 _contextMenuPosition.y = Screen.height - _contextMenuPosition.y;
                 // Ensure the menu doesn't go off the screen
                 _contextMenuPosition.x = Mathf.Clamp(_contextMenuPosition.x, 0, Screen.width - 10) + 10;
+                EndActiveAction();
             }
-
+            if (Input.GetKey(KeyCode.Escape))
+            {
+                EndActiveAction();
+            }
             // Close the context menu when clicking elsewhere
             if (Input.GetMouseButtonDown(0))
             {
@@ -150,6 +149,95 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     _showSubContextMenu = false;
                 }
             }
+        }
+
+        internal void OnGUI()
+        {
+            if (DialogueTree == null) return;
+
+            Color prevoiousBackgroundColor = GUI.backgroundColor;
+            GUI.backgroundColor = Color.grey;
+            GUI.Box(new Rect(0, 0, Screen.width, Screen.height), GUIContent.none);
+            GUI.backgroundColor = prevoiousBackgroundColor;
+
+            if (_isFirstDraw)
+            {
+                for (int i = 0; i < drawNodeEditors.Count; i++)
+                {
+                    drawNodeEditors.Values.ElementAt(i).Init();
+                }
+                _isFirstDraw = false;
+            }
+
+            // Handle user input for zoom and pan
+            HandleZoomAndPan();
+
+            // Handle node dragging
+            HandleMouseClick();
+
+            // Define the visible screen rect for dynamic rendering
+            Rect visibleArea = new(
+                -_panOffset.x / _scaleFactor,
+                -_panOffset.y / _scaleFactor,
+                Screen.width / _scaleFactor,
+                Screen.height / _scaleFactor
+            );
+
+            // Apply transformations for zoom and pan
+            GUI.matrix = Matrix4x4.TRS(_panOffset, Quaternion.identity, new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
+
+            // Draw the background
+            if (Event.current.type == EventType.Repaint)
+                DrawInfiniteBackground();
+
+            // Draw only nodes and connections in the visible area
+            DrawConnectionsInArea(visibleArea);
+            DrawNodesInArea(visibleArea);
+            HandleActiveActionStrategy();
+
+            // Draw the tooltip
+            if (GUI.tooltip != "")
+            {
+                GUIStyle style = new(GUI.skin.label);
+                style.normal.textColor = Color.white;
+                style.fontSize = 12;
+                style.alignment = TextAnchor.MiddleCenter;
+
+                float width = style.CalcSize(new GUIContent(GUI.tooltip)).x;
+                float height = style.CalcHeight(new GUIContent(GUI.tooltip), width);
+                GUI.Label(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y - 50, width, height), GUI.tooltip, style);
+            }
+
+            // Reset transformations
+            GUI.matrix = Matrix4x4.identity;
+
+            // Draw context menus if needed
+            if (_showContextMenu) DrawContextMenu();
+            if (_showSubContextMenu) DrawSubContextMenu();
+
+            DrawControls();
+        }
+
+        private void EndActiveAction()
+        {
+            if (_activeAction != null)
+            {
+                _activeAction.OnCancel(this, _selectedNode);
+                _activeAction = null;
+            }
+        }
+
+        /// <summary>
+        /// Initialize the graph editor with the actor
+        /// </summary>
+        /// <param name="actor">Actor to initalize</param>
+        public void Init(Actor actor)
+        {
+            if (actor == null) return;
+            DS_DialogueTreeController dialogueTreeController = actor.GetComponentInChildren<DS_DialogueTreeController>();
+            if (dialogueTreeController == null) return;
+            if (dialogueTreeController.graph == null) return;
+            DialogueTree = dialogueTreeController.graph.Cast<DialogueTree>();
         }
 
         [HideFromIl2Cpp]
@@ -194,6 +282,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
+        [HideFromIl2Cpp]
         private int CreateOutConnections(DrawNodeEditor editor, Vector2 newPosition, Il2CppSystem.Collections.Generic.List<Il2CppNodeCanvas.Framework.Connection> connections)
         {
             Vector2 connectionPosition = new(newPosition.x, newPosition.y + 100);
@@ -245,71 +334,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             DialogueTree = node.subGraph;
         }
 
-        internal void OnGUI()
-        {
-            if (DialogueTree == null) return;
-
-            Color prevoiousBackgroundColor = GUI.backgroundColor;
-            GUI.backgroundColor = Color.grey;
-            GUI.Box(new Rect(0, 0, Screen.width, Screen.height), GUIContent.none);
-            GUI.backgroundColor = prevoiousBackgroundColor;
-
-            if (_isFirstDraw)
-            {
-                for (int i = 0; i < drawNodeEditors.Count; i++)
-                {
-                    drawNodeEditors.Values.ElementAt(i).Init();
-                }
-                _isFirstDraw = false;
-            }
-
-            // Handle user input for zoom and pan
-            HandleZoomAndPan();
-
-            // Handle node dragging
-            HandleMouseClick();
-
-            // Define the visible screen rect for dynamic rendering
-            Rect visibleArea = new(
-                -_panOffset.x / _scaleFactor,
-                -_panOffset.y / _scaleFactor,
-                Screen.width / _scaleFactor,
-                Screen.height / _scaleFactor
-            );
-
-            // Apply transformations for zoom and pan
-            GUI.matrix = Matrix4x4.TRS(_panOffset, Quaternion.identity, new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
-
-            // Draw the background
-            if (Event.current.type == EventType.Repaint)
-                DrawInfiniteBackground();
-
-            // Draw only nodes and connections in the visible area
-            DrawConnectionsInArea(visibleArea);
-            DrawNodesInArea(visibleArea);
-
-            // Draw the tooltip
-            if (GUI.tooltip != "")
-            {
-                GUIStyle style = new(GUI.skin.label);
-                style.normal.textColor = Color.white;
-                style.fontSize = 12;
-                style.alignment = TextAnchor.MiddleCenter;
-
-                float width = style.CalcSize(new GUIContent(GUI.tooltip)).x;
-                float height = style.CalcHeight(new GUIContent(GUI.tooltip), width);
-                GUI.Label(new Rect(Event.current.mousePosition.x, Event.current.mousePosition.y - 50, width, height), GUI.tooltip, style);
-            }
-
-            // Reset transformations
-            GUI.matrix = Matrix4x4.identity;
-
-            // Draw context menus if needed
-            if (_showContextMenu) DrawContextMenu();
-            if (_showSubContextMenu) DrawSubContextMenu();
-
-            DrawControls();
-        }
+        #region Drawing
 
         [HideFromIl2Cpp]
         private void DrawControls()
@@ -421,6 +446,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                         else
                         {
                             _selectedNode = editor;
+                            editor.IsSelected = true;
                             _dragOffset = adjustedMousePosition - editor.Position;
                         }
                         break;
@@ -436,9 +462,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
 
             // On mouse up, stop dragging
-            if (e.type == EventType.MouseUp && e.button == 0)
+            if (e.type == EventType.MouseUp && e.button == 0 && _selectedNode != null)
             {
-                _selectedNode = null;
+                Rect nodeRect = new(_selectedNode.Position, _selectedNode.NodeSize);
+                if (!nodeRect.Contains(adjustedMousePosition))
+                {
+                    _selectedNode.IsSelected = false;
+                    _selectedNode = null;
+                }
             }
         }
 
@@ -499,6 +530,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
         }
 
+        private void HandleActiveActionStrategy()
+        {
+            if (_activeAction != null)
+            {
+                Event e = Event.current;
+                Vector2 adjustedMousePosition = (e.mousePosition - _panOffset) / _scaleFactor;
+                _activeAction.OnGui(this, _selectedNode, adjustedMousePosition);
+            };
+        }
+
+        #endregion Drawing
+
         #region ContextMenu
 
         [HideFromIl2Cpp]
@@ -510,13 +553,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             for (int i = 0; i < _contextMenuOptions.Length; i++)
             {
+                if (ContextNeedsSelection(i) && _selectedNode == null) continue;
                 if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), _contextMenuOptions[i].GetLocalizedString(null)))
                 {
+                    EndActiveAction();
                     HandleContextMenuSelection(i);
                     _showContextMenu = false;
                 }
             }
         }
+
+        private static bool ContextNeedsSelection(int index)
+        {
+            return index == (int)GraphEditorAction.Delete || index == (int)GraphEditorAction.Duplicate || index == (int)GraphEditorAction.Connect;
+        }
+
         [HideFromIl2Cpp]
         void DrawContextMenu(int length, float menuWidth)
         {
@@ -570,6 +621,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 case (int)GraphEditorAction.Duplicate:
                     MelonLogger.Msg("Duplicate selected");
                     break;
+                case (int)GraphEditorAction.Connect:
+                    MelonLogger.Msg("Connect selected");
+                    break;
             }
         }
 
@@ -577,7 +631,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             Create,
             Delete,
-            Duplicate
+            Duplicate,
+            Connect
         }
         #endregion ContextMenu
 
@@ -625,7 +680,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <param name="target">Node where the line will be drawn</param>
         /// <returns>Edge point</returns>
         [HideFromIl2Cpp]
-        static Vector2 GetEdgePoint(Vector2 nodeCenter, Vector2 nodeSize, Vector2 target)
+        public static Vector2 GetEdgePoint(Vector2 nodeCenter, Vector2 nodeSize, Vector2 target)
         {
             Vector2 direction = target - nodeCenter;
 
@@ -654,7 +709,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <param name="color">Which color it should have</param>
         /// <param name="index">Index of the line</param>
         [HideFromIl2Cpp]
-        void DrawLine(Vector2 pointA, Vector2 pointB, Color color, int index)
+        public void DrawLine(Vector2 pointA, Vector2 pointB, Color color, int index)
         {
             Color previousColor = GUI.color;
             GUI.color = color;

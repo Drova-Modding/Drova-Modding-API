@@ -1,4 +1,5 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
+using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
@@ -27,6 +28,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// Size of the node
         /// </summary>
         protected Vector2 NodeSizeInternal;
+
+        /// <summary>
+        /// If the node is selected
+        /// </summary>
+        public bool IsSelected = false;
 
         /// <summary>
         /// Size of the node

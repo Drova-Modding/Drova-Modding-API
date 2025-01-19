@@ -50,8 +50,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 return;
             }
+
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
+            GUI.color = Color.green;
+            GUI.depth = 20;
+            GUI.Box(new Rect(position.x, position.y, NodeSizeInternal.x, NodeSizeInternal.y), "MultipleConditionNode");
+
             GUI.depth = 10;
             GUI.color = Color.white;
             Vector2 taskStartPosition = new(position.x, position.y + 30);
@@ -81,9 +86,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             rect.height += 100 + _spaceBetweenTasks;
 
-            GUI.color = Color.green;
-            GUI.depth = 20;
-            GUI.Box(rect, "MultipleConditionNode");
+           
             NodeSizeInternal = new Vector2(rect.width, rect.height);
 
             GUI.depth = previousDepth;

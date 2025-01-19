@@ -28,7 +28,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 GraphGQuestCompService condition = _castedTask.Conditions[i];
                 _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, condition.Variable.GetValue().GetParent().name, false, condition.Variable.GetValue()));
 
-                BBParameter<AGEnum<QuestState>.Comparer> comparision = condition.Comparison;
+                //BBParameter<AGEnum<QuestState>.Comparer> comparision = condition.Comparison;
                 //_comparisionDropdowns.Add(new GUIDropdown(Enum.GetNames<AGEnum<QuestState>.Comparer>(), (int)comparision.TryCast<BBParameter<GQuestState.Comparer>>().GetValue()));
                 _valueDropdown.Add(new GUIDropdown(Enum.GetNames<QuestState>(), (int)condition.Value.GetValue()));
             }
