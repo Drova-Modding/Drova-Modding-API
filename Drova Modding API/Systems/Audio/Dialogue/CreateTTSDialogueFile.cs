@@ -9,8 +9,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 {
     /// <summary>
     /// Creates a dialogue file in TTS Format
-    /// TODO: Add the necessary python script to convert the dialogue file to gametts format
-    /// TODO: Add the mapping file for actor names to numbers
     /// </summary>
     internal class CreateTTSDialogueFile
     {
@@ -35,7 +33,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             DialogueTree[] dialogueTrees = GatherAllDialogueTrees();
             for (int i = 0; i < dialogueTrees.Length; i++)
             {
-                var dialogueTree = dialogueTrees[i];
+                DialogueTree dialogueTree = dialogueTrees[i];
                 if (dialogueTree.name.Contains("Test"))
                 {
                     MelonLogger.Msg("Skipping creation for: " + dialogueTree.name);
@@ -47,8 +45,8 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
                 for (int j = 0; j < dialogueTree.allNodes.Count; j++)
                 {
-                    var node = dialogueTree.allNodes[j];
-                    var statement = node.TryCast<DS_StatementNode>();
+                    Node node = dialogueTree.allNodes[j];
+                    DS_StatementNode statement = node.TryCast<DS_StatementNode>();
                     if (statement != null)
                     {
                         if (statement.actorName == "NPC")
@@ -61,7 +59,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             }
                             break;
                         }
-                        var loca = statement.GetLocalizedString();
+                        string loca = statement.GetLocalizedString();
                         // Unused dialogue node
                         if (loca.StartsWith("[LOCA] Key not found")) continue;
 
@@ -79,12 +77,12 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         continue;
                     }
 
-                    var multipleChoice = node.TryCast<DS_MultipleChoiceNode>();
+                    DS_MultipleChoiceNode multipleChoice = node.TryCast<DS_MultipleChoiceNode>();
                     if (multipleChoice != null)
                     {
                         for (int k = 0; k < multipleChoice.availableChoices.Count; k++)
                         {
-                            var choice = multipleChoice.availableChoices[k];
+                            DS_MultipleChoiceNode.Choice choice = multipleChoice.availableChoices[k];
                             sb.AppendLine()
                                .Append(MapActorNameToNumber(actorMapping, multipleChoice.actorName))
                                .Append(SEPERATOR)
@@ -102,7 +100,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             }
             for (int i = 0; i < genericDialogues.Count; i++)
             {
-                var keyValue = genericDialogues.ElementAt(i);
+                KeyValuePair<string, DialogueTree> keyValue = genericDialogues.ElementAt(i);
                 MelonLogger.Msg("Generic Dialog for " + keyValue.Key + " with " + keyValue.Value.allNodes.Count);
             }
 
@@ -110,7 +108,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
             for (int j = 0; j < dialogueTrees.Length; j++)
             {
-                var tree = dialogueTrees[j];
+                DialogueTree tree = dialogueTrees[j];
 
                 if (genericDialogues.ContainsKey(tree.name)) continue;
 
@@ -118,17 +116,16 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
                 for (int k = 0; k < tree.allNodes.Count; k++)
                 {
-                    var node = tree.allNodes[k];
-                    var subTree = node.TryCast<SubDialogueTree>();
+                    Node node = tree.allNodes[k];
+                    SubDialogueTree subTree = node.TryCast<SubDialogueTree>();
                     if (subTree != null && subTree.subGraph != null && genericDialogues.ContainsKey(subTree.subGraph.name))
                     {
                         MelonLogger.Msg("Found generic Dialog " + subTree.subGraph.name + " in " + tree.name);
                         subTree.SetParametersMap();
                         subTree.currentInstance = subTree.TryCast<IGraphAssignable>().CheckInstance(true).TryCast<DialogueTree>();
                         subTree.TryWriteMappedActorParameters();
-                        //var stringBuilder = new StringBuilder();
-                        var npcName = "";
-                        foreach (var item in subTree.GetParametersMap())
+                        string npcName = "";
+                        foreach (Il2CppSystem.Collections.Generic.KeyValuePair<string, string> item in subTree.GetParametersMap())
                         {
                             ActorParameter parameterById1 = subTree.currentInstance.GetParameterByID(item.key);
                             ActorParameter parameterById2 = subTree.DLGTree.GetParameterByID(item.Value);
@@ -140,8 +137,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             {
                                 npcName = parameterById2.name;
                             }
-
-                            //stringBuilder.AppendLine().Append(item.key).Append(' ').Append(parameterById1.name).Append(" : ").Append(item.value).Append(' ').Append(parameterById2.name);
                         }
 
                         // Dialogue which is used by different systems, currently unsupported
@@ -153,11 +148,11 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
                         for (int i = 0; i < subTree.subGraph.allNodes.Count; i++)
                         {
-                            var subGraphNode = subTree.subGraph.allNodes[i];
-                            var statement = subGraphNode.TryCast<DS_StatementNode>();
+                            Node subGraphNode = subTree.subGraph.allNodes[i];
+                            DS_StatementNode statement = subGraphNode.TryCast<DS_StatementNode>();
                             if (statement != null)
                             {
-                                var actorName = statement.actorName;
+                                string actorName = statement.actorName;
                                 // Skip already player generated dialogues
                                 if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && playerGeneratedDialogues.Contains(subTree.subGraph.name))
                                 {
@@ -182,7 +177,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             }
                         }
                         playerGeneratedDialogues.Add(subTree.subGraph.name);
-                        //MelonLogger.Msg(stringBuilder.ToString());
                     }
 
                 }
@@ -191,7 +185,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
             string path = Utils.SavePath;
             Directory.CreateDirectory(path);
-            var savePath = Path.Combine(path, FILE_NAME);
+            string savePath = Path.Combine(path, FILE_NAME);
             try
             {
                 File.WriteAllText(savePath, sb.ToString());
@@ -204,14 +198,14 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
         private static void ReadActorMappings(Dictionary<string, int> actorMapping)
         {
-            var pathToMapping = Path.Combine(Utils.SavePath, MAPPING_FILE_NAME);
+            string pathToMapping = Path.Combine(Utils.SavePath, MAPPING_FILE_NAME);
             if (File.Exists(pathToMapping))
             {
-                var lines = File.ReadAllLines(pathToMapping);
+                string[] lines = File.ReadAllLines(pathToMapping);
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    var line = lines[i];
-                    var split = line.Split(SEPERATOR);
+                    string line = lines[i];
+                    string[] split = line.Split(SEPERATOR);
                     if (split.Length != 2)
                     {
                         MelonLogger.Error("Invalid mapping line: " + line);

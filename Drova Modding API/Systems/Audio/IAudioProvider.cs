@@ -15,6 +15,6 @@ namespace Drova_Modding_API.Systems.Audio
         /// <param name="actorName">actor name of the node</param>
         /// <param name="choiceId">if its multiple choice, the choice id</param>
         /// <returns>AudioClip to be used for this node</returns>
-        public AudioClip GetAudioClip(string dialogeName, string uuid, string actorName, int? choiceId);
+        public Task<AudioClip> GetAudioClip(string dialogeName, string uuid, string actorName, int? choiceId);
     }
 }

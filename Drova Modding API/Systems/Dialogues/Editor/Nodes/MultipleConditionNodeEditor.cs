@@ -86,7 +86,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             rect.height += 100 + _spaceBetweenTasks;
 
-           
             NodeSizeInternal = new Vector2(rect.width, rect.height);
 
             GUI.depth = previousDepth;

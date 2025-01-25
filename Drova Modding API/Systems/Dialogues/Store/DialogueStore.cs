@@ -28,7 +28,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
             Il2CppSystem.Collections.Generic.List<UnityEngine.Object> data;
             Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> lol = SerializationUtility.SerializeValue<GraphSource>(dialogue.graphSource.Pack(dialogue), DataFormat.JSON, out data, null);
 
-            // Write lol into a json file
             string savePath = Path.Combine(Utils.SavePath, "dialogue.json");
             File.WriteAllBytes(savePath, lol);
         }

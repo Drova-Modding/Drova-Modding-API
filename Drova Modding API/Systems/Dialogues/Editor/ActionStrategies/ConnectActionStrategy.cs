@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 
         public void OnEnd(GraphEditorManager editorManager, DrawNodeEditor selection, Vector2 clickPosition)
         {
-            foreach (var editor in editorManager.DrawNodeEditors)
+            foreach (KeyValuePair<string, DrawNodeEditor> editor in editorManager.DrawNodeEditors)
             {
                 Rect nodeRect = new(editor.Value.Position, editor.Value.NodeSize);
                 if (nodeRect.Contains(clickPosition))
@@ -27,8 +27,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 
         public void OnGui(GraphEditorManager editorManager, DrawNodeEditor selection, Vector2 mousePosition)
         {
-            var nodeCenter = selection.Position + selection.NodeSize / 2;
-            var nodeEdge = GraphEditorManager.GetEdgePoint(nodeCenter, selection.NodeSize, mousePosition);
+            Vector2 nodeCenter = selection.Position + (selection.NodeSize / 2);
+            Vector2 nodeEdge = GraphEditorManager.GetEdgePoint(nodeCenter, selection.NodeSize, mousePosition);
             editorManager.DrawLine(nodeEdge, mousePosition, Color.magenta, 0);
         }
 

@@ -30,7 +30,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
         /// <param name="selection"></param>
         void OnCancel(GraphEditorManager editorManager, DrawNodeEditor selection);
 
-
         /// <summary>
         /// On GUI event
         /// </summary>

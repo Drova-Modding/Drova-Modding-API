@@ -1,5 +1,4 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
-using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
