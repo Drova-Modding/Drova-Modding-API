@@ -1,14 +1,16 @@
 ﻿using Drova_Modding_API.Systems.Audio;
 using HarmonyLib;
 using Il2CppNodeCanvas.DialogueTrees;
+using Il2CppNodeCanvas.Framework;
 
-[HarmonyPatch(typeof(DialogueTree), nameof(DialogueTree.OnAfterDeserialize))]
+[HarmonyPatch(typeof(Graph), nameof(Graph.SelfDeserialize))]
 internal static class DialougeTreePatch
 {
-    private static void Postfix(DialogueTree __instance)
+    private static void Postfix(Graph __instance)
     {
-        AudioManager._dialogueAudioConnector.OnDialogueTreeLoaded(__instance);
-
+        var dialogueTree = __instance.TryCast<DialogueTree>();
+        if (dialogueTree == null) return;
+        AudioManager._dialogueAudioConnector.OnDialogueTreeLoaded(dialogueTree);
     }
 }
 

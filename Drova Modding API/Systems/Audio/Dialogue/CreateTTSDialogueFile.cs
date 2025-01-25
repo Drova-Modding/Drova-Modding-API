@@ -34,9 +34,9 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             for (int i = 0; i < dialogueTrees.Length; i++)
             {
                 DialogueTree dialogueTree = dialogueTrees[i];
-                if (dialogueTree.name.Contains("Test"))
+                if (dialogueTree.IsTestOrDebugDialogue)
                 {
-                    MelonLogger.Msg("Skipping creation for: " + dialogueTree.name);
+                    MelonLogger.Msg("Skipping creation for test/debug: " + dialogueTree.name);
                     continue;
                 };
                 MelonLogger.Msg("Creating dialogue file for: " + dialogueTree.name);
@@ -68,7 +68,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             .Append(SEPERATOR)
                             .Append(loca)
                             .Append(SEPERATOR)
-                            .Append(GetUniqueIDStatement(dialogueTree, node))
+                            .Append(AudioManager.GetUniqueIDStatement(dialogueTree, statement))
                             .Append(SEPERATOR)
                             .Append(EMOTION)
                             .Append(SEPERATOR)
@@ -88,7 +88,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                                .Append(SEPERATOR)
                                .Append(multipleChoice.GetLocalizedString(choice.statement))
                                .Append(SEPERATOR)
-                               .Append(GetUniqueIDChoice(dialogueTree, choice))
+                               .Append(AudioManager.GetUniqueIDChoice(dialogueTree, choice))
                                .Append(SEPERATOR)
                                .Append(EMOTION)
                                .Append(SEPERATOR)
@@ -167,7 +167,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                                     .Append(SEPERATOR)
                                     .Append(statement.GetLocalizedString())
                                     .Append(SEPERATOR)
-                                    .Append(GetUniqueIDStatementGeneric(subTree.subGraph, subGraphNode, actorName))
+                                    .Append(AudioManager.GetUniqueIDStatementGeneric(subTree.subGraph, statement, actorName))
                                     .Append(SEPERATOR)
                                     .Append(EMOTION)
                                     .Append(SEPERATOR)
@@ -233,19 +233,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             }
         }
 
-        private static string GetUniqueIDStatement(DialogueTree tree, Node node)
-        {
-            return $"{tree.name}_{node.UID}";
-        }
-
-        private static string GetUniqueIDStatementGeneric(DialogueTree tree, Node node, string actorName)
-        {
-            return $"{tree.name}_{node.UID}_{actorName}";
-        }
-
-        private static string GetUniqueIDChoice(DialogueTree tree, DS_MultipleChoiceNode.Choice choice)
-        {
-            return $"{tree.name}_choice_{choice.UID}";
-        }
+      
     }
 }

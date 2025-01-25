@@ -455,11 +455,11 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-	  <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+		<CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-	  <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -596,14 +596,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="..\README.MD">
-	    <Pack>True</Pack>
-	    <PackagePath>\</PackagePath>
-	  </None>
+		<None Include="..\README.MD">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
 	</ItemGroup>
-	
+
+	<ItemGroup>
+		<PackageReference Include="NVorbis" Version="0.10.5" />
+	</ItemGroup>
+
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;" />
 		<Exec Command="COPY &quot;$(TargetDir)$(TargetName).xml&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;" />
+		<Exec Command="COPY &quot;$(UserProfile)\.nuget\packages\nvorbis\0.10.5\lib\netstandard2.0\NVorbis.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;" />
 	</Target>
 </Project>

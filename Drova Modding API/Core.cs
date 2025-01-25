@@ -11,6 +11,8 @@ using Il2CppDrova;
 using Drova_Modding_API.Systems.Dialogues;
 using Il2CppDrova.MapDatabases;
 using Il2CppDrova.Items;
+using Drova_Modding_API.Systems.Audio.Dialogue;
+
 
 #if DEBUG
 using UnityEngine.InputSystem;
