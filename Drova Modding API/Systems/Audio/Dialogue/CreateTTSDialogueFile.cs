@@ -1,4 +1,5 @@
-﻿using Il2CppNodeCanvas.DialogueTrees;
+﻿using Drova_Modding_API.Systems.Editor;
+using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.Framework;
 using MelonLoader;
 using System.Text;
@@ -25,6 +26,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
         public void CreateDialogueFile()
         {
+            EditorManager.InEditor = true;
             Dictionary<string, int> actorMapping = [];
             ReadActorMappings(actorMapping);
 
@@ -194,6 +196,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             {
                 MelonLogger.Error("Error saving dialogue file: " + e);
             }
+            EditorManager.InEditor = false;
         }
 
         private static void ReadActorMappings(Dictionary<string, int> actorMapping)
@@ -233,6 +236,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             }
         }
 
-      
+
     }
 }

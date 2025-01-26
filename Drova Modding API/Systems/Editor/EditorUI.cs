@@ -121,10 +121,10 @@ namespace Drova_Modding_API.Systems.Editor
 
         private void OnEditNpc()
         {
-            MelonLogger.Msg("Editing NPC");
             _npcEditButton.gameObject.SetActive(false);
             _graphEditorManager.gameObject.SetActive(true);
             _graphEditorManager.Init(_currentSelectedActor);
+            EditorManager.InEditor = true;
         }
 
         [HideFromIl2Cpp]

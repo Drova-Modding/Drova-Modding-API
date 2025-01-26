@@ -29,6 +29,11 @@ namespace Drova_Modding_API.Systems.Editor
         public static bool AllowNpcSelection { get; set; } = true;
 
         /// <summary>
+        /// If an editor is currently open
+        /// </summary>
+        public static bool InEditor { get; set; } = false;
+
+        /// <summary>
         /// Trigger the event for when an NPC is selected
         /// </summary>
         /// <param name="actor">Npc to trigger</param>

@@ -70,11 +70,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// Factory for creating node editors
         /// </summary>
+        [HideFromIl2Cpp]
         public DrawNodeEditorFactory DrawNodeEditorFactory { get; set; }
 
         /// <summary>
         /// Factory for creating task editors
         /// </summary>
+        [HideFromIl2Cpp]
         public DrawTaskEditorFactory DrawTaskEditorFactory { get; set; }
 
         // Track whether the context menu is open
@@ -107,6 +109,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// List of node editors
         /// </summary>
+        [HideFromIl2Cpp]
         public Dictionary<string, DrawNodeEditor> DrawNodeEditors => drawNodeEditors;
 
         internal void Awake()
@@ -373,6 +376,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             _showSubContextMenu = false;
             drawNodeEditors.Clear();
             EditorManager.AllowNpcSelection = true;
+            EditorManager.InEditor = false;
             _scaleFactor = 1;
             _panOffset = new(200, -200);
             _isFirstDraw = true;
