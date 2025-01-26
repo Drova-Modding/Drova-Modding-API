@@ -8,14 +8,24 @@ namespace Drova_Modding_API.Systems.Audio
     public static class AudioManager
     {
         internal static IAudioConnector _dialogueAudioConnector = new DefaultDialogueAudioConnector(new FileAudioProvider());
+        internal static IAudioHandler _audioHandler = new DefaultAudioHandler();
 
         /// <summary>
         /// Replace the current DialougeAudioConnector with a new one
         /// </summary>
-        /// <param name="dialogueAudioConnector"></param>
-        public static void SetDialogueAudioConnector(IAudioConnector dialogueAudioConnector)
+        /// <param name="dialogueAudioConnector">new DialogueAudioConnector</param>
+        public static void ReplaceDialogueAudioConnector(IAudioConnector dialogueAudioConnector)
         {
             _dialogueAudioConnector = dialogueAudioConnector;
+        }
+
+        /// <summary>
+        /// Replace the current AudioHandler with a new one
+        /// </summary>
+        /// <param name="audioHandler">new AudioHandler</param>
+        public static void ReplaceAudioHandler(IAudioHandler audioHandler)
+        {
+            _audioHandler = audioHandler;
         }
 
         /// <summary>
