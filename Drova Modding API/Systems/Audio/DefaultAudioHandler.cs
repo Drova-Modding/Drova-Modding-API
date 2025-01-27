@@ -1,7 +1,9 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.DialogueTrees.UI;
+using Il2CppTMPro;
 using MelonLoader;
 using System.Collections;
+using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Audio
 {
@@ -38,7 +40,38 @@ namespace Drova_Modding_API.Systems.Audio
             }
             var actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
             actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);
-            actorSpeech.maxVisibleCharacters = text.Length;
+            actorSpeech.maxVisibleCharacters = 0;
+            actorSpeech.ForceMeshUpdate(false, false);
+
+            float audioLength = info.statement.audio.length;
+            MelonCoroutines.Start(TypeText(actorSpeech, text, audioLength));
+
+        }
+
+        /// <summary>
+        /// Coroutine to type the text based on the length of the audio clip
+        /// </summary>
+        /// <param name="actorSpeech">The TextMeshProUGUI component for the actor speech</param>
+        /// <param name="text">The text to type</param>
+        /// <param name="audioLength">The length of the audio clip</param>
+        /// <returns></returns>
+        private static IEnumerator TypeText(TextMeshProUGUI actorSpeech, string text, float audioLength)
+        {
+            int totalCharacters = text.Length;
+            float elapsedTime = 0f;
+            float timePerCharacter = audioLength / totalCharacters;
+
+            while (elapsedTime < audioLength)
+            {
+                elapsedTime += Time.deltaTime;
+                int visibleCharacters = Mathf.FloorToInt(elapsedTime / timePerCharacter);
+                actorSpeech.maxVisibleCharacters = Mathf.Clamp(visibleCharacters, 0, totalCharacters);
+                actorSpeech.ForceMeshUpdate(false, false);
+                yield return null;
+            }
+
+            // Ensure all characters are visible at the end
+            actorSpeech.maxVisibleCharacters = totalCharacters;
             actorSpeech.ForceMeshUpdate(false, false);
         }
     }
