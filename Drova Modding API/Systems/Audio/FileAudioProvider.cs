@@ -15,28 +15,28 @@ namespace Drova_Modding_API.Systems.Audio
         const string AudioFolderName = "Audio";
 
         /// <inheritdoc/>
-        public Task<AudioClip> GetAudioClip(string dialogeName, string globaPath, string locaKey, string actorName, int? choiceId)
+        public Task<AudioClip> GetAudioClip(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
         {
             //StringBuilder sb = new();
             //sb.Append("Loading audio file: ").Append(dialogeName).Append('_').Append(globaPath.Replace('/', '_')).Append('_').Append(locaKey).Append('_').Append(actorName);
             //MelonLoader.MelonLogger.Msg(sb.ToString());
-            string path = GetAudioFilePath(dialogeName, globaPath.Replace('/', '_'), locaKey, actorName, choiceId);
+            string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId);
             return LoadOggAudioAsync(path);
         }
 
-        private static string GetAudioFilePath(string dialogeName, string globaPath, string locaKey, string actorName, int? choiceId)
+        private static string GetAudioFilePath(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
         {
             if (choiceId.HasValue)
             {
-                return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_choice_{locaKey}_{globaPath}.ogg");
+                return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}.ogg");
             }
-            if (File.Exists(Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{globaPath}_{actorName}.ogg")))
+            if (File.Exists(Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}_{actorName}.ogg")))
             {
-                return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{globaPath}_{actorName}.ogg");
+                return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}_{actorName}.ogg");
             }
             else
             {
-                return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{globaPath}.ogg");
+                return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}.ogg");
             }
         }
 

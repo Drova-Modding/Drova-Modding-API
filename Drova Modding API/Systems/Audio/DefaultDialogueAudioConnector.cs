@@ -34,7 +34,7 @@ namespace Drova_Modding_API.Systems.Audio
                 DS_StatementNode statement = node.TryCast<DS_StatementNode>();
                 if (statement != null)
                 {
-                    taskToStatement.TryAdd(AudioProvider.GetAudioClip(statement.DLGTree.name, statement.statement.GlobalLocaPath, statement.statement.locaKey, statement.actorName, null), statement);
+                    taskToStatement.TryAdd(AudioProvider.GetAudioClip(statement.DLGTree.name, statement.statement.useGlobalLoca ? statement.statement.GlobalLocaPath : dialogueTree.LocaPath, statement.statement.locaKey, statement.actorName, null), statement);
                     continue;
                 }
                 DS_MultipleChoiceNode mutlipleChoice = node.TryCast<DS_MultipleChoiceNode>();
@@ -45,7 +45,7 @@ namespace Drova_Modding_API.Systems.Audio
                         DS_MultipleChoiceNode.Choice choice = mutlipleChoice.availableChoices[j];
                         if (choice.statement.audio != null) return;
 
-                        taskToChoice.TryAdd(AudioProvider.GetAudioClip(mutlipleChoice.DLGTree.name, choice.statement.GlobalLocaPath, choice.statement.locaKey, mutlipleChoice.actorName, j), choice);
+                        taskToChoice.TryAdd(AudioProvider.GetAudioClip(mutlipleChoice.DLGTree.name, choice.statement.useGlobalLoca ? choice.statement.GlobalLocaPath : dialogueTree.LocaPath, choice.statement.locaKey, mutlipleChoice.actorName, j), choice);
                     }
                 }
             }
@@ -56,7 +56,8 @@ namespace Drova_Modding_API.Systems.Audio
                 if (task.IsCompleted)
                 {
                     taskToStatement[task].statement.audio = task.Result;
-                } else
+                }
+                else
                 {
                     MelonLogger.Msg($"Failed to load audio for statement {taskToStatement[task].statement.locaKey}");
                 }

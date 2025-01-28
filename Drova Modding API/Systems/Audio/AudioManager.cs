@@ -36,7 +36,14 @@ namespace Drova_Modding_API.Systems.Audio
         /// <returns></returns>
         public static string GetUniqueIDStatement(DialogueTree tree, DS_StatementNode node)
         {
-            return $"{tree.name}_{node.statement.locaKey}_{node.statement.GlobalLocaPath.Replace('/', '_')}";
+            if (node.statement.useGlobalLoca)
+            {
+                return $"{tree.name}_{node.statement.locaKey}_{node.statement.GlobalLocaPath.Replace('/', '_')}";
+            }
+            else
+            {
+                return $"{tree.name}_{node.statement.locaKey}_{node.DLGTree.LocaPath.Replace('/', '_')}";
+            }
         }
 
         /// <summary>
@@ -48,7 +55,14 @@ namespace Drova_Modding_API.Systems.Audio
         /// <returns></returns>
         public static string GetUniqueIDStatementGeneric(DialogueTree tree, DS_StatementNode node, string actorName)
         {
-            return $"{tree.name}_{node.statement.locaKey}_{node.statement.GlobalLocaPath.Replace('/', '_')}_{actorName}";
+            if (node.statement.useGlobalLoca)
+            {
+                return $"{tree.name}_{node.statement.locaKey}_{node.statement.GlobalLocaPath.Replace('/', '_')}_{actorName}";
+            }
+            else
+            {
+                return $"{tree.name}_{node.statement.locaKey}_{node.DLGTree.LocaPath.Replace('/', '_')}_{actorName}";
+            }
         }
 
         /// <summary>
@@ -59,7 +73,14 @@ namespace Drova_Modding_API.Systems.Audio
         /// <returns></returns>
         public static string GetUniqueIDChoice(DialogueTree tree, DS_MultipleChoiceNode.Choice choice)
         {
-            return $"{tree.name}_{choice.statement.locaKey}_{choice.statement.GlobalLocaPath.Replace('/', '_')}";
+            if (choice.statement.useGlobalLoca)
+            {
+                return $"{tree.name}_{choice.statement.locaKey}_{choice.statement.GlobalLocaPath.Replace('/', '_')}";
+            }
+            else
+            {
+                return $"{tree.name}_{choice.statement.locaKey}_{tree.LocaPath.Replace('/', '_')}";
+            }
         }
     }
 }
