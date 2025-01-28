@@ -17,9 +17,9 @@ namespace Drova_Modding_API.Systems.Audio
         /// <inheritdoc/>
         public Task<AudioClip> GetAudioClip(string dialogeName, string globaPath, string locaKey, string actorName, int? choiceId)
         {
-            StringBuilder sb = new();
-            sb.Append("Loading audio file: ").Append(dialogeName).Append('_').Append(globaPath.Replace('/', '_')).Append('_').Append(locaKey).Append('_').Append(actorName);
-            MelonLoader.MelonLogger.Msg(sb.ToString());
+            //StringBuilder sb = new();
+            //sb.Append("Loading audio file: ").Append(dialogeName).Append('_').Append(globaPath.Replace('/', '_')).Append('_').Append(locaKey).Append('_').Append(actorName);
+            //MelonLoader.MelonLogger.Msg(sb.ToString());
             string path = GetAudioFilePath(dialogeName, globaPath.Replace('/', '_'), locaKey, actorName, choiceId);
             return LoadOggAudioAsync(path);
         }

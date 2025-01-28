@@ -15,11 +15,12 @@ namespace Drova_Modding_API.Systems.Audio
     {
         public void HandleMultipleChoiceRequest(MultipleChoiceRequestInfo info, DS_DialogueUGUI dialogueUGUI)
         {
-            throw new NotImplementedException();
+            //info.
         }
 
         public void HandleSubtitleRequest(SubtitlesRequestInfo info, DS_DialogueUGUI dialogueUGUI)
         {
+            //MelonLogger.Msg($"Handling subtitle request for: {info.actor.name}");
             MelonCoroutines.Start(WaitForWindowAndSetup(info, dialogueUGUI));
         }
 

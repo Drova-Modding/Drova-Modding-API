@@ -478,8 +478,11 @@
 		<Compile Include="Generation\AddressableGeneration.cs" />
 		<Compile Include="GlobalFields\SceneNames.cs" />
 		<Compile Include="Patches\AreaNamePatch.cs" />
+		<Compile Include="Patches\DialogueTreePatch.cs" />
 		<Compile Include="Patches\DialougeTreePatch.cs" />
 		<Compile Include="Patches\DS_DialogueUGUI_Patch.cs" />
+		<Compile Include="Patches\DS_MultipleChoiceNodePatch.cs" />
+		<Compile Include="Patches\DS_Statement_Patch.cs" />
 		<Compile Include="Patches\GUI_Window_Options.cs" />
 		<Compile Include="Patches\GUI_Window_Patch.cs" />
 		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
