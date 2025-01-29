@@ -70,8 +70,8 @@ namespace Drova_Modding_API
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
-                //var creation = new CreateTTSDialogueFile();
-                //creation.CreateDialogueFile();
+                var creation = new CreateTTSDialogueFile();
+                creation.CreateDialogueFile();
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
 #endif

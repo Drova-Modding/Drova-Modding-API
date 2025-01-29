@@ -491,6 +491,7 @@
 		<Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
 		<Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
 		<Compile Include="Systems\Audio\Dialogue\CreateTTSDialogueFile.cs" />
+		<Compile Include="Systems\Audio\Dialogue\DialogueTree.cs" />
 		<Compile Include="Systems\Audio\FileAudioProvider.cs" />
 		<Compile Include="Systems\Audio\IAudioConnector.cs" />
 		<Compile Include="Systems\Audio\IAudioHandler.cs" />
