@@ -490,9 +490,24 @@
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
 		<Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
-		<Compile Include="Systems\Audio\Dialogue\BertineSpiderDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\GateNementonNorthDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\GateNementonSouthDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\BanditDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\BanditMineHauerDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\BertineSpiderDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\CombatDialogues.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\CraftingReactionDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateArenaDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateBrutusMine.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateConorDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateDeepMineEntryDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateMineDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateMineStorageDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonFireFestivalLukan.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonNorthDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonSouthDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampDruidDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampSeanDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuinCampUpperTownIveraDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\LaudineDialogue.cs" />
 		<Compile Include="Systems\Audio\FileAudioProvider.cs" />
 		<Compile Include="Systems\Audio\IAudioConnector.cs" />
 		<Compile Include="Systems\Audio\IAudioHandler.cs" />
@@ -541,12 +556,12 @@
 	</ItemGroup>
 	<ItemGroup Condition="'$(Configuration)'=='Debug'">
 		<Compile Include="Systems\Audio\Dialogue\CreateTTSDialogueFile.cs" />
-		<Compile Include="Systems\Audio\Dialogue\CrimeDialogues.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\CrimeDialogues.cs" />
 		<Compile Include="Systems\Audio\Dialogue\DialogueNameAndFactions.cs" />
-		<Compile Include="Systems\Audio\Dialogue\IGenericDialogueHandler.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\IGenericDialogueHandler.cs" />
 		<Compile Include="Systems\Audio\Dialogue\DialogueUtils.cs" />
-		<Compile Include="Systems\Audio\Dialogue\MusicReactionDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\RedTowerDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\MusicReactionDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\RedTowerDialogue.cs" />
 		<Compile Include="Systems\Dialogues\Editor\DrawNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\DrawTaskEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Factories\DrawTaskEditorFactory.cs" />

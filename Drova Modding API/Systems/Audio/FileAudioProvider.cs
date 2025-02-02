@@ -63,8 +63,8 @@ namespace Drova_Modding_API.Systems.Audio
 
         private class CachedAudio
         {
-            public AudioClip AudioClip;
-            public bool IsLoaded;
+            internal AudioClip AudioClip;
+            internal bool IsLoaded;
         }
     }
 }

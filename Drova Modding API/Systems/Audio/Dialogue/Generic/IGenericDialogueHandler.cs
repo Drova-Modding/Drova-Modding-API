@@ -1,7 +1,7 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
 using System.Text;
 
-namespace Drova_Modding_API.Systems.Audio.Dialogue
+namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
 {
     internal interface IGenericDialogueHandler
     {

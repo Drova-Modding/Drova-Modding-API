@@ -1,13 +1,19 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace Drova_Modding_API.Systems.Audio.Dialogue
+namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
 {
-    internal class MusicReactionDialogue : IGenericDialogueHandler
+    internal class CombatDialogues : IGenericDialogueHandler
     {
+        private const string COMBAT_DIALOGUE = "DT_WorldDialogue_PlayerLoseFight";
+        private const string COMBAT_DIALOGUE_1 = "DT_Generic_Combat_WorldDialogues";
         public bool CanHandleDialogue(DialogueTree tree)
         {
-            return tree.name.Contains("MusicReaction");
+            return tree.name == COMBAT_DIALOGUE || tree.name == COMBAT_DIALOGUE_1;
         }
 
         public void HandleDialogue(DialogueTree tree, StringBuilder dialogStringBuilder, Dictionary<string, int> actorMapping)
@@ -31,6 +37,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         .Append(DialogueUtils.STYLE)
                         .Append(DialogueUtils.SEPERATOR)
                         .AppendLine();
+
                 }
             }
         }

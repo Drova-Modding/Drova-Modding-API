@@ -1,22 +1,23 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
 using System.Text;
 
-namespace Drova_Modding_API.Systems.Audio.Dialogue
+namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
 {
-    internal class GateNementonNorthDialogue : IGenericDialogueHandler
+    internal class GateArenaDialogue : IGenericDialogueHandler
     {
-        private const string GATE_NEMENTON_NORTH = "Gate_Nemeton_North";
+        private const string GATE_ARENA = "DT_Gate_DAS_Arena_Entry";
         public bool CanHandleDialogue(DialogueTree tree)
         {
-            return tree.name.Contains(GATE_NEMENTON_NORTH);
+            return tree.name == GATE_ARENA;
         }
+
         public void HandleDialogue(DialogueTree tree, StringBuilder dialogStringBuilder, Dictionary<string, int> actorMapping)
         {
             for (int i = 0; i < tree.allNodes.Count; i++)
             {
                 DS_StatementNode statementNode = tree.allNodes[i].TryCast<DS_StatementNode>();
                 if (statementNode == null) continue;
-                string actorName = DialogueNameAndFactions.NEMENTON_GATE_NORTH;
+                string actorName = DialogueNameAndFactions.ARENA_GATE_JURI;
                 dialogStringBuilder
                     .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
                     .Append(DialogueUtils.SEPERATOR)
@@ -31,7 +32,5 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     .AppendLine();
             }
         }
-    }
-    {
     }
 }

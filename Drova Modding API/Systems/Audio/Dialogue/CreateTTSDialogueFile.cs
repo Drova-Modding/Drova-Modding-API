@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.Systems.Editor;
+﻿using Drova_Modding_API.Systems.Audio.Dialogue.Generic;
+using Drova_Modding_API.Systems.Editor;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.Framework;
 using MelonLoader;
@@ -26,8 +27,23 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             new MusicReactionDialogue(),
             new CrimeDialogues(),
             new GateNementonSouthDialogue(),
-            new BertineSpiderDialogue(),
             new GateNementonNorthDialogue(),
+            new GateNementonFireFestivalLukan(),
+            new LaudineDialogue(),
+            new BertineSpiderDialogue(),
+            new GateBrutusMine(),
+            new GateRuincampDruidDialogue(),
+            new GateMineDialogue(),
+            new GateDeepMineEntryDialogue(),
+            new CraftingReactionDialogue(),
+            new GateArenaDialogue(),
+            new GateConorDialogue(),
+            new BanditDialogue(),
+            new BanditMineHauerDialogue(),
+            new CombatDialogues(),
+            new GateRuincampSeanDialogue(),
+            new GateRuinCampUpperTownIveraDialogue(),
+            new GateMineStorageDialogue(),
         ];
 
         private static DialogueTree[] GatherAllDialogueTrees()
