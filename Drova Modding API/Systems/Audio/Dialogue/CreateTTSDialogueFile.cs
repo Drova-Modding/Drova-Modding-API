@@ -2,7 +2,6 @@
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.Framework;
 using MelonLoader;
-using System.Linq;
 using System.Text;
 using UnityEngine;
 using static Il2CppNodeCanvas.DialogueTrees.DialogueTree;
@@ -14,15 +13,22 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
     /// </summary>
     internal class CreateTTSDialogueFile
     {
-        public const char SEPERATOR = '|';
-        public const string EMOTION = "Neutral";
-        public const string STYLE = "Default";
-        public const string FILE_NAME = "DialogueFile.txt";
-        public const string MAPPING_FILE_NAME = "mapping.txt";
+
+        private const string FILE_NAME = "DialogueFile.txt";
+        private const string MAPPING_FILE_NAME = "mapping.txt";
         private const string NPC = "NPC";
         private const string TEACHER = "TEACHER";
         private const string INSTIGATOR = "INSTIGATOR";
-        public static readonly string[] GENERICS_NAMES = [NPC, TEACHER, INSTIGATOR];
+        private static readonly string[] GENERICS_NAMES = [NPC, TEACHER, INSTIGATOR];
+        private readonly List<IGenericDialogueHandler> genericDialogueHandlers =
+        [
+            new RedTowerDialogue(),
+            new MusicReactionDialogue(),
+            new CrimeDialogues(),
+            new GateNementonSouthDialogue(),
+            new BertineSpiderDialogue(),
+            new GateNementonNorthDialogue(),
+        ];
 
         private static DialogueTree[] GatherAllDialogueTrees()
         {
@@ -56,7 +62,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     DS_StatementNode statement = node.TryCast<DS_StatementNode>();
                     if (statement != null)
                     {
-                        if (GENERICS_NAMES.Any(n => n == statement.actorName))
+                        if (GENERICS_NAMES.Any(n => n.Contains(statement.actorName, StringComparison.OrdinalIgnoreCase)))
                         {
                             MelonLogger.Msg("Generic NPC in " + dialogueTree.name + " with actor id: " + statement._actorParameterID);
                             if (!genericDialogues.ContainsKey(dialogueTree.name))
@@ -71,16 +77,16 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         if (loca.StartsWith("[LOCA] Key not found")) continue;
 
                         sb
-                            .Append(MapActorNameToNumber(actorMapping, statement.actorName))
-                            .Append(SEPERATOR)
+                            .Append(DialogueUtils.MapActorNameToNumber(actorMapping, statement.actorName))
+                            .Append(DialogueUtils.SEPERATOR)
                             .Append(loca)
-                            .Append(SEPERATOR)
+                            .Append(DialogueUtils.SEPERATOR)
                             .Append(AudioManager.GetUniqueIDStatement(dialogueTree, statement))
-                            .Append(SEPERATOR)
-                            .Append(EMOTION)
-                            .Append(SEPERATOR)
-                            .Append(STYLE)
-                            .Append(SEPERATOR).AppendLine();
+                            .Append(DialogueUtils.SEPERATOR)
+                            .Append(DialogueUtils.EMOTION)
+                            .Append(DialogueUtils.SEPERATOR)
+                            .Append(DialogueUtils.STYLE)
+                            .Append(DialogueUtils.SEPERATOR).AppendLine();
                         continue;
                     }
 
@@ -91,22 +97,21 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         {
                             DS_MultipleChoiceNode.Choice choice = multipleChoice.availableChoices[k];
                             sb
-                               .Append(MapActorNameToNumber(actorMapping, multipleChoice.actorName))
-                               .Append(SEPERATOR)
+                               .Append(DialogueUtils.MapActorNameToNumber(actorMapping, multipleChoice.actorName))
+                               .Append(DialogueUtils.SEPERATOR)
                                .Append(multipleChoice.GetLocalizedString(choice.statement))
-                               .Append(SEPERATOR)
+                               .Append(DialogueUtils.SEPERATOR)
                                .Append(AudioManager.GetUniqueIDChoice(dialogueTree, choice))
-                               .Append(SEPERATOR)
-                               .Append(EMOTION)
-                               .Append(SEPERATOR)
-                               .Append(STYLE)
-                               .Append(SEPERATOR)
+                               .Append(DialogueUtils.SEPERATOR)
+                               .Append(DialogueUtils.EMOTION)
+                               .Append(DialogueUtils.SEPERATOR)
+                               .Append(DialogueUtils.STYLE)
+                               .Append(DialogueUtils.SEPERATOR)
                                .AppendLine();
                         }
                     }
                 }
             }
-
 
             HashSet<string> playerGeneratedDialogues = [];
             HashSet<string> handledGenerics = [];
@@ -137,14 +142,14 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         // first check try to recover at this point by searching the main graph
                         if (genericName.Length == 0)
                         {
-                            var holdingTree = dialogueTrees
+                            DialogueTree holdingTree = dialogueTrees
                                  .FirstOrDefault(d => d.allNodes.ToArray().ToList()
                                  .Find(node => node.TryCast<SubDialogueTree>() != null && node.Cast<SubDialogueTree>().subGraph?.name == tree.name
                                  ) != null
                              );
                             if (holdingTree != null)
                             {
-                                var subTreeUnderHolding = holdingTree.allNodes.ToArray().ToList()
+                                SubDialogueTree subTreeUnderHolding = holdingTree.allNodes.ToArray().ToList()
                                      .Find(node => node.TryCast<SubDialogueTree>() != null && node.Cast<SubDialogueTree>().subGraph?.name == tree.name)
                                      .Cast<SubDialogueTree>();
                                 subTreeUnderHolding.SetParametersMap();
@@ -155,7 +160,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         }
 
                         // Dialogue which is used by different systems, currently unsupported
-                        if (genericName.Length == 0 || GENERICS_NAMES.Any(n => n == genericName))
+                        if (genericName.Length == 0 || GENERICS_NAMES.Any(n => n.Contains(genericName, StringComparison.OrdinalIgnoreCase)))
                         {
                             MelonLogger.Warning("No NPC name found for " + subTree.subGraph.name);
                             continue;
@@ -169,25 +174,25 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             {
                                 string actorName = statement.actorName;
                                 // Skip already player generated dialogues
-                                if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && playerGeneratedDialogues.Contains(subTree.subGraph.name))
+                                if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach")))
                                 {
                                     continue;
                                 }
-                                if (GENERICS_NAMES.Any(n => n == actorName))
+                                if (GENERICS_NAMES.Any(n => n.Contains(actorName, StringComparison.OrdinalIgnoreCase)))
                                 {
                                     actorName = genericName;
                                 }
                                 sb
-                                    .Append(MapActorNameToNumber(actorMapping, actorName))
-                                    .Append(SEPERATOR)
+                                    .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
+                                    .Append(DialogueUtils.SEPERATOR)
                                     .Append(statement.GetLocalizedString())
-                                    .Append(SEPERATOR)
+                                    .Append(DialogueUtils.SEPERATOR)
                                     .Append(AudioManager.GetUniqueIDStatementGeneric(subTree.subGraph, statement, actorName))
-                                    .Append(SEPERATOR)
-                                    .Append(EMOTION)
-                                    .Append(SEPERATOR)
-                                    .Append(STYLE)
-                                    .Append(SEPERATOR)
+                                    .Append(DialogueUtils.SEPERATOR)
+                                    .Append(DialogueUtils.EMOTION)
+                                    .Append(DialogueUtils.SEPERATOR)
+                                    .Append(DialogueUtils.STYLE)
+                                    .Append(DialogueUtils.SEPERATOR)
                                     .AppendLine();
                                 continue;
                             }
@@ -204,7 +209,8 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 }
 
             }
-            var sbGneric = new StringBuilder();
+            StringBuilder sbGneric = new();
+            StringBuilder sbGenericTreeNames = new();
 
             for (int i = 0; i < genericDialogues.Count; i++)
             {
@@ -214,27 +220,48 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     MelonLogger.Msg("Skipping generic dialog for " + keyValue.Key + " because it was already generated");
                     continue;
                 }
-                MelonLogger.Msg("Generic Dialog for " + keyValue.Key + " with " + keyValue.Value.allNodes.Count);
-                for (int j = 0; j < keyValue.Value.allNodes.Count; j++)
+                bool isHandledByGenericHandler = false;
+                for (int j = 0; j < genericDialogueHandlers.Count; j++)
                 {
-                    Node node = keyValue.Value.allNodes[j];
-                    DS_StatementNode statement = node.TryCast<DS_StatementNode>();
-                    if (statement != null)
+                    if (genericDialogueHandlers[j].CanHandleDialogue(keyValue.Value))
                     {
-                        sbGneric
-                            .Append(statement.actorName)
-                            .Append(SEPERATOR)
-                            .Append(statement.GetLocalizedString())
-                            .Append(SEPERATOR)
-                            .Append(AudioManager.GetUniqueIDStatement(keyValue.Value, statement))
-                            .Append(SEPERATOR)
-                            .Append(EMOTION)
-                            .Append(SEPERATOR)
-                            .Append(STYLE)
-                            .Append(SEPERATOR)
-                            .AppendLine();
-                        continue;
+                        genericDialogueHandlers[j].HandleDialogue(keyValue.Value, sb, actorMapping);
+                        isHandledByGenericHandler = true;
+                        break;
                     }
+                }
+                if (isHandledByGenericHandler) continue;
+                MelonLogger.Msg("Generic Dialog for " + keyValue.Key + " with " + keyValue.Value.allNodes.Count);
+                string genericName = "";
+                CheckIfLocaPathIncludesNpc(keyValue.Value, actorMapping, ref genericName);
+                if (genericName.Length > 0)
+                {
+                    for (int j = 0; j < keyValue.Value.allNodes.Count; j++)
+                    {
+                        Node node = keyValue.Value.allNodes[j];
+                        DS_StatementNode statement = node.TryCast<DS_StatementNode>();
+                        if (statement != null)
+                        {
+                            sb
+                                .Append(genericName)
+                                .Append(DialogueUtils.SEPERATOR)
+                                .Append(statement.GetLocalizedString())
+                                .Append(DialogueUtils.SEPERATOR)
+                                .Append(AudioManager.GetUniqueIDStatement(keyValue.Value, statement))
+                                .Append(DialogueUtils.SEPERATOR)
+                                .Append(DialogueUtils.EMOTION)
+                                .Append(DialogueUtils.SEPERATOR)
+                                .Append(DialogueUtils.STYLE)
+                                .Append(DialogueUtils.SEPERATOR)
+                                .AppendLine();
+                            continue;
+                        }
+                    }
+                }
+                else
+                {
+                    sbGenericTreeNames.Append(keyValue.Key).AppendLine();
+                    CreateGenericDialog(sbGneric, keyValue);
                 }
             }
 
@@ -242,22 +269,60 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             Directory.CreateDirectory(path);
             string savePath = Path.Combine(path, FILE_NAME);
             string genericSavePath = Path.Combine(path, "Generic_" + FILE_NAME);
+            string genericSaveDialogueTreeNamesPath = Path.Combine(path, "Generic_ALL_" + FILE_NAME);
             try
             {
                 File.WriteAllText(savePath, sb.ToString());
                 File.WriteAllText(genericSavePath, sbGneric.ToString());
+                File.WriteAllText(genericSaveDialogueTreeNamesPath, sbGenericTreeNames.ToString());
             }
             catch (Exception e)
             {
                 MelonLogger.Error("Error saving dialogue file: " + e);
             }
 
-
-
             EditorManager.InEditor = false;
         }
 
-        private void ProcessSubDialogueTree(SubDialogueTree subTree, Dictionary<string, int> actorMapping, StringBuilder sb, string genericName, HashSet<string> playerGeneratedDialogues, HashSet<string> handledGeneric)
+        private static void CreateGenericDialog(StringBuilder sbGneric, KeyValuePair<string, DialogueTree> keyValue)
+        {
+            for (int j = 0; j < keyValue.Value.allNodes.Count; j++)
+            {
+                Node node = keyValue.Value.allNodes[j];
+                DS_StatementNode statement = node.TryCast<DS_StatementNode>();
+                if (statement != null)
+                {
+                    sbGneric
+                        .Append(statement.actorName)
+                        .Append(DialogueUtils.SEPERATOR)
+                        .Append(statement.GetLocalizedString())
+                        .Append(DialogueUtils.SEPERATOR)
+                        .Append(AudioManager.GetUniqueIDStatement(keyValue.Value, statement))
+                        .Append(DialogueUtils.SEPERATOR)
+                        .Append(DialogueUtils.EMOTION)
+                        .Append(DialogueUtils.SEPERATOR)
+                        .Append(DialogueUtils.STYLE)
+                        .Append(DialogueUtils.SEPERATOR)
+                        .AppendLine();
+                    continue;
+                }
+            }
+        }
+
+        private static void CheckIfLocaPathIncludesNpc(DialogueTree tree, Dictionary<string, int> actorMapping, ref string genericName)
+        {
+            for (int i = 0; i < actorMapping.Count; i++)
+            {
+                string actorName = actorMapping.Keys.ElementAt(i);
+                if (tree.LocaPath.Contains(actorName))
+                {
+                    genericName = actorName;
+                    break;
+                }
+            }
+        }
+
+        private static void ProcessSubDialogueTree(SubDialogueTree subTree, Dictionary<string, int> actorMapping, StringBuilder sb, string genericName, HashSet<string> playerGeneratedDialogues, HashSet<string> handledGeneric)
         {
             if (subTree.subGraph != null)
             {
@@ -269,25 +334,25 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     {
                         string actorName = statement.actorName;
                         // Skip already player generated dialogues
-                        if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && playerGeneratedDialogues.Contains(subTree.subGraph.name))
+                        if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach")))
                         {
                             continue;
                         }
-                        if (GENERICS_NAMES.Any(n => n == actorName))
+                        if (GENERICS_NAMES.Any(n => n.Contains(actorName, StringComparison.OrdinalIgnoreCase)))
                         {
                             actorName = genericName;
                         }
                         sb
-                        .Append(MapActorNameToNumber(actorMapping, actorName))
-                        .Append(SEPERATOR)
+                        .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
+                        .Append(DialogueUtils.SEPERATOR)
                         .Append(statement.GetLocalizedString())
-                        .Append(SEPERATOR)
+                        .Append(DialogueUtils.SEPERATOR)
                         .Append(AudioManager.GetUniqueIDStatement(subTree.subGraph, statement))
-                        .Append(SEPERATOR)
-                        .Append(EMOTION)
-                        .Append(SEPERATOR)
-                        .Append(STYLE)
-                        .Append(SEPERATOR)
+                        .Append(DialogueUtils.SEPERATOR)
+                        .Append(DialogueUtils.EMOTION)
+                        .Append(DialogueUtils.SEPERATOR)
+                        .Append(DialogueUtils.STYLE)
+                        .Append(DialogueUtils.SEPERATOR)
                         .AppendLine();
                     }
                     else
@@ -310,7 +375,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             {
                 //ActorParameter parameterById1 = subTree.currentInstance.GetParameterByID(item.key);
                 ActorParameter parameterById2 = dLGTree.GetParameterByID(item.Value);
-                if (!GENERICS_NAMES.Any(n => n == parameterById2.name))
+                if (!GENERICS_NAMES.Any(n => n.Contains(parameterById2.name, StringComparison.OrdinalIgnoreCase)))
                 {
                     genericName = parameterById2.name;
                 }
@@ -332,7 +397,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 for (int i = 0; i < lines.Length; i++)
                 {
                     string line = lines[i];
-                    string[] split = line.Split(SEPERATOR);
+                    string[] split = line.Split(DialogueUtils.SEPERATOR);
                     if (split.Length != 2)
                     {
                         MelonLogger.Error("Invalid mapping line: " + line);
@@ -346,20 +411,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 MelonLogger.Error("No mapping file found at: " + pathToMapping);
             }
         }
-
-        private string MapActorNameToNumber(Dictionary<string, int> actorMapping, string actorName)
-        {
-            if (actorMapping.ContainsKey(actorName))
-            {
-                return actorMapping[actorName].ToString();
-            }
-            else
-            {
-                MelonLogger.Error("No mapping found for actor: " + actorName);
-                return "0";
-            }
-        }
-
 
     }
 }

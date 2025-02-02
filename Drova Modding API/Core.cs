@@ -10,16 +10,14 @@ using MelonLoader;
 using Il2CppDrova;
 using Drova_Modding_API.Systems.Dialogues;
 using Il2CppDrova.MapDatabases;
-using Il2CppDrova.Items;
 using Drova_Modding_API.Systems.Audio.Dialogue;
-
 
 #if DEBUG
 using UnityEngine.InputSystem;
 using System.Collections;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.3.0", "Drova Modding", null)]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 6, 6, true)]
 [assembly: MelonPriority(-1)]
@@ -46,7 +44,6 @@ namespace Drova_Modding_API
 #endif
             SystemInit.RegisterStores();
             LoggerInstance.Msg("Initialized Modding API.");
-            LoggerInstance.Msg(typeof(Item));
             OptionMenuAccess.Instance.OnOptionMenuClose += () =>
             {
                 if (!_inMainMenu) InputActionRegister.Instance.EnableGameplayActions();
@@ -70,7 +67,7 @@ namespace Drova_Modding_API
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
-                var creation = new CreateTTSDialogueFile();
+                CreateTTSDialogueFile creation = new();
                 creation.CreateDialogueFile();
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);

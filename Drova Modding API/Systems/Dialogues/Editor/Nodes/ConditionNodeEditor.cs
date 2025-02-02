@@ -1,5 +1,6 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppNodeCanvas.DialogueTrees;
+using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
@@ -23,6 +24,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             if (_castedNode._condition != null)
             {
                 _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedNode._condition.GetIl2CppType());
+                if (_drawTaskEditor == null)
+                {
+                    MelonLogger.Warning("No DrawTaskEditor found for type: " + _castedNode._condition.GetIl2CppType());
+                    return;
+                }
                 _drawTaskEditor.Task = _castedNode._condition;
                 _drawTaskEditor.GraphEditorManager = GraphEditorManager;
                 _drawTaskEditor.Init();

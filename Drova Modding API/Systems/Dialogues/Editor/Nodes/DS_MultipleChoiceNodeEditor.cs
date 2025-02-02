@@ -52,10 +52,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
                 DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
-                GUI.Box(new Rect(position.x + 5, position.y + step, 340, 70), $"Choice {i}:", _castedNode.GetLocalizedString(choice.statement));
+                GUI.Box(new Rect(position.x + 5, position.y + step, 340, 70), new GUIContent($"Choice {i}:", _castedNode.GetLocalizedString(choice.statement)));
                 step += 5;
-                GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Globapath:");
-                choice.statement._globalPath = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._globalPath);
+                if (choice.statement.useGlobalLoca)
+                {
+                    GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Globapath:");
+                    choice.statement._globalPath = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._globalPath);
+                }
+                else
+                {
+                    GUI.Label(new Rect(position.x + 5, position.y + step, 300, 20), "LocaPath: " + _castedNode.DLGTree.LocaPath);
+                }
                 step += 35;
                 GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Statement:");
                 choice.statement._locaKey = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._locaKey);

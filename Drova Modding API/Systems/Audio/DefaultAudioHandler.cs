@@ -32,14 +32,14 @@ namespace Drova_Modding_API.Systems.Audio
         /// <returns></returns>
         private static IEnumerator WaitForWindowAndSetup(SubtitlesRequestInfo info, DS_DialogueUGUI dialogueUGUI)
         {
-            var text = info.statement.text;
-            var currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
+            string text = info.statement.text;
+            Il2CppDrova.GUI.Dialogue.DS_DialogueWindow currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
             while (currentWindow == null)
             {
                 yield return null;
                 currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
             }
-            var actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
+            TextMeshProUGUI actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
             actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);
             actorSpeech.maxVisibleCharacters = 0;
             actorSpeech.ForceMeshUpdate(false, false);
@@ -56,8 +56,8 @@ namespace Drova_Modding_API.Systems.Audio
         /// <returns></returns>
         private static IEnumerator TypeText(DS_DialogueUGUI dialogueUGUI, string text, float audioLength)
         {
-            var currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
-            var actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
+            Il2CppDrova.GUI.Dialogue.DS_DialogueWindow currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
+            TextMeshProUGUI actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
 
             int totalCharacters = text.Length;
             float elapsedTime = 0f;

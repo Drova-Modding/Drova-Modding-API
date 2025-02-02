@@ -32,7 +32,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
 
             // Editable TextFields for type and property
-            CastedNode.statement._globalPath = GUI.TextField(new Rect(position.x + 5, position.y + 25, nodeSize.x - 10, 20), CastedNode.statement._globalPath);
+            if (CastedNode.statement.useGlobalLoca)
+            {
+                CastedNode.statement._globalPath = GUI.TextField(new Rect(position.x + 5, position.y + 25, nodeSize.x - 10, 20), CastedNode.statement._globalPath);
+            }
+            else
+            {
+                GUI.Label(new Rect(position.x + 5, position.y + 25, nodeSize.x - 10, 20), "LocaPath: " + CastedNode.DLGTree.LocaPath);
+            }
             CastedNode.statement._locaKey = GUI.TextField(new Rect(position.x + 5, position.y + 55, nodeSize.x - 10, 20), CastedNode.statement._locaKey);
 
             GUI.color = previousColor;

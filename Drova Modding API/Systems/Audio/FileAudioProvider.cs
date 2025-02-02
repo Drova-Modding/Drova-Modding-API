@@ -13,13 +13,14 @@ namespace Drova_Modding_API.Systems.Audio
         /// Path to the audio files
         /// </summary>
         const string AudioFolderName = "Audio";
+        readonly Dictionary<string, CachedAudio> actorToCachedAudio = [];
 
         /// <inheritdoc/>
         public Task<AudioClip> GetAudioClip(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
         {
-            //StringBuilder sb = new();
-            //sb.Append("Loading audio file: ").Append(dialogeName).Append('_').Append(globaPath.Replace('/', '_')).Append('_').Append(locaKey).Append('_').Append(actorName);
-            //MelonLoader.MelonLogger.Msg(sb.ToString());
+            StringBuilder sb = new();
+            sb.Append("Trying to load audio clip for: ").Append(dialogeName).Append('_').Append(filePath.Replace('/', '_')).Append('_').Append(locaKey).Append('_').Append(actorName);
+            MelonLoader.MelonLogger.Msg(sb.ToString());
             string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId);
             return LoadOggAudioAsync(path);
         }
@@ -48,7 +49,7 @@ namespace Drova_Modding_API.Systems.Audio
                 {
                     return null;
                 }
-                using var vorbis = new VorbisReader(path);
+                using VorbisReader vorbis = new(path);
                 int sampleRate = vorbis.SampleRate;
                 int channels = vorbis.Channels;
                 float[] samples = new float[vorbis.TotalSamples * channels];
@@ -58,6 +59,12 @@ namespace Drova_Modding_API.Systems.Audio
                 audioClip.SetData(samples, 0);
                 return audioClip;
             });
+        }
+
+        private class CachedAudio
+        {
+            public AudioClip AudioClip;
+            public bool IsLoaded;
         }
     }
 }
