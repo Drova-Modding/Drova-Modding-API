@@ -1,6 +1,7 @@
 ﻿using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
 using HarmonyLib;
+using Il2CppDrova.DialogueNew;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.Framework;
 
@@ -23,7 +24,7 @@ internal static class DialogueTreePatch_Subtitles
 {
     private static void Prefix(SubtitlesRequestInfo info, DialogueTree __instance)
     {
-        MelonLoader.MelonLogger.Msg($"Handling subtitle request in DialogueTree for: {info.actor.name}");
+        MelonLoader.MelonLogger.Msg($"Handling subtitle request in DialogueTree for: {info.actor.TryCast<DS_DialogueActor>().name}");
         if (__instance.OnSubtitlesRequest != null)
         {
             MelonLoader.MelonLogger.Msg("Invoking OnSubtitlesRequest");

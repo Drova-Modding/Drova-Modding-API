@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.Systems.Audio.Dialogue.Generic;
+﻿using Drova_Modding_API.Systems.Audio.Dialogue.Dynamic;
+using Drova_Modding_API.Systems.Audio.Dialogue.Generic;
 using Drova_Modding_API.Systems.Editor;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.Framework;
@@ -16,7 +17,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
     {
 
         private const string FILE_NAME = "DialogueFile.txt";
-        private const string MAPPING_FILE_NAME = "mapping.txt";
         private const string NPC = "NPC";
         private const string TEACHER = "TEACHER";
         private const string INSTIGATOR = "INSTIGATOR";
@@ -44,6 +44,13 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             new GateRuincampSeanDialogue(),
             new GateRuinCampUpperTownIveraDialogue(),
             new GateMineStorageDialogue(),
+            new AfterCombatPlayerDialogue(),
+            new GreatTuskDialogue(),
+            new PlayerOustideSoftCircleDialogue(),
+            new ArenaViewerDialogue(),
+            new ArenaFightsDialogue(),
+            new GateNementonHolyHain(),
+            new FrogDialogue(),
         ];
 
         private static DialogueTree[] GatherAllDialogueTrees()
@@ -51,21 +58,28 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             return Resources.FindObjectsOfTypeAll<DialogueTree>();
         }
 
-        public void CreateDialogueFile()
+        private StringBuilder sb = new();
+        private StringBuilder sbGneric = new();
+        private StringBuilder sbGenericTreeNames = new();
+
+        Dictionary<string, int> actorMapping = [];
+
+        public void Init()
         {
             EditorManager.InEditor = true;
-            Dictionary<string, int> actorMapping = [];
-            ReadActorMappings(actorMapping);
+            DialogueUtils.ReadActorMappings(actorMapping);
+        }
 
+        public void CreateDialogueFile()
+        {
             Dictionary<string, DialogueTree> genericDialogues = [];
-            StringBuilder sb = new();
             DialogueTree[] dialogueTrees = GatherAllDialogueTrees();
             for (int i = 0; i < dialogueTrees.Length; i++)
             {
                 DialogueTree dialogueTree = dialogueTrees[i];
                 if (dialogueTree.IsTestOrDebugDialogue)
                 {
-                    MelonLogger.Msg("Skipping creation for test/debug: " + dialogueTree.name);
+                    //MelonLogger.Msg("Skipping creation for test/debug: " + dialogueTree.name);
                     continue;
                 };
                 //MelonLogger.Msg("Creating dialogue file for: " + dialogueTree.name);
@@ -80,7 +94,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     {
                         if (GENERICS_NAMES.Any(n => n.Contains(statement.actorName, StringComparison.OrdinalIgnoreCase)))
                         {
-                            MelonLogger.Msg("Generic NPC in " + dialogueTree.name + " with actor id: " + statement._actorParameterID);
+                            //MelonLogger.Msg("Generic NPC in " + dialogueTree.name + " with actor id: " + statement._actorParameterID);
                             if (!genericDialogues.ContainsKey(dialogueTree.name))
                             {
                                 genericDialogues.Add(dialogueTree.name, dialogueTree);
@@ -137,8 +151,13 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 DialogueTree tree = dialogueTrees[j];
                 HashSet<string> handledSubdialogues = [];
                 if (genericDialogues.ContainsKey(tree.name)) continue;
+                if (tree.name.Contains("DT_Dialogue_AfterCombat"))
+                {
+                    genericDialogues.TryAdd(tree.name, tree);
+                    continue;
+                }
 
-                MelonLogger.Msg("Executing for " + tree.name + " with " + tree.allNodes.Count);
+                //MelonLogger.Msg("Executing for " + tree.name + " with " + tree.allNodes.Count);
 
                 for (int k = 0; k < tree.allNodes.Count; k++)
                 {
@@ -149,7 +168,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         // prevent duplicate handling
                         if (handledSubdialogues.Contains(subTree.subGraph.name)) continue;
                         handledSubdialogues.Add(subTree.subGraph.name);
-                        MelonLogger.Msg("Found generic Dialog " + subTree.subGraph.name + " in " + tree.name);
+                        //MelonLogger.Msg("Found generic Dialog " + subTree.subGraph.name + " in " + tree.name);
                         subTree.SetParametersMap();
                         subTree.currentInstance = subTree.TryCast<IGraphAssignable>().CheckInstance(true).TryCast<DialogueTree>();
                         subTree.TryWriteMappedActorParameters();
@@ -178,7 +197,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         // Dialogue which is used by different systems, currently unsupported
                         if (genericName.Length == 0 || GENERICS_NAMES.Any(n => n.Contains(genericName, StringComparison.OrdinalIgnoreCase)))
                         {
-                            MelonLogger.Warning("No NPC name found for " + subTree.subGraph.name);
+                            //MelonLogger.Warning("No NPC name found for " + subTree.subGraph.name);
                             continue;
                         }
 
@@ -190,14 +209,17 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             {
                                 string actorName = statement.actorName;
                                 // Skip already player generated dialogues
-                                if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach")))
+                                if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                                 {
                                     continue;
                                 }
                                 if (GENERICS_NAMES.Any(n => n.Contains(actorName, StringComparison.OrdinalIgnoreCase)))
                                 {
                                     actorName = genericName;
+                                    if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
+                                        continue;
                                 }
+
                                 sb
                                     .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
                                     .Append(DialogueUtils.SEPERATOR)
@@ -225,15 +247,13 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 }
 
             }
-            StringBuilder sbGneric = new();
-            StringBuilder sbGenericTreeNames = new();
 
             for (int i = 0; i < genericDialogues.Count; i++)
             {
                 KeyValuePair<string, DialogueTree> keyValue = genericDialogues.ElementAt(i);
                 if (handledGenerics.Contains(keyValue.Key))
                 {
-                    MelonLogger.Msg("Skipping generic dialog for " + keyValue.Key + " because it was already generated");
+                    //MelonLogger.Msg("Skipping generic dialog for " + keyValue.Key + " because it was already generated");
                     continue;
                 }
                 bool isHandledByGenericHandler = false;
@@ -247,7 +267,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     }
                 }
                 if (isHandledByGenericHandler) continue;
-                MelonLogger.Msg("Generic Dialog for " + keyValue.Key + " with " + keyValue.Value.allNodes.Count);
+                //MelonLogger.Msg("Generic Dialog for " + keyValue.Key + " with " + keyValue.Value.allNodes.Count);
                 string genericName = "";
                 CheckIfLocaPathIncludesNpc(keyValue.Value, actorMapping, ref genericName);
                 if (genericName.Length > 0)
@@ -280,6 +300,14 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     CreateGenericDialog(sbGneric, keyValue);
                 }
             }
+
+            BrawlDialogue.GenerateDialogue(sb, actorMapping);
+            SleepDialogue.GenerateDialogue(sb, actorMapping);
+        }
+
+        public void GeneratePointDialogues()
+        {
+            ReadOutDialogRoutinePoint.GenerateDialogues(actorMapping, sb);
 
             string path = Utils.SavePath;
             Directory.CreateDirectory(path);
@@ -350,13 +378,15 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     {
                         string actorName = statement.actorName;
                         // Skip already player generated dialogues
-                        if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach")))
+                        if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                         {
                             continue;
                         }
                         if (GENERICS_NAMES.Any(n => n.Contains(actorName, StringComparison.OrdinalIgnoreCase)))
                         {
                             actorName = genericName;
+                            if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
+                                continue;
                         }
                         sb
                         .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
@@ -402,30 +432,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             }
 
             return genericName;
-        }
-
-        private static void ReadActorMappings(Dictionary<string, int> actorMapping)
-        {
-            string pathToMapping = Path.Combine(Utils.SavePath, MAPPING_FILE_NAME);
-            if (File.Exists(pathToMapping))
-            {
-                string[] lines = File.ReadAllLines(pathToMapping);
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    string line = lines[i];
-                    string[] split = line.Split(DialogueUtils.SEPERATOR);
-                    if (split.Length != 2)
-                    {
-                        MelonLogger.Error("Invalid mapping line: " + line);
-                        continue;
-                    }
-                    actorMapping.Add(split[0], int.Parse(split[1]));
-                }
-            }
-            else
-            {
-                MelonLogger.Error("No mapping file found at: " + pathToMapping);
-            }
         }
 
     }

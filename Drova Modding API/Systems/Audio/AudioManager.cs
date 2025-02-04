@@ -47,6 +47,18 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
+        /// Get a unique ID for a statement node
+        /// </summary>
+        /// <param name="treeName"></param>
+        /// <param name="locaKey"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static string GetUniqueIDStatement(string treeName, string locaKey, string path)
+        {
+            return $"{treeName}_{locaKey}_{path.Replace('/', '_')}";
+        }
+
+        /// <summary>
         /// Get a unique ID for a generic statement node
         /// </summary>
         /// <param name="tree"></param>
@@ -62,6 +74,22 @@ namespace Drova_Modding_API.Systems.Audio
             else
             {
                 return $"{tree.name}_{node.statement.locaKey}_{node.DLGTree.LocaPath.Replace('/', '_')}_{actorName}";
+            }
+        }
+
+        /// <summary>
+        /// Get a unique ID for a generic statement node
+        /// </summary>
+        /// <returns></returns>
+        public static string GetUniqueIDStatementGeneric(string treeName, string locaKey, string globalLocaPath, string actorName, string locaPath, bool useGlobalLoca = false)
+        {
+            if (useGlobalLoca)
+            {
+                return $"{treeName}_{locaKey}_{globalLocaPath.Replace('/', '_')}_{actorName}";
+            }
+            else
+            {
+                return $"{treeName}_{locaKey}_{locaPath.Replace('/', '_')}_{actorName}";
             }
         }
 

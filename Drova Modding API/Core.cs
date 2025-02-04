@@ -30,8 +30,12 @@ namespace Drova_Modding_API
     {
         internal static string AssemblyLocation;
         internal bool _inMainMenu = false;
+        CreateTTSDialogueFile creation = new();
+        bool created = false;
 
 #if DEBUG
+        internal bool actorsLoaded = false;
+        internal bool aiLogicLoaded = false;
         private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
 #endif
 
@@ -67,13 +71,14 @@ namespace Drova_Modding_API
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
-                CreateTTSDialogueFile creation = new();
-                creation.CreateDialogueFile();
+
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
                 _inMainMenu = true;
+                creation.Init();
+                creation.CreateDialogueFile();
             }
             if (sceneName == SceneNames.GameplayMain)
             {
@@ -82,6 +87,19 @@ namespace Drova_Modding_API
                 SystemInit.Init();
                 InputActionRegister.Instance.EnableGameplayActions();
                 _inMainMenu = false;
+            }
+            if (sceneName == SceneNames.AILogic)
+            {
+                aiLogicLoaded = true;
+            }
+            if (sceneName == SceneNames.Actor)
+            {
+                actorsLoaded = true;
+            }
+            if (actorsLoaded && aiLogicLoaded && !created)
+            {
+                created = true;
+                creation.GeneratePointDialogues();
             }
         }
 

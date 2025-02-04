@@ -14,5 +14,15 @@
          * The name of the gameplay main scene.
          */
         public const string GameplayMain = "Scene_Gameplay_Main";
+
+        /**
+         * The name of the AI logic scene.
+         */
+        public const string AILogic = "Scene_AILogic";
+
+        /**
+         * The name of the Actor scene.
+         */
+        public const string Actor = "Scene_Actors";
     }
 }

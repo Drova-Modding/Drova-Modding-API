@@ -5,6 +5,7 @@
         public const string PLAYER = "Player";
         public const string BANDIT = "Bandit";
         public const string HAUER = "Hauer_01";
+        public const string FROG = "Frog";
         public readonly static string[] BOUNDED = ["Slawa", "Oksana", "Roarke", "Birka", "Taron", "Bertine"];
         public const string BOUNDED_LEADER = "Diemo";
 
@@ -19,6 +20,9 @@
         public const string NEMENTON_GATE_SOUTH = "Palina";
         public const string NEMENTON_GATE_NORTH = "Adela";
         public const string NEMENTON_GATE_HAIN = "Lukan";
+        public const string NEMENTON_GATE_HAIN_SOUTH = "Lukan";
+        public const string NEMENTON_GATE_HAIN_NORTH = "Etzel";
+        public const string NEMENTON_GATE_HAIN_NORTH_2 = "Laudine";
         public const string NEMENTON_LAUDINE = "Laudine";
         public const string NEMENTON_SISTER = "Molvina";
         public readonly static string[] NEMENTON = [NEMENTON_LEADER, NEMENTON_GATE_NORTH, NEMENTON_GATE_SOUTH, NEMENTON_LAUDINE, NEMENTON_SISTER, NEMENTON_GATE_HAIN, "Henik", "Asmus", "Mombert", "Myrte", "Femke", "Lio", "Oskar", "Gerion", "Luten", "Olga", "Gradan", "Chunnaic", "Boony", "Dunja", "Mumme", "Kellan", "Muc", "Helma", "Angus", "Etzel", "Fia", "Rura", "Humbert", "Karotte", "Junali", "Aiko", "Adela", "Kendrick", "Jeniffer", "Swenn", "Enya", "Harvey", "Kerr", "Fester", "Kati", "Teigen", "Niala", "Colin", "Adwin", "Hailey", "Gilwar", "Farona", "Minira", "Willi", "Erwin"];
@@ -29,7 +33,12 @@
         public const string GATE_UPPER_SEAN = "Sean";
         public const string GATE_UPPER_IVERA = "Ivera";
         public const string ARENA_GATE_JURI = "Juri";
-        public readonly static string[] RUINCAMP = [RUINCAMP_BROTHER, RUINCAMP_DRUID_GUARD, GATE_CONOR, "Augis", "Hajo", "Ismar", "Elnea", "Manes", "Cuna", "Berni", "Farina", ARENA_GATE_JURI, "Banner", "Farlan", "Eugen", "Bardok", "Darwin", "RuinenlagerGuard", "Miranda", "Gra", "Tiaa", "Tadhg", "Friedel", "Morvin", "Ester", "Dark", "Mottek", "Kilian", "Sorcha", "Mog", "Meluna", "Lindon", "Fulk", "Jola", GATE_UPPER_IVERA, "Gesina", "Cord", "Bady", "Baldo", "Kora", "Bernold", "Laurin", "Boris", "Gera", "Liandra", "Senga", "Grit", "Jimmy", "Sagar", "Ebru", "Ada", GATE_UPPER_SEAN, "Hadewin", "Flunka", "Aidan", "Doro", "Leyna", "Blanda", "Emre", "Fygen", "Mareno", "Frithjof", "Lore"];
+        public const string BALDO_AS_ALDO = "Aldo";
+        public const string RUINCAMP_HADEWIN = "Hadewin";
+        public const string RUINCAMP_FLUNKA = "Flunka";
+        public const string RUINCAMP_MIRANDA = "Miranda";
+        public const string RUINCAMP_PROXIMUS = "Morvin";
+        public readonly static string[] RUINCAMP = [RUINCAMP_BROTHER, RUINCAMP_DRUID_GUARD, GATE_CONOR, "Augis", "Hajo", "Ismar", "Elnea", "Manes", "Cuna", "Berni", "Farina", ARENA_GATE_JURI, "Banner", "Farlan", "Eugen", "Bardok", "Darwin", "RuinenlagerGuard", RUINCAMP_MIRANDA, "Gra", "Tiaa", "Tadhg", "Friedel", RUINCAMP_PROXIMUS, "Ester", "Dark", "Mottek", "Kilian", "Sorcha", "Mog", "Meluna", "Lindon", "Fulk", "Jola", GATE_UPPER_IVERA, "Gesina", "Cord", "Bady", "Baldo", "Kora", "Bernold", "Laurin", "Boris", "Gera", "Liandra", "Senga", "Grit", "Jimmy", "Sagar", "Ebru", "Ada", GATE_UPPER_SEAN, RUINCAMP_HADEWIN, RUINCAMP_FLUNKA, "Aidan", "Doro", "Leyna", "Blanda", "Emre", "Fygen", "Mareno", "Frithjof", "Lore"];
 
         public const string STORAGE_MINE_GUARD = "Irmina";
         public readonly static string[] MINE = ["Roisin", "Lothar", "Merik", "Shona", "Gero", "Esdert", STORAGE_MINE_GUARD, "Inja", "Levin"];
@@ -62,6 +71,14 @@
         public readonly static string[] NEUTRAL = ["Ida", "Elgar", "Leru"];
 
         public readonly static string[] RUIN_CAMP_OTHER = ["Karmi", "Albrecht", "Jarmon"];
+
+        public readonly static string[] GREAT_TUSK_NEMENTON = ["Henik", "Gradan", "Karotte"];
+        public readonly static string[] GREAT_TUSK_RUINCAMP = ["Farlan", "Eugen", "Lindon"];
+        public readonly static string[] GREAT_TUSK_DRUIDS = ["Darwin", "Mombert"];
+
+
+        public readonly static string[] ARENA_TRAINING_FIGHTS = ["Carima", "Blaan", "Dark", "Mog"];
+        public readonly static string[] ARENA_MAIN_FIGHTS = ["Ebru", "Liandra", "Banner", "Ada"];
 
         public readonly static string[] NPCs = [.. FOREST, .. BOUNDED, .. BRUTUS_MINE, .. NEMENTON, .. MOOR_CAMP, .. RUINCAMP, .. AUWALD, .. MINE, ..DEEP_MINE, .. TAVERN, ..GEORGS_FARM, ..WOODCAMP, .. RUIN_EXPLORER, .. HIPPIE_CAMP,.. NEUTRAL, .. RUIN_CAMP_OTHER, HAUER];
 
