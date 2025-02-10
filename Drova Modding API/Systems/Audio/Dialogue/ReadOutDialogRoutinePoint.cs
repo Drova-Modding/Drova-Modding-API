@@ -1,7 +1,7 @@
-﻿using System.Text;
-using UnityEngine;
+﻿using Il2Cpp;
 using Il2CppDrova.Routine;
-using Il2Cpp;
+using System.Text;
+using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue
 {
@@ -10,26 +10,25 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         private const string DT_WorldDialogue_Template = "DT_WorldDialogue_Template";
         private static readonly HashSet<string> alreadyMapped = [];
 
-
         public static void GenerateDialogues(Dictionary<string, int> actorMapping, StringBuilder sb)
         {
 
-            var points = UnityEngine.Object.FindObjectsByType<DialogRoutinePoint>(FindObjectsSortMode.None);
+            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<DialogRoutinePoint> points = UnityEngine.Object.FindObjectsByType<DialogRoutinePoint>(FindObjectsSortMode.None);
 
             for (int i = 0; i < points.Length; i++)
             {
-                var point = points[i];
-                var dialogues = point._worldDialogueStarterModule;
+                DialogRoutinePoint point = points[i];
+                Il2CppDrova.DialogueNew.WorldDialogueStarterModule dialogues = point._worldDialogueStarterModule;
                 for (int j = 0; j < dialogues._worldDialogueSettings.Args.Count; j++)
                 {
-                    var arg = dialogues._worldDialogueSettings.Args[j];
+                    Il2CppDrova.DialogueNew.WorldDialogueArg arg = dialogues._worldDialogueSettings.Args[j];
                     string actorName;
                     if (arg.Participant == null)
                     {
-                        var place = point.GetComponentInParent<RoutinePlaceCondition>(true);
+                        RoutinePlaceCondition place = point.GetComponentInParent<RoutinePlaceCondition>(true);
                         if (place == null)
                         {
-                            var defaultRoutine = point.GetComponentInParent<DefaultRoutinePlace>(true);
+                            DefaultRoutinePlace defaultRoutine = point.GetComponentInParent<DefaultRoutinePlace>(true);
                             if (defaultRoutine != null)
                             {
                                 actorName = defaultRoutine._entity._locaName.GetLocalizedString(null);
@@ -46,7 +45,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     {
                         actorName = arg.Participant._locaName.GetLocalizedString(null);
                     }
-                    var id = AudioManager.GetUniqueIDStatementGeneric(DT_WorldDialogue_Template, arg.Key, "", actorName, arg.Path);
+                    string id = AudioManager.GetUniqueIDStatementGeneric(DT_WorldDialogue_Template, arg.Key, "", actorName, arg.Path);
                     if (alreadyMapped.Contains(id))
                         continue;
                     alreadyMapped.Add(id);

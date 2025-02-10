@@ -20,7 +20,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
             {
                 for (int i = 0; i < tree.allNodes.Count; i++)
                 {
-                    var statement = tree.allNodes[i].TryCast<DS_StatementNode>();
+                    DS_StatementNode statement = tree.allNodes[i].TryCast<DS_StatementNode>();
                     if (statement != null)
                     {
                         if (statement.statement.locaKey != BY_PASS_NEMENTON)
@@ -30,7 +30,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
                                 dialogStringBuilder
                                     .Append(DialogueUtils.MapActorNameToNumber(actorMapping, DialogueNameAndFactions.GREAT_TUSK_NEMENTON[j]))
                                     .Append(DialogueUtils.SEPERATOR)
-                                    .Append(statement.statement)
+                                    .Append(statement.GetLocalizedString())
                                     .Append(DialogueUtils.SEPERATOR)
                                     .Append(AudioManager.GetUniqueIDStatementGeneric(tree, statement, DialogueNameAndFactions.GREAT_TUSK_NEMENTON[j]))
                                     .Append(DialogueUtils.SEPERATOR)
@@ -48,7 +48,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
                                 dialogStringBuilder
                                     .Append(DialogueUtils.MapActorNameToNumber(actorMapping, DialogueNameAndFactions.GREAT_TUSK_RUINCAMP[j]))
                                     .Append(DialogueUtils.SEPERATOR)
-                                    .Append(statement.statement)
+                                    .Append(statement.GetLocalizedString())
                                     .Append(DialogueUtils.SEPERATOR)
                                     .Append(AudioManager.GetUniqueIDStatementGeneric(tree, statement, DialogueNameAndFactions.GREAT_TUSK_RUINCAMP[j]))
                                     .Append(DialogueUtils.SEPERATOR)
@@ -66,7 +66,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
             {
                 for (int i = 0; i < tree.allNodes.Count; i++)
                 {
-                    var statement = tree.allNodes[i].TryCast<DS_StatementNode>();
+                    DS_StatementNode statement = tree.allNodes[i].TryCast<DS_StatementNode>();
                     if (statement != null)
                     {
                         for (int j = 0; j < DialogueNameAndFactions.GREAT_TUSK_DRUIDS.Length; j++)
@@ -74,7 +74,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
                             dialogStringBuilder
                                 .Append(DialogueUtils.MapActorNameToNumber(actorMapping, DialogueNameAndFactions.GREAT_TUSK_DRUIDS[j]))
                                 .Append(DialogueUtils.SEPERATOR)
-                                .Append(statement.statement)
+                                .Append(statement.GetLocalizedString())
                                 .Append(DialogueUtils.SEPERATOR)
                                 .Append(AudioManager.GetUniqueIDStatementGeneric(tree, statement, DialogueNameAndFactions.GREAT_TUSK_DRUIDS[j]))
                                 .Append(DialogueUtils.SEPERATOR)

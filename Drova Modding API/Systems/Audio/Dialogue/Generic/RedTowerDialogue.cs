@@ -7,6 +7,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
     {
         private const string RED_TOWER_RUINCAMP = "_Ruinenlager";
         private const string RED_TOWER_NEMENTON = "_Nemeton";
+        private const string RED_TOWER_DRUIDS = "DarwinAndMombert";
 
         public bool CanHandleDialogue(DialogueTree tree)
         {
@@ -22,6 +23,10 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
             else if (tree.name.Contains(RED_TOWER_NEMENTON))
             {
                 HandleDialogueRedTower(tree, dialogStringBuilder, actorMapping, DialogueNameAndFactions.RED_TOWER_NEMENTON);
+            }
+            else if (tree.name.Contains(RED_TOWER_DRUIDS))
+            {
+                HandleDialogueRedTower(tree, dialogStringBuilder, actorMapping, DialogueNameAndFactions.RED_TOWER_DRUIDS);
             }
         }
 

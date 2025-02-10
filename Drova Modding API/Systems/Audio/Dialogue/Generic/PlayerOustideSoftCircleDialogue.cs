@@ -1,9 +1,5 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
 {
@@ -20,7 +16,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
         {
             for (int i = 0; i < tree.allNodes.Count; i++)
             {
-                var statement = tree.allNodes[i].TryCast<DS_StatementNode>();
+                DS_StatementNode statement = tree.allNodes[i].TryCast<DS_StatementNode>();
                 if (statement != null)
                 {
                     for (int j = 0; j < DialogueNameAndFactions.NPCs.Length; j++)

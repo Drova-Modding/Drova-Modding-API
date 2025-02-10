@@ -1,9 +1,5 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
 {
@@ -19,7 +15,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
         {
             for (int i = 0; i < tree.allNodes.Count; i++)
             {
-                var statement = tree.allNodes[i].TryCast<DS_StatementNode>();
+                DS_StatementNode statement = tree.allNodes[i].TryCast<DS_StatementNode>();
                 if (statement != null)
                 {
                     for (int j = 0; j < DialogueNameAndFactions.RUINCAMP.Length; j++)
@@ -27,7 +23,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
                         dialogStringBuilder
                             .Append(DialogueUtils.MapActorNameToNumber(actorMapping, DialogueNameAndFactions.RUINCAMP[j]))
                             .Append(DialogueUtils.SEPERATOR)
-                            .Append(statement.statement)
+                            .Append(statement.GetLocalizedString())
                             .Append(DialogueUtils.SEPERATOR)
                             .Append(AudioManager.GetUniqueIDStatementGeneric(tree, statement, DialogueNameAndFactions.RUINCAMP[j]))
                             .Append(DialogueUtils.SEPERATOR)

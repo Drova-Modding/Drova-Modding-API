@@ -25,7 +25,7 @@
         public const string NEMENTON_GATE_HAIN_NORTH_2 = "Laudine";
         public const string NEMENTON_LAUDINE = "Laudine";
         public const string NEMENTON_SISTER = "Molvina";
-        public readonly static string[] NEMENTON = [NEMENTON_LEADER, NEMENTON_GATE_NORTH, NEMENTON_GATE_SOUTH, NEMENTON_LAUDINE, NEMENTON_SISTER, NEMENTON_GATE_HAIN, "Henik", "Asmus", "Mombert", "Myrte", "Femke", "Lio", "Oskar", "Gerion", "Luten", "Olga", "Gradan", "Chunnaic", "Boony", "Dunja", "Mumme", "Kellan", "Muc", "Helma", "Angus", "Etzel", "Fia", "Rura", "Humbert", "Karotte", "Junali", "Aiko", "Adela", "Kendrick", "Jeniffer", "Swenn", "Enya", "Harvey", "Kerr", "Fester", "Kati", "Teigen", "Niala", "Colin", "Adwin", "Hailey", "Gilwar", "Farona", "Minira", "Willi", "Erwin"];
+        public readonly static string[] NEMENTON = [NEMENTON_LEADER, NEMENTON_GATE_NORTH, NEMENTON_GATE_SOUTH, NEMENTON_LAUDINE, NEMENTON_SISTER, NEMENTON_GATE_HAIN, "Henik", "Asmus", "Mombert", "Myrte", "Femke", "Lio", "Oskar", "Gerion", "Luten", "Olga", "Gradan", "Chunnaic", "Boony", "Dunja", "Mumme", "Kellan", "Muc", "Helma", "Angus", "Etzel", "Fia", "Rura", "Humbert", "Karotte", "Junali", "Aiko", "Adela", "Kendrick", "Jennifer", "Swenn", "Enya", "Harvey", "Kerr", "Fester", "Kati", "Teigen", "Niala", "Colin", "Adwin", "Hailey", "Gilwar", "Farona", "Minira", "Willi", "Erwin"];
 
         public const string RUINCAMP_BROTHER = "Jero";
         public const string RUINCAMP_DRUID_GUARD = "Oppo";
@@ -38,6 +38,7 @@
         public const string RUINCAMP_FLUNKA = "Flunka";
         public const string RUINCAMP_MIRANDA = "Miranda";
         public const string RUINCAMP_PROXIMUS = "Morvin";
+        public const string BADY = "Bady";
         public readonly static string[] RUINCAMP = [RUINCAMP_BROTHER, RUINCAMP_DRUID_GUARD, GATE_CONOR, "Augis", "Hajo", "Ismar", "Elnea", "Manes", "Cuna", "Berni", "Farina", ARENA_GATE_JURI, "Banner", "Farlan", "Eugen", "Bardok", "Darwin", "RuinenlagerGuard", RUINCAMP_MIRANDA, "Gra", "Tiaa", "Tadhg", "Friedel", RUINCAMP_PROXIMUS, "Ester", "Dark", "Mottek", "Kilian", "Sorcha", "Mog", "Meluna", "Lindon", "Fulk", "Jola", GATE_UPPER_IVERA, "Gesina", "Cord", "Bady", "Baldo", "Kora", "Bernold", "Laurin", "Boris", "Gera", "Liandra", "Senga", "Grit", "Jimmy", "Sagar", "Ebru", "Ada", GATE_UPPER_SEAN, RUINCAMP_HADEWIN, RUINCAMP_FLUNKA, "Aidan", "Doro", "Leyna", "Blanda", "Emre", "Fygen", "Mareno", "Frithjof", "Lore"];
 
         public const string STORAGE_MINE_GUARD = "Irmina";
@@ -54,9 +55,9 @@
 
         public readonly static string[] RED_TOWER_NEMENTON = ["Henik", "Asmus", "Mombert", NEMENTON_LAUDINE];
         public readonly static string[] RED_TOWER_RUINCAMP = ["Eugen", "Fulk", "Darwin", "Cuna"];
+        public readonly static string[] RED_TOWER_DRUIDS = ["Mombert", "Darwin"];
 
         public readonly static string[] TAVERN = ["Olaf", "Tristan", "Andarta", "Evi", "Ruhan", "Sine", "Melf", "Tuz", "Marten", "Unknown", "Fawini", "Lobo", "Eoin", "Margitte", "Josi"];
-        
 
         public readonly static string[] GEORGS_FARM = ["Dylara", "Delani", "Raya", "Mirron", "Jurek", "Georg", "Jerzy"];
 
@@ -76,12 +77,10 @@
         public readonly static string[] GREAT_TUSK_RUINCAMP = ["Farlan", "Eugen", "Lindon"];
         public readonly static string[] GREAT_TUSK_DRUIDS = ["Darwin", "Mombert"];
 
-
         public readonly static string[] ARENA_TRAINING_FIGHTS = ["Carima", "Blaan", "Dark", "Mog"];
         public readonly static string[] ARENA_MAIN_FIGHTS = ["Ebru", "Liandra", "Banner", "Ada"];
 
-        public readonly static string[] NPCs = [.. FOREST, .. BOUNDED, .. BRUTUS_MINE, .. NEMENTON, .. MOOR_CAMP, .. RUINCAMP, .. AUWALD, .. MINE, ..DEEP_MINE, .. TAVERN, ..GEORGS_FARM, ..WOODCAMP, .. RUIN_EXPLORER, .. HIPPIE_CAMP,.. NEUTRAL, .. RUIN_CAMP_OTHER, HAUER];
-
+        public readonly static string[] NPCs = [.. FOREST, .. BOUNDED, .. BRUTUS_MINE, .. NEMENTON, .. MOOR_CAMP, .. RUINCAMP, .. AUWALD, .. MINE, .. DEEP_MINE, .. TAVERN, .. GEORGS_FARM, .. WOODCAMP, .. RUIN_EXPLORER, .. HIPPIE_CAMP, .. NEUTRAL, .. RUIN_CAMP_OTHER, HAUER];
 
     }
 }

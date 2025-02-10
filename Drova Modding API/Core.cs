@@ -30,7 +30,7 @@ namespace Drova_Modding_API
     {
         internal static string AssemblyLocation;
         internal bool _inMainMenu = false;
-        CreateTTSDialogueFile creation = new();
+        readonly CreateTTSDialogueFile creation = new();
         bool created = false;
 
 #if DEBUG
@@ -96,7 +96,7 @@ namespace Drova_Modding_API
             {
                 actorsLoaded = true;
             }
-            if (actorsLoaded && aiLogicLoaded && !created)
+            if (actorsLoaded && aiLogicLoaded)
             {
                 created = true;
                 creation.GeneratePointDialogues();
@@ -125,7 +125,8 @@ namespace Drova_Modding_API
             }
             if (Input.GetKeyDown(KeyCode.F3))
             {
-                MelonCoroutines.Start(SetupNPC());
+                creation.Save();
+                //MelonCoroutines.Start(SetupNPC());
             }
             if (Input.GetKeyDown(KeyCode.F4))
             {

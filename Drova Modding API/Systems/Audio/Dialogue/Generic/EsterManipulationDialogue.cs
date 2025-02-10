@@ -3,13 +3,12 @@ using System.Text;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
 {
-    internal class GateNementonFireFestivalLukan : IGenericDialogueHandler
+    internal class EsterManipulationDialogue : IGenericDialogueHandler
     {
-        private const string DIALOGUE_NAME = "DT_Gate_Nemeton_FireFestival_Lukan";
-        private const string DIALOGUE_NAME_1 = "DT_Gate_Nemeton_FireFestival_Ongoing_Lukan";
+        private const string DIALOGUE_NAME = "DT_Comment_ArenaMainFight_EsterManipulation";
         public bool CanHandleDialogue(DialogueTree tree)
         {
-            return tree.name == DIALOGUE_NAME || tree.name == DIALOGUE_NAME_1;
+            return tree.name == DIALOGUE_NAME;
         }
 
         public void HandleDialogue(DialogueTree tree, StringBuilder dialogStringBuilder, Dictionary<string, int> actorMapping)
@@ -18,7 +17,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
             {
                 DS_StatementNode statementNode = tree.allNodes[i].TryCast<DS_StatementNode>();
                 if (statementNode == null) continue;
-                string actorName = DialogueNameAndFactions.NEMENTON_GATE_HAIN;
+                string actorName = DialogueNameAndFactions.BADY;
                 dialogStringBuilder
                     .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
                     .Append(DialogueUtils.SEPERATOR)

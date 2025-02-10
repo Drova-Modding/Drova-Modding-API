@@ -20,7 +20,9 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         private const string NPC = "NPC";
         private const string TEACHER = "TEACHER";
         private const string INSTIGATOR = "INSTIGATOR";
-        private static readonly string[] GENERICS_NAMES = [NPC, TEACHER, INSTIGATOR];
+        private const string DRUID = "DRUID";
+        private const string PARTICIPANT = "Participant";
+        private static readonly string[] GENERICS_NAMES = [NPC, TEACHER, INSTIGATOR, DRUID, PARTICIPANT];
         private readonly List<IGenericDialogueHandler> genericDialogueHandlers =
         [
             new RedTowerDialogue(),
@@ -51,6 +53,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             new ArenaFightsDialogue(),
             new GateNementonHolyHain(),
             new FrogDialogue(),
+            new EsterManipulationDialogue(),
         ];
 
         private static DialogueTree[] GatherAllDialogueTrees()
@@ -58,11 +61,12 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             return Resources.FindObjectsOfTypeAll<DialogueTree>();
         }
 
-        private StringBuilder sb = new();
-        private StringBuilder sbGneric = new();
-        private StringBuilder sbGenericTreeNames = new();
+        private readonly StringBuilder sb = new();
+        private readonly StringBuilder sbGneric = new();
+        private readonly StringBuilder sbGenericTreeNames = new();
+        private readonly StringBuilder sbAllDialogueNames = new();
 
-        Dictionary<string, int> actorMapping = [];
+        readonly Dictionary<string, int> actorMapping = [];
 
         public void Init()
         {
@@ -82,6 +86,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     //MelonLogger.Msg("Skipping creation for test/debug: " + dialogueTree.name);
                     continue;
                 };
+                sbAllDialogueNames.Append(dialogueTree.name).AppendLine();
                 //MelonLogger.Msg("Creating dialogue file for: " + dialogueTree.name);
                 dialogueTree.SelfDeserialize();
                 dialogueTree.DeserializeIfNotDoneYet(true);
@@ -89,6 +94,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 for (int j = 0; j < dialogueTree.allNodes.Count; j++)
                 {
                     Node node = dialogueTree.allNodes[j];
+
                     DS_StatementNode statement = node.TryCast<DS_StatementNode>();
                     if (statement != null)
                     {
@@ -101,6 +107,11 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                                 break;
                             }
                             break;
+                        }
+                        if (node.inConnections.Count == 0 && node.outConnections.Count == 0)
+                        {
+                            MelonLogger.Msg("Skipping node without connections");
+                            continue;
                         }
                         string loca = statement.GetLocalizedString();
                         // Unused dialogue node
@@ -123,6 +134,11 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     DS_MultipleChoiceNode multipleChoice = node.TryCast<DS_MultipleChoiceNode>();
                     if (multipleChoice != null)
                     {
+                        if (node.inConnections.Count == 0 && node.outConnections.Count == 0)
+                        {
+                            MelonLogger.Msg("Skipping node without connections");
+                            continue;
+                        }
                         for (int k = 0; k < multipleChoice.availableChoices.Count; k++)
                         {
                             DS_MultipleChoiceNode.Choice choice = multipleChoice.availableChoices[k];
@@ -219,6 +235,11 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                                     if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                                         continue;
                                 }
+                                if (subGraphNode.inConnections.Count == 0 && subGraphNode.outConnections.Count == 0)
+                                {
+                                    MelonLogger.Msg("Skipping node without connections");
+                                    continue;
+                                }
 
                                 sb
                                     .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
@@ -303,12 +324,18 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
             BrawlDialogue.GenerateDialogue(sb, actorMapping);
             SleepDialogue.GenerateDialogue(sb, actorMapping);
+
+            File.WriteAllText(Path.Combine(Utils.SavePath, "AllDialogueNames.txt"), sbAllDialogueNames.ToString());
         }
 
         public void GeneratePointDialogues()
         {
             ReadOutDialogRoutinePoint.GenerateDialogues(actorMapping, sb);
 
+        }
+
+        public void Save()
+        {
             string path = Utils.SavePath;
             Directory.CreateDirectory(path);
             string savePath = Path.Combine(path, FILE_NAME);
@@ -324,7 +351,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             {
                 MelonLogger.Error("Error saving dialogue file: " + e);
             }
-
             EditorManager.InEditor = false;
         }
 
@@ -387,6 +413,11 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             actorName = genericName;
                             if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                                 continue;
+                        }
+                        if (subGraphNode.inConnections.Count == 0 && subGraphNode.outConnections.Count == 0)
+                        {
+                            MelonLogger.Msg("Skipping node without connections");
+                            continue;
                         }
                         sb
                         .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))

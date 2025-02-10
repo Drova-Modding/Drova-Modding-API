@@ -502,6 +502,7 @@
 		<Compile Include="Systems\Audio\Dialogue\Generic\BertineSpiderDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\CombatDialogues.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\CraftingReactionDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\EsterManipulationDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\FrogDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\GateArenaDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\GateBrutusMine.cs" />
