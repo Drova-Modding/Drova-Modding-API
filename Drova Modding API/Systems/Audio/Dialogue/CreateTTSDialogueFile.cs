@@ -22,7 +22,8 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         private const string INSTIGATOR = "INSTIGATOR";
         private const string DRUID = "DRUID";
         private const string PARTICIPANT = "Participant";
-        private static readonly string[] GENERICS_NAMES = [NPC, TEACHER, INSTIGATOR, DRUID, PARTICIPANT];
+        private const string ACTOR = "ACTOR";
+        private static readonly string[] GENERICS_NAMES = [NPC, TEACHER, INSTIGATOR, DRUID, PARTICIPANT, ACTOR];
         private readonly List<IGenericDialogueHandler> genericDialogueHandlers =
         [
             new RedTowerDialogue(),
@@ -85,7 +86,8 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 {
                     //MelonLogger.Msg("Skipping creation for test/debug: " + dialogueTree.name);
                     continue;
-                };
+                }
+                ;
                 sbAllDialogueNames.Append(dialogueTree.name).AppendLine();
                 //MelonLogger.Msg("Creating dialogue file for: " + dialogueTree.name);
                 dialogueTree.SelfDeserialize();
@@ -142,6 +144,11 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         for (int k = 0; k < multipleChoice.availableChoices.Count; k++)
                         {
                             DS_MultipleChoiceNode.Choice choice = multipleChoice.availableChoices[k];
+                            if ((choice.statement.locaKey == "aboutQuests" || choice.statement.locaKey == "aboutOtherQuests") && multipleChoice.actorName == "Player")
+                            {
+                                MelonLogger.Msg("Skipping node with generic quest dialogue, which isn't in use");
+                                continue;
+                            }
                             sb
                                .Append(DialogueUtils.MapActorNameToNumber(actorMapping, multipleChoice.actorName))
                                .Append(DialogueUtils.SEPERATOR)
@@ -360,6 +367,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             {
                 Node node = keyValue.Value.allNodes[j];
                 DS_StatementNode statement = node.TryCast<DS_StatementNode>();
+
                 if (statement != null)
                 {
                     sbGneric

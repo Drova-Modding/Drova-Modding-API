@@ -56,6 +56,7 @@
         public readonly static string[] RED_TOWER_NEMENTON = ["Henik", "Asmus", "Mombert", NEMENTON_LAUDINE];
         public readonly static string[] RED_TOWER_RUINCAMP = ["Eugen", "Fulk", "Darwin", "Cuna"];
         public readonly static string[] RED_TOWER_DRUIDS = ["Mombert", "Darwin"];
+        public readonly static string[] RED_TOWER_ALL = [.. RED_TOWER_NEMENTON, .. RED_TOWER_RUINCAMP];
 
         public readonly static string[] TAVERN = ["Olaf", "Tristan", "Andarta", "Evi", "Ruhan", "Sine", "Melf", "Tuz", "Marten", "Unknown", "Fawini", "Lobo", "Eoin", "Margitte", "Josi"];
 

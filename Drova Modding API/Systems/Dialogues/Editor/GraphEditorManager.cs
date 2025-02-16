@@ -540,7 +540,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 Event e = Event.current;
                 Vector2 adjustedMousePosition = (e.mousePosition - _panOffset) / _scaleFactor;
                 _activeAction.OnGui(this, _selectedNode, adjustedMousePosition);
-            };
+            }
         }
 
         #endregion Drawing
