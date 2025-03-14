@@ -51,7 +51,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
                             dialogStringBuilder
                                 .Append(DialogueUtils.MapActorNameToNumber(actorMapping, DialogueNameAndFactions.ARENA_MAIN_FIGHTS[j]))
                                 .Append(DialogueUtils.SEPERATOR)
-                                .Append(statement.statement)
+                                .Append(statement.GetLocalizedString())
                                 .Append(DialogueUtils.SEPERATOR)
                                 .Append(AudioManager.GetUniqueIDStatementGeneric(tree, statement, DialogueNameAndFactions.ARENA_MAIN_FIGHTS[j]))
                                 .Append(DialogueUtils.SEPERATOR)

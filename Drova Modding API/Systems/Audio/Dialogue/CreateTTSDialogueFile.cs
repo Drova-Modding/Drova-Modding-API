@@ -311,7 +311,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                                 .Append(DialogueUtils.SEPERATOR)
                                 .Append(statement.GetLocalizedString())
                                 .Append(DialogueUtils.SEPERATOR)
-                                .Append(AudioManager.GetUniqueIDStatement(keyValue.Value, statement))
+                                .Append(AudioManager.GetUniqueIDStatementGeneric(keyValue.Value, statement, genericName))
                                 .Append(DialogueUtils.SEPERATOR)
                                 .Append(DialogueUtils.EMOTION)
                                 .Append(DialogueUtils.SEPERATOR)
@@ -335,10 +335,10 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             File.WriteAllText(Path.Combine(Utils.SavePath, "AllDialogueNames.txt"), sbAllDialogueNames.ToString());
         }
 
-        public void GeneratePointDialogues()
+        public void GenerateWorldDialogues()
         {
             ReadOutDialogRoutinePoint.GenerateDialogues(actorMapping, sb);
-
+            ReadOutDialogueHitBehaviour.GenerateHitBvhrDialogues(actorMapping, sb);
         }
 
         public void Save()
@@ -408,6 +408,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 {
                     Node subGraphNode = subTree.subGraph.allNodes[i];
                     DS_StatementNode statement = subGraphNode.TryCast<DS_StatementNode>();
+                    bool isGeneric = false;
                     if (statement != null)
                     {
                         string actorName = statement.actorName;
@@ -419,6 +420,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         if (GENERICS_NAMES.Any(n => n.Contains(actorName, StringComparison.OrdinalIgnoreCase)))
                         {
                             actorName = genericName;
+                            isGeneric = true;
                             if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                                 continue;
                         }
@@ -432,7 +434,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         .Append(DialogueUtils.SEPERATOR)
                         .Append(statement.GetLocalizedString())
                         .Append(DialogueUtils.SEPERATOR)
-                        .Append(AudioManager.GetUniqueIDStatement(subTree.subGraph, statement))
+                        .Append(isGeneric ? AudioManager.GetUniqueIDStatementGeneric(subTree.subGraph, statement, actorName) :  AudioManager.GetUniqueIDStatement(subTree.subGraph, statement))
                         .Append(DialogueUtils.SEPERATOR)
                         .Append(DialogueUtils.EMOTION)
                         .Append(DialogueUtils.SEPERATOR)

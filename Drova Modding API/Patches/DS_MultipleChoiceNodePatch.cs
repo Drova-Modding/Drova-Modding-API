@@ -16,7 +16,6 @@ internal static class DS_MultipleChoiceNodePatch
         __instance.status = Il2CppNodeCanvas.Framework.Status.Running;
         Action callback = new(() =>
         {
-            MelonLoader.MelonLogger.Msg("Handling callback for DS_MultipleChoiceNode.OnOptionSelected");
             __c__DisplayClass26_._OnOptionSelected_b__0();
         });
         string localizedString = __instance.GetLocalizedString(__instance.availableChoices[index].statement);

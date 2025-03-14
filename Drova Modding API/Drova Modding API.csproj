@@ -490,6 +490,7 @@
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
 		<Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
+		<Compile Include="Systems\Audio\Dialogue\DynamicInstancesToGuid.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Dynamic\BaldoDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Dynamic\BrawlDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Dynamic\RestWorldDialogue.cs" />
@@ -521,6 +522,7 @@
 		<Compile Include="Systems\Audio\Dialogue\Generic\LaudineDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\PlayerOustideSoftCircleDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\ReadOutDialogRoutinePoint.cs" />
+		<Compile Include="Systems\Audio\Dialogue\ReadOutDialogueHitBehaviour.cs" />
 		<Compile Include="Systems\Audio\FileAudioProvider.cs" />
 		<Compile Include="Systems\Audio\IAudioConnector.cs" />
 		<Compile Include="Systems\Audio\IAudioHandler.cs" />

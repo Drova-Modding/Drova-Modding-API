@@ -99,7 +99,7 @@ namespace Drova_Modding_API
             if (actorsLoaded && aiLogicLoaded)
             {
                 created = true;
-                creation.GeneratePointDialogues();
+                creation.GenerateWorldDialogues();
             }
         }
 
@@ -125,6 +125,7 @@ namespace Drova_Modding_API
             }
             if (Input.GetKeyDown(KeyCode.F3))
             {
+                //DynamicInstancesToGuid.GenerateGuids();
                 creation.Save();
                 //MelonCoroutines.Start(SetupNPC());
             }
