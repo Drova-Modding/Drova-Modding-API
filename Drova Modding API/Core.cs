@@ -71,14 +71,13 @@ namespace Drova_Modding_API
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
-
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
                 _inMainMenu = true;
-                creation.Init();
-                creation.CreateDialogueFile();
+                //creation.Init();
+                //creation.CreateDialogueFile();
             }
             if (sceneName == SceneNames.GameplayMain)
             {
@@ -88,19 +87,19 @@ namespace Drova_Modding_API
                 InputActionRegister.Instance.EnableGameplayActions();
                 _inMainMenu = false;
             }
-            if (sceneName == SceneNames.AILogic)
-            {
-                aiLogicLoaded = true;
-            }
-            if (sceneName == SceneNames.Actor)
-            {
-                actorsLoaded = true;
-            }
-            if (actorsLoaded && aiLogicLoaded)
-            {
-                created = true;
-                creation.GenerateWorldDialogues();
-            }
+            //if (sceneName == SceneNames.AILogic)
+            //{
+            //    aiLogicLoaded = true;
+            //}
+            //if (sceneName == SceneNames.Actor)
+            //{
+            //    actorsLoaded = true;
+            //}
+            //if (actorsLoaded && aiLogicLoaded)
+            //{
+            //    created = true;
+            //    creation.GenerateWorldDialogues();
+            //}
         }
 
         /// <inheritdoc/>

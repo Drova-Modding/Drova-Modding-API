@@ -12,13 +12,12 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
         internal static void GenerateHitBvhrDialogues(Dictionary<string, int> actorMapping, StringBuilder sb)
         {
-            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<HitReceiveBhvr_WorldDialogue> bhvrs = UnityEngine.Object.FindObjectsByType<HitReceiveBhvr_WorldDialogue>(FindObjectsSortMode.None);
+            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<HitReceiveBhvr_WorldDialogue> bhvrs = UnityEngine.Object.FindObjectsOfType<HitReceiveBhvr_WorldDialogue>(true);
             for (int i = 0; i < bhvrs.Count; i++)
             {
                 var bvhr = bhvrs[i];
 
                 Il2CppDrova.DialogueNew.WorldDialogueStarterModule dialogues = bvhr._dialogueStarterModule;
-                if(dialogues._worldDialogueSettings.)
                 for (int j = 0; j < dialogues._worldDialogueSettings.Args.Count; j++)
                 {
                     Il2CppDrova.DialogueNew.WorldDialogueArg arg = dialogues._worldDialogueSettings.Args[j];
@@ -36,7 +35,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     {
                         actorName = arg.Participant._locaName.GetLocalizedString(null);
                     }
-                    string id = AudioManager.GetUniqueIDStatementGeneric(DT_WorldDialogue_Template, arg.Key, "", actorName, arg.Path);
+                    string id = AudioManager.GetUniqueIDStatementGeneric(DT_WorldDialogue_Template, arg.Path, "", actorName, arg.Key);
                     if (alreadyMapped.Contains(id))
                         continue;
                     alreadyMapped.Add(id);

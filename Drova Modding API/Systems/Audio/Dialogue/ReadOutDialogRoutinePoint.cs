@@ -1,5 +1,6 @@
 ﻿using Il2Cpp;
 using Il2CppDrova.Routine;
+using MelonLoader;
 using System.Text;
 using UnityEngine;
 
@@ -13,12 +14,19 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         public static void GenerateDialogues(Dictionary<string, int> actorMapping, StringBuilder sb)
         {
 
-            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<DialogRoutinePoint> points = UnityEngine.Object.FindObjectsByType<DialogRoutinePoint>(FindObjectsSortMode.None);
+            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<DialogRoutinePoint> points = UnityEngine.Object.FindObjectsOfType<DialogRoutinePoint>(true);
 
             for (int i = 0; i < points.Length; i++)
             {
                 DialogRoutinePoint point = points[i];
                 Il2CppDrova.DialogueNew.WorldDialogueStarterModule dialogues = point._worldDialogueStarterModule;
+
+                if (dialogues._worldDialogueSettings.Args.Count == 0)
+                {
+                    MelonLogger.Msg("No dialogues found for: " + point.name + " "  + point.transform.parent.name + " " + point.transform.parent.parent.name);
+                }
+            
+
                 for (int j = 0; j < dialogues._worldDialogueSettings.Args.Count; j++)
                 {
                     Il2CppDrova.DialogueNew.WorldDialogueArg arg = dialogues._worldDialogueSettings.Args[j];
@@ -45,9 +53,11 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     {
                         actorName = arg.Participant._locaName.GetLocalizedString(null);
                     }
-                    string id = AudioManager.GetUniqueIDStatementGeneric(DT_WorldDialogue_Template, arg.Key, "", actorName, arg.Path);
-                    if (alreadyMapped.Contains(id))
+                    string id = AudioManager.GetUniqueIDStatementGeneric(DT_WorldDialogue_Template, arg.Path, "", actorName, arg.Key);
+                    if (alreadyMapped.Contains(id)) { 
+                        //MelonLogger.Msg("Already added: " + id);
                         continue;
+                    }
                     alreadyMapped.Add(id);
                     sb
                               .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))

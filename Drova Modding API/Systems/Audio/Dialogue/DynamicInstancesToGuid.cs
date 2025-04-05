@@ -1,9 +1,5 @@
 ﻿using Il2CppDrova;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue
 {
@@ -26,7 +22,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 }
                 return false;
             });
-            var guidFromInstances = allGenericInstances.Select(x => new DataContainer(x._guidString ,x.transform.parent.name)).ToList();
+            var guidFromInstances = allGenericInstances.Select(x => new DataContainer(x._guidString, x.transform.parent.name, x.name)).ToList();
             var stringBuilder = new StringBuilder();
             for (int i = 0; i < guidFromInstances.Count; i++)
             {
@@ -36,9 +32,10 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             File.WriteAllText(Path.Combine(Utils.SavePath, "GenericInstancesToGuids.txt"), stringBuilder.ToString());
         }
 
-        private readonly struct DataContainer(string guid, string location)
+        private readonly struct DataContainer(string guid, string location, string name)
         {
             public readonly string Guid { get; } = guid;
+            public readonly string Name { get; } = name;
             public readonly string Location { get; } = location;
         }
     }
