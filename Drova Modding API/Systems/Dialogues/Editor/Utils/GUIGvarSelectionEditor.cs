@@ -63,7 +63,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             _showOnlyList = showOnlyList;
             _subDatabaseGVars = ProviderAccess.GetGameDatabase().GVarDatabase;
 
-            string[] gvarLists = _subDatabaseGVars.AllGVars.ToArray().Select(e => e.name).ToArray();
+            string[] gvarLists = [.. _subDatabaseGVars.AllGVars.ToArray().Select(e => e?.name ?? "null")];
             int selectedIndex = -1;
             if (nameOfList != null)
             {
@@ -90,14 +90,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             if (_showOnlyList) return;
             _selecteableGvars = _gvarType switch
             {
-                GvarType.INT => _currentSelectedGvarList.GetVarsOfType<GInt>().ToArray().ToList().OfType<AGVarBase>().ToList(),
-                GvarType.FLOAT => _currentSelectedGvarList.GetVarsOfType<GFloat>().ToArray().ToList().OfType<AGVarBase>().ToList(),
-                GvarType.STRING => _currentSelectedGvarList.GetVarsOfType<GString>().ToArray().ToList().OfType<AGVarBase>().ToList(),
-                GvarType.BOOL => _currentSelectedGvarList.GetVarsOfType<GBool>().ToArray().ToList().OfType<AGVarBase>().ToList(),
+                GvarType.INT => [.. _currentSelectedGvarList.GetVarsOfType<GInt>().ToArray().ToList().OfType<AGVarBase>()],
+                GvarType.FLOAT => [.. _currentSelectedGvarList.GetVarsOfType<GFloat>().ToArray().ToList().OfType<AGVarBase>()],
+                GvarType.STRING => [.. _currentSelectedGvarList.GetVarsOfType<GString>().ToArray().ToList().OfType<AGVarBase>()],
+                GvarType.BOOL => [.. _currentSelectedGvarList.GetVarsOfType<GBool>().ToArray().ToList().OfType<AGVarBase>()],
                 GvarType.QUEST => _currentSelectedGvarList.IsQuestVarList ? [_currentSelectedGvarList._questState] : [],
                 _ => [],
             };
-            _GvarValueDropdown = new GUIDropdownWithFilter(_selecteableGvars.Select(e => e.name).ToArray(), -1, 10);
+            _GvarValueDropdown = new GUIDropdownWithFilter([.. _selecteableGvars.Select(e => e.name)], -1, 10);
 
         }
 
