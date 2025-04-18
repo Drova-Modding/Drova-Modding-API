@@ -19,7 +19,7 @@ using System.Collections;
 
 [assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
-[assembly: VerifyLoaderVersion(0, 6, 6, true)]
+[assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
 namespace Drova_Modding_API
 {
@@ -31,11 +31,8 @@ namespace Drova_Modding_API
         internal static string AssemblyLocation;
         internal bool _inMainMenu = false;
         readonly CreateTTSDialogueFile creation = new();
-        bool created = false;
 
 #if DEBUG
-        internal bool actorsLoaded = false;
-        internal bool aiLogicLoaded = false;
         private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
 #endif
 
@@ -76,8 +73,6 @@ namespace Drova_Modding_API
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
                 _inMainMenu = true;
-                //creation.Init();
-                //creation.CreateDialogueFile();
             }
             if (sceneName == SceneNames.GameplayMain)
             {
@@ -87,19 +82,6 @@ namespace Drova_Modding_API
                 InputActionRegister.Instance.EnableGameplayActions();
                 _inMainMenu = false;
             }
-            //if (sceneName == SceneNames.AILogic)
-            //{
-            //    aiLogicLoaded = true;
-            //}
-            //if (sceneName == SceneNames.Actor)
-            //{
-            //    actorsLoaded = true;
-            //}
-            //if (actorsLoaded && aiLogicLoaded)
-            //{
-            //    created = true;
-            //    creation.GenerateWorldDialogues();
-            //}
         }
 
         /// <inheritdoc/>

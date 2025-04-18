@@ -10,13 +10,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 {
     /// <summary>
     /// Editor for GQuestStateConditionTask.
-    /// TODO: Hope the devs are moving the Enum to a better place :D
+    /// TODO: BBParameter support still not working, hope for move the Enum from the generic class
     /// </summary>
     public class GQuestStateConditionTaskEditor : DrawTaskEditor
     {
         private GQuestStateConditionTask _castedTask;
         private readonly List<GUIGvarSelectionEditor> _gvarSelectionEditors = [];
-        //private readonly List<GUIDropdown> _comparisionDropdowns = [];
+        private readonly List<GUIDropdown> _comparisionDropdowns = [];
         private readonly List<GUIDropdown> _valueDropdown = [];
 
         /// <inheritdoc/>
@@ -26,11 +26,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
                 GraphGQuestCompService condition = _castedTask.Conditions[i];
-                _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, condition.Variable.GetValue().GetParent().name, false, condition.Variable.GetValue()));
+                _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, condition.Variable?.GetValue().GetParent().name, false, condition.Variable?.GetValue()));
 
-                //BBParameter<AGEnum<QuestState>.Comparer> comparision = condition.Comparison;
-                //_comparisionDropdowns.Add(new GUIDropdown(Enum.GetNames<AGEnum<QuestState>.Comparer>(), (int)comparision.TryCast<BBParameter<GQuestState.Comparer>>().GetValue()));
-                _valueDropdown.Add(new GUIDropdown(Enum.GetNames<QuestState>(), (int)condition.Value.GetValue()));
+                BBParameter<AGEnum<QuestState>.Comparer> comparision = condition.Comparison;
+                int comparisionIndex = condition.Comparison != null ? (int)comparision.GetValue() : -1;
+                _comparisionDropdowns.Add(new GUIDropdown(Enum.GetNames<AGEnum<QuestState>.Comparer>(), comparisionIndex));
+                int valueIndex = condition.Value != null ? (int)condition.Value?.GetValue() : -1;
+                _valueDropdown.Add(new GUIDropdown(Enum.GetNames<QuestState>(), valueIndex));
             }
         }
 
@@ -47,13 +49,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             {
                 GraphGQuestCompService condition = _castedTask.Conditions[i];
                 GUIGvarSelectionEditor gvarEditor = _gvarSelectionEditors[i];
-                //var comparerDropdown = _comparisionDropdowns[i];
+                var comparerDropdown = _comparisionDropdowns[i];
                 GUIDropdown valueDropdown = _valueDropdown[i];
                 if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
                 {
                     _castedTask.Conditions.RemoveAt(i);
                     _gvarSelectionEditors.RemoveAt(i);
-                    //_comparisionDropdowns.RemoveAt(i);
+                    _comparisionDropdowns.RemoveAt(i);
                     _valueDropdown.RemoveAt(i);
                     i--;
                     continue;
@@ -64,11 +66,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     condition.Variable.SetValue(gvarEditor.CurrentSelectedGvar.TryCast<GQuestState>());
                 }
                 rect.y += 60;
-                //if (comparerDropdown.Draw(rect))
-                //{
-                //    condition.Comparison = (AGEnum<QuestState>.Comparer)comparerDropdown.SelectedIndex;
-                //}
-                //rect.y += 20;
+                if (comparerDropdown.Draw(rect))
+                {
+                    condition.Comparison = (AGEnum<QuestState>.Comparer)comparerDropdown.SelectedIndex;
+                }
+                rect.y += 20;
                 if (valueDropdown.Draw(rect))
                 {
                     condition.Value = (QuestState)valueDropdown.SelectedIndex;
@@ -79,7 +81,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             {
                 _castedTask.Conditions.Add(new GraphGQuestCompService());
                 _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, _castedTask.Conditions[^1].Variable.GetValue().GetParent().name, false, _castedTask.Conditions[^1].Variable.GetValue()));
-                //_comparisionDropdowns.Add(new GUIDropdown(Enum.GetNames<AGEnum<QuestState>.Comparer>(), (int)_castedTask.Conditions[^1].Comparison.GetValue()));
+                _comparisionDropdowns.Add(new GUIDropdown(Enum.GetNames<AGEnum<QuestState>.Comparer>(), (int)_castedTask.Conditions[^1].Comparison.GetValue()));
                 _valueDropdown.Add(new GUIDropdown(Enum.GetNames<QuestState>(), (int)_castedTask.Conditions[^1].Value.GetValue()));
             }
             return size;
