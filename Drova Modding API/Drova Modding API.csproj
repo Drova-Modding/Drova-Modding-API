@@ -490,50 +490,15 @@
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
 		<Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
-		<Compile Include="Systems\Audio\Dialogue\DynamicInstancesToGuid.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Dynamic\BaldoDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Dynamic\BrawlDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Dynamic\RestWorldDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Dynamic\SleepDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\AfterCombatPlayerDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\ArenaViewerDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\ArenaFightsDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\BanditDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\BanditMineHauerDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\BertineSpiderDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\CombatDialogues.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\CraftingReactionDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\EsterManipulationDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\FrogDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateArenaDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateBrutusMine.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateConorDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateDeepMineEntryDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateMineDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateMineStorageDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonFireFestivalLukan.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonHolyHain.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonNorthDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonSouthDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampDruidDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampSeanDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuinCampUpperTownIveraDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GreatTuskDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\LaudineDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\PlayerOustideSoftCircleDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\ReadOutDialogRoutinePoint.cs" />
-		<Compile Include="Systems\Audio\Dialogue\ReadOutDialogueHitBehaviour.cs" />
 		<Compile Include="Systems\Audio\FileAudioProvider.cs" />
 		<Compile Include="Systems\Audio\IAudioConnector.cs" />
 		<Compile Include="Systems\Audio\IAudioHandler.cs" />
 		<Compile Include="Systems\Audio\IAudioProvider.cs" />
 		<Compile Include="Systems\Audio\AudioManager.cs" />
-		<Compile Include="Systems\Dialogues\EntityInfoPicturesToPngUtils.cs" />
 		<Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
 		<Compile Include="Systems\Editor\EditorManager.cs" />
 		<Compile Include="Systems\Editor\EditorUI.cs" />
 		<Compile Include="Systems\Editor\NpcMouseRaycast.cs" />
-		<Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
 		<Compile Include="Systems\Editor\Relocators\DialogueTreeRelocator.cs" />
 		<Compile Include="Systems\Editor\Relocators\EntityInfoRelocator.cs" />
 		<Compile Include="Systems\Editor\Relocators\GVarBoolRelocator.cs" />
@@ -571,6 +536,39 @@
 		<Compile Include="Utils.cs" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(Configuration)'=='Debug'">
+		<Compile Include="Systems\Audio\Dialogue\DynamicInstancesToGuid.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Dynamic\BaldoDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Dynamic\BrawlDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Dynamic\RestWorldDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Dynamic\SleepDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\AfterCombatPlayerDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\ArenaViewerDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\ArenaFightsDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\BanditDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\BanditMineHauerDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\BertineSpiderDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\CombatDialogues.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\CraftingReactionDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\EsterManipulationDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\FrogDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateArenaDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateBrutusMine.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateConorDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateDeepMineEntryDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateMineDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateMineStorageDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonFireFestivalLukan.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonHolyHain.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonNorthDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonSouthDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampDruidDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampSeanDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuinCampUpperTownIveraDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\GreatTuskDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\LaudineDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\Generic\PlayerOustideSoftCircleDialogue.cs" />
+		<Compile Include="Systems\Audio\Dialogue\ReadOutDialogRoutinePoint.cs" />
+		<Compile Include="Systems\Audio\Dialogue\ReadOutDialogueHitBehaviour.cs" />
 		<Compile Include="Systems\Audio\Dialogue\CreateTTSDialogueFile.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\CrimeDialogues.cs" />
 		<Compile Include="Systems\Audio\Dialogue\DialogueNameAndFactions.cs" />
@@ -578,6 +576,8 @@
 		<Compile Include="Systems\Audio\Dialogue\DialogueUtils.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\MusicReactionDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Generic\RedTowerDialogue.cs" />
+		<Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
+		<Compile Include="Systems\Dialogues\EntityInfoPicturesToPngUtils.cs" />
 		<Compile Include="Systems\Dialogues\Editor\DrawNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\DrawTaskEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Factories\DrawTaskEditorFactory.cs" />
@@ -643,7 +643,7 @@
 		<Compile Include="Systems\Dialogues\Editor\Tasks\GQuestStateConditionTaskEditor.cs" />
 	</ItemGroup>
 
-		<ItemGroup>
+	<ItemGroup>
 		<None Include="..\README.MD">
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>

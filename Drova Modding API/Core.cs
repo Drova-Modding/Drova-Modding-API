@@ -10,7 +10,6 @@ using MelonLoader;
 using Il2CppDrova;
 using Drova_Modding_API.Systems.Dialogues;
 using Il2CppDrova.MapDatabases;
-using Drova_Modding_API.Systems.Audio.Dialogue;
 
 #if DEBUG
 using UnityEngine.InputSystem;
@@ -30,8 +29,6 @@ namespace Drova_Modding_API
     {
         internal static string AssemblyLocation;
         internal bool _inMainMenu = false;
-        readonly CreateTTSDialogueFile creation = new();
-
 #if DEBUG
         private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
 #endif
@@ -106,9 +103,7 @@ namespace Drova_Modding_API
             }
             if (Input.GetKeyDown(KeyCode.F3))
             {
-                //DynamicInstancesToGuid.GenerateGuids();
-                creation.Save();
-                //MelonCoroutines.Start(SetupNPC());
+                MelonCoroutines.Start(SetupNPC());
             }
             if (Input.GetKeyDown(KeyCode.F4))
             {
