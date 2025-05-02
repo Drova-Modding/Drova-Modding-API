@@ -82,12 +82,11 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             for (int i = 0; i < dialogueTrees.Length; i++)
             {
                 DialogueTree dialogueTree = dialogueTrees[i];
-                if (dialogueTree.IsTestOrDebugDialogue)
+                if (dialogueTree.IsTestOrDebugDialogue && dialogueTree.name != "DT_Main_NPC_Monko" && dialogueTree.name != "DT_Main_NPC_Minira")
                 {
                     //MelonLogger.Msg("Skipping creation for test/debug: " + dialogueTree.name);
                     continue;
                 }
-                ;
                 sbAllDialogueNames.Append(dialogueTree.name).AppendLine();
                 //MelonLogger.Msg("Creating dialogue file for: " + dialogueTree.name);
                 dialogueTree.SelfDeserialize();
