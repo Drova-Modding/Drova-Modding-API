@@ -33,12 +33,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     Il2CppNodeCanvas.Framework.Task task = condition.TryCast<Il2CppNodeCanvas.Framework.Task>();
                     _drawTaskEditors.Add(editor);
                     editor.Task = task;
+                    editor.GraphEditorManager = GraphEditorManager;
                     editor.Init();
                 }
                 else
                 {
                     DrawTaskEditor editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(null);
                     _drawTaskEditors.Add(editor);
+                    editor.GraphEditorManager = GraphEditorManager;
                     editor.Init();
                 }
             }
