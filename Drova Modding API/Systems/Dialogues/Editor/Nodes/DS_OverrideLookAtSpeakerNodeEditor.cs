@@ -22,7 +22,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_OverrideLookAtSpeaker>();
-            GraphEditorManager.DialogueTree.actorParameters.ForEach(new Action<DialogueTree.ActorParameter>(actor => _speakersNameToGuid.Add(actor.name, actor.ID)));
+            GraphEditorManager.DialogueTree.actorParameters.ForEach(new Action<DialogueTree.ActorParameter>(actor => _speakersNameToGuid.TryAdd(actor.name, actor.ID)));
             for (int i = 0; i < _castedNode._lookDirectionOverrides._lookDirections.Count; i++)
             {
                 LookDirectionsOverrides.ActorLookParam lookDirection = _castedNode._lookDirectionOverrides._lookDirections[i];
@@ -72,7 +72,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _actorLookParam = actorLookParam;
             _speakersNameToGuid = speakersNameToGuid;
-            List<string> nameList = _speakersNameToGuid.Keys.ToList();
+            List<string> nameList = [.. _speakersNameToGuid.Keys];
             _actorsDropdown.Add(new GUIDropdown([.. nameList], nameList.FindIndex(name => name == _actorLookParam._fromActor.name)));
             _actorsDropdown.Add(new GUIDropdown([.. nameList], nameList.FindIndex(name => name == _actorLookParam._toActor.name)));
         }
