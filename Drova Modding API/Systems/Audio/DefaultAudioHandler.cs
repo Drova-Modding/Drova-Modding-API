@@ -34,10 +34,20 @@ namespace Drova_Modding_API.Systems.Audio
         {
             string text = info.statement.text;
             Il2CppDrova.GUI.Dialogue.DS_DialogueWindow currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
+            if (currentWindow && !currentWindow.gameObject.transform.parent.name.Contains(info.actor.name, StringComparison.OrdinalIgnoreCase))
+            {
+                currentWindow = null;
+            }
             while (currentWindow == null)
             {
+
                 yield return null;
                 currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
+                if (currentWindow && !currentWindow.gameObject.transform.parent.name.Contains(info.actor.name, StringComparison.OrdinalIgnoreCase))
+                {
+                    currentWindow = null;
+                    yield return null;
+                }
             }
             TextMeshProUGUI actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
             actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);

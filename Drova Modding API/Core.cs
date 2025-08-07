@@ -10,6 +10,8 @@ using MelonLoader;
 using Il2CppDrova;
 using Drova_Modding_API.Systems.Dialogues;
 using Il2CppDrova.MapDatabases;
+using Drova_Modding_API.Systems.Audio.Dialogue;
+
 
 #if DEBUG
 using UnityEngine.InputSystem;
@@ -31,6 +33,7 @@ namespace Drova_Modding_API
         internal bool _inMainMenu = false;
 #if DEBUG
         private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
+        private readonly CreateTTSDialogueFile _ttsFile = new();
 #endif
 
         /// <inheritdoc/>
@@ -67,6 +70,7 @@ namespace Drova_Modding_API
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
+                //_ttsFile.CreateDialogueFile();
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
                 _inMainMenu = true;
@@ -78,6 +82,10 @@ namespace Drova_Modding_API
                 SystemInit.Init();
                 InputActionRegister.Instance.EnableGameplayActions();
                 _inMainMenu = false;
+            }
+            if (sceneName == SceneNames.AILogic)
+            {
+                _ttsFile.GenerateWorldDialogues();
             }
         }
 
@@ -120,6 +128,11 @@ namespace Drova_Modding_API
                     }
                 }
                 //AddressableAccess.Bandits.Human_Bandit_Mine_01.InstantiateAsync(PlayerAccess.GetPlayer().gameObject.transform.position, Quaternion.identity);
+            }
+            if (Input.GetKeyDown(KeyCode.F5))
+            {
+                _ttsFile.GenerateWorldDialogues();
+                _ttsFile.Save();
             }
 #endif
         }

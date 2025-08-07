@@ -4,7 +4,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>annotations</Nullable>
 		<RootNamespace>Drova_Modding_API</RootNamespace>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>12</LangVersion>
 		<IsPackable>false</IsPackable>
 		<AssemblyVersion>1.0.0.0</AssemblyVersion>
 		<FileVersion>1.0.0.0</FileVersion>

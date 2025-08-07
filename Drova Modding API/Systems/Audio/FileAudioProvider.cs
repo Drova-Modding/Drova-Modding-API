@@ -20,13 +20,15 @@ namespace Drova_Modding_API.Systems.Audio
         {
             StringBuilder sb = new();
             sb.Append("Trying to load audio clip for: ").Append(dialogeName).Append('_').Append(filePath.Replace('/', '_')).Append('_').Append(locaKey).Append('_').Append(actorName);
-            MelonLoader.MelonLogger.Msg(sb.ToString());
+            //MelonLoader.MelonLogger.Msg(sb.ToString());
             string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId);
+            MelonLoader.MelonLogger.Msg($"Loading audio from {path}");
             return LoadOggAudioAsync(path);
         }
 
         private static string GetAudioFilePath(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
         {
+           
             if (choiceId.HasValue)
             {
                 return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}.ogg");
@@ -35,10 +37,11 @@ namespace Drova_Modding_API.Systems.Audio
             {
                 return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}_{actorName}.ogg");
             }
-            else
+            if(dialogeName.Contains("DT_WorldDialogue_Template") && File.Exists(Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{filePath}_{locaKey}_{actorName}.ogg")))
             {
-                return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}.ogg");
+                return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{filePath}_{locaKey}_{actorName}.ogg");
             }
+            return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}.ogg");
         }
 
         private static async Task<AudioClip> LoadOggAudioAsync(string path)

@@ -25,7 +25,7 @@
         public const string NEMENTON_GATE_HAIN_NORTH_2 = "Laudine";
         public const string NEMENTON_LAUDINE = "Laudine";
         public const string NEMENTON_SISTER = "Molvina";
-        public readonly static string[] NEMENTON = [NEMENTON_LEADER, NEMENTON_GATE_NORTH, NEMENTON_GATE_SOUTH, NEMENTON_LAUDINE, NEMENTON_SISTER, NEMENTON_GATE_HAIN, "Henik", "Asmus", "Mombert", "Myrte", "Femke", "Lio", "Gerion", "Luten", "Olga", "Gradan", "Chunnaic", "Bonny", "Dunja", "Mumme", "Kellan", "Muc", "Helma", "Angus", "Etzel", "Fia", "Rura", "Humbert", "Karotte", "Junali", "Aiko", "Adela", "Kendrick", "Jennifer", "Swenn", "Enya", "Harvey", "Kerr", "Fester", "Kati", "Teigen", "Niala", "Colin", "Adwin", "Hailey", "Gilwar", "Farona", "Minira", "Willi", "Erwin"];
+        public readonly static string[] NEMENTON = [NEMENTON_LEADER, NEMENTON_GATE_NORTH, NEMENTON_GATE_SOUTH, NEMENTON_LAUDINE, NEMENTON_SISTER, NEMENTON_GATE_HAIN, "Henik", "Asmus", "Mombert", "Myrte", "Femke", "Lio", "Gerion", "Luten", "Olga", "Gradan", "Chunnaic", "Bonny", "Dunja", "Mumme", "Kellan", "Muc", "Helma", "Angus", "Etzel", "Fia", "Rura", "Humbert", "Karotte", "Junali", "Aiko", "Kendrick", "Jennifer", "Swenn", "Enya", "Harvey", "Kerr", "Fester", "Kati", "Teigen", "Niala", "Colin", "Adwin", "Hailey", "Gilwar", "Farona", "Minira", "Willi", "Erwin"];
 
         public const string RUINCAMP_BROTHER = "Jero";
         public const string RUINCAMP_DRUID_GUARD = "Oppo";

@@ -15,7 +15,7 @@ using Il2CppDrova.Weather;
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    ///  Easy access to the DrovaResourceProvider and its ressources
+    ///  Easy access to the DrovaResourceProvider and its resources
     /// </summary>
     public static class ProviderAccess
     {
@@ -82,7 +82,6 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Contains all global stats for the game <see cref="GenericStatDesc"/>
         /// </summary>
-
         public static StatContainer GetGlobalStatsContainer()
         {
             _cachedStateContainer ??= GetDrovaResourceProvider()._handler[3].Cast<StatContainer>();
