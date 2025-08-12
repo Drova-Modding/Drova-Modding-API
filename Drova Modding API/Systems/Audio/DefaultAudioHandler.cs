@@ -13,6 +13,8 @@ namespace Drova_Modding_API.Systems.Audio
     /// </summary>
     internal class DefaultAudioHandler : IAudioHandler
     {
+        private object _firstCoroutine;
+        private object _secondCoroutine;
         public void HandleMultipleChoiceRequest(MultipleChoiceRequestInfo info, DS_DialogueUGUI dialogueUGUI)
         {
             //info.
@@ -20,8 +22,16 @@ namespace Drova_Modding_API.Systems.Audio
 
         public void HandleSubtitleRequest(SubtitlesRequestInfo info, DS_DialogueUGUI dialogueUGUI)
         {
+            if (_firstCoroutine != null)
+            {
+                MelonCoroutines.Stop(_firstCoroutine);
+            }
+            if (_secondCoroutine != null)
+            {
+                MelonCoroutines.Stop(_secondCoroutine);
+            }
             //MelonLogger.Msg($"Handling subtitle request for: {info.actor.name}");
-            MelonCoroutines.Start(WaitForWindowAndSetup(info, dialogueUGUI));
+            _firstCoroutine = MelonCoroutines.Start(WaitForWindowAndSetup(info, dialogueUGUI));
         }
 
         /// <summary>
@@ -30,7 +40,7 @@ namespace Drova_Modding_API.Systems.Audio
         /// <param name="info">The info to set</param>
         /// <param name="dialogueUGUI">The instance of the dialouge GUI</param>
         /// <returns></returns>
-        private static IEnumerator WaitForWindowAndSetup(SubtitlesRequestInfo info, DS_DialogueUGUI dialogueUGUI)
+        private IEnumerator WaitForWindowAndSetup(SubtitlesRequestInfo info, DS_DialogueUGUI dialogueUGUI)
         {
             string text = info.statement.text;
             Il2CppDrova.GUI.Dialogue.DS_DialogueWindow currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
@@ -54,7 +64,7 @@ namespace Drova_Modding_API.Systems.Audio
             actorSpeech.maxVisibleCharacters = 0;
             actorSpeech.ForceMeshUpdate(false, false);
             float audioLength = info.statement.audio.length;
-            MelonCoroutines.Start(TypeText(dialogueUGUI, text, audioLength));
+            _secondCoroutine = MelonCoroutines.Start(TypeText(dialogueUGUI, text, audioLength));
         }
 
         /// <summary>
@@ -68,7 +78,6 @@ namespace Drova_Modding_API.Systems.Audio
         {
             Il2CppDrova.GUI.Dialogue.DS_DialogueWindow currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
             TextMeshProUGUI actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
-
             int totalCharacters = text.Length;
             float elapsedTime = 0f;
             float timePerCharacter = audioLength / totalCharacters;
@@ -81,12 +90,22 @@ namespace Drova_Modding_API.Systems.Audio
                 actorSpeech.maxVisibleCharacters = Mathf.Clamp(visibleCharacters, 0, totalCharacters);
                 try
                 {
+                    // IDK? Sometimes the actorSpeech Text gets reseted and we need to restore it somehow
+                    if (actorSpeech.text.Length == 0)
+                    {
+                        actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);
+                    }
                     actorSpeech.ForceMeshUpdate(false, false);
                 }
                 catch (Exception)
                 {
                     // this is a workaround for a bug in the dialogue system, when the dialogue window is first opened for the player
                     currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
+                    if (currentWindow == null)
+                    {
+                        MelonLogger.Warning("Window empty for text: {0}", text);
+                        break;
+                    }
                     actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
                     actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);
                     actorSpeech.maxVisibleCharacters = Mathf.Clamp(visibleCharacters, 0, totalCharacters);

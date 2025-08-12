@@ -18,17 +18,12 @@ namespace Drova_Modding_API.Systems.Audio
         /// <inheritdoc/>
         public Task<AudioClip> GetAudioClip(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
         {
-            StringBuilder sb = new();
-            sb.Append("Trying to load audio clip for: ").Append(dialogeName).Append('_').Append(filePath.Replace('/', '_')).Append('_').Append(locaKey).Append('_').Append(actorName);
-            //MelonLoader.MelonLogger.Msg(sb.ToString());
-            string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId);
-            MelonLoader.MelonLogger.Msg($"Loading audio from {path}");
+            string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId);   
             return LoadOggAudioAsync(path);
         }
 
         private static string GetAudioFilePath(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
         {
-           
             if (choiceId.HasValue)
             {
                 return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}.ogg");
@@ -50,6 +45,7 @@ namespace Drova_Modding_API.Systems.Audio
             {
                 if (!File.Exists(path))
                 {
+                    MelonLoader.MelonLogger.Msg($"Audio not found for {path.Split("/")[^1]}");
                     return null;
                 }
                 using VorbisReader vorbis = new(path);

@@ -56,7 +56,7 @@ namespace Drova_Modding_API.Systems.Audio
                 }
                 else
                 {
-                    MelonLogger.Msg($"Failed to load audio for statement {taskToStatement[task].statement.locaKey}");
+                    MelonLogger.Error($"Failed to load audio for statement {taskToStatement[task].statement.locaKey}");
                 }
             }
             Task.WaitAll([.. taskToChoice.Keys]);
@@ -69,7 +69,7 @@ namespace Drova_Modding_API.Systems.Audio
                 }
                 else
                 {
-                    MelonLogger.Msg($"Failed to load audio for choice {taskToChoice[task].statement.locaKey}");
+                    MelonLogger.Error($"Failed to load audio for choice {taskToChoice[task].statement.locaKey}");
                 }
             }
         }
@@ -86,7 +86,7 @@ namespace Drova_Modding_API.Systems.Audio
             }
             else
             {
-                MelonLogger.Msg($"Failed to load audio for statement {statementNode.statement.locaKey}");
+                MelonLogger.Error($"Failed to load audio for statement {statementNode.statement.locaKey}");
             }
         }
     }
