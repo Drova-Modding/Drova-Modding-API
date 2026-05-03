@@ -7,11 +7,15 @@ namespace Drova_Modding_API.Systems.Audio
     /// </summary>
     public static class AudioManager
     {
+        /// <summary>
+        /// The cached CAVE prefix for audios
+        /// </summary>
+        public static string DEFAULT_CAVE_AUDIO_PREFIX = "_CAVE";
         internal static IAudioConnector _dialogueAudioConnector = new DefaultDialogueAudioConnector(new FileAudioProvider());
         internal static IAudioHandler _audioHandler = new DefaultAudioHandler();
 
         /// <summary>
-        /// Replace the current DialougeAudioConnector with a new one
+        /// Replace the current DialogueAudioConnector with a new one
         /// </summary>
         /// <param name="dialogueAudioConnector">new DialogueAudioConnector</param>
         public static void ReplaceDialogueAudioConnector(IAudioConnector dialogueAudioConnector)

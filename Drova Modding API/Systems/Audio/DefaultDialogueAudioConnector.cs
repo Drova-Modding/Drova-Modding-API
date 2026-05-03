@@ -16,15 +16,14 @@ namespace Drova_Modding_API.Systems.Audio
         /// <summary>
         /// The audio provider to use for the dialogue system
         /// </summary>
-        public IAudioProvider AudioProvider = audioProvider;
+        public readonly IAudioProvider AudioProvider = audioProvider;
 
-        internal static HashSet<string> _loadedAudioTress = [];
+        internal static readonly HashSet<string> _loadedAudioTress = [];
 
         /// <inheritdoc/>
         public void OnDialogueTreeLoaded(DialogueTree dialogueTree)
         {
-            if (_loadedAudioTress.Contains(dialogueTree.name)) return;
-            _loadedAudioTress.Add(dialogueTree.name);
+            if (!_loadedAudioTress.Add(dialogueTree.name)) return;
             Dictionary<Task<AudioClip>, DS_StatementNode> taskToStatement = [];
             Dictionary<Task<AudioClip>, DS_MultipleChoiceNode.Choice> taskToChoice = [];
             for (int i = 0; i < dialogueTree.allNodes.Count; i++)
@@ -36,13 +35,13 @@ namespace Drova_Modding_API.Systems.Audio
                     taskToStatement.TryAdd(AudioProvider.GetAudioClip(statement.DLGTree.name, statement.statement.useGlobalLoca ? statement.statement.GlobalLocaPath : dialogueTree.LocaPath, statement.statement.locaKey, statement.actorName, null), statement);
                     continue;
                 }
-                DS_MultipleChoiceNode mutlipleChoice = node.TryCast<DS_MultipleChoiceNode>();
-                if (mutlipleChoice != null)
+                DS_MultipleChoiceNode multipleChoice = node.TryCast<DS_MultipleChoiceNode>();
+                if (multipleChoice != null)
                 {
-                    for (int j = 0; j < mutlipleChoice.availableChoices.Count; j++)
+                    for (int j = 0; j < multipleChoice.availableChoices.Count; j++)
                     {
-                        DS_MultipleChoiceNode.Choice choice = mutlipleChoice.availableChoices[j];
-                        taskToChoice.TryAdd(AudioProvider.GetAudioClip(mutlipleChoice.DLGTree.name, choice.statement.useGlobalLoca ? choice.statement.GlobalLocaPath : dialogueTree.LocaPath, choice.statement.locaKey, mutlipleChoice.actorName, j), choice);
+                        DS_MultipleChoiceNode.Choice choice = multipleChoice.availableChoices[j];
+                        taskToChoice.TryAdd(AudioProvider.GetAudioClip(multipleChoice.DLGTree.name, choice.statement.useGlobalLoca ? choice.statement.GlobalLocaPath : dialogueTree.LocaPath, choice.statement.locaKey, multipleChoice.actorName, j), choice);
                     }
                 }
             }

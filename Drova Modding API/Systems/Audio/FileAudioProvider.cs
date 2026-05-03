@@ -1,4 +1,5 @@
-﻿using NVorbis;
+﻿using Drova_Modding_API.Systems.WorldEvents;
+using NVorbis;
 using System.Text;
 using UnityEngine;
 
@@ -14,16 +15,39 @@ namespace Drova_Modding_API.Systems.Audio
         /// </summary>
         const string AudioFolderName = "Audio";
         readonly Dictionary<string, CachedAudio> actorToCachedAudio = [];
+        private readonly AreaNameSystem _areaNameSystem;
+        
+
+        /// <summary>
+        /// Initializes a new instance of the FileAudioProvider class and caches the AreaNameSystem
+        /// </summary>
+        public FileAudioProvider()
+        {
+            _areaNameSystem = WorldEventSystemManager.Instance.areaNameSystem;
+        }
 
         /// <inheritdoc/>
         public Task<AudioClip> GetAudioClip(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
         {
-            string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId);   
+            string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId, _areaNameSystem.IsInCave());   
             return LoadOggAudioAsync(path);
         }
 
-        private static string GetAudioFilePath(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
+        private static string GetAudioFilePath(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId, bool isInCave)
         {
+            if (isInCave)
+            {
+                var path = Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}_{actorName}{AudioManager.DEFAULT_CAVE_AUDIO_PREFIX}.ogg");
+                if(File.Exists(path))
+                {
+                    return path;
+                }
+                path = Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}{AudioManager.DEFAULT_CAVE_AUDIO_PREFIX}.ogg");
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
             if (choiceId.HasValue)
             {
                 return Path.Combine(Utils.SavePath, AudioFolderName, $"{dialogeName}_{locaKey}_{filePath}.ogg");
