@@ -2,15 +2,17 @@
 using HarmonyLib;
 using Il2CppDrova.GUI;
 
-[HarmonyPatch(typeof(GUI_GameMenu_APanel), nameof(GUI_GameMenu_APanel.OnTryClosePanel))]
-static class GUI_GameMenu_APanelPatch
+[HarmonyPatch(typeof(GUI_Window_Options), nameof(GUI_Window_Options.CloseWindow))]
+static class GUI_Window_Options_CloseWindowPatch
 {
-    static void Postfix(ref bool __result)
+    static bool Prefix(GUI_Window_Options __instance)
     {
+        // If currently mapping input keys, prevent window from closing
         if (InputActionRegister.isMappingCurrently)
         {
-            __result = false;
+            return false; // Skip the original method
         }
+        return true; // Allow the original method to execute
     }
 }
 

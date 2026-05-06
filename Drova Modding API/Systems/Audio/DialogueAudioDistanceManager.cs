@@ -22,6 +22,7 @@ namespace Drova_Modding_API.Systems.Audio
         private const float DEFAULT_MIN_DISTANCE = 100f;
         private const float DEFAULT_MAX_DISTANCE = 425f;
         private const float DEFAULT_VOLUME_LERP_SPEED = 5f;
+        private const float VOLUME_SNAP_EPSILON = 0.0001f;
 
         private sealed class RegisteredDialogueSource(AudioSource source, Transform actorTransform)
         {
@@ -119,9 +120,7 @@ namespace Drova_Modding_API.Systems.Audio
         {
             if (_registeredSources.Count == 0) return;
             ApplyConfiguredSettings();
-            MelonLogger.Msg("Updating DialogueAudioDistanceManager");
             if (!PlayerAccess.TryGetPlayer(out Il2CppDrova.Actor player)) return;
-            MelonLogger.Msg("Found player, adjusting dialogue audio volumes");
             Vector2 playerPos = player.transform.position;
 
             for (int i = _registeredSources.Count - 1; i >= 0; i--)
@@ -176,13 +175,19 @@ namespace Drova_Modding_API.Systems.Audio
 
                 Vector2 actorPos = actorTransform.position;
                 float distance = Vector2.Distance(actorPos, playerPos);
-                float adjustedDistance = Mathf.Max(0f, distance - MinDistance);
-                float targetVolume = Mathf.Max(0f, 1f - (adjustedDistance * adjustedDistance) / ((MaxDistance - MinDistance) * (MaxDistance - MinDistance)));
-                float volume = Mathf.Lerp(source.volume, targetVolume, Time.deltaTime * VolumeLerpSpeed);
-                source.volume = volume;
-                //float volume = Mathf.Clamp01(1f - Mathf.InverseLerp(MinDistance, MaxDistance, distance));
-                MelonLogger.Msg($"Setting volume to {volume}%");
-                //source.volume = volume;
+                float normalized = Mathf.InverseLerp(MinDistance, MaxDistance, distance);
+                float targetVolume = Mathf.Clamp01(1f - (normalized * normalized));
+
+                // Snap very low values to zero to avoid endless tiny exponential decay updates.
+                if (targetVolume <= VOLUME_SNAP_EPSILON)
+                {
+                    source.volume = 0f;
+                    continue;
+                }
+
+                float lerpFactor = Mathf.Clamp01(Time.deltaTime * VolumeLerpSpeed);
+                float volume = Mathf.Lerp(source.volume, targetVolume, lerpFactor);
+                source.volume = Mathf.Abs(volume - targetVolume) <= VOLUME_SNAP_EPSILON ? targetVolume : volume;
             }
         }
     }

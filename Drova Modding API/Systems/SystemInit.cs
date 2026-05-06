@@ -1,6 +1,7 @@
 ﻿using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
+using Drova_Modding_API.Systems.GlobalVars;
 using Drova_Modding_API.Systems.SaveGame;
 using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.WorldEvents;
@@ -21,6 +22,7 @@ namespace Drova_Modding_API.Systems
                 AreaNameSystem areaNameSystem = moddingAPISystemRoot.AddComponent<AreaNameSystem>();
                 WorldEventSystemManager worldEventSystem = moddingAPISystemRoot.AddComponent<WorldEventSystemManager>();
                 worldEventSystem.areaNameSystem = areaNameSystem;
+                moddingAPISystemRoot.AddComponent<GlobalVarInspectorSystem>();
                 moddingAPISystemRoot.AddComponent<DialogueAudioDistanceManager>();
                 moddingAPISystemRoot.SetActive(true);
                 // TODO Fix me, it doesn't move the object to the scene

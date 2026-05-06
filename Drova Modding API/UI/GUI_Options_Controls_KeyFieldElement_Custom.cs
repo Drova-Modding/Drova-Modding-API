@@ -24,7 +24,8 @@ namespace Drova_Modding_API.UI
         GameObject conflictMarker;
         GameObject _controller;
         GameObject _keyboard;
-        GameObject _exitButton;
+        GameObject? _exitButton;
+        RebindingOperation? _rebindOperation;
 
         private const string GamePadGroup = "Gamepad";
         private const string KeyboardGroup = "Keyboard;Mouse";
@@ -34,13 +35,15 @@ namespace Drova_Modding_API.UI
         /// </summary>
         protected void OnDestroy()
         {
+            CancelCurrentRebinding();
+            InputActionRegister.isMappingCurrently = false;
             InputSystem.remove_onDeviceChange(new Action<InputDevice, InputDeviceChange>(this.OnDeviceChange));
         }
 
         /**
          * Initialize the keybinding element.
          */
-        public void Init(string actionName, GameObject exitButton = null)
+        public void Init(string actionName, GameObject? exitButton = null)
         {
             _exitButton = exitButton;
             _actionName = actionName;
@@ -108,14 +111,13 @@ namespace Drova_Modding_API.UI
                 MelonLogger.Warning($"Binding index not found for action {_actionName} and group {GamePadGroup}. This could be intenional if you don't want this action to be rebindable");
                 return;
             }
-            _controllerKeybindingText.text = action.GetBindingDisplayString(0, GamePadGroup);
+            _controllerKeybindingText.text = action.bindings[bindingIndex].ToDisplayString();
         }
 
         private void RemoveGamepad()
         {
             _controllerButton.onClick.RemoveAllListeners();
             _controllerButton.gameObject.SetActive(false);
-
         }
 
         private void InitKeyboard()
@@ -123,12 +125,18 @@ namespace Drova_Modding_API.UI
             _keyboard.SetActive(true);
             InputAction action = InputActionRegister.Instance[_actionName];
             _keybindingButton.onClick.AddListener(new Action(RegisterListen));
-            _keybindingText.text = action.GetBindingDisplayString(0, KeyboardGroup);
+            int bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(KeyboardGroup));
+            if (bindingIndex == -1)
+            {
+                _keybindingButton.interactable = false;
+                MelonLogger.Warning($"Binding index not found for action {_actionName} and group {KeyboardGroup}. This could be intenional if you don't want this action to be rebindable");
+                return;
+            }
+            _keybindingText.text = action.bindings[bindingIndex].ToDisplayString();
         }
 
         private void Init()
         {
-
             if (Gamepad.current != null)
             {
                 InitGamepad();
@@ -138,7 +146,6 @@ namespace Drova_Modding_API.UI
                 RemoveGamepad();
             }
             InitKeyboard();
-
         }
 
         private void RegisterListen()
@@ -162,20 +169,65 @@ namespace Drova_Modding_API.UI
                 MelonLogger.Error($"Binding index not found for action {_actionName} and group {group}.");
                 return;
             }
+            CancelCurrentRebinding();
+
+            string originalBindingText = action.bindings[bindingIndex].ToDisplayString();
             InputActionRegister.isMappingCurrently = true;
-            RebindingOperation rebindOperation = action.PerformInteractiveRebinding(bindingIndex).WithControlsExcluding(excludeGroup).WithBindingMask(new Il2CppSystem.Nullable<InputBinding>(InputBinding.MaskByGroup(group))).WithTimeout(30);
+            _exitButton?.SetActive(false);
+
+            RebindingOperation rebindOperation = action.PerformInteractiveRebinding(bindingIndex)
+                .WithControlsExcluding(excludeGroup)
+                .WithBindingMask(new Il2CppSystem.Nullable<InputBinding>(InputBinding.MaskByGroup(group)))
+                .WithTimeout(30);
+            _rebindOperation = rebindOperation;
+
+            if (group == KeyboardGroup)
+            {
+                rebindOperation.WithCancelingThrough("<Keyboard>/backquote");
+            }
+            else if (group == GamePadGroup)
+            {
+                rebindOperation.WithCancelingThrough("<Gamepad>/start");
+            }
+
             if (secondaryExcludeGroup != null)
             {
                 rebindOperation.WithControlsExcluding(secondaryExcludeGroup);
             }
+            rebindOperation.OnCancel(new Action<RebindingOperation>(operation =>
+            {
+                textMesh.text = originalBindingText;
+                FinishRebinding(operation);
+            }));
             rebindOperation.OnComplete(new Action<RebindingOperation>(operation =>
             {
                 textMesh.text = operation.action.bindings[bindingIndex].ToDisplayString();
-                InputActionRegister.isMappingCurrently = false;
-                _exitButton.SetActive(true);
-                operation.Dispose();
+                FinishRebinding(operation);
             }));
             rebindOperation.Start();
+        }
+
+        private void FinishRebinding(RebindingOperation operation)
+        {
+            InputActionRegister.isMappingCurrently = false;
+            _exitButton?.SetActive(true);
+            if (_rebindOperation == operation)
+            {
+                _rebindOperation = null;
+            }
+            operation.Dispose();
+        }
+
+        private void CancelCurrentRebinding()
+        {
+            if (_rebindOperation == null)
+            {
+                return;
+            }
+
+            RebindingOperation operation = _rebindOperation;
+            _rebindOperation = null;
+            operation.Cancel();
         }
     }
 }

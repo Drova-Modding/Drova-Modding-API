@@ -11,6 +11,9 @@ using static Il2CppNodeCanvas.DialogueTrees.DS_MultipleChoiceNode;
 
 namespace Drova_Modding_API.Systems.Dialogues
 {
+    /// <summary>
+    /// The dialog graph for adding to self-created actors a dialogue tree
+    /// </summary>
     public static class DialogGraph
     {
         internal static void AddDialogGraph(Actor actor)

@@ -20,7 +20,7 @@ namespace Drova_Modding_API.Access
     public static class ProviderAccess
     {
         private static DrovaResourceProvider _DrovaResourceProvider;
-        private static GameManager _gameManager;
+        private static GameManager? _gameManager;
 
         /// <summary>
         /// Access to the DrovaResourceProvider
@@ -53,7 +53,7 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static SubDatabase_StatusEffect StatusEffectDatabase => GetGameDatabase()._statusEffectDatabase;
 
-        private static StatContainer _cachedStateContainer;
+        private static StatContainer? _cachedStateContainer;
 
         /// <summary>
         /// Contains BHV Trees
@@ -326,7 +326,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// GameOverManager
         /// </summary>
-        public static bool TryGetGameOverGameHandler(out GameOverGameHandler gameOverGameHandler)
+        public static bool TryGetGameOverGameHandler(out GameOverGameHandler? gameOverGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -346,7 +346,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Time scale
         /// </summary>
-        public static bool TryGetGameStateGameHandler(out GameStateGameHandler gameStateGameHandler)
+        public static bool TryGetGameStateGameHandler(out GameStateGameHandler? gameStateGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -364,9 +364,9 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Access to joarnal, map collection and crafting
+        /// Access to journal, map collection, and crafting
         /// </summary>
-        public static bool TryGetPlayerMetaDataGameHandler(out PlayerMetaDataGameHandler playerMetaDataGameHandler)
+        public static bool TryGetPlayerMetaDataGameHandler(out PlayerMetaDataGameHandler? playerMetaDataGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -384,29 +384,29 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// WeatherGameHandler Access to weather events and properties
+        /// weatherGameHandler Access to weather events and properties
         /// </summary>
-        public static bool TryGetWeatherGameHandler(out WeatherGameHandler WeatherGameHandler)
+        public static bool TryGetWeatherGameHandler(out WeatherGameHandler? weatherGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
-                WeatherGameHandler = null;
+                weatherGameHandler = null;
                 return false;
             }
-            if (_gameManager.TryGetGameHandler("WeatherGameHandler", out IGameHandler handler))
+            if (_gameManager.TryGetGameHandler("weatherGameHandler", out IGameHandler handler))
             {
-                WeatherGameHandler = handler.Cast<WeatherGameHandler>();
+                weatherGameHandler = handler.Cast<WeatherGameHandler>();
                 return true;
             }
 
-            WeatherGameHandler = null;
+            weatherGameHandler = null;
             return false;
         }
 
         /// <summary>
         /// DaytimeGameHandler with events 
         /// </summary>
-        public static bool TryGetDaytimeGameHandler(out DaytimeGameHandler daytimeGameHandler)
+        public static bool TryGetDaytimeGameHandler(out DaytimeGameHandler? daytimeGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -427,7 +427,7 @@ namespace Drova_Modding_API.Access
         /// RootObjectHandler get root objects for scenes
         /// Possible values: "RoutineScene_Gameplay_Main", "RoutineScene_Creatures", "AIControllerScene_Creatures", "AIControllerScene_Actors", "RoutineScene_Actors"
         /// </summary>
-        public static bool TryGetRootObjectHandler(out RootObjectHandler rootObjectHandler)
+        public static bool TryGetRootObjectHandler(out RootObjectHandler? rootObjectHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -447,7 +447,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// LazyManager for other lazy Objects
         /// </summary>
-        public static bool TryGetLazyManager(out LazyManager lazyManager)
+        public static bool TryGetLazyManager(out LazyManager? lazyManager)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -467,7 +467,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Lazy Ai Factory Manager
         /// </summary>
-        public static bool TryGetLazyAIFactoryManager(out LazyAIFactoryManager lazyAIFactoryManager)
+        public static bool TryGetLazyAIFactoryManager(out LazyAIFactoryManager? lazyAIFactoryManager)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -487,7 +487,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Lazy Loaded Hit Objects
         /// </summary>
-        public static bool TryGetLazyHitFactoryManager(out LazyHitFactoryManager lazyHitFactoryManager)
+        public static bool TryGetLazyHitFactoryManager(out LazyHitFactoryManager? lazyHitFactoryManager)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -507,7 +507,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Congition Manager
         /// </summary>
-        public static bool TryGetCognitionOctreeManager(out CognitionOctreeManager cognitionOctreeManager)
+        public static bool TryGetCognitionOctreeManager(out CognitionOctreeManager? cognitionOctreeManager)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -525,7 +525,7 @@ namespace Drova_Modding_API.Access
         }
 
         /**
-         * Access to the AstarPath for navigation and pathfinding, as example <see cref="AstarPath.GetNearest(UnityEngine.Vector3)"/>
+         * Access to the AstarPath for navigation and pathfinding, as an example <see cref="AstarPath.GetNearest(UnityEngine.Vector3)"/>
          */
         public static AstarPath GetAstarPath()
         {

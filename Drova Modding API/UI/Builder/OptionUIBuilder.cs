@@ -227,10 +227,10 @@ namespace Drova_Modding_API.UI.Builder
             unitySlider.wholeNumbers = wholeNumbers;
 
             GUI_ConfigOption_Slider_Float sliderOption = rightOptionConfig.gameObject.AddComponent<GUI_ConfigOption_Slider_Float>();
-            sliderOption._uiElement = unitySlider;
-            sliderOption._configHandler = ProviderAccess.GetConfigGameHandler();
-            sliderOption._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
-            sliderOption._key._key = optionKey;
+            sliderOption.UiElement = unitySlider;
+            sliderOption.ConfigHandler = ProviderAccess.GetConfigGameHandler();
+            sliderOption.Key = ScriptableObject.CreateInstance<ConfigOptionKey>();
+            sliderOption.Key._key = optionKey;
             GUI_ConfigOption_Slider toDestroy = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
             if (toDestroy)
             {
@@ -242,25 +242,25 @@ namespace Drova_Modding_API.UI.Builder
             }
 
             sliderOption.Init();
-            if (!sliderOption._configHandler)
+            if (!sliderOption.ConfigHandler)
             {
                 MelonLogger.Error("ConfigHandler not found in slider prefab");
                 return this;
             }
 
-            if (!sliderOption._configHandler.GameplayConfig._configFile.TryGetString(optionKey, out string value))
+            if (!sliderOption.ConfigHandler.GameplayConfig._configFile.TryGetString(optionKey, out string value))
             {
-                sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
+                sliderOption.ConfigHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
 
-                ConfigOption_Float configOptionFloat = new(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
-                sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
+                ConfigOption_Float configOptionFloat = new(sliderOption.ConfigHandler.GameplayConfig, optionKey, defaultValue);
+                sliderOption.ConfigHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(defaultValue);
             }
             else
             {
-                ConfigOption_Float configOptionFloat = new(sliderOption._configHandler.GameplayConfig, optionKey, float.Parse(value));
+                ConfigOption_Float configOptionFloat = new(sliderOption.ConfigHandler.GameplayConfig, optionKey, float.Parse(value));
 
-                sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
+                sliderOption.ConfigHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(float.Parse(value));
             }
             gameObjects.Add(slider);

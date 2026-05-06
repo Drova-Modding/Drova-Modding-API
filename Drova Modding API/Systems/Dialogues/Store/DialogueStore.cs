@@ -12,10 +12,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
         [Serializable]
         private class SaveData
         {
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
             public byte[] StoredData;
             public byte[] ObjectReferences;
             public string Key;
             public bool IsBuiltInDialog;
+#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
+
         }
 
         private readonly Dictionary<string, SaveData> _dialogues = new();

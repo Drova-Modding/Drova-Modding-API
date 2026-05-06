@@ -62,7 +62,14 @@ namespace Drova_Modding_API.Systems.Audio
             TextMeshProUGUI actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
             actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);
             actorSpeech.maxVisibleCharacters = 0;
-            actorSpeech.ForceMeshUpdate(false, false);
+            try
+            {
+                actorSpeech.ForceMeshUpdate(false, false);
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Warning("ForceMeshUpdate failed during setup for text: {0} - {1}", text, e.Message);
+            }
             float audioLength = info.statement.audio.length;
             _secondCoroutine = MelonCoroutines.Start(TypeText(dialogueUGUI, text, audioLength));
         }
@@ -109,14 +116,28 @@ namespace Drova_Modding_API.Systems.Audio
                     actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
                     actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);
                     actorSpeech.maxVisibleCharacters = Mathf.Clamp(visibleCharacters, 0, totalCharacters);
-                    actorSpeech.ForceMeshUpdate(false, false);
+                    try
+                    {
+                        actorSpeech.ForceMeshUpdate(false, false);
+                    }
+                    catch (Exception innerEx)
+                    {
+                        MelonLogger.Warning("ForceMeshUpdate failed in recovery for text: {0} - {1}", text, innerEx.Message);
+                    }
                 }
                 yield return null;
             }
 
             // Ensure all characters are visible at the end
             actorSpeech.maxVisibleCharacters = totalCharacters;
-            actorSpeech.ForceMeshUpdate(false, false);
+            try
+            {
+                actorSpeech.ForceMeshUpdate(false, false);
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Warning("ForceMeshUpdate failed at end of TypeText for text: {0} - {1}", text, e.Message);
+            }
         }
     }
 }

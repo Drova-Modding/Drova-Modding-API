@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0 - 2026-05-03]
+### Added
+- Functional dialogue system with graph editor support (nodes, tasks, multiple choice flow)
+- Generic, world, and player dialogue generation improvements
+- Dialogue audio integration with provider interfaces and file-based audio loading
+- Dynamic dialogue audio volume based on player distance
+- Utility scripts and mappings for dialogue/TTS workflows
+
+### Changed
+- Improved dialogue editor rendering, line drawing, and graph navigation behavior
+- Refined dialogue creation flow and handling for more generic dialogue cases
+- Cleanup and optimization around provider access and release compilation
+- On building no more warnings :D
+
+### Fixed
+- Fixed an error message which would appear when we tried to patch the options menu
+- Fixed a bug where interrupting a rebinding attempt could leave the control in a stale state and require clicking again before rebinding would work
+- Fixed the custom input rebinding flow to clean up properly on cancel/complete and restore the UI state correctly
+
 ## [0.3.0 - 2024-11-29]
 ### Added
 - Event System

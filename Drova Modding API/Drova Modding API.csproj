@@ -94,14 +94,8 @@
 		<Reference Include="Il2CppParadoxNotion">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppParadoxNotion.dll</HintPath>
 		</Reference>
-		<Reference Include="Il2CppPathfinding.ClipperLib">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppPathfinding.ClipperLib.dll</HintPath>
-		</Reference>
 		<Reference Include="Il2CppPathfinding.Ionic.Zip.Reduced">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppPathfinding.Ionic.Zip.Reduced.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppPathfinding.Poly2Tri">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppPathfinding.Poly2Tri.dll</HintPath>
 		</Reference>
 		<Reference Include="Il2CppRewired_Core">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppRewired_Core.dll</HintPath>
@@ -117,9 +111,6 @@
 		</Reference>
 		<Reference Include="Il2CppSirenix.OdinInspector.Modules.Unity.Addressables">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.OdinInspector.Modules.Unity.Addressables.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSirenix.Serialization.AOTGenerated">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.Serialization.AOTGenerated.dll</HintPath>
 		</Reference>
 		<Reference Include="Il2CppSirenix.Serialization.Config">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.Serialization.Config.dll</HintPath>
@@ -247,12 +238,6 @@
 		<Reference Include="UnityEngine.ClothModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ClothModule.dll</HintPath>
 		</Reference>
-		<Reference Include="UnityEngine.ClusterInputModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ClusterInputModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.ClusterRendererModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ClusterRendererModule.dll</HintPath>
-		</Reference>
 		<Reference Include="UnityEngine.ContentLoadModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ContentLoadModule.dll</HintPath>
 		</Reference>
@@ -300,9 +285,6 @@
 		</Reference>
 		<Reference Include="UnityEngine.LocalizationModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.LocalizationModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.NVIDIAModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.NVIDIAModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.ParticleSystemModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ParticleSystemModule.dll</HintPath>
@@ -409,26 +391,14 @@
 		<Reference Include="UnityEngine.UnityWebRequestWWWModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
 		</Reference>
-		<Reference Include="UnityEngine.VehiclesModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VehiclesModule.dll</HintPath>
-		</Reference>
 		<Reference Include="UnityEngine.VFXModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VFXModule.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.VideoModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VideoModule.dll</HintPath>
 		</Reference>
-		<Reference Include="UnityEngine.VirtualTexturingModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VirtualTexturingModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.VRModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VRModule.dll</HintPath>
-		</Reference>
 		<Reference Include="UnityEngine.WindModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.WindModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.XRModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.XRModule.dll</HintPath>
 		</Reference>
 		<Reference Include="MelonLoader">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\MelonLoader.dll</HintPath>
@@ -518,6 +488,7 @@
 		<Compile Include="Systems\SaveGame\Store\LazyActorStore.cs" />
 		<Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
 		<Compile Include="Systems\Dialogues\DialogGraph.cs" />
+		<Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.cs" />
 		<Compile Include="Systems\Spawning\LazyActorSaveData.cs" />
 		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
 		<Compile Include="Systems\Spawning\ActorWorldLocator.cs" />
@@ -653,6 +624,12 @@
 
 	<ItemGroup>
 		<PackageReference Include="NVorbis" Version="0.10.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="..\.gitignore">
+	    <Link>.gitignore</Link>
+	  </Content>
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

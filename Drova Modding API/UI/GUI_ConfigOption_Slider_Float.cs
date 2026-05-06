@@ -17,13 +17,27 @@ namespace Drova_Modding_API.UI
     [RegisterTypeInIl2Cpp]
     public class GUI_ConfigOption_Slider_Float : MonoBehaviour
     {
-        public Slider _uiElement;
-        public ConfigGameHandler _configHandler;
-        public ConfigOptionKey _key;
+        /// <summary>
+        /// Slider UI Element
+        /// </summary>
+        public Slider UiElement;
+        /// <summary>
+        /// The config game handler
+        /// </summary>
+        public ConfigGameHandler ConfigHandler;
+        /// <summary>
+        /// The key for the ConfigGameHandler
+        /// </summary>
+        public ConfigOptionKey Key;
 
         private TextMeshProUGUI _amountText;
         private bool _showPercentSign;
 
+        /// <summary>
+        /// Do not use
+        /// </summary>
+        /// <param name="ptr"></param>
+        // ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
         public GUI_ConfigOption_Slider_Float(IntPtr ptr) : base(ptr)
         {
         }
@@ -52,12 +66,12 @@ namespace Drova_Modding_API.UI
         /// </summary>
         public void SetUIValueCustom(float value)
         {
-            if (_uiElement == null)
+            if (UiElement == null)
             {
                 MelonLogger.Error("UI slider element is not initialized");
                 return;
             }
-            _uiElement.value = value;
+            UiElement.value = value;
             OnValueChangedListener(value);
         }
 
@@ -85,7 +99,7 @@ namespace Drova_Modding_API.UI
             {
                 _amountText.text = value.ToString("0.00");
             }
-            _configHandler?.GameplayConfig?.ConfigFile?.SetValue(_key?._key, value.ToString("0.00"));
+            ConfigHandler?.GameplayConfig?.ConfigFile?.SetValue(Key?._key, value.ToString("0.00"));
         }
     }
 }

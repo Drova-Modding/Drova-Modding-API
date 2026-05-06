@@ -128,7 +128,6 @@ namespace Drova_Modding_API.Systems.ModdingUI
 
                     minDistanceSlider.onValueChanged.AddListener(new Action<float>((value) =>
                     {
-                        MelonLogger.Msg($"Min Distance changed to {value}");
                         if (value >= maxDistanceSlider.value)
                         {
                             maxDistanceOptions.OnValueChangedListener(value + 1f);
@@ -138,7 +137,6 @@ namespace Drova_Modding_API.Systems.ModdingUI
 
                     maxDistanceSlider.onValueChanged.AddListener(new Action<float>((value) =>
                     {
-                        MelonLogger.Msg($"Max Distance changed to {value}");
                         if (value <= minDistanceSlider.value)
                         {
                             minDistanceOptions.OnValueChangedListener(value - 1f);

@@ -14,7 +14,6 @@ namespace Drova_Modding_API.Systems.Audio
         /// Path to the audio files
         /// </summary>
         const string AudioFolderName = "Audio";
-        readonly Dictionary<string, CachedAudio> actorToCachedAudio = [];
         private readonly AreaNameSystem _areaNameSystem;
         
 
@@ -82,12 +81,6 @@ namespace Drova_Modding_API.Systems.Audio
                 audioClip.SetData(samples, 0);
                 return audioClip;
             });
-        }
-
-        private class CachedAudio
-        {
-            internal AudioClip AudioClip;
-            internal bool IsLoaded;
         }
     }
 }
