@@ -57,6 +57,35 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// </summary>
         public int OptionsCount => _options.Length;
 
+        // ── Deferred overlay system ──────────────────────────────────────────
+        // GUI.depth only affects ordering between separate OnGUI callbacks.
+        // Within one OnGUI, last-drawn = on top.  We therefore defer all
+        // dropdown overlays to after all nodes have been drawn.
+
+        private static readonly List<(GUIDropdown dd, Rect rect)> _pendingOverlays = [];
+
+        // Set by FlushOverlays; consumed (and cleared) on the next Draw() call
+        private bool _changedThisFlush = false;
+
+        /// <summary>
+        /// Draws all deferred dropdown overlays.
+        /// Call this once per frame, AFTER all nodes / controls have been drawn,
+        /// so that open dropdowns are always painted on top of everything else.
+        /// </summary>
+        public static void FlushOverlays()
+        {
+            // Snapshot + clear BEFORE drawing in case an item click triggers
+            // re-entrant Draw() calls that add new entries.
+            (GUIDropdown dd, Rect rect)[] toFlush = [.. _pendingOverlays];
+            _pendingOverlays.Clear();
+            foreach ((GUIDropdown dd, Rect rect) in toFlush)
+            {
+                if (dd.DrawOptions(rect))
+                    dd._changedThisFlush = true;
+            }
+        }
+        // ────────────────────────────────────────────────────────────────────
+
         /// <summary>
         /// Initializes a new instance of the GUIDropdown class.
         /// </summary>
@@ -67,15 +96,33 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             _options = options;
             _selectedIndex = selectedIndex;
 
+            Texture2D blackTexture = CreateTexture(2, 2, Color.black);
+            Texture2D hoverTexture = CreateTexture(2, 2, new Color(0.15f, 0.15f, 0.15f, 1.0f));
+            Texture2D highlightTexture = CreateTexture(2, 2, new Color(0.2f, 0.5f, 0.8f, 1.0f));
+
             // Initialize default styles
             _defaultStyle = new GUIStyle(GUI.skin.button);
             _defaultStyle.normal.textColor = Color.white;
-            _defaultStyle.normal.background = CreateTexture(2, 2, Color.black);
+            _defaultStyle.normal.background = blackTexture;
+            _defaultStyle.hover.background = hoverTexture;
+            _defaultStyle.active.background = hoverTexture;
+            _defaultStyle.focused.background = blackTexture;
+            _defaultStyle.onNormal.background = blackTexture;
+            _defaultStyle.onHover.background = hoverTexture;
+            _defaultStyle.onActive.background = hoverTexture;
+            _defaultStyle.onFocused.background = blackTexture;
 
             // Highlight style with a different background color
             _highlightStyle = new GUIStyle(GUI.skin.button);
             _highlightStyle.normal.textColor = Color.yellow;
-            _highlightStyle.normal.background = CreateTexture(2, 2, new Color(0.2f, 0.5f, 0.8f, 0.8f));
+            _highlightStyle.normal.background = highlightTexture;
+            _highlightStyle.hover.background = highlightTexture;
+            _highlightStyle.active.background = highlightTexture;
+            _highlightStyle.focused.background = highlightTexture;
+            _highlightStyle.onNormal.background = highlightTexture;
+            _highlightStyle.onHover.background = highlightTexture;
+            _highlightStyle.onActive.background = highlightTexture;
+            _highlightStyle.onFocused.background = highlightTexture;
         }
 
         /// <summary>
@@ -90,19 +137,28 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
         /// <summary>
         /// Draws the dropdown UI and handles interactions.
+        /// The dropdown overlay (options list) is NOT drawn immediately; it is
+        /// registered for deferred rendering via <see cref="FlushOverlays"/> so
+        /// it always appears on top of all other controls.
         /// </summary>
         /// <param name="dropdownRect">The position and size of the dropdown.</param>
-        /// <returns>True if the selected index changed; otherwise, false.</returns>
+        /// <returns>
+        /// True if the selected index changed since the last call;
+        /// the result reflects the previous frame's selection (one-frame lag).
+        /// </returns>
         public virtual bool Draw(Rect dropdownRect)
         {
+            // Consume and reset the flag so it only returns true for one frame
+            bool changed = _changedThisFlush;
+            _changedThisFlush = false;
+
             RenderSelectedOption(dropdownRect);
 
+            // Register for deferred overlay drawing if the list is open
             if (_showDropdown)
-            {
-                return RenderDropdownOptions(dropdownRect, _options);
-            }
+                _pendingOverlays.Add((this, dropdownRect));
 
-            return false;
+            return changed;
         }
 
         /// <summary>
@@ -111,7 +167,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// If no option is selected, then nothing is shown.
         /// </summary>
         /// <param name="dropdownRect"></param>
-        protected void RenderSelectedOption(Rect dropdownRect)
+        public virtual void RenderSelectedOption(Rect dropdownRect)
         {
 
             if (_options.Length == 0)
@@ -127,21 +183,54 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         }
 
         /// <summary>
+        /// Renders the dropdown options if the dropdown is open.
+        /// </summary>
+        /// <param name="dropdownRect"></param>
+        /// <returns></returns>
+        public virtual bool DrawOptions(Rect dropdownRect)
+        {
+            if (_showDropdown)
+            {
+                return RenderDropdownOptions(dropdownRect, _options);
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Renders the dropdown options.
         /// </summary>
         /// <param name="dropdownRect"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        protected bool RenderDropdownOptions(Rect dropdownRect, string[] options)
+        public virtual bool RenderDropdownOptions(Rect dropdownRect, string[] options)
         {
+            Rect backgroundRect = new Rect(dropdownRect.x, dropdownRect.y + dropdownRect.height, dropdownRect.width, dropdownRect.height * options.Length);
+
+            // Close dropdown if clicked outside the dropdown area (main button or options)
+            if (_showDropdown && Event.current.type == EventType.MouseDown && !backgroundRect.Contains(Event.current.mousePosition) && !dropdownRect.Contains(Event.current.mousePosition))
+            {
+                _showDropdown = false;
+            }
+
+            if (!_showDropdown)
+            {
+                return false;
+            }
+
             int previousDepth = GUI.depth;
 
-            GUI.depth = 0;
+            // Use a very low depth to ensure it's on top of everything
+            GUI.depth = -2000;
+
+            // Draw a background box for the entire dropdown area to ensure full opacity
+            GUI.Box(backgroundRect, "", _defaultStyle);
+
             bool selectionChanged = false;
             for (int i = 0; i < options.Length; i++)
             {
+                Rect buttonRect = new Rect(dropdownRect.x, dropdownRect.y + (dropdownRect.height * (i + 1)), dropdownRect.width, dropdownRect.height);
                 GUIStyle style = (i == _selectedIndex) ? _highlightStyle : _defaultStyle;
-                if (GUI.Button(new Rect(dropdownRect.x, dropdownRect.y + (dropdownRect.height * (i + 1)), dropdownRect.width, dropdownRect.height), options[i], style))
+                if (GUI.Button(buttonRect, options[i], style))
                 {
                     if (i != _selectedIndex)
                     {
@@ -149,6 +238,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
                         selectionChanged = true;
                     }
                     _showDropdown = false;
+                    Event.current.Use();
                 }
             }
             GUI.depth = previousDepth;

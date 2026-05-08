@@ -107,7 +107,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     itemStack.Exchange = (DialogItemsExchange.ExchangeDirection)_directionDropdowns[i].SelectedIndex;
                 }
 
-                if (_valueModeDropdowns[i].Draw(new Rect(position.x + 10, yOffset + 20, 200, 20)))
+                if (_valueModeDropdowns[i].Draw(new Rect(position.x + 120, yOffset + 20, 200, 20)))
                 {
                     itemStack.Mode = (DialogItems.ValueMode)_valueModeDropdowns[i].SelectedIndex;
                     if (itemStack.Mode == DialogItems.ValueMode.GInt)

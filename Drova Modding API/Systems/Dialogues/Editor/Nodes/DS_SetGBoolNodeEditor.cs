@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_SetGBoolNodeEditor : DrawNodeEditor
     {
-        private DS_SetGBoolNode _castedNode;
+        private DS_SetGBoolNode? _castedNode;
         private GUIGvarSelectionEditor _gvarSelectionEditor;
 
         public DS_SetGBoolNodeEditor()
@@ -36,6 +36,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             int previousDepth = GUI.depth;
 
             Rect drawRect = new(position.x, position.y, 450, 120);
+            GUI.color = Color.green;
             GUI.Box(drawRect, "DS_SetGBoolNode");
 
             GUI.color = Color.white;
@@ -48,7 +49,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             _castedNode.Value = GUI.Toggle(new Rect(position.x + 10, position.y + 60, 200, 20), _castedNode.Value.value, "Value to set");
 
-            GUI.color = Color.green;
+           
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;

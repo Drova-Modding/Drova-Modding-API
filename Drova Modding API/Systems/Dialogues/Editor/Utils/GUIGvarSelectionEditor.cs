@@ -1,5 +1,6 @@
 ﻿using Drova_Modding_API.Access;
 using Il2CppDrova.GlobalVarSystem;
+using Il2CppDrova.QuestSystem;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
@@ -78,7 +79,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
             if (selected != null)
             {
-                int selectionIndex = _selecteableGvars.FindIndex(gvar => gvar.Id == selected.Id);
+                int selectionIndex = _selecteableGvars.FindIndex(gvar => SafeId(gvar) == SafeId(selected));
                 _GvarValueDropdown.SetSelectedIndex(selectionIndex);
             }
         }
@@ -124,6 +125,22 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
                 result = true;
             }
             return result;
+        }
+
+        private static string SafeId(AGVarBase gvar)
+        {
+            if (gvar == null) return "null";
+            var intVar = gvar.TryCast<GInt>();
+            if (intVar != null) return intVar.GetGVarId();
+            var boolVar = gvar.TryCast<GBool>();
+            if (boolVar != null) return boolVar.GetGVarId();
+            var floatVar = gvar.TryCast<GFloat>();
+            if (floatVar != null) return floatVar.GetGVarId();
+            var stringVar = gvar.TryCast<GString>();
+            if (stringVar != null) return stringVar.GetGVarId();
+            var questVar = gvar.TryCast<GQuestState>();
+            if (questVar != null) return questVar.GetGVarId();
+            return gvar.GetGVarId();
         }
     }
 

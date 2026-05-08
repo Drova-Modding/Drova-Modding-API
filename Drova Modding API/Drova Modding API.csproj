@@ -466,6 +466,9 @@
 		<Compile Include="Systems\Audio\IAudioHandler.cs" />
 		<Compile Include="Systems\Audio\IAudioProvider.cs" />
 		<Compile Include="Systems\Audio\AudioManager.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_EquipNodeEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetSpellToActiveAbiSlotNodeEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_UseItemNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
 		<Compile Include="Systems\Editor\EditorManager.cs" />
 		<Compile Include="Systems\Editor\EditorUI.cs" />
@@ -629,6 +632,9 @@
 	<ItemGroup>
 	  <Content Include="..\.gitignore">
 	    <Link>.gitignore</Link>
+	  </Content>
+	  <Content Include="..\Agents.md">
+	    <Link>Agents.md</Link>
 	  </Content>
 	</ItemGroup>
 

@@ -2,6 +2,7 @@
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies;
 using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
+using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.Editor;
 using Il2Cpp;
@@ -28,12 +29,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         private DialogueTree _dialogueTree;
         private bool _isActive = false;
         private readonly DialogueStore _dialogueStore = new();
-        private IActionStrategy _activeAction;
+        private IActionStrategy? _activeAction;
 
         /// <summary>
         /// The dialogue tree that is being edited
         /// </summary>
-        public DialogueTree DialogueTree
+        public DialogueTree? DialogueTree
         {
             get
             {
@@ -62,7 +63,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         }
 
         // Currently selected node
-        private DrawNodeEditor _selectedNode = null;
+        private DrawNodeEditor? _selectedNode = null;
 
         // Offset between the mouse position and node position
         private Vector2 _dragOffset;
@@ -98,6 +99,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         private Vector2 _dragStart;
         // Is panning in progress?
         private bool _isDragging = false;
+        // Is a node being dragged?
+        private bool _isDraggingNode = false;
 
         private bool _isFirstDraw = true;
 
@@ -196,6 +199,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             DrawConnectionsInArea(visibleArea);
             DrawNodesInArea(visibleArea);
             HandleActiveActionStrategy();
+
+            // Flush all deferred dropdown overlays so they paint on top of every node
+            GUIDropdown.FlushOverlays();
 
             // Draw the tooltip
             if (GUI.tooltip != "")
@@ -330,6 +336,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             GraphEditorSnapshots.Add(new GraphEditorSnapshot(DialogueTree, _scaleFactor, _panOffset));
             drawNodeEditors.Clear();
+            _selectedNode = null;
+            _isDraggingNode = false;
             _scaleFactor = 1;
             _panOffset = new Vector2(200, -200);
             _isFirstDraw = true;
@@ -357,6 +365,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 if (GUI.Button(new(10, 10, 550, 60), $"Go back to {snapshot.DialogueTree.name}"))
                 {
                     drawNodeEditors.Clear();
+                    _selectedNode = null;
+                    _isDraggingNode = false;
                     _isFirstDraw = true;
                     _scaleFactor = snapshot.ScaleFactor;
                     _panOffset = snapshot.PanOffset;
@@ -372,6 +382,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             _isActive = false;
             DialogueTree = null;
+            _selectedNode = null;
+            _isDraggingNode = false;
             _showContextMenu = false;
             _showSubContextMenu = false;
             drawNodeEditors.Clear();
@@ -433,6 +445,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (e.type == EventType.MouseDown && e.button == 0)
             {
                 bool isDoubleClick = e.clickCount == 2;
+                bool nodeHit = false;
 
                 foreach (KeyValuePair<string, DrawNodeEditor> element in drawNodeEditors)
                 {
@@ -441,6 +454,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
                     if (nodeRect.Contains(adjustedMousePosition))
                     {
+                        nodeHit = true;
                         if (isDoubleClick)
                         {
                             editor.OnDoubleClick(adjustedMousePosition);
@@ -448,31 +462,40 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                         }
                         else
                         {
+                            if (_selectedNode != null && _selectedNode != editor)
+                            {
+                                _selectedNode.IsSelected = false;
+                            }
                             _selectedNode = editor;
                             editor.IsSelected = true;
                             _dragOffset = adjustedMousePosition - editor.Position;
+                            _isDraggingNode = true;
                         }
                         break;
+                    }
+                }
+
+                if (!nodeHit && !isDoubleClick)
+                {
+                    if (_selectedNode != null)
+                    {
+                        _selectedNode.IsSelected = false;
+                        _selectedNode = null;
                     }
                 }
             }
 
             // On mouse drag, update the node's position
-            if (e.type == EventType.MouseDrag && _selectedNode != null)
+            if (e.type == EventType.MouseDrag && _isDraggingNode && _selectedNode != null)
             {
                 _selectedNode.Position = adjustedMousePosition - _dragOffset;
                 e.Use();
             }
 
             // On mouse up, stop dragging
-            if (e.type == EventType.MouseUp && e.button == 0 && _selectedNode != null)
+            if (e.type == EventType.MouseUp && e.button == 0)
             {
-                Rect nodeRect = new(_selectedNode.Position, _selectedNode.NodeSize);
-                if (!nodeRect.Contains(adjustedMousePosition))
-                {
-                    _selectedNode.IsSelected = false;
-                    _selectedNode = null;
-                }
+                _isDraggingNode = false;
             }
         }
 
@@ -497,7 +520,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 Vector2 start = new(x, -10000);
                 Vector2 end = new(x, 10000);
 
-                GUIExtensions.DrawLine(start, end, gridColor, 1.0f);
+                GUIExtensions.DrawLine(start, end, gridColor);
             }
 
             // Draw horizontal grid lines
@@ -507,7 +530,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 Vector2 start = new(-10000, y);
                 Vector2 end = new(10000, y);
 
-                GUIExtensions.DrawLine(start, end, gridColor, 1.0f);
+                GUIExtensions.DrawLine(start, end, gridColor);
             }
         }
 

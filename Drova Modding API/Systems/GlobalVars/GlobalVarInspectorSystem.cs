@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Drova_Modding_API.Access;
+﻿using Drova_Modding_API.Access;
 using Il2CppDrova.GlobalVarSystem;
+using System;
+using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppDrova.QuestSystem;
 using Il2CppInterop.Runtime.Attributes;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
@@ -44,6 +43,8 @@ namespace Drova_Modding_API.Systems.GlobalVars
         private string _lastAppliedVarFilter = string.Empty;
         private string _pendingValue = string.Empty;
         private string _statusMessage = string.Empty;
+        private GUIDropdown? _enumDropdown;
+        private Rect _dropdownRect;
 
         private GVarList _selectedList;
         private AGVarBase? _selectedVar;
@@ -84,6 +85,18 @@ namespace Drova_Modding_API.Systems.GlobalVars
             float varWidth = Mathf.Clamp(contentWidth * 0.42f, 420f, 760f);
 
             GUILayout.BeginVertical();
+
+            // Draw dropdown options first to handle input before other buttons in this window
+            // They will still render on top because of GUI.depth = -2000 in GUIDropdown
+            if (_enumDropdown != null)
+            {
+                if (_enumDropdown.DrawOptions(_dropdownRect))
+                {
+                    _pendingValue = _enumDropdown.SelectedOption;
+                    ApplyValue(_pendingValue);
+                }
+            }
+
             GUILayout.Label($"Lists: {_gvarLists.Count}  Vars in list: {_selectedListVars.Count}");
 
             if (!string.IsNullOrWhiteSpace(_statusMessage))
@@ -177,6 +190,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                     _selectedVar = row.Var;
                     _pendingValue = value;
                     _statusMessage = string.Empty;
+                    UpdateDropdownForSelectedVar();
                 }
             }
 
@@ -198,11 +212,20 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
 
             GUILayout.Label($"Name: {_selectedVar.name}");
-            GUILayout.Label($"Id: {_selectedVar.Id}");
+            GUILayout.Label($"Id: {SafeId(_selectedVar)}");
             GUILayout.Label($"Type: {GetTypeName(_selectedVar)}");
             GUILayout.Label($"Current: {SafeValueToString(_selectedVar)}");
             GUILayout.Label("New value:");
-            _pendingValue = GUILayout.TextField(_pendingValue);
+            
+            if (_enumDropdown != null)
+            {
+                _dropdownRect = GUILayoutUtility.GetRect(200f, 24f);
+                _enumDropdown.RenderSelectedOption(_dropdownRect);
+            }
+            else
+            {
+                _pendingValue = GUILayout.TextField(_pendingValue);
+            }
 
             if (GUILayout.Button("Apply"))
             {
@@ -215,6 +238,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 _pendingValue = SafeValueToString(_selectedVar);
                 _statusMessage = "Value reset to initial value.";
                 RebuildVarRows();
+                UpdateDropdownForSelectedVar();
             }
 
             GUILayout.EndVertical();
@@ -228,7 +252,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 return;
             }
 
-            if (!_selectedVar.TryParse(rawValue, out Il2CppSystem.Object parsedValue) || parsedValue == null)
+            if (!_selectedVar.TryParse(rawValue, out Il2CppSystem.Object parsedValue))
             {
                 _statusMessage = $"Could not parse '{rawValue}' for {GetTypeName(_selectedVar)}.";
                 return;
@@ -238,6 +262,34 @@ namespace Drova_Modding_API.Systems.GlobalVars
             _pendingValue = SafeValueToString(_selectedVar);
             _statusMessage = "Value applied.";
             RebuildVarRows();
+            UpdateDropdownForSelectedVar();
+        }
+
+        [HideFromIl2Cpp]
+        private void UpdateDropdownForSelectedVar()
+        {
+            _enumDropdown = null;
+            if (_selectedVar == null)
+            {
+                return;
+            }
+
+            GBool boolVar = _selectedVar.TryCast<GBool>();
+            if (boolVar != null)
+            {
+                string[] options = ["false", "true"];
+                int selected = string.Equals(_pendingValue, "true", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+                _enumDropdown = new GUIDropdown(options, selected);
+                return;
+            }
+
+            GQuestState questStateVar = _selectedVar.TryCast<GQuestState>();
+            if (questStateVar != null)
+            {
+                string[] options = Enum.GetNames<QuestState>();
+                int selected = Array.IndexOf(options, _pendingValue);
+                _enumDropdown = new GUIDropdown(options, selected);
+            }
         }
 
         [HideFromIl2Cpp]
@@ -278,6 +330,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
         {
             _selectedListVars.Clear();
             _selectedVar = null;
+            _enumDropdown = null;
 
             if (_selectedList == null)
             {
@@ -289,11 +342,12 @@ namespace Drova_Modding_API.Systems.GlobalVars
             AddVarsOfType<GFloat>(seenIds);
             AddVarsOfType<GString>(seenIds);
             AddVarsOfType<GBool>(seenIds);
+            AddVarsOfType<GQuestState>(seenIds);
 
             if (_selectedList.IsQuestVarList && _selectedList._questState != null)
             {
                 AGVarBase questState = _selectedList._questState;
-                if (seenIds.Add(questState.Id))
+                if (seenIds.Add(SafeId(questState)))
                 {
                     _selectedListVars.Add(questState);
                 }
@@ -315,7 +369,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                     continue;
                 }
 
-                if (seenIds.Add(gvar.Id))
+                if (seenIds.Add(SafeId(gvar)))
                 {
                     _selectedListVars.Add(gvar);
                 }
@@ -495,6 +549,47 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
 
             return gvar.GetGenericValue()?.ToString() ?? "null";
+        }
+
+        [HideFromIl2Cpp]
+        private static string SafeId(AGVarBase gvar)
+        {
+            if (gvar == null)
+            {
+                return "null";
+            }
+
+            GInt intVar = gvar.TryCast<GInt>();
+            if (intVar != null)
+            {
+                return intVar.GetGVarId();
+            }
+
+            GBool boolVar = gvar.TryCast<GBool>();
+            if (boolVar != null)
+            {
+                return boolVar.GetGVarId();
+            }
+
+            GFloat floatVar = gvar.TryCast<GFloat>();
+            if (floatVar != null)
+            {
+                return floatVar.GetGVarId();
+            }
+
+            GString stringVar = gvar.TryCast<GString>();
+            if (stringVar != null)
+            {
+                return stringVar.GetGVarId();
+            }
+
+            GQuestState questStateVar = gvar.TryCast<GQuestState>();
+            if (questStateVar != null)
+            {
+                return questStateVar.GetGVarId();
+            }
+
+            return gvar.GetGVarId();
         }
     }
 }
