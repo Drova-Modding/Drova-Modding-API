@@ -11,6 +11,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private GUICreateConditionTask _guiCreateConditionTask;
         private DrawTaskEditor _drawTaskEditor;
         private bool _changeCondition = false;
+        private float _lastTaskHeight = 60;
 
         public ConditionNodeEditor()
         {
@@ -49,16 +50,26 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return;
             }
 
-            Rect rect = new(position.x, position.y, 350, 120);
+            float contentHeight = _changeCondition
+                ? _guiCreateConditionTask.Size.y
+                : _lastTaskHeight + 30;
+            float boxHeight = contentHeight + 30;
+            Rect rect = new(position.x, position.y, 350, boxHeight);
+            NodeSizeInternal = new Vector2(350, boxHeight);
+
             Color previousColor = GUI.color;
+            Color previousBg = GUI.backgroundColor;
             GUI.color = Color.green;
+            GUI.backgroundColor = Color.clear;
             GUI.Box(rect, "ConditionNode");
             GUI.color = previousColor;
+            GUI.backgroundColor = previousBg;
 
             if (!_changeCondition)
             {
                 Rect size = _drawTaskEditor.DrawTask(new Vector2(position.x, position.y + 20));
-                if (GUI.Button(new Rect(position.x + 10, position.y + 60 + size.y, 200, 20), "Change Condition"))
+                _lastTaskHeight = size.height;
+                if (GUI.Button(new Rect(position.x + 10, position.y + 30 + size.height, 200, 20), "Change Condition"))
                 {
                     _changeCondition = true;
                 }

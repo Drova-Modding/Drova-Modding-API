@@ -19,9 +19,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
                 GraphGBoolCompService task = _castedTask.Conditions[i];
-                _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GBool.Comparer>(), (int)task.Comparison.value));
+                int comparerIndex = task.Comparison != null ? (int)task.Comparison.value : 0;
+                _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GBool.Comparer>(), comparerIndex));
 
-                _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.BOOL, task.Variable.GetValue().GetParent().name, false, task.Variable.GetValue()));
+                GBool variable = task.Variable?.GetValue();
+                _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.BOOL, variable?.GetParent()?.name, false, variable));
             }
         }
 
@@ -32,8 +34,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 return default;
             }
 
+            int conditionCount = _castedTask.Conditions.Count;
+            float totalHeight = 70 + (130 * conditionCount);
+
+            Color previousColor = GUI.color;
+            Color previousBg = GUI.backgroundColor;
+
+            GUI.color = Color.white;
+            GUI.backgroundColor = new Color(0.15f, 0.2f, 0.45f, 0.95f);
+            Rect drawRect = new(position.x, position.y, 380, totalHeight);
+            GUI.Box(drawRect, "GBoolConditionTask");
+            GUI.backgroundColor = previousBg;
+
             Rect rect = new(position.x, position.y + 20, 220, 20);
-            Rect size = new(position.x, position.y, 220, 40);
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
                 GraphGBoolCompService condition = _castedTask.Conditions[i];
@@ -64,8 +77,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 condition.Value.value = GUI.Toggle(rect, condition.Value.value, "Compare value");
 
                 rect.y += 30;
-
-                size.height += 130;
             }
 
             rect.y += 30;
@@ -76,14 +87,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GBool.Comparer>(), 0));
                 _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.BOOL));
             }
-
-            size.height += 30;
-
-            Color previousColor = GUI.color;
-
-            GUI.color = Color.blue;
-            Rect drawRect = new(position.x, position.y, 380, size.height);
-            GUI.Box(drawRect, "GBoolConditionTask");
 
             GUI.color = previousColor;
 

@@ -18,6 +18,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             base.Init();
             _castedNode ??= Node.TryCast<DS_HubNode>();
             _hubRatingDropdown ??= new GUIDropdown(Enum.GetNames<DS_HubNode.HubRating>(), (int)_castedNode.ratingCache);
+            TransparentOuterBox = true;
         }
 
         public override void DrawNode(Vector2 position)
@@ -27,31 +28,34 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return;
             }
 
-            base.DrawNode(new Vector2(position.x, position.y + 30));
-
             int previousDepth = GUI.depth;
             Color previousColor = GUI.color;
+
+            base.DrawNode(new Vector2(position.x, position.y + 30));
+
+            float innerHeight = NodeSizeInternal.y;
+            float outerHeight = innerHeight + 80;
+
+            GUI.depth = 20;
+            GUI.color = Color.green;
+            GUI.Box(new Rect(position.x, position.y, NodeSizeInternal.x, outerHeight), "DS_HubNode");
 
             GUI.depth = 10;
             GUI.color = Color.white;
 
-            Vector2 nextPosition = new(position.x, position.y + NodeSizeInternal.y + 40);
+            Vector2 ratingPosition = new(position.x, position.y + innerHeight + 40);
 
-            GUI.Label(new Rect(nextPosition.x + 5, nextPosition.y, 100, 20), "Rating:");
+            GUI.Label(new Rect(ratingPosition.x + 5, ratingPosition.y, 100, 20), "Rating:");
 
-            if (_hubRatingDropdown.Draw(new Rect(nextPosition.x + 110, nextPosition.y, 220, 20)))
+            if (_hubRatingDropdown.Draw(new Rect(ratingPosition.x + 110, ratingPosition.y, 220, 20)))
             {
                 _castedNode.ratingCache = (DS_HubNode.HubRating)_hubRatingDropdown.SelectedIndex;
             }
 
-            GUI.color = Color.green;
-            GUI.depth = 20;
-
-            GUI.Box(new Rect(position.x, position.y, NodeSizeInternal.x, NodeSizeInternal.y + 50), "DS_HubNode");
+            NodeSizeInternal = new Vector2(NodeSizeInternal.x, outerHeight);
 
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-
         }
     }
 }

@@ -9,6 +9,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private readonly Dictionary<int, DrawTaskEditor> _choices = [];
         private readonly Dictionary<int, float> _taskHeights = [];
 
+        protected bool TransparentOuterBox { get; set; } = false;
+
         public DS_MultipleChoiceNodeEditor()
         {
             NodeSizeInternal = new Vector2(350, 150);
@@ -56,7 +58,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.color = Color.green;
             NodeSizeInternal = new Vector2(350, additionalHeight);
-            GUI.Box(new Rect(position.x, position.y, 350, additionalHeight), "DS_MultipleChoiceNode");
+            if (TransparentOuterBox)
+            {
+                GUI.backgroundColor = Color.clear;
+                GUI.Box(new Rect(position.x, position.y, 350, additionalHeight), "DS_MultipleChoiceNode");
+                GUI.backgroundColor = previousBackgroundColor;
+            }
+            else
+            {
+                GUI.Box(new Rect(position.x, position.y, 350, additionalHeight), "DS_MultipleChoiceNode");
+            }
 
             GUI.backgroundColor = Color.black;
             GUI.color = Color.white;

@@ -12,8 +12,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     {
         private ConditionList _castedTask;
         private readonly List<DrawTaskEditor> _drawTaskEditors = [];
+        private readonly Dictionary<int, float> _taskHeights = [];
         private readonly GUICreateConditionTask _createConditionTask = new();
         private GUIDropdown _conditionsCheckModeDropdown;
+        private const int HeaderHeight = 20;
+        private const int Padding = 10;
+        private const int DropdownHeight = 20;
 
         public override void Init()
         {
@@ -34,14 +38,29 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
         public override Rect DrawTask(Vector2 position)
         {
-            Rect rect = new(position, new Vector2(250, (_drawTaskEditors.Count * 30) + 100));
-            GUI.Box(rect, "Condition List");
+            float totalHeight = HeaderHeight;
+            float maxWidth = 250;
             for (int i = 0; i < _drawTaskEditors.Count; i++)
             {
-                _drawTaskEditors[i].DrawTask(new Vector2(position.x, position.y + 20 + (i * 20)));
+                if (_taskHeights.TryGetValue(i, out float cached))
+                    totalHeight += cached + Padding;
+            }
+            float selectionHeight = _createConditionTask.Size.y;
+            totalHeight += selectionHeight + Padding + DropdownHeight + Padding;
+
+            Rect rect = new(position, new Vector2(maxWidth, totalHeight));
+            GUI.Box(rect, "Condition List");
+
+            float yOffset = HeaderHeight;
+            for (int i = 0; i < _drawTaskEditors.Count; i++)
+            {
+                Rect drawn = _drawTaskEditors[i].DrawTask(new Vector2(position.x, position.y + yOffset));
+                _taskHeights[i] = drawn.height;
+                if (drawn.width > maxWidth) maxWidth = drawn.width;
+                yOffset += drawn.height + Padding;
             }
 
-            ConditionTask task = _createConditionTask.Draw(new Vector2(position.x, position.y + (_drawTaskEditors.Count * 30)));
+            ConditionTask task = _createConditionTask.Draw(new Vector2(position.x, position.y + yOffset));
             if (task != null)
             {
                 DrawTaskEditor editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(task.GetIl2CppType());
@@ -51,12 +70,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 _drawTaskEditors.Add(editor);
                 _castedTask.conditions.Add(task);
             }
+            yOffset += selectionHeight + Padding;
 
-            if (_conditionsCheckModeDropdown.Draw(new Rect(position.x, position.y + (_drawTaskEditors.Count * 30) + 50, 200, 20)))
+            if (_conditionsCheckModeDropdown.Draw(new Rect(position.x, position.y + yOffset, 200, DropdownHeight)))
             {
                 _castedTask.checkMode = (ConditionsCheckMode)_conditionsCheckModeDropdown.SelectedIndex;
             }
 
+            rect.width = maxWidth;
             return rect;
         }
     }
