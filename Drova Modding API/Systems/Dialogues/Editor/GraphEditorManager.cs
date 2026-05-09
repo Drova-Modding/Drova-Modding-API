@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies;
 using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
@@ -505,33 +505,41 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             float gridSize = 50;
             Color gridColor = new(0.7f, 0.7f, 0.7f, 0.5f); // semi-transparent gray
 
-            // Calculate the top-left position of the grid based on the pan offset
-            float startX = Mathf.Floor(-_panOffset.x / _scaleFactor / gridSize) * gridSize;
-            float startY = Mathf.Floor(-_panOffset.y / _scaleFactor / gridSize) * gridSize;
+            // GUIExtensions.DrawLine uses RotateAroundPivot, which expects the pivot
+            // in screen space. The caller's pan/scale matrix would corrupt vertical
+            // lines, so draw the grid in screen space with an identity matrix.
+            Matrix4x4 previousMatrix = GUI.matrix;
+            GUI.matrix = Matrix4x4.identity;
 
-            // Calculate how many lines we need to draw on the screen
-            int verticalLinesCount = Mathf.CeilToInt(Screen.width / (_scaleFactor * gridSize)) + 2;
-            int horizontalLinesCount = Mathf.CeilToInt(Screen.height / (_scaleFactor * gridSize)) + 2;
+            // Visible world rect derived from current pan and zoom
+            float worldLeft = -_panOffset.x / _scaleFactor;
+            float worldTop = -_panOffset.y / _scaleFactor;
+            float worldRight = worldLeft + (Screen.width / _scaleFactor);
+            float worldBottom = worldTop + (Screen.height / _scaleFactor);
 
-            // Draw vertical grid lines
-            for (int i = -1; i < verticalLinesCount; i++)
+            float startWorldX = Mathf.Floor(worldLeft / gridSize) * gridSize;
+            float startWorldY = Mathf.Floor(worldTop / gridSize) * gridSize;
+
+            int verticalLinesCount = Mathf.CeilToInt((worldRight - startWorldX) / gridSize) + 1;
+            int horizontalLinesCount = Mathf.CeilToInt((worldBottom - startWorldY) / gridSize) + 1;
+
+            // Vertical grid lines, drawn fully across the screen height
+            for (int i = 0; i < verticalLinesCount; i++)
             {
-                float x = startX + (i * gridSize);
-                Vector2 start = new(x, -10000);
-                Vector2 end = new(x, 10000);
-
-                GUIExtensions.DrawLine(start, end, gridColor);
+                float worldX = startWorldX + (i * gridSize);
+                float screenX = (worldX * _scaleFactor) + _panOffset.x;
+                GUIExtensions.DrawLine(new Vector2(screenX, 0), new Vector2(screenX, Screen.height), gridColor);
             }
 
-            // Draw horizontal grid lines
-            for (int i = -1; i < horizontalLinesCount; i++)
+            // Horizontal grid lines, drawn fully across the screen width
+            for (int i = 0; i < horizontalLinesCount; i++)
             {
-                float y = startY + (i * gridSize);
-                Vector2 start = new(-10000, y);
-                Vector2 end = new(10000, y);
-
-                GUIExtensions.DrawLine(start, end, gridColor);
+                float worldY = startWorldY + (i * gridSize);
+                float screenY = (worldY * _scaleFactor) + _panOffset.y;
+                GUIExtensions.DrawLine(new Vector2(0, screenY), new Vector2(Screen.width, screenY), gridColor);
             }
+
+            GUI.matrix = previousMatrix;
         }
 
         [HideFromIl2Cpp]
