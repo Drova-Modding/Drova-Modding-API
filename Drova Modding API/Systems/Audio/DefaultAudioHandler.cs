@@ -30,7 +30,7 @@ namespace Drova_Modding_API.Systems.Audio
             {
                 MelonCoroutines.Stop(_secondCoroutine);
             }
-            //MelonLogger.Msg($"Handling subtitle request for: {info.actor.name}");
+            //AudioLog.Msg($"Handling subtitle request for: {info.actor.name}");
             _firstCoroutine = MelonCoroutines.Start(WaitForWindowAndSetup(info, dialogueUGUI));
         }
 
@@ -68,7 +68,7 @@ namespace Drova_Modding_API.Systems.Audio
             }
             catch (Exception e)
             {
-                MelonLogger.Warning("ForceMeshUpdate failed during setup for text: {0} - {1}", text, e.Message);
+                AudioLog.Warning("ForceMeshUpdate failed during setup for text: {0} - {1}", text, e.Message);
             }
             float audioLength = info.statement.audio.length;
             _secondCoroutine = MelonCoroutines.Start(TypeText(dialogueUGUI, text, audioLength));
@@ -110,7 +110,7 @@ namespace Drova_Modding_API.Systems.Audio
                     currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
                     if (currentWindow == null)
                     {
-                        MelonLogger.Warning("Window empty for text: {0}", text);
+                        AudioLog.Warning("Window empty for text: {0}", text);
                         break;
                     }
                     actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
@@ -122,7 +122,7 @@ namespace Drova_Modding_API.Systems.Audio
                     }
                     catch (Exception innerEx)
                     {
-                        MelonLogger.Warning("ForceMeshUpdate failed in recovery for text: {0} - {1}", text, innerEx.Message);
+                        AudioLog.Warning("ForceMeshUpdate failed in recovery for text: {0} - {1}", text, innerEx.Message);
                     }
                 }
                 yield return null;
@@ -136,7 +136,7 @@ namespace Drova_Modding_API.Systems.Audio
             }
             catch (Exception e)
             {
-                MelonLogger.Warning("ForceMeshUpdate failed at end of TypeText for text: {0} - {1}", text, e.Message);
+                AudioLog.Warning("ForceMeshUpdate failed at end of TypeText for text: {0} - {1}", text, e.Message);
             }
         }
     }

@@ -109,6 +109,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
         private readonly Dictionary<string, DrawNodeEditor> drawNodeEditors = [];
 
+        // Editors whose AABB overlaps another editor this frame
+        private readonly HashSet<DrawNodeEditor> _overlappingEditors = [];
+
         /// <summary>
         /// List of node editors
         /// </summary>
@@ -195,9 +198,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (Event.current.type == EventType.Repaint)
                 DrawInfiniteBackground();
 
+            // Detect overlaps using last-frame sizes; highlight pass runs after node draw
+            DetectOverlaps();
+
             // Draw only nodes and connections in the visible area
             DrawConnectionsInArea(visibleArea);
             DrawNodesInArea(visibleArea);
+            DrawOverlapHighlights(visibleArea);
             HandleActiveActionStrategy();
 
             // Flush all deferred dropdown overlays so they paint on top of every node
@@ -358,6 +365,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 DialogueTree.Serialize(null);
                 this._dialogueStore.SaveDialogue(DialogueTree);
+            }
+            if (GUI.Button(new(Screen.width - 160, 130, 150, 60), "Resolve Overlaps"))
+            {
+                ResolveOverlaps();
             }
             if (GraphEditorSnapshots.Count > 0)
             {
@@ -540,6 +551,110 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
 
             GUI.matrix = previousMatrix;
+        }
+
+        [HideFromIl2Cpp]
+        private void DetectOverlaps()
+        {
+            _overlappingEditors.Clear();
+            List<DrawNodeEditor> values = [.. drawNodeEditors.Values];
+            for (int i = 0; i < values.Count; i++)
+            {
+                DrawNodeEditor a = values[i];
+                if (a == null || a.NodeSize.x <= 0 || a.NodeSize.y <= 0) continue;
+                Rect rectA = new(a.Position, a.NodeSize);
+                for (int j = i + 1; j < values.Count; j++)
+                {
+                    DrawNodeEditor b = values[j];
+                    if (b == null || b.NodeSize.x <= 0 || b.NodeSize.y <= 0) continue;
+                    Rect rectB = new(b.Position, b.NodeSize);
+                    if (rectA.Overlaps(rectB))
+                    {
+                        _overlappingEditors.Add(a);
+                        _overlappingEditors.Add(b);
+                    }
+                }
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawOverlapHighlights(Rect visibleArea)
+        {
+            if (_overlappingEditors.Count == 0) return;
+
+            Color previousColor = GUI.color;
+            Color previousBg = GUI.backgroundColor;
+            GUI.color = new Color(1f, 0.25f, 0.25f, 1f);
+
+            const float thickness = 2f;
+            foreach (DrawNodeEditor editor in _overlappingEditors)
+            {
+                if (editor == null) continue;
+                Rect nodeRect = new(editor.Position, editor.NodeSize);
+                if (!visibleArea.Overlaps(nodeRect)) continue;
+
+                float x = editor.Position.x;
+                float y = editor.Position.y;
+                float w = editor.NodeSize.x;
+                float h = editor.NodeSize.y;
+                GUI.Box(new Rect(x, y, w, thickness), GUIContent.none);
+                GUI.Box(new Rect(x, y + h - thickness, w, thickness), GUIContent.none);
+                GUI.Box(new Rect(x, y, thickness, h), GUIContent.none);
+                GUI.Box(new Rect(x + w - thickness, y, thickness, h), GUIContent.none);
+            }
+
+            GUI.color = previousColor;
+            GUI.backgroundColor = previousBg;
+        }
+
+        [HideFromIl2Cpp]
+        private void ResolveOverlaps()
+        {
+            const int maxIterations = 50;
+            const float padding = 20f;
+            List<DrawNodeEditor> values = [.. drawNodeEditors.Values];
+
+            for (int iter = 0; iter < maxIterations; iter++)
+            {
+                bool anyOverlap = false;
+                for (int i = 0; i < values.Count; i++)
+                {
+                    DrawNodeEditor a = values[i];
+                    if (a == null || a.NodeSize.x <= 0 || a.NodeSize.y <= 0) continue;
+                    for (int j = i + 1; j < values.Count; j++)
+                    {
+                        DrawNodeEditor b = values[j];
+                        if (b == null || b.NodeSize.x <= 0 || b.NodeSize.y <= 0) continue;
+                        Rect rectA = new(a.Position, a.NodeSize);
+                        Rect rectB = new(b.Position, b.NodeSize);
+                        if (!rectA.Overlaps(rectB)) continue;
+
+                        anyOverlap = true;
+
+                        float overlapX = Mathf.Min(rectA.xMax, rectB.xMax) - Mathf.Max(rectA.xMin, rectB.xMin);
+                        float overlapY = Mathf.Min(rectA.yMax, rectB.yMax) - Mathf.Max(rectA.yMin, rectB.yMin);
+
+                        // Push along the smaller-overlap axis; the lower/right node moves
+                        if (overlapX < overlapY)
+                        {
+                            float push = overlapX + padding;
+                            if (a.Position.x <= b.Position.x)
+                                b.Position = new Vector2(b.Position.x + push, b.Position.y);
+                            else
+                                a.Position = new Vector2(a.Position.x + push, a.Position.y);
+                        }
+                        else
+                        {
+                            float push = overlapY + padding;
+                            if (a.Position.y <= b.Position.y)
+                                b.Position = new Vector2(b.Position.x, b.Position.y + push);
+                            else
+                                a.Position = new Vector2(a.Position.x, a.Position.y + push);
+                        }
+                    }
+                }
+                if (!anyOverlap) break;
+            }
         }
 
         [HideFromIl2Cpp]

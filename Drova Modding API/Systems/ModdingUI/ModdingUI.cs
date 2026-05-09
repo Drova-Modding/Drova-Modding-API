@@ -32,6 +32,11 @@ namespace Drova_Modding_API.Systems.ModdingUI
         /// Config key for dialogue audio volume interpolation speed.
         /// </summary>
         public const string DialogueAudioVolumeLerpSpeedOptionKey = "DialogueAudioVolumeLerpSpeed";
+        /// <summary>
+        /// Config key for the master toggle that controls whether dialogue audio is loaded at all.
+        /// Defaults to <c>false</c>, so no dialogue audio is loaded until the user opts in.
+        /// </summary>
+        public const string EnableDialogueAudioOptionKey = "EnableDialogueAudio";
 
         internal static void RegisterModdingUI()
         {
@@ -68,6 +73,15 @@ namespace Drova_Modding_API.Systems.ModdingUI
                 new LocalizationAccess.LocalizationEntry("DialogueAudioVolumeLerpSpeed", "Lautstaerke-Uebergang", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
                 new LocalizationAccess.LocalizationEntry("DialogueAudioVolumeLerpSpeed", "Volume Lerp Speed", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
                 new LocalizationAccess.LocalizationEntry("DialogueAudioVolumeLerpSpeed", "Vitesse de fondu du volume", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudio", "Dialogaudio aktivieren", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudio", "Enable dialogue audio", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudio", "Activer l'audio des dialogues", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOn", "An", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOn", "On", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOn", "Activé", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Aus", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Off", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Désactivé", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
                 ], "ModdingUI");
         }
 
@@ -81,6 +95,12 @@ namespace Drova_Modding_API.Systems.ModdingUI
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMinRandomness"), ModdingUIMinOptionKey, 1, 120, 30)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMaxRandomness"), ModdingUIMaxOptionKey, 2, 360, 60)
                 .CreateHeader(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioHeader"))
+                .CreateSwitch(
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "EnableDialogueAudio"),
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "EnableDialogueAudioOn"),
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "EnableDialogueAudioOff"),
+                    EnableDialogueAudioOptionKey,
+                    defaultValue: false)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioMinDistance"), DialogueAudioMinDistanceOptionKey, 50, 800, 100)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioMaxDistance"), DialogueAudioMaxDistanceOptionKey, 200, 1000, 425)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioVolumeLerpSpeed"), DialogueAudioVolumeLerpSpeedOptionKey, 1, 20, 5)
@@ -114,12 +134,12 @@ namespace Drova_Modding_API.Systems.ModdingUI
                     }
                 }));
 
-                if (builded.Count >= 8)
+                if (builded.Count >= 9)
                 {
-                    Slider minDistanceSlider = builded[6].GetComponentInChildren<Slider>();
-                    GUI_ConfigOption_Slider minDistanceOptions = builded[6].GetComponentInChildren<GUI_ConfigOption_Slider>();
-                    Slider maxDistanceSlider = builded[7].GetComponentInChildren<Slider>();
-                    GUI_ConfigOption_Slider maxDistanceOptions = builded[7].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                    Slider minDistanceSlider = builded[7].GetComponentInChildren<Slider>();
+                    GUI_ConfigOption_Slider minDistanceOptions = builded[7].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                    Slider maxDistanceSlider = builded[8].GetComponentInChildren<Slider>();
+                    GUI_ConfigOption_Slider maxDistanceOptions = builded[8].GetComponentInChildren<GUI_ConfigOption_Slider>();
                     if (minDistanceSlider == null || minDistanceOptions == null || maxDistanceSlider == null || maxDistanceOptions == null)
                     {
                         MelonLogger.Warning("Skipping dialogue distance slider link setup because one or more slider components are missing.");

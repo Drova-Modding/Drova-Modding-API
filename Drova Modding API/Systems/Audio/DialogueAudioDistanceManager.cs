@@ -50,10 +50,10 @@ namespace Drova_Modding_API.Systems.Audio
 
         internal void Awake()
         {
-            MelonLogger.Msg("Initializing DialogueAudioDistanceManager");
+            AudioLog.Msg("Initializing DialogueAudioDistanceManager");
             if (_instance != null)
             {
-                MelonLogger.Warning("DialogueAudioDistanceManager already exists, destroying duplicate.");
+                AudioLog.Warning("DialogueAudioDistanceManager already exists, destroying duplicate.");
                 Destroy(this);
                 return;
             }
@@ -95,7 +95,7 @@ namespace Drova_Modding_API.Systems.Audio
         public void Register(AudioSource source, Transform actorTransform)
         {
             if (source == null || actorTransform == null) return;
-            MelonLogger.Msg($"Registering dialogue audio source for actor {actorTransform.name}");
+            AudioLog.Msg($"Registering dialogue audio source for actor {actorTransform.name}");
             Unregister(source);
             _registeredSources.Add(new RegisteredDialogueSource(source, actorTransform));
         }
@@ -140,7 +140,7 @@ namespace Drova_Modding_API.Systems.Audio
                     {
                         reasons.Add("actor Transform is null");
                     }
-                    MelonLogger.Msg($"Unregistering dialogue audio source for actor {actorTransform?.name ?? "<unknown>"}: {string.Join(", ", reasons)}");
+                    AudioLog.Msg($"Unregistering dialogue audio source for actor {actorTransform?.name ?? "<unknown>"}: {string.Join(", ", reasons)}");
                     _registeredSources.RemoveAt(i);
                     continue;
                 }
@@ -149,7 +149,7 @@ namespace Drova_Modding_API.Systems.Audio
                 {
                     if (!entry.HasStartedPlaying)
                     {
-                        MelonLogger.Msg($"Dialogue audio source for actor {actorTransform.name} started playing after {entry.FramesSinceRegistration} update(s)");
+                        AudioLog.Msg($"Dialogue audio source for actor {actorTransform.name} started playing after {entry.FramesSinceRegistration} update(s)");
                     }
 
                     entry.HasStartedPlaying = true;
@@ -162,13 +162,13 @@ namespace Drova_Modding_API.Systems.Audio
                         continue;
                     }
 
-                    MelonLogger.Msg($"Unregistering dialogue audio source for actor {actorTransform.name}: AudioSource never started playing within {START_PLAYBACK_GRACE_FRAMES} update(s)");
+                    AudioLog.Msg($"Unregistering dialogue audio source for actor {actorTransform.name}: AudioSource never started playing within {START_PLAYBACK_GRACE_FRAMES} update(s)");
                     _registeredSources.RemoveAt(i);
                     continue;
                 }
                 else
                 {
-                    MelonLogger.Msg($"Unregistering dialogue audio source for actor {actorTransform.name}: AudioSource stopped playing");
+                    AudioLog.Msg($"Unregistering dialogue audio source for actor {actorTransform.name}: AudioSource stopped playing");
                     _registeredSources.RemoveAt(i);
                     continue;
                 }

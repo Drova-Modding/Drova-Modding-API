@@ -7,6 +7,8 @@
 - Dialogue audio integration with provider interfaces and file-based audio loading
 - Dynamic dialogue audio volume based on player distance
 - Utility scripts and mappings for dialogue/TTS workflows
+- GlobalVarList inspector editor for easier debugging and management of global variables (F6)
+- 
 
 ### Changed
 - Improved dialogue editor rendering, line drawing, and graph navigation behavior

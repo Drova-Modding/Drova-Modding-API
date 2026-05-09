@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.Access;
+﻿#if DEBUG
+using Drova_Modding_API.Access;
 using Il2CppDrova.GlobalVarSystem;
 using System;
 using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
@@ -593,5 +594,4 @@ namespace Drova_Modding_API.Systems.GlobalVars
         }
     }
 }
-
-
+#endif

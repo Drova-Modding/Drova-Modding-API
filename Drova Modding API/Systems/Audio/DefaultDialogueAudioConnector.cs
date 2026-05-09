@@ -55,7 +55,7 @@ namespace Drova_Modding_API.Systems.Audio
                 }
                 else
                 {
-                    MelonLogger.Error($"Failed to load audio for statement {taskToStatement[task].statement.locaKey}");
+                    AudioLog.Error($"Failed to load audio for statement {taskToStatement[task].statement.locaKey}");
                 }
             }
             Task.WaitAll([.. taskToChoice.Keys]);
@@ -68,7 +68,7 @@ namespace Drova_Modding_API.Systems.Audio
                 }
                 else
                 {
-                    MelonLogger.Error($"Failed to load audio for choice {taskToChoice[task].statement.locaKey}");
+                    AudioLog.Error($"Failed to load audio for choice {taskToChoice[task].statement.locaKey}");
                 }
             }
         }
@@ -76,7 +76,7 @@ namespace Drova_Modding_API.Systems.Audio
         /// <inheritdoc/>
         public void OnWorldDialogueStatement(DS_StatementNode statementNode)
         {
-            MelonLogger.Msg($"Loading generic Audio for " + statementNode.DLGTree.name);
+            AudioLog.Msg($"Loading generic Audio for " + statementNode.DLGTree.name);
             Task<AudioClip> task = AudioProvider.GetAudioClip(statementNode.DLGTree.name, statementNode.statement.useGlobalLoca ? statementNode.statement.GlobalLocaPath : statementNode.DLGTree.LocaPath, statementNode.statement.locaKey, statementNode.finalActor.name, null);
             task.Wait();
             if (task.IsCompleted)
@@ -85,7 +85,7 @@ namespace Drova_Modding_API.Systems.Audio
             }
             else
             {
-                MelonLogger.Error($"Failed to load audio for statement {statementNode.statement.locaKey}");
+                AudioLog.Error($"Failed to load audio for statement {statementNode.statement.locaKey}");
             }
         }
     }

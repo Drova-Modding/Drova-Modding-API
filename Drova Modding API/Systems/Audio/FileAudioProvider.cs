@@ -1,4 +1,6 @@
-﻿using Drova_Modding_API.Systems.WorldEvents;
+﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.ModdingUI;
+using Drova_Modding_API.Systems.WorldEvents;
 using NVorbis;
 using System.Text;
 using UnityEngine;
@@ -28,7 +30,11 @@ namespace Drova_Modding_API.Systems.Audio
         /// <inheritdoc/>
         public Task<AudioClip> GetAudioClip(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)
         {
-            string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId, _areaNameSystem.IsInCave());   
+            if (!ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.EnableDialogueAudioOptionKey, out bool enabled) || !enabled)
+            {
+                return Task.FromResult<AudioClip>(null);
+            }
+            string path = GetAudioFilePath(dialogeName, filePath.Replace('/', '_'), locaKey, actorName, choiceId, _areaNameSystem.IsInCave());
             return LoadOggAudioAsync(path);
         }
 
@@ -68,7 +74,7 @@ namespace Drova_Modding_API.Systems.Audio
             {
                 if (!File.Exists(path))
                 {
-                    MelonLoader.MelonLogger.Msg($"Audio not found for {path.Split("/")[^1]}");
+                    AudioLog.Msg($"Audio not found for {path.Split("/")[^1]}");
                     return null;
                 }
                 using VorbisReader vorbis = new(path);

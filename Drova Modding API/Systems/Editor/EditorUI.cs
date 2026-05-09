@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor;
+﻿#if DEBUG
+using Drova_Modding_API.Systems.Dialogues.Editor;
 using Il2CppDrova;
 using Il2CppDrova.GUI.Cheat;
 using Il2CppInterop.Runtime.Attributes;
@@ -12,7 +13,6 @@ namespace Drova_Modding_API.Systems.Editor
     [RegisterTypeInIl2Cpp]
     internal class EditorUI(IntPtr ptr) : MonoBehaviour(ptr)
     {
-#if DEBUG
         private TextMeshProUGUI _npcDisplay;
         private Button _npcEditButton;
         private Actor _currentSelectedActor;
@@ -132,6 +132,6 @@ namespace Drova_Modding_API.Systems.Editor
         {
             rectTransform.sizeDelta = sizeDelta;
         }
-#endif
     }
 }
+#endif

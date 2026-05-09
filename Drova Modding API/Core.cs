@@ -7,15 +7,10 @@ using Drova_Modding_API.Systems;
 
 using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
-using Il2CppDrova;
-using Drova_Modding_API.Systems.Dialogues;
-using Il2CppDrova.MapDatabases;
-using Drova_Modding_API.Systems.Audio.Dialogue;
 
 
 #if DEBUG
 using UnityEngine.InputSystem;
-using System.Collections;
 #endif
 
 [assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.0", "Drova Modding", null)]
@@ -33,7 +28,6 @@ namespace Drova_Modding_API
         internal bool _inMainMenu = false;
 #if DEBUG
         private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
-        private readonly CreateTTSDialogueFile _ttsFile = new();
 #endif
 
         /// <inheritdoc/>
@@ -83,10 +77,10 @@ namespace Drova_Modding_API
                 InputActionRegister.Instance.EnableGameplayActions();
                 _inMainMenu = false;
             }
-            if (sceneName == SceneNames.AILogic)
-            {
-                _ttsFile.GenerateWorldDialogues();
-            }
+            // if (sceneName == SceneNames.AILogic)
+            // {
+            //     _ttsFile.GenerateWorldDialogues();
+            // }
         }
 
         /// <inheritdoc/>
@@ -109,42 +103,7 @@ namespace Drova_Modding_API
             {
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(!ProviderAccess.GetCheatGameHandler().IsCheatModeEnabled);
             }
-            if (Input.GetKeyDown(KeyCode.F3))
-            {
-                MelonCoroutines.Start(SetupNPC());
-            }
-            if (Input.GetKeyDown(KeyCode.F4))
-            {
-                MapDatabase db = MapDatabaseProvider.Database.TryCast<MapDatabase>();
-                Il2CppSystem.Collections.Generic.Dictionary<string, Il2CppSystem.Collections.Generic.Dictionary<string, BaseMapDatabaseObject>>.Enumerator enumerator = db._dataCache.GetEnumerator();
-                while (enumerator.MoveNext())
-                {
-                    MelonLogger.Msg("Masterkey: " + enumerator.Current.Key);
-                    Il2CppSystem.Collections.Generic.Dictionary<string, BaseMapDatabaseObject>.Enumerator nextEnumerator = enumerator.Current.Value.GetEnumerator();
-                    while (nextEnumerator.MoveNext())
-                    {
-                        MelonLogger.Msg(nextEnumerator.Current.Key);
-                        MelonLogger.Msg(nextEnumerator.Current.Value);
-                    }
-                }
-                //AddressableAccess.Bandits.Human_Bandit_Mine_01.InstantiateAsync(PlayerAccess.GetPlayer().gameObject.transform.position, Quaternion.identity);
-            }
-            if (Input.GetKeyDown(KeyCode.F5))
-            {
-                _ttsFile.GenerateWorldDialogues();
-                _ttsFile.Save();
-            }
 #endif
-        }
-
-        private IEnumerator SetupNPC()
-        {
-            UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<GameObject> npc = AddressableAccess.NPCs.Human_Template.InstantiateAsync(PlayerAccess.GetPlayer().gameObject.transform.position, Quaternion.identity);
-            while (!npc.IsDone)
-            {
-                yield return new WaitForSeconds(0.1f);
-            }
-            DialogGraph.AddDialogGraph(npc.Result.GetComponentInChildren<Actor>());
         }
     }
 }

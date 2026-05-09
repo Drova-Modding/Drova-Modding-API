@@ -86,7 +86,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 editor.Init();
             }
 
-            rect.height += 100 + _spaceBetweenTasks;
+            rect.height += _guiCreateConditionTask.Size.y + _spaceBetweenTasks;
 
             NodeSizeInternal = new Vector2(rect.width, rect.height);
 

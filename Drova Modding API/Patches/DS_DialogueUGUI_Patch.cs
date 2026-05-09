@@ -14,7 +14,7 @@ internal static class DS_DialogueUGUI_Patch
 #if DEBUG
     private static void Prefix(SubtitlesRequestInfo info, DS_DialogueUGUI __instance)
     {
-        MelonLogger.Msg($"Handling subtitle request for in DS_DialogueUGUI.OnSubtitleRequest : {info.actor.name}");
+        AudioLog.Msg($"Handling subtitle request for in DS_DialogueUGUI.OnSubtitleRequest : {info.actor.name}");
     }
 #endif
     private static void Postfix(SubtitlesRequestInfo info, DS_DialogueUGUI __instance)
@@ -23,7 +23,7 @@ internal static class DS_DialogueUGUI_Patch
         if (EditorManager.InEditor) return;
 #endif
         if (info.statement.audio == null) {
-            MelonLogger.Warning($"Audio for actor {info.actor.name} not found with text {info.statement.text}");
+            AudioLog.Warning($"Audio for actor {info.actor.name} not found with text {info.statement.text}");
             return;
         };
 
@@ -34,7 +34,7 @@ internal static class DS_DialogueUGUI_Patch
         DS_DialogueActor dialogueActor = info.actor.TryCast<DS_DialogueActor>();
         if (audioSource != null && dialogueActor != null)
         {
-            MelonLogger.Msg($"Registering audio source for actor {info.actor.name}");
+            AudioLog.Msg($"Registering audio source for actor {info.actor.name}");
             DialogueAudioDistanceManager.Instance?.Register(audioSource, dialogueActor.transform);
         }
     }
@@ -45,7 +45,7 @@ internal static class DS_DialogueUGUI_Patch
 //{
 //    private static void Prefix()
 //    {
-//        MelonLogger.Msg("Unregistering DLGTree events");
+//        AudioLog.Msg("Unregistering DLGTree events");
 //    }
 //}
 
@@ -54,6 +54,6 @@ internal static class DS_DialogueUGUI_Patch
 //{
 //    private static void Prefix()
 //    {
-//        MelonLogger.Msg("Registering DLGTree events");
+//        AudioLog.Msg("Registering DLGTree events");
 //    }
 //}

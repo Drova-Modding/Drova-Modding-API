@@ -465,33 +465,29 @@
 		<Compile Include="Systems\Audio\IAudioConnector.cs" />
 		<Compile Include="Systems\Audio\IAudioHandler.cs" />
 		<Compile Include="Systems\Audio\IAudioProvider.cs" />
+		<Compile Include="Systems\Audio\AudioLog.cs" />
 		<Compile Include="Systems\Audio\AudioManager.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_EquipNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetSpellToActiveAbiSlotNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_UseItemNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
 		<Compile Include="Systems\Editor\EditorManager.cs" />
-		<Compile Include="Systems\Editor\EditorUI.cs" />
 		<Compile Include="Systems\Editor\NpcMouseRaycast.cs" />
-		<Compile Include="Systems\Editor\Relocators\DialogueTreeRelocator.cs" />
-		<Compile Include="Systems\Editor\Relocators\EntityInfoRelocator.cs" />
-		<Compile Include="Systems\Editor\Relocators\GVarBoolRelocator.cs" />
-		<Compile Include="Systems\Editor\Relocators\GVarIntRelocator.cs" />
-		<Compile Include="Systems\Editor\Relocators\GVarListRelocator.cs" />
-		<Compile Include="Systems\Editor\Relocators\GVarQuestStateRelocator.cs" />
-		<Compile Include="Systems\Editor\Relocators\IObjectRelocator.cs" />
-		<Compile Include="Systems\Editor\Relocators\ItemRelocator.cs" />
-		<Compile Include="Systems\Editor\Relocators\ObjectRelocatorFactory.cs" />
-		<Compile Include="Systems\Editor\Relocators\RelocatorSaveData.cs" />
 		<Compile Include="Systems\ModdingUI\ModdingUI.cs" />
 		<Compile Include="Systems\Morphing\MorphManager.cs" />
 		<Compile Include="Systems\Region.cs" />
+		<Compile Include="Systems\Relocators\DialogueTreeRelocator.cs" />
+		<Compile Include="Systems\Relocators\EntityInfoRelocator.cs" />
+		<Compile Include="Systems\Relocators\GVarBoolRelocator.cs" />
+		<Compile Include="Systems\Relocators\GVarIntRelocator.cs" />
+		<Compile Include="Systems\Relocators\GVarListRelocator.cs" />
+		<Compile Include="Systems\Relocators\GVarQuestStateRelocator.cs" />
+		<Compile Include="Systems\Relocators\IObjectRelocator.cs" />
+		<Compile Include="Systems\Relocators\ItemRelocator.cs" />
+		<Compile Include="Systems\Relocators\ObjectRelocatorFactory.cs" />
+		<Compile Include="Systems\Relocators\RelocatorSaveData.cs" />
 		<Compile Include="Systems\SaveGame\Store\IStorable.cs" />
 		<Compile Include="Systems\SaveGame\Store\IStore.cs" />
 		<Compile Include="Systems\SaveGame\Store\LazyActorStore.cs" />
 		<Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
 		<Compile Include="Systems\Dialogues\DialogGraph.cs" />
-		<Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.cs" />
 		<Compile Include="Systems\Spawning\LazyActorSaveData.cs" />
 		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
 		<Compile Include="Systems\Spawning\ActorWorldLocator.cs" />
@@ -511,6 +507,8 @@
 		<Compile Include="Utils.cs" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(Configuration)'=='Debug'">
+		<Compile Include="Systems\Editor\EditorUI.cs" />
+		<Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.cs" />
 		<Compile Include="Systems\Audio\Dialogue\DynamicInstancesToGuid.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Dynamic\BaldoDialogue.cs" />
 		<Compile Include="Systems\Audio\Dialogue\Dynamic\BrawlDialogue.cs" />
@@ -598,6 +596,9 @@
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetFirstChapterNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_StatementNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Nodes\SubDialogueTreeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_EquipNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetSpellToActiveAbiSlotNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_UseItemNodeEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckGVarListConditionTaskEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasAttributeTaskEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasItemsTaskEditor.cs" />
@@ -642,5 +643,37 @@
 		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;" />
 		<Exec Command="COPY &quot;$(TargetDir)$(TargetName).xml&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;" />
 		<Exec Command="COPY &quot;$(UserProfile)\.nuget\packages\nvorbis\0.10.5\lib\netstandard2.0\NVorbis.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;" />
+	</Target>
+
+	<Target Name="PackageMod" AfterTargets="PostBuild">
+		<PropertyGroup>
+			<DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
+			<StagingDir>$(DistDir)\staging\$(Configuration)</StagingDir>
+			<ZipName Condition="'$(Configuration)'=='Debug'">Modding_API_Dev.zip</ZipName>
+			<ZipName Condition="'$(Configuration)'=='Release'">Modding_API.zip</ZipName>
+			<ZipPath>$(DistDir)\$(ZipName)</ZipPath>
+			<GameDir>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin</GameDir>
+			<GameLocalizationDir>$(GameDir)\Mods\Modding_API\Localization</GameLocalizationDir>
+			<NVorbisDll>$(GameDir)\UserLibs\NVorbis.dll</NVorbisDll>
+			<AddressablesTxt>$(GameDir)\Mods\addressables.txt</AddressablesTxt>
+		</PropertyGroup>
+
+		<RemoveDir Directories="$(StagingDir)" />
+		<MakeDir Directories="$(DistDir);$(StagingDir)\Mods;$(StagingDir)\UserLibs" />
+
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(StagingDir)\Mods" />
+		<Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug'" />
+		<Copy SourceFiles="$(AddressablesTxt)" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug' And Exists('$(AddressablesTxt)')" />
+		<Copy SourceFiles="$(NVorbisDll)" DestinationFolder="$(StagingDir)\UserLibs" />
+
+		<ItemGroup>
+			<LocalizationFiles Include="$(GameLocalizationDir)\**\*.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(LocalizationFiles)" DestinationFiles="@(LocalizationFiles->'$(StagingDir)\Mods\Modding_API\Localization\%(RecursiveDir)%(Filename)%(Extension)')" />
+
+		<Delete Files="$(ZipPath)" />
+		<Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(StagingDir)\*' -DestinationPath '$(ZipPath)' -Force&quot;" />
+
+		<Message Importance="high" Text="Packaged $(Configuration) build -&gt; $(ZipPath)" />
 	</Target>
 </Project>
