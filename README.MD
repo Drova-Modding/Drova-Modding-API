@@ -45,10 +45,10 @@ See [Wiki](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
 - You can create persistent settings in there including, keyboard bindings, switches, dropdown, buttons and sliders. 
 - Create your own loc files for your mods
 - Easier access to the Drova Providers and GameManager and Player
-- Access to the Addressables, including GUI, Items/Recipies/Spells, Creatures and Bandits
+- Access to the Addressables, including GUI, Items/Recipies/Spells, Creatures, Bandits and Interactions
 - Spawning persistent and non-persistent actors in the world
 - Event System to hook into the game events and create your own events
-- Dialog System to create your own dialogs and hook into the existing ones
+- Dialog System with 40+ nodes to create your own dialogs and hook into the existing ones
 - Area Name System to know where the player is currently
 - Audio System to play audio clips on actors
 - GlobalVarList inspector editor for easier debugging and management of global variables (F6)
@@ -57,13 +57,13 @@ See [Wiki](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
 - F6 – GlobalVarList inspector editor
 - ^ – Toggle the cheats menu
 - When Cheats Menu is open:
-  - Left click on an actor to get on the bottom left a menu with options to enter the dialogue editor
+  - Left-click on an actor to get on the bottom left a menu with options to enter the dialogue editor
 - When in the Dialogue Editor:
-  - Left click on a node to open the node editor
-  - Right click on the graph background to open the graph context menu
+  - Right-click on the graph background to open the graph context menu
+  - Left-click on a node and pressing to drag it around
   - Middle click and drag to pan the graph
   - Scroll to zoom in and out of the graph
-  - double click on a subgraph node to open the subgraph
+  - Double-click on a subgraph node to open the subgraph
 
 
 
