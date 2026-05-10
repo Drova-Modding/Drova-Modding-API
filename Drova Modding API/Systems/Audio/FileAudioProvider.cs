@@ -24,7 +24,7 @@ namespace Drova_Modding_API.Systems.Audio
         /// </summary>
         public FileAudioProvider()
         {
-            _areaNameSystem = WorldEventSystemManager.Instance.areaNameSystem;
+            _areaNameSystem = WorldEventSystemManager.Instance.AreaNameSystem;
         }
 
         /// <inheritdoc/>

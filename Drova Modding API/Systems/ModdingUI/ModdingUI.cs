@@ -124,6 +124,8 @@ namespace Drova_Modding_API.Systems.ModdingUI
                         maxSliderOptions.OnValueChangedListener(value + 1);
                         maxSliderOptions.UpdateOptionValue((int)value + 1);
                     }
+                    var instance = WorldEvents.WorldEventSystemManager.Instance;
+                    instance?.RefreshCooldown();
                 }));
                 maxSlider.onValueChanged.AddListener(new Action<float>((value) =>
                 {
@@ -132,6 +134,8 @@ namespace Drova_Modding_API.Systems.ModdingUI
                         minSliderOptions.OnValueChangedListener(value - 1);
                         minSliderOptions.UpdateOptionValue((int)value - 1);
                     }
+                    var instance = WorldEvents.WorldEventSystemManager.Instance;
+                    instance?.RefreshCooldown();
                 }));
 
                 if (builded.Count >= 9)

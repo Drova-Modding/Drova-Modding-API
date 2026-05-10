@@ -1,10 +1,12 @@
 ﻿using Drova_Modding_API.Register;
+using Il2Cpp;
 using Il2CppDrova.GUI;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using static UnityEngine.InputSystem.InputActionRebindingExtensions;
 
 namespace Drova_Modding_API.UI
@@ -12,7 +14,7 @@ namespace Drova_Modding_API.UI
     /**
      * This class is used to create a custom keybinding element for the option menu.
      */
-    [RegisterTypeInIl2Cpp]
+    [RegisterTypeInIl2CppWithInterfaces(typeof(ISelectHandler), typeof(ISubmitHandler))]
     public class GUI_Options_Controls_KeyFieldElement_Custom(IntPtr ptr) : MonoBehaviour(ptr)
     {
         Button _keybindingButton;
@@ -228,6 +230,45 @@ namespace Drova_Modding_API.UI
             RebindingOperation operation = _rebindOperation;
             _rebindOperation = null;
             operation.Cancel();
+        }
+
+        /// <summary>
+        /// Implements ISelectHandler to ensure that when the row is selected, the appropriate button (controller or keyboard) is also selected for visual feedback.
+        /// </summary>
+        /// <param name="eventData"></param>
+        public void OnSelect(BaseEventData eventData)
+        {
+            // OnSelect is called when the GameObject itself is selected by the EventSystem.
+            // This is primarily used for controller navigation to ensure visual feedback.
+            // In Drova's UI, when a row is selected, it should highlight the interactable button.
+            
+            if (Gamepad.current == null) return;
+
+            // Select the appropriate button based on active device group
+            if (_controllerButton != null && _controllerButton.gameObject.activeInHierarchy)
+            {
+                _controllerButton.Select();
+            }
+            else if (_keybindingButton != null && _keybindingButton.gameObject.activeInHierarchy)
+            {
+                _keybindingButton.Select();
+            }
+        }
+
+        /// <summary>
+        /// Implements ISubmitHandler to ensure that when the user presses the submit button (e.g., "A" on a controller), it triggers the rebinding process for the appropriate button.
+        /// </summary>
+        /// <param name="eventData"></param>
+        public void OnSubmit(BaseEventData eventData)
+        {
+            if (Gamepad.current != null)
+            {
+                RegisterListenController();
+            }
+            else
+            {
+                RegisterListen();
+            }
         }
     }
 }

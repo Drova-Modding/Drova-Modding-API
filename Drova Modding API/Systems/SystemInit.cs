@@ -23,7 +23,7 @@ namespace Drova_Modding_API.Systems
                 moddingAPISystemRoot.SetActive(false);
                 AreaNameSystem areaNameSystem = moddingAPISystemRoot.AddComponent<AreaNameSystem>();
                 WorldEventSystemManager worldEventSystem = moddingAPISystemRoot.AddComponent<WorldEventSystemManager>();
-                worldEventSystem.areaNameSystem = areaNameSystem;
+                worldEventSystem.AreaNameSystem = areaNameSystem;
 #if DEBUG
                 moddingAPISystemRoot.AddComponent<GlobalVarInspectorSystem>();
 #endif

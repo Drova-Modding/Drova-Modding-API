@@ -11,9 +11,12 @@ namespace Drova_Modding_API.Systems
     [RegisterTypeInIl2Cpp]
     public class AreaNameSystem(IntPtr ptr) : MonoBehaviour(ptr)
     {
-        private static AreaNameSystem _instance;
+        private static AreaNameSystem? _instance;
 
-        private readonly List<Region> regions = [];
+        /// <summary>
+        /// The regions the Player is currently in
+        /// </summary>
+        public readonly List<Region> Regions = [];
 
         /**
          * The delegate that is called when the player enters or leaves a region.
@@ -54,8 +57,9 @@ namespace Drova_Modding_API.Systems
         /// <param name="areaName">The name of the area</param>
         public void OnAreaEntered(string areaName)
         {
-            regions.Add(RegionExtensions.GetRegionByName(areaName));
-            OnRegionChanged?.Invoke(RegionExtensions.GetRegionByName(areaName), true);
+            MelonLogger.Msg("Entered " + areaName);
+            Regions.Add(RegionExtensions.GetRegionByName(areaName));
+            OnRegionChanged(RegionExtensions.GetRegionByName(areaName), true);
         }
 
         /// <summary>
@@ -64,23 +68,24 @@ namespace Drova_Modding_API.Systems
         /// <param name="areaName">The name of the area</param>
         public void UnregisterAreaName(string areaName)
         {
-            if (regions.Remove(RegionExtensions.GetRegionByName(areaName)))
+            MelonLogger.Msg("Unregistered " + areaName);
+            if (Regions.Remove(RegionExtensions.GetRegionByName(areaName)))
             {
-                OnRegionChanged?.Invoke(RegionExtensions.GetRegionByName(areaName), false);
+                OnRegionChanged(RegionExtensions.GetRegionByName(areaName), false);
             }
         }
 
         /// <summary>
-        /// Checks if the player is currently in a cave. This is determined by checking if any of the current regions are caves.
+        /// Checks if the player is currently in a cave. This is determined by checking if any of the current Regions are caves.
         /// </summary>
         /// <returns></returns>
         public bool IsInCave()
         {
 #if DEBUG
-            MelonLogger.Msg("Checking if player is in a cave. Current regions: " + string.Join(", ", regions.Select(r => r.ToString())));
-            MelonLogger.Msg("Is player in cave? " + regions.IsARegionInCave());
+            MelonLogger.Msg("Checking if player is in a cave. Current Regions: " + string.Join(", ", Regions.Select(r => r.ToString())));
+            MelonLogger.Msg("Is player in cave? " + Regions.IsARegionInCave());
 #endif
-            return regions.IsARegionInCave();
+            return Regions.IsARegionInCave();
         }
     }
 }
