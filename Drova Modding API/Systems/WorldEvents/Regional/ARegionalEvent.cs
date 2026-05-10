@@ -4,7 +4,7 @@
     /// A regional event that will start when a player enters a region.
     /// </summary>
     /// <param name="regionToTrigger">The region to trigger the event</param>
-    public abstract class ARegionalEvent(Region regionToTrigger): IWorldEvent
+    public abstract class ARegionalEvent(Region regionToTrigger) : IWorldEvent
     {
         /**
          * If the event is currently running.
@@ -35,7 +35,7 @@
         {
             this.IsRunning = true;
         }
-        
+
         /// <inheritdoc/>
         public virtual void EndEvent()
         {

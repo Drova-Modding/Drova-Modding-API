@@ -136,6 +136,42 @@
     /// </summary>
     public static class RegionExtensions
     {
+        /// <summary>
+        /// Returns whether a region is in a cave or not
+        /// </summary>
+        /// <param name="regions"></param>
+        /// <returns></returns>
+        public static bool IsARegionInCave(this List<Region> regions)
+        {
+            for (int i = 0; i < regions.Count; i++)
+            {
+                var region = regions[i];
+                if (region.IsCaveRegion()) return true;
+            }
+            return false;
+        }
+
+        /**
+         * Returns whether a region is a cave region or not.
+         */
+        public static bool IsCaveRegion(this Region region)
+        {
+            return region switch
+            {
+                Region.RedTower => true,
+                Region.Mine => true,
+                Region.Cave => true,
+                Region.SpiderDungeon => true,
+                Region.Ruins => true,
+                Region.CityDungeon => true,
+                Region.Academy => true,
+                Region.Library => true,
+                Region.RuinUnder => true,
+                Region.Ruinexplorer => true,
+                Region.RuinSchmuggler => true,
+                _ => false
+            };
+        }
         /**
          * Get the name of a region.
          */

@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.4.0 - 2026-05-03]
+### Added
+- Functional dialogue system with graph editor support (nodes, tasks, multiple choice flow)
+- Generic, world, and player dialogue generation improvements
+- Dialogue audio integration with provider interfaces and file-based audio loading
+- Dynamic dialogue audio volume based on player distance
+- Utility scripts and mappings for dialogue/TTS workflows
+- GlobalVarList inspector editor for easier debugging and management of global variables (F6)
+- Drova 1.3 / 1.3.1 compatibility (new items, GVarList fixes)
+- Added many new dialogue nodes: Equip, UnEquip, UseItem, GiveItem, GiveExp, Heal, Faction, PlaySfx, SetSpell, and CutsceneAction
+- Typing delay support for dialogue text
+- Added `GetPlayerAttributeStats()` and equipment slot access to `PlayerAccess`
+- Expanded `AddressableAccess` to include Interactions and new NPC templates
+- Added `DialogueAudioDistanceManager` for more precise volume adjustments
+
+
+### Changed
+- Improved dialogue editor rendering, line drawing, and graph navigation behavior
+- Refined dialogue creation flow and handling for more generic dialogue cases
+- Cleanup and optimization around provider access and release compilation
+- On building no more warnings :D
+
+### Fixed
+- Fixed an error message which would appear when we tried to patch the options menu
+- Fixed a bug where interrupting a rebinding attempt could leave the control in a stale state and require clicking again before rebinding would work
+- Fixed the custom input rebinding flow to clean up properly on cancel/complete and restore the UI state correctly
+- Fixed a bug where the dialog window speech text mesh pro would reset incorrectly
+- Prevented the options menu from closing during key rebinding to avoid interruption
+
 ## [0.3.0 - 2024-11-29]
 ### Added
 - Event System

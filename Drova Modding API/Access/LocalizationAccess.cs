@@ -23,7 +23,6 @@ namespace Drova_Modding_API.Access
             LocalizationDB.Instance.LoadLanguage(language);
         }
 
-
         /// <summary>
         /// Gets a localized string for a mod.
         /// <example>
@@ -49,13 +48,12 @@ namespace Drova_Modding_API.Access
         /// <param name="value">Int of the Enum, at the moment of writing this it would be something >35</param>
         public static void InjectLanguageEnum(string name, int value)
         {
-            var injection = new Dictionary<string, object>
+            Dictionary<string, object> injection = new()
             {
                 { name, value }
             };
             EnumInjector.InjectEnumValues<ELanguage>(injection);
         }
-
 
         /// <summary>
         /// Creates localization entries for a mod. The entries are grouped by language and written to the respective language file.
@@ -64,14 +62,14 @@ namespace Drova_Modding_API.Access
         /// <param name="modName">The name of the mod (must be unique to other mod names).</param> 
         public static void CreateLocalizationEntries(List<LocalizationEntry> entries, string modName)
         {
-            var groups = entries.GroupBy(x => x.Language);
-            var map = new Dictionary<ELanguage, StringBuilder>();
+            IEnumerable<IGrouping<ELanguage, LocalizationEntry>> groups = entries.GroupBy(x => x.Language);
+            Dictionary<ELanguage, StringBuilder> map = new();
 
-            foreach (var entry in groups)
+            foreach (IGrouping<ELanguage, LocalizationEntry> entry in groups)
             {
-                var sb = new StringBuilder();
+                StringBuilder sb = new();
 
-                foreach (var item in entry)
+                foreach (LocalizationEntry item in entry)
                 {
                     sb.AppendLine($"{item.Key} {{ {item.Value} }}");
                     sb.AppendLine();
@@ -79,9 +77,9 @@ namespace Drova_Modding_API.Access
                 map.Add(entry.Key, sb);
             }
 
-            foreach (var item in map)
+            foreach (KeyValuePair<ELanguage, StringBuilder> item in map)
             {
-                var path = LocalizationDB.Instance.GetLanguageFolderPath(item.Key);
+                string path = LocalizationDB.Instance.GetLanguageFolderPath(item.Key);
                 try
                 {
                     File.WriteAllText(Path.Combine(path, modName + $"_{Enum.GetName(typeof(ELanguage), item.Key)}.loc"), item.Value.ToString());
@@ -92,6 +90,65 @@ namespace Drova_Modding_API.Access
                 }
             }
             LocalizationDB.Instance.ReloadCurrentLanguage();
+        }
+
+        /// <summary>
+        /// Creates localization entries for a mod. The entries are grouped by language and copied to the respective language file.
+        /// Copys all content from the folder to the localization folder.
+        /// </summary>
+        internal static void CreateLocalizationEntriesFromFolder()
+        {
+            string localizationFolder = Path.Combine(Utils.SavePath, "Localization");
+            if (!Directory.Exists(localizationFolder))
+            {
+                MelonLogger.Msg("Localization folder not found. Created one for convient reason");
+                try { Directory.CreateDirectory(localizationFolder); }
+                catch (Exception e) { MelonLogger.Error(e.Message); }
+                return;
+            }
+
+            // collect all folders
+            string[] folders = Directory.GetDirectories(localizationFolder);
+            foreach (string folder in folders)
+            {
+                try
+                {
+                    string language = folder.Split(Path.DirectorySeparatorChar).Last();
+                    if (!Enum.TryParse(language, true, out ELanguage _))
+                    {
+                        // If language is not found, inject it to the enum
+                        int count = Enum.GetValues(typeof(ELanguage)).Length;
+                        InjectLanguageEnum(language, ++count);
+                    }
+                    // Here we should be safe and the language enum should contain the result
+                    if (Enum.TryParse(language, true, out ELanguage result))
+                    {
+                        string copyPath = LocalizationDB.Instance.GetLanguageFolderPath(result);
+                        // Copy all files and directories recursively
+                        CopyFilesRecursively(folder, copyPath);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MelonLogger.Error("Failed to load localiazations for {0}, because {1}", folder, e.Message);
+                }
+            }
+        }
+
+        static void CopyFilesRecursively(string sourcePath, string destinationPath)
+        {
+            foreach (string file in Directory.GetFiles(sourcePath))
+            {
+                string destFile = Path.Combine(destinationPath, Path.GetFileName(file));
+                File.Copy(file, destFile, true);
+            }
+
+            foreach (string dir in Directory.GetDirectories(sourcePath))
+            {
+                string destDir = Path.Combine(destinationPath, Path.GetFileName(dir));
+                Directory.CreateDirectory(destDir);
+                CopyFilesRecursively(dir, destDir);
+            }
         }
 
         /// <summary>

@@ -1,8 +1,10 @@
 ﻿using Il2CppDrova.GUI.Options;
-using MelonLoader;
-using UnityEngine.UI;
+using Il2CppDrova.ConfigOptions;
+using Il2CppDrova;
 using Il2CppTMPro;
-
+using MelonLoader;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace Drova_Modding_API.UI
 {
@@ -13,10 +15,32 @@ namespace Drova_Modding_API.UI
     /// Constructor for the float slider.
     /// </remarks>
     [RegisterTypeInIl2Cpp]
-    public class GUI_ConfigOption_Slider_Float(IntPtr ptr) : GUI_AConfigOption<float, Slider>(ptr)
+    public class GUI_ConfigOption_Slider_Float : MonoBehaviour
     {
+        /// <summary>
+        /// Slider UI Element
+        /// </summary>
+        public Slider UiElement;
+        /// <summary>
+        /// The config game handler
+        /// </summary>
+        public ConfigGameHandler ConfigHandler;
+        /// <summary>
+        /// The key for the ConfigGameHandler
+        /// </summary>
+        public ConfigOptionKey Key;
+
         private TextMeshProUGUI _amountText;
         private bool _showPercentSign;
+
+        /// <summary>
+        /// Do not use
+        /// </summary>
+        /// <param name="ptr"></param>
+        // ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
+        public GUI_ConfigOption_Slider_Float(IntPtr ptr) : base(ptr)
+        {
+        }
 
         /// <summary>
         /// Initialize the float slider.
@@ -24,12 +48,12 @@ namespace Drova_Modding_API.UI
         public void Init()
         {
             _amountText = gameObject.transform.parent.GetComponentInChildren<TextMeshProUGUI>();
-            if(_amountText == null)
+            if (_amountText == null)
             {
                 MelonLogger.Error("Amount text not found");
             }
-            var slider = GetComponent<Slider>();
-            if(slider == null)
+            Slider slider = GetComponent<Slider>();
+            if (slider == null)
             {
                 MelonLogger.Error("Slider not found"); return;
             }
@@ -37,23 +61,17 @@ namespace Drova_Modding_API.UI
             _showPercentSign = false;
         }
 
-
-        /// <summary>
-        /// Set the value of the slider and text.
-        /// Doesn't work at the moment
-        /// </summary>
-        /// <param name="value"></param>
-        public override void SetUIValue(float value)
-        {
-            SetUIValueCustom(value);
-        }
-
         /// <summary>
         /// Set the value of the slider and text.
         /// </summary>
         public void SetUIValueCustom(float value)
         {
-            _uiElement.value = value;
+            if (UiElement == null)
+            {
+                MelonLogger.Error("UI slider element is not initialized");
+                return;
+            }
+            UiElement.value = value;
             OnValueChangedListener(value);
         }
 
@@ -68,6 +86,11 @@ namespace Drova_Modding_API.UI
         /// <param name="value"></param>
         protected void OnValueChangedListener(float value)
         {
+            if (_amountText == null)
+            {
+                return;
+            }
+
             if (_showPercentSign)
             {
                 _amountText.text = value + "%";
@@ -76,7 +99,7 @@ namespace Drova_Modding_API.UI
             {
                 _amountText.text = value.ToString("0.00");
             }
-            _configHandler.GameplayConfig.ConfigFile.SetValue(_key._key, value.ToString("0.00"));
+            ConfigHandler?.GameplayConfig?.ConfigFile?.SetValue(Key?._key, value.ToString("0.00"));
         }
     }
 }

@@ -1,11 +1,11 @@
 ﻿using Drova_Modding_API.Access;
 using Drova_Modding_API.Extensions;
-using Il2CppDrova;
-using UnityEngine.AddressableAssets;
-using UnityEngine;
-using System.Collections;
-using MelonLoader;
 using Drova_Modding_API.Systems.Spawning;
+using Il2CppDrova;
+using MelonLoader;
+using System.Collections;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Drova_Modding_API.Systems.WorldEvents
 {
@@ -21,14 +21,13 @@ namespace Drova_Modding_API.Systems.WorldEvents
         private object _melonCouroutineToken;
         private bool _isRunning = false;
 
-
         /// <summary>
         /// Called when the event starts. Checks if the player is alive and not teleporting.
         /// </summary>
         /// <returns></returns>
         public bool CanStartEvent()
         {
-            if (PlayerAccess.TryGetPlayer(out var player))
+            if (PlayerAccess.TryGetPlayer(out Actor player))
             {
                 return player.IsAlive() && !player.IsTelporting();
             }
@@ -41,17 +40,17 @@ namespace Drova_Modding_API.Systems.WorldEvents
         public virtual void StartEvent()
         {
             _isRunning = true;
-            if (!PlayerAccess.TryGetPlayer(out var player))
+            if (!PlayerAccess.TryGetPlayer(out Actor player))
             {
                 WorldEventSystemManager.Instance.EndEvent();
             }
-            foreach (var encounter in encountersToSpawn)
+            foreach (KeyValuePair<AssetReferenceGameObject, int> encounter in encountersToSpawn)
             {
                 for (int i = 0; i < encounter.Value; i++)
                 {
-                    var position = player.transform.position;
+                    Vector3 position = player.transform.position;
 
-                    var randomPosition = _worldLocator.GetRandomFreePosition(new Vector2(position.x, position.y));
+                    Vector2? randomPosition = _worldLocator.GetRandomFreePosition(new Vector2(position.x, position.y));
                     if (randomPosition.HasValue)
                     {
                         _spawnedEncounters.Add(encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity).WaitForCompletion());
@@ -84,12 +83,16 @@ namespace Drova_Modding_API.Systems.WorldEvents
          */
         public virtual void EndEvent()
         {
+            if (!_isRunning)
+            {
+                return;
+            }
             _isRunning = false;
             if (_melonCouroutineToken != null)
             {
                 MelonCoroutines.Stop(_melonCouroutineToken);
             }
-            foreach (var encounter in _spawnedEncounters)
+            foreach (GameObject encounter in _spawnedEncounters)
             {
                 if (encounter != null)
                 {
@@ -97,6 +100,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 }
             }
             _spawnedEncounters.Clear();
+            WorldEventSystemManager.Instance.EndEvent();
 
         }
     }

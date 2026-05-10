@@ -8,9 +8,14 @@ using Drova_Modding_API.Systems;
 using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.3.0", "Drova Modding", null)]
+
+#if DEBUG
+using UnityEngine.InputSystem;
+#endif
+
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
-[assembly: VerifyLoaderVersion(0, 6, 6, true)]
+[assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
 namespace Drova_Modding_API
 {
@@ -20,23 +25,28 @@ namespace Drova_Modding_API
     public class Core : MelonMod
     {
         internal static string AssemblyLocation;
-        internal static event Action OnMonoUpdate;
         internal bool _inMainMenu = false;
+#if DEBUG
+        private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
+#endif
 
         /// <inheritdoc/>
         public override void OnInitializeMelon()
         {
             base.OnInitializeMelon();
-            SystemInit.RegisterIl2Cpp();
+#if DEBUG
+            consoleAction.Enable();
+#endif
             SystemInit.RegisterStores();
             LoggerInstance.Msg("Initialized Modding API.");
-            OptionMenuAccess.Instance.OnOptionMenuClose += () => { 
+            OptionMenuAccess.Instance.OnOptionMenuClose += () =>
+            {
                 if (!_inMainMenu) InputActionRegister.Instance.EnableGameplayActions();
                 InputActionRegister.Instance.SaveActions();
             };
             OptionMenuAccess.Instance.OnOptionMenuOpen += () =>
             {
-                
+
                 InputActionRegister.Instance.DisableGameplayActions();
             };
         }
@@ -51,9 +61,10 @@ namespace Drova_Modding_API
                 // Retrigger it to make sure that the close call is registered
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
-
+                LocalizationAccess.CreateLocalizationEntriesFromFolder();
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
+                //_ttsFile.CreateDialogueFile();
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
                 _inMainMenu = true;
@@ -66,6 +77,10 @@ namespace Drova_Modding_API
                 InputActionRegister.Instance.EnableGameplayActions();
                 _inMainMenu = false;
             }
+            // if (sceneName == SceneNames.AILogic)
+            // {
+            //     _ttsFile.GenerateWorldDialogues();
+            // }
         }
 
         /// <inheritdoc/>
@@ -73,7 +88,6 @@ namespace Drova_Modding_API
         {
             base.OnLateInitializeMelon();
             AssemblyLocation = MelonAssembly.Location;
-            ActionKeyRegister.Instance.LoadKeyCodes();
             GameObject gameObject = new("ModdingAPIRegister");
             gameObject.AddComponent<InputActionRegister>();
             UnityEngine.Object.DontDestroyOnLoad(gameObject);
@@ -85,12 +99,11 @@ namespace Drova_Modding_API
         {
             base.OnUpdate();
 #if DEBUG
-            if (Input.GetKeyDown(KeyCode.BackQuote))
+            if (consoleAction.WasReleasedThisFrame())
             {
-                ProviderAccess.GetCheatGameHandler().EnableCheatMode(!ProviderAccess.GetCheatGameHandler()._cheatModeEnabled);
+                ProviderAccess.GetCheatGameHandler().EnableCheatMode(!ProviderAccess.GetCheatGameHandler().IsCheatModeEnabled);
             }
 #endif
-            OnMonoUpdate?.Invoke();
         }
     }
 }

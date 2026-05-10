@@ -16,14 +16,14 @@ namespace Drova_Modding_API.Access
         /// <returns>Returns your value or default if not found</returns>
         public static bool TryGetConfigValue<T>(string key, out T value)
         {
-            var ressource = ProviderAccess.GetDrovaResourceProvider();
+            Il2CppDrova.DrovaResourceProvider ressource = ProviderAccess.GetDrovaResourceProvider();
             if (ressource == null)
             {
                 MelonLogger.Error("DrovaResourceProvider is null. The Game might still be bootstrapping");
                 value = default;
                 return false;
             }
-            var provider = ProviderAccess.GetConfigGameHandler();
+            Il2CppDrova.ConfigGameHandler provider = ProviderAccess.GetConfigGameHandler();
             if (provider == null)
             {
                 MelonLogger.Error("ConfigGameHandler is null. The Game might still be bootstrapping");
@@ -68,7 +68,8 @@ namespace Drova_Modding_API.Access
                 {
                     if (provider.GameplayConfig.ConfigFile.TryGetString(key, out string stringifiedValue))
                     {
-                        if (Enum.TryParse(typeof(T), stringifiedValue, out object result)) {
+                        if (Enum.TryParse(typeof(T), stringifiedValue, out object result))
+                        {
                             value = (T)result;
                             return true;
                         }

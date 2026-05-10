@@ -1,10 +1,10 @@
 ﻿using Drova_Modding_API.Register;
+using Il2CppDrova.GUI;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using Il2CppDrova.GUI;
 using static UnityEngine.InputSystem.InputActionRebindingExtensions;
 
 namespace Drova_Modding_API.UI
@@ -24,24 +24,26 @@ namespace Drova_Modding_API.UI
         GameObject conflictMarker;
         GameObject _controller;
         GameObject _keyboard;
-        GameObject _exitButton;
+        GameObject? _exitButton;
+        RebindingOperation? _rebindOperation;
 
         private const string GamePadGroup = "Gamepad";
         private const string KeyboardGroup = "Keyboard;Mouse";
-
 
         /// <summary>
         /// OnDestory method.
         /// </summary>
         protected void OnDestroy()
         {
+            CancelCurrentRebinding();
+            InputActionRegister.isMappingCurrently = false;
             InputSystem.remove_onDeviceChange(new Action<InputDevice, InputDeviceChange>(this.OnDeviceChange));
         }
 
         /**
          * Initialize the keybinding element.
          */
-        public void Init(string actionName, bool useObsolote = true, GameObject exitButton = null)
+        public void Init(string actionName, GameObject? exitButton = null)
         {
             _exitButton = exitButton;
             _actionName = actionName;
@@ -73,26 +75,20 @@ namespace Drova_Modding_API.UI
                 MelonLogger.Error("Keybinding button or text not found."); return;
             }
 
-            var conflictMarkerChild = _keyboard.transform.FindChild("ConflictMarker");
+            Transform conflictMarkerChild = _keyboard.transform.FindChild("ConflictMarker");
             if (conflictMarkerChild == null)
             {
                 MelonLogger.Error("ConflictMarker not found."); return;
             }
             conflictMarker = conflictMarkerChild.gameObject;
-            if (useObsolote)
-            {
-                InitObsolete();
-            }
-            else
-            {
-                InitNew();
-            }
+
+            Init();
             InputSystem.add_onDeviceChange(new Action<InputDevice, InputDeviceChange>(this.OnDeviceChange));
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
-            var isGamePad = device.TryCast<Gamepad>() != null;
+            bool isGamePad = device.TryCast<Gamepad>() != null;
             if ((change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected || change == InputDeviceChange.Enabled) && isGamePad)
             {
                 InitGamepad();
@@ -106,47 +102,50 @@ namespace Drova_Modding_API.UI
         private void InitGamepad()
         {
             _controllerButton.gameObject.SetActive(true);
-            var action = InputActionRegister.Instance[_actionName];
+            InputAction action = InputActionRegister.Instance[_actionName];
             _controllerButton.onClick.AddListener(new Action(RegisterListenController));
-            var bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(GamePadGroup));
+            int bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(GamePadGroup));
             if (bindingIndex == -1)
             {
                 _controllerButton.interactable = false;
                 MelonLogger.Warning($"Binding index not found for action {_actionName} and group {GamePadGroup}. This could be intenional if you don't want this action to be rebindable");
                 return;
             }
-            _controllerKeybindingText.text = action.GetBindingDisplayString((InputBinding.DisplayStringOptions)0, GamePadGroup);
+            _controllerKeybindingText.text = action.bindings[bindingIndex].ToDisplayString();
         }
 
         private void RemoveGamepad()
         {
             _controllerButton.onClick.RemoveAllListeners();
             _controllerButton.gameObject.SetActive(false);
-
         }
 
         private void InitKeyboard()
         {
             _keyboard.SetActive(true);
-            var action = InputActionRegister.Instance[_actionName];
+            InputAction action = InputActionRegister.Instance[_actionName];
             _keybindingButton.onClick.AddListener(new Action(RegisterListen));
-            _keybindingText.text = action.GetBindingDisplayString((InputBinding.DisplayStringOptions)0, KeyboardGroup);
+            int bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(KeyboardGroup));
+            if (bindingIndex == -1)
+            {
+                _keybindingButton.interactable = false;
+                MelonLogger.Warning($"Binding index not found for action {_actionName} and group {KeyboardGroup}. This could be intenional if you don't want this action to be rebindable");
+                return;
+            }
+            _keybindingText.text = action.bindings[bindingIndex].ToDisplayString();
         }
 
-
-
-        private void InitNew()
+        private void Init()
         {
-            
             if (Gamepad.current != null)
             {
                 InitGamepad();
-            } else
+            }
+            else
             {
                 RemoveGamepad();
             }
             InitKeyboard();
-            
         }
 
         private void RegisterListen()
@@ -163,92 +162,72 @@ namespace Drova_Modding_API.UI
 
         private void ListenForRebinding(TextMeshProUGUI textMesh, string group, string excludeGroup, string secondaryExcludeGroup = null)
         {
-            var action = InputActionRegister.Instance[_actionName];
-            var bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(group));
+            InputAction action = InputActionRegister.Instance[_actionName];
+            int bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(group));
             if (bindingIndex == -1)
             {
                 MelonLogger.Error($"Binding index not found for action {_actionName} and group {group}.");
                 return;
             }
+            CancelCurrentRebinding();
+
+            string originalBindingText = action.bindings[bindingIndex].ToDisplayString();
             InputActionRegister.isMappingCurrently = true;
-            var rebindOperation = action.PerformInteractiveRebinding(bindingIndex).WithControlsExcluding(excludeGroup).WithBindingMask(new Il2CppSystem.Nullable<InputBinding>(InputBinding.MaskByGroup(group))).WithTimeout(30);
+            _exitButton?.SetActive(false);
+
+            RebindingOperation rebindOperation = action.PerformInteractiveRebinding(bindingIndex)
+                .WithControlsExcluding(excludeGroup)
+                .WithBindingMask(new Il2CppSystem.Nullable<InputBinding>(InputBinding.MaskByGroup(group)))
+                .WithTimeout(30);
+            _rebindOperation = rebindOperation;
+
+            if (group == KeyboardGroup)
+            {
+                rebindOperation.WithCancelingThrough("<Keyboard>/backquote");
+            }
+            else if (group == GamePadGroup)
+            {
+                rebindOperation.WithCancelingThrough("<Gamepad>/start");
+            }
+
             if (secondaryExcludeGroup != null)
             {
                 rebindOperation.WithControlsExcluding(secondaryExcludeGroup);
             }
+            rebindOperation.OnCancel(new Action<RebindingOperation>(operation =>
+            {
+                textMesh.text = originalBindingText;
+                FinishRebinding(operation);
+            }));
             rebindOperation.OnComplete(new Action<RebindingOperation>(operation =>
             {
                 textMesh.text = operation.action.bindings[bindingIndex].ToDisplayString();
-                InputActionRegister.isMappingCurrently = false;
-                _exitButton.SetActive(true);
-                operation.Dispose();
+                FinishRebinding(operation);
             }));
             rebindOperation.Start();
         }
 
-        private void InitObsolete()
+        private void FinishRebinding(RebindingOperation operation)
         {
-            _keybindingButton.onClick.AddListener(new Action(RegisterListenKey));
-            if (KeyAlreadyBound(ActionKeyRegister.Instance[_actionName])) conflictMarker.GetComponent<Image>().enabled = true;
-        }
-
-        [Obsolete("Removed with upcoming updates.")]
-        private bool KeyAlreadyBound(KeyCode code)
-        {
-            foreach (var key in ActionKeyRegister.Instance.KeyCodes)
+            InputActionRegister.isMappingCurrently = false;
+            _exitButton?.SetActive(true);
+            if (_rebindOperation == operation)
             {
-                if (key == ActionKeyRegister.Instance[_actionName]) continue;
-                if (key == code) return true;
+                _rebindOperation = null;
             }
-            if (_controls)
+            operation.Dispose();
+        }
+
+        private void CancelCurrentRebinding()
+        {
+            if (_rebindOperation == null)
             {
-                foreach (var key in _controls.RemapService._defaultMappingKeyboard.Values)
-                    if (Enum.TryParse(key.KeyboardValue.Replace(" ", ""), out KeyCode result))
-                    {
-                        if (result == code) return true;
-                    }
+                return;
             }
-            return false;
-        }
 
-        /**
-         * Register the listener for the keybinding.
-         */
-        [Obsolete("Removed with upcoming updates.")]
-        public void RegisterListenKey()
-        {
-            _keybindingText.text = "...";
-            Core.OnMonoUpdate += ListenForKey;
-        }
-
-        [Obsolete("Removed with upcoming updates.")]
-        private void ListenForKey()
-        {
-
-            foreach (var key in Keyboard.current.allKeys)
-                if (key.wasPressedThisFrame && char.IsLetterOrDigit(key.displayName[0]))
-                {
-                    // If escape is pressed, cancel the keybinding action.
-                    if (key.keyCode == Key.Escape)
-                    {
-                        _keybindingText.text = ActionKeyRegister.Instance[_actionName].ToString();
-                        Core.OnMonoUpdate -= ListenForKey; return;
-                    }
-                    KeyCode code = Utils.KeyToKeyCode(key.keyCode);
-                    if (code == KeyCode.None) return;
-                    if (KeyAlreadyBound(code))
-                    {
-                        Core.OnMonoUpdate -= ListenForKey;
-                        _keybindingText.text = code.ToString();
-                        ActionKeyRegister.Instance.AddAction(_actionName, code);
-                        conflictMarker.GetComponent<Image>().enabled = true;
-                        return;
-                    }
-                    conflictMarker.GetComponent<Image>().enabled = false;
-                    ActionKeyRegister.Instance.AddAction(_actionName, code);
-                    _keybindingText.text = code.ToString();
-                    Core.OnMonoUpdate -= ListenForKey;
-                }
+            RebindingOperation operation = _rebindOperation;
+            _rebindOperation = null;
+            operation.Cancel();
         }
     }
 }

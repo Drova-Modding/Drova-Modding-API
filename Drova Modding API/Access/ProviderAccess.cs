@@ -3,21 +3,24 @@ using Il2CppCustomFramework.Localization;
 using Il2CppDrova;
 using Il2CppDrova.Achievements;
 using Il2CppDrova.DialogueNew;
+using Il2CppDrova.GlobalVarSystem;
 using Il2CppDrova.GUI;
+using Il2CppDrova.Items;
 using Il2CppDrova.Items.Stats;
 using Il2CppDrova.QuestSystem;
+using Il2CppDrova.StatusEffects;
 using Il2CppDrova.Utilities.LazyLoading;
 using Il2CppDrova.Weather;
 
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    ///  Easy access to the DrovaResourceProvider and its ressources
+    ///  Easy access to the DrovaResourceProvider and its resources
     /// </summary>
     public static class ProviderAccess
     {
         private static DrovaResourceProvider _DrovaResourceProvider;
-        private static GameManager _gameManager;
+        private static GameManager? _gameManager;
 
         /// <summary>
         /// Access to the DrovaResourceProvider
@@ -31,11 +34,33 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
+        /// Access to the GVarDatabase
+        /// </summary>
+        public static SubDatabase_GVars GVarDatabase => GetGameDatabase()._gvarDatabase;
+
+        /// <summary>
+        /// Access to the RecipeDatabase
+        /// </summary>
+        public static SubDatabase_Recipe RecipeDatabase => GetGameDatabase()._recipeDatabase;
+
+        /// <summary>
+        /// Access to the ItemDatabase
+        /// </summary>
+        public static SubDatabase_Item ItemDatabase => GetGameDatabase()._itemDatabase;
+
+        /// <summary>
+        /// Access to the StatusEffectDatabase
+        /// </summary>
+        public static SubDatabase_StatusEffect StatusEffectDatabase => GetGameDatabase()._statusEffectDatabase;
+
+        private static StatContainer? _cachedStateContainer;
+
+        /// <summary>
         /// Contains BHV Trees
         /// </summary>
         public static AIDatabase GetAIDatabase()
         {
-            return GetDrovaResourceProvider()._handler[0].Cast<AIDatabase>();
+            return AIDatabase.Instance;
         }
 
         /// <summary>
@@ -43,7 +68,7 @@ namespace Drova_Modding_API.Access
         ///  </summary>
         public static FadingMaterials GetFadingMaterials()
         {
-            return GetDrovaResourceProvider()._handler[1].Cast<FadingMaterials>();
+            return FadingMaterials.Instance;
         }
 
         /// <summary>
@@ -57,10 +82,10 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Contains all global stats for the game <see cref="GenericStatDesc"/>
         /// </summary>
-
         public static StatContainer GetGlobalStatsContainer()
         {
-            return GetDrovaResourceProvider()._handler[3].Cast<StatContainer>();
+            _cachedStateContainer ??= GetDrovaResourceProvider()._handler[3].Cast<StatContainer>();
+            return _cachedStateContainer;
         }
 
         /// <summary>
@@ -68,7 +93,7 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static LocalizationDB GetLocalizationDB()
         {
-            return GetDrovaResourceProvider()._handler[4].Cast<LocalizationDB>();
+            return LocalizationDB.Instance;
         }
 
         /// <summary>
@@ -76,7 +101,7 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static TilemapDatabase GetTilemapDatabase()
         {
-            return GetDrovaResourceProvider()._handler[5].Cast<TilemapDatabase>();
+            return TilemapDatabase.Instance;
         }
 
         /// <summary>
@@ -85,7 +110,7 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static TooltipBuilder GetTooltipBuilder()
         {
-            return GetDrovaResourceProvider()._handler[6].Cast<TooltipBuilder>();
+            return TooltipBuilder.Instance;
         }
 
         /// <summary>
@@ -93,7 +118,7 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static GameDatabase GetGameDatabase()
         {
-            return GetDrovaResourceProvider()._handler[7].Cast<GameDatabase>();
+            return GameDatabase.Instance;
         }
 
         /// <summary>
@@ -101,63 +126,71 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static ScriptableGameHandlerDatabase GetScriptableGameHandlerDatabase()
         {
-            return GetDrovaResourceProvider()._handler[8].Cast<ScriptableGameHandlerDatabase>();
+            return ScriptableGameHandlerDatabase.Instance;
         }
 
         /// <summary>
         ///  Access to FSM and Graphes
         /// </summary>
-        public static FactoryAIGameHandler GetFactoryAIGameHandler()
+        public static FactoryAIGameHandler? GetFactoryAIGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[0].Cast<FactoryAIGameHandler>();
+            return FactoryAIGameHandler.TryGet();
         }
 
         /// <summary>
         ///  Access to the Achievement System
         /// </summary>
-        public static AchievementGameHandler GetAchievementGameHandler()
+        public static AchievementGameHandler? GetAchievementGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[1].Cast<AchievementGameHandler>();
+
+            AchievementGameHandler.TryGet(out AchievementGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Provides access to PlayerCraftedEvent and PlayerUsedConsumable Event
         /// </summary>
-        public static AnalyticsGameHandler GetAnalyticsGameHandler()
+        public static AnalyticsGameHandler? GetAnalyticsGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[2].Cast<AnalyticsGameHandler>();
+            AnalyticsGameHandler.TryGet(out AnalyticsGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// SFX Access and Play Sounds for Actors
         /// </summary>
-        public static AudioGameHandler GetAudioGameHandler()
+        public static AudioGameHandler? GetAudioGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[3].Cast<AudioGameHandler>();
+            AudioGameHandler.TryGet(out AudioGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Camera Target and Offset
         /// </summary>
-        public static CameraGameHandler GetCameraGameHandler()
+        public static CameraGameHandler? GetCameraGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[4].Cast<CameraGameHandler>();
+            CameraGameHandler.TryGet(out CameraGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Access to all Cheat related stuff, like register spawnable Actors/Items and other
         /// </summary>
-        public static CheatGameHandler GetCheatGameHandler()
+        public static CheatGameHandler? GetCheatGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[5].Cast<CheatGameHandler>();
+            CheatGameHandler.TryGet(out CheatGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Access to <see cref="ConfigFileBridgeOptions"/>
         /// </summary>
-        public static ConfigGameHandler GetConfigGameHandler()
+        public static ConfigGameHandler? GetConfigGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[6].Cast<ConfigGameHandler>();
+            ConfigGameHandler.TryGet(out ConfigGameHandler handler);
+            return handler;
+
         }
 
         /// <summary>
@@ -171,92 +204,103 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Active dialogues and access to the Dialogue System
         /// </summary>
-        public static DialogueSystemGameHandler GetDialogueSystemGameHandler()
+        public static DialogueSystemGameHandler? GetDialogueSystemGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[8].Cast<DialogueSystemGameHandler>();
+            DialogueSystemGameHandler.TryGet(out DialogueSystemGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Access to the player object and events for entities spawning, despawning, etc. and entities in scene
         /// </summary>
         /// <returns></returns>
-        public static EntityGameHandler GetEntityGameHandler()
+        public static EntityGameHandler? GetEntityGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[9].Cast<EntityGameHandler>();
+            EntityGameHandler.TryGet(out EntityGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Eqiupmentslots, Talents, StatusEffects
         /// </summary>
-        public static GameplaySettingsHandler GetGameplaySettingsHandler()
+        public static GameplaySettingsHandler? GetGameplaySettingsHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[10].Cast<GameplaySettingsHandler>();
+            GameplaySettingsHandler.TryGet(out GameplaySettingsHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Access to commom Items, like torches, money
         /// Access to the perceptionColor and other stuff
         /// </summary>
-        public static GlobalAssetsGameHandler GetGlobalAssetsGameHandler()
+        public static GlobalAssetsGameHandler? GetGlobalAssetsGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[11].Cast<GlobalAssetsGameHandler>();
+            GlobalAssetsGameHandler.TryGet(out GlobalAssetsGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Access to GUI Windows and their prefabs
         /// </summary>
-        public static GUIGameHandler GetGUIGameHandler()
+        public static GUIGameHandler? GetGUIGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[12].Cast<GUIGameHandler>();
+            GUIGameHandler.TryGet(out GUIGameHandler handler);
+            return handler;
         }
         /// <summary>
         /// Provides Position and access to their Databases
         /// </summary>
-        public static MapGameHandler GetMapGameHandler()
+        public static MapGameHandler? GetMapGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[13].Cast<MapGameHandler>();
+            MapGameHandler.TryGet(out MapGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Common ObjectPool Pattern
         /// </summary>
-        public static ObjectPoolerGameHandler GetObjectPoolerGameHandler()
+        public static ObjectPoolerGameHandler? GetObjectPoolerGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[14].Cast<ObjectPoolerGameHandler>();
+            ObjectPoolerGameHandler.TryGet(out ObjectPoolerGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Tracks active Quests
         /// </summary>
         /// <returns></returns>
-        public static QuestGameHandler GetQuestGameHandler()
+        public static QuestGameHandler? GetQuestGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[15].Cast<QuestGameHandler>();
+            QuestGameHandler.TryGet(out QuestGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Events, Data related to SaveGames and the current Savegame
         /// </summary>
-        public static SavegameGameHandler GetSaveGameHandler()
+        public static SavegameGameHandler? GetSaveGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[16].Cast<SavegameGameHandler>();
+            SavegameGameHandler.TryGet(out SavegameGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Fading, Streaming, Events for Scene Changes and access if the player is teleporting
         /// </summary>
         /// <returns></returns>
-        public static SceneGameHandler GetSceneGameHandler()
+        public static SceneGameHandler? GetSceneGameHandler()
         {
-            return GetScriptableGameHandlerDatabase()._assets[17].Cast<SceneGameHandler>();
+            SceneGameHandler.TryGet(out SceneGameHandler handler);
+            return handler;
         }
 
         /// <summary>
         /// Tutorial Events and access to the Tutorial System
         /// </summary>
-        public static TutorialManager GetTutorialManager()
+        public static TutorialManager? GetTutorialManager()
         {
-            return GetScriptableGameHandlerDatabase()._assets[18].Cast<TutorialManager>();
+            TutorialManager.TryGet(out TutorialManager handler);
+            return handler;
         }
 
         /// <summary>
@@ -269,7 +313,7 @@ namespace Drova_Modding_API.Access
                 gameManager = _gameManager;
                 return true;
             }
-            var gameManagerObject = UnityEngine.Object.FindObjectOfType<GameManager>();
+            GameManager gameManagerObject = UnityEngine.Object.FindObjectOfType<GameManager>();
             gameManager = gameManagerObject;
             if (gameManagerObject != null)
             {
@@ -282,7 +326,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// GameOverManager
         /// </summary>
-        public static bool TryGetGameOverGameHandler(out GameOverGameHandler gameOverGameHandler)
+        public static bool TryGetGameOverGameHandler(out GameOverGameHandler? gameOverGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -302,7 +346,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Time scale
         /// </summary>
-        public static bool TryGetGameStateGameHandler(out GameStateGameHandler gameStateGameHandler)
+        public static bool TryGetGameStateGameHandler(out GameStateGameHandler? gameStateGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -320,9 +364,9 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Access to joarnal, map collection and crafting
+        /// Access to journal, map collection, and crafting
         /// </summary>
-        public static bool TryGetPlayerMetaDataGameHandler(out PlayerMetaDataGameHandler playerMetaDataGameHandler)
+        public static bool TryGetPlayerMetaDataGameHandler(out PlayerMetaDataGameHandler? playerMetaDataGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -340,29 +384,29 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// WeatherGameHandler Access to weather events and properties
+        /// weatherGameHandler Access to weather events and properties
         /// </summary>
-        public static bool TryGetWeatherGameHandler(out WeatherGameHandler WeatherGameHandler)
+        public static bool TryGetWeatherGameHandler(out WeatherGameHandler? weatherGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
-                WeatherGameHandler = null;
+                weatherGameHandler = null;
                 return false;
             }
-            if (_gameManager.TryGetGameHandler("WeatherGameHandler", out IGameHandler handler))
+            if (_gameManager.TryGetGameHandler("weatherGameHandler", out IGameHandler handler))
             {
-                WeatherGameHandler = handler.Cast<WeatherGameHandler>();
+                weatherGameHandler = handler.Cast<WeatherGameHandler>();
                 return true;
             }
 
-            WeatherGameHandler = null;
+            weatherGameHandler = null;
             return false;
         }
 
         /// <summary>
         /// DaytimeGameHandler with events 
         /// </summary>
-        public static bool TryGetDaytimeGameHandler(out DaytimeGameHandler daytimeGameHandler)
+        public static bool TryGetDaytimeGameHandler(out DaytimeGameHandler? daytimeGameHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -383,7 +427,7 @@ namespace Drova_Modding_API.Access
         /// RootObjectHandler get root objects for scenes
         /// Possible values: "RoutineScene_Gameplay_Main", "RoutineScene_Creatures", "AIControllerScene_Creatures", "AIControllerScene_Actors", "RoutineScene_Actors"
         /// </summary>
-        public static bool TryGetRootObjectHandler(out RootObjectHandler rootObjectHandler)
+        public static bool TryGetRootObjectHandler(out RootObjectHandler? rootObjectHandler)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -403,7 +447,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// LazyManager for other lazy Objects
         /// </summary>
-        public static bool TryGetLazyManager(out LazyManager lazyManager)
+        public static bool TryGetLazyManager(out LazyManager? lazyManager)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -423,7 +467,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Lazy Ai Factory Manager
         /// </summary>
-        public static bool TryGetLazyAIFactoryManager(out LazyAIFactoryManager lazyAIFactoryManager)
+        public static bool TryGetLazyAIFactoryManager(out LazyAIFactoryManager? lazyAIFactoryManager)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -443,7 +487,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Lazy Loaded Hit Objects
         /// </summary>
-        public static bool TryGetLazyHitFactoryManager(out LazyHitFactoryManager lazyHitFactoryManager)
+        public static bool TryGetLazyHitFactoryManager(out LazyHitFactoryManager? lazyHitFactoryManager)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -463,7 +507,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Congition Manager
         /// </summary>
-        public static bool TryGetCognitionOctreeManager(out CognitionOctreeManager cognitionOctreeManager)
+        public static bool TryGetCognitionOctreeManager(out CognitionOctreeManager? cognitionOctreeManager)
         {
             if (!_gameManager && !TryGetGameManager(out GameManager _))
             {
@@ -481,7 +525,7 @@ namespace Drova_Modding_API.Access
         }
 
         /**
-         * Access to the AstarPath for navigation and pathfinding, as example <see cref="AstarPath.GetNearest(UnityEngine.Vector3)"/>
+         * Access to the AstarPath for navigation and pathfinding, as an example <see cref="AstarPath.GetNearest(UnityEngine.Vector3)"/>
          */
         public static AstarPath GetAstarPath()
         {

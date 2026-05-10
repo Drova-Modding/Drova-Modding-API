@@ -1,5 +1,8 @@
 ﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.UI;
 using Il2CppDrova.GUI.Options;
+using MelonLoader;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Drova_Modding_API.Systems.ModdingUI
@@ -17,6 +20,23 @@ namespace Drova_Modding_API.Systems.ModdingUI
          * The key for the max option.
          */
         public const string ModdingUIMaxOptionKey = "ModdingUIMax";
+        /// <summary>
+        /// Config key for dialogue audio minimum full-volume distance.
+        /// </summary>
+        public const string DialogueAudioMinDistanceOptionKey = "DialogueAudioMinDistance";
+        /// <summary>
+        /// Config key for dialogue audio maximum audible distance.
+        /// </summary>
+        public const string DialogueAudioMaxDistanceOptionKey = "DialogueAudioMaxDistance";
+        /// <summary>
+        /// Config key for dialogue audio volume interpolation speed.
+        /// </summary>
+        public const string DialogueAudioVolumeLerpSpeedOptionKey = "DialogueAudioVolumeLerpSpeed";
+        /// <summary>
+        /// Config key for the master toggle that controls whether dialogue audio is loaded at all.
+        /// Defaults to <c>false</c>, so no dialogue audio is loaded until the user opts in.
+        /// </summary>
+        public const string EnableDialogueAudioOptionKey = "EnableDialogueAudio";
 
         internal static void RegisterModdingUI()
         {
@@ -41,25 +61,62 @@ namespace Drova_Modding_API.Systems.ModdingUI
                 new LocalizationAccess.LocalizationEntry("ModdingSliderMaxRandomness", "Max. Zeit zwischen Events", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
                 new LocalizationAccess.LocalizationEntry("ModdingSliderMaxRandomness", "Max. time between Events", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
                 new LocalizationAccess.LocalizationEntry("ModdingSliderMaxRandomness", "Temps maximum entre les événements", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioHeader", "Dialogue Audio", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioHeader", "Dialogue Audio", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioHeader", "Audio de dialogue", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioMinDistance", "Minimale Distanz", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioMinDistance", "Min Distance", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioMinDistance", "Distance minimale", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioMaxDistance", "Maximale Distanz", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioMaxDistance", "Max Distance", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioMaxDistance", "Distance maximale", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioVolumeLerpSpeed", "Lautstaerke-Uebergang", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioVolumeLerpSpeed", "Volume Lerp Speed", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("DialogueAudioVolumeLerpSpeed", "Vitesse de fondu du volume", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudio", "Dialogaudio aktivieren", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudio", "Enable dialogue audio", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudio", "Activer l'audio des dialogues", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOn", "An", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOn", "On", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOn", "Activé", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Aus", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Off", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Désactivé", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
                 ], "ModdingUI");
         }
 
         private static void Instance_OnOptionMenuOpen()
         {
-            var builder = OptionMenuAccess.Instance.GetBuilder("ModdingUI");
+            UI.Builder.OptionUIBuilder builder = OptionMenuAccess.Instance.GetBuilder("ModdingUI");
             if (builder == null) return;
-            var builded = builder.CreateTitle(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingUITitle"))
+            List<GameObject> builded = builder.CreateTitle(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingUITitle"))
                 .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderDisclaimer2"))
                 .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderDisclaimer"))
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMinRandomness"), ModdingUIMinOptionKey, 1, 120, 30)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMaxRandomness"), ModdingUIMaxOptionKey, 2, 360, 60)
+                .CreateHeader(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioHeader"))
+                .CreateSwitch(
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "EnableDialogueAudio"),
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "EnableDialogueAudioOn"),
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "EnableDialogueAudioOff"),
+                    EnableDialogueAudioOptionKey,
+                    defaultValue: false)
+                .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioMinDistance"), DialogueAudioMinDistanceOptionKey, 50, 800, 100)
+                .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioMaxDistance"), DialogueAudioMaxDistanceOptionKey, 200, 1000, 425)
+                .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioVolumeLerpSpeed"), DialogueAudioVolumeLerpSpeedOptionKey, 1, 20, 5)
                 .Build();
-            if (builded != null && builded.Count == 4)
+            if (builded.Count >= 5)
             {
-                var minSlider = builded[2].GetComponentInChildren<Slider>();
-                var minSliderOptions = builded[2].GetComponentInChildren<GUI_ConfigOption_Slider>();
-                var maxSlider = builded[3].GetComponentInChildren<Slider>();
-                var maxSliderOptions = builded[3].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                // Layout currently is: 0 title, 1 disclaimer, 2 disclaimer, 3 min slider, 4 max slider, ...
+                Slider minSlider = builded[3].GetComponentInChildren<Slider>();
+                GUI_ConfigOption_Slider minSliderOptions = builded[3].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                Slider maxSlider = builded[4].GetComponentInChildren<Slider>();
+                GUI_ConfigOption_Slider maxSliderOptions = builded[4].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                if (minSlider == null || minSliderOptions == null || maxSlider == null || maxSliderOptions == null)
+                {
+                    MelonLogger.Warning("Skipping min/max slider link setup because one or more slider components are missing.");
+                    return;
+                }
                 minSlider.onValueChanged.AddListener(new Action<float>((value) =>
                 {
                     if (value >= maxSlider.value)
@@ -76,6 +133,37 @@ namespace Drova_Modding_API.Systems.ModdingUI
                         minSliderOptions.UpdateOptionValue((int)value - 1);
                     }
                 }));
+
+                if (builded.Count >= 9)
+                {
+                    Slider minDistanceSlider = builded[7].GetComponentInChildren<Slider>();
+                    GUI_ConfigOption_Slider minDistanceOptions = builded[7].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                    Slider maxDistanceSlider = builded[8].GetComponentInChildren<Slider>();
+                    GUI_ConfigOption_Slider maxDistanceOptions = builded[8].GetComponentInChildren<GUI_ConfigOption_Slider>();
+                    if (minDistanceSlider == null || minDistanceOptions == null || maxDistanceSlider == null || maxDistanceOptions == null)
+                    {
+                        MelonLogger.Warning("Skipping dialogue distance slider link setup because one or more slider components are missing.");
+                        return;
+                    }
+
+                    minDistanceSlider.onValueChanged.AddListener(new Action<float>((value) =>
+                    {
+                        if (value >= maxDistanceSlider.value)
+                        {
+                            maxDistanceOptions.OnValueChangedListener(value + 1f);
+                            maxDistanceOptions.UpdateOptionValue((int)value + 1);
+                        }
+                    }));
+
+                    maxDistanceSlider.onValueChanged.AddListener(new Action<float>((value) =>
+                    {
+                        if (value <= minDistanceSlider.value)
+                        {
+                            minDistanceOptions.OnValueChangedListener(value - 1f);
+                            minDistanceOptions.UpdateOptionValue((int)value - 1);
+                        }
+                    }));
+                }
             }
         }
     }

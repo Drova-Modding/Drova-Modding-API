@@ -13,7 +13,7 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static Actor GetPlayer()
         {
-            var entityGameHandler = ProviderAccess.GetEntityGameHandler();
+            EntityGameHandler entityGameHandler = ProviderAccess.GetEntityGameHandler();
             if (entityGameHandler != null)
             {
                 return entityGameHandler.PlayerActor;
@@ -39,10 +39,10 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static ActorEquipSlot GetPrimarySlot()
         {
-            if (TryGetPlayer(out var player))
+            if (TryGetPlayer(out Actor player))
             {
-                var slotType = ProviderAccess.GetGameplaySettingsHandler().PrimarySlot;
-                var ammoSlot = player.GetEquipmentModule().GetFirstSlotInActiveSet(slotType);
+                Il2CppDrova.Items.EquipmentSlotType slotType = ProviderAccess.GetGameplaySettingsHandler().PrimarySlot;
+                ActorEquipSlot ammoSlot = player.GetEquipmentModule().GetFirstSlotInActiveSet(slotType);
 
                 return ammoSlot;
             }
@@ -56,10 +56,10 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static ActorEquipSlot GetSecondarySlot()
         {
-            if (TryGetPlayer(out var player))
+            if (TryGetPlayer(out Actor player))
             {
-                var slotType = ProviderAccess.GetGameplaySettingsHandler().SecondarySlot;
-                var ammoSlot = player.GetEquipmentModule().GetFirstSlotInActiveSet(slotType);
+                Il2CppDrova.Items.EquipmentSlotType slotType = ProviderAccess.GetGameplaySettingsHandler().SecondarySlot;
+                ActorEquipSlot ammoSlot = player.GetEquipmentModule().GetFirstSlotInActiveSet(slotType);
 
                 return ammoSlot;
             }
@@ -73,10 +73,10 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static ActorEquipSlot GetSlingshotSlot()
         {
-            if (TryGetPlayer(out var player))
+            if (TryGetPlayer(out Actor player))
             {
-                var slingAmmoSlotType = ProviderAccess.GetGameplaySettingsHandler().SlingAmmoSlot;
-                var ammoSlot = player.GetEquipmentModule().GetFirstSlotInActiveSet(slingAmmoSlotType);
+                Il2CppDrova.Items.EquipmentSlotType slingAmmoSlotType = ProviderAccess.GetGameplaySettingsHandler().SlingAmmoSlot;
+                ActorEquipSlot ammoSlot = player.GetEquipmentModule().GetFirstSlotInActiveSet(slingAmmoSlotType);
 
                 return ammoSlot;
             }
@@ -90,14 +90,27 @@ namespace Drova_Modding_API.Access
         /// <returns></returns>
         public static ActorEquipSlot GetBowSlot()
         {
-            if (TryGetPlayer(out var player))
+            if (TryGetPlayer(out Actor player))
             {
-                var slingAmmoSlotType = ProviderAccess.GetGameplaySettingsHandler().BowAmmoSlot;
-                var ammoSlot = player.GetEquipmentModule().GetFirstSlotInActiveSet(slingAmmoSlotType);
+                Il2CppDrova.Items.EquipmentSlotType slingAmmoSlotType = ProviderAccess.GetGameplaySettingsHandler().BowAmmoSlot;
+                ActorEquipSlot ammoSlot = player.GetEquipmentModule().GetFirstSlotInActiveSet(slingAmmoSlotType);
 
                 return ammoSlot;
             }
 
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the player's attribute stats.
+        /// </summary>
+        /// <returns></returns>
+        public static PlayerAttributeStats GetPlayerAttributeStats()
+        {
+            if (TryGetPlayer(out Actor player))
+            {
+                return player.GetStats().TryCast<PlayerAttributeStats>();
+            }
             return null;
         }
     }

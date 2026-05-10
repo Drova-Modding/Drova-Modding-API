@@ -1,11 +1,10 @@
 ﻿using MelonLoader;
 using System.Text;
 using System.Text.Json;
+using UnityEngine;
 using UnityEngine.AddressableAssets.Utility;
 using UnityEngine.ResourceManagement.Util;
-using UnityEngine;
 using static UnityEngine.AddressableAssets.ResourceLocators.ContentCatalogData;
-
 
 namespace Drova_Modding_API.Generation
 {
@@ -35,7 +34,6 @@ namespace Drova_Modding_API.Generation
 
             public string m_ExtraDataString { get; set; }
 
-
             public SerializedType[] m_resourceTypes { get; set; }
 
         }
@@ -50,12 +48,12 @@ namespace Drova_Modding_API.Generation
                 {
                     case SerializationUtilities.ObjectType.UnicodeString:
                         {
-                            var dataLength = BitConverter.ToInt32(keyData, dataIndex);
+                            int dataLength = BitConverter.ToInt32(keyData, dataIndex);
                             return Encoding.Unicode.GetString(keyData, dataIndex + 4, dataLength);
                         }
                     case SerializationUtilities.ObjectType.AsciiString:
                         {
-                            var dataLength = BitConverter.ToInt32(keyData, dataIndex);
+                            int dataLength = BitConverter.ToInt32(keyData, dataIndex);
                             return Encoding.ASCII.GetString(keyData, dataIndex + 4, dataLength);
                         }
                     case SerializationUtilities.ObjectType.UInt16: return BitConverter.ToUInt16(keyData, dataIndex);
@@ -98,28 +96,28 @@ namespace Drova_Modding_API.Generation
 
         public static void CreateAddressableFile(MelonAssembly assembly)
         {
-            var jsonPath = Path.Combine(assembly.Location, "..", "..", "Drova_Data", "StreamingAssets", "aa", "catalog.json");
-            var json = File.ReadAllText(jsonPath);
-            var options = new JsonSerializerOptions
+            string jsonPath = Path.Combine(assembly.Location, "..", "..", "Drova_Data", "StreamingAssets", "aa", "catalog.json");
+            string json = File.ReadAllText(jsonPath);
+            JsonSerializerOptions options = new()
             {
                 PropertyNameCaseInsensitive = true
             };
-            var data = JsonSerializer.Deserialize<ContentCatalogData>(json, options);
+            ContentCatalogData data = JsonSerializer.Deserialize<ContentCatalogData>(json, options);
 
-            var bucketData = Convert.FromBase64String(data.m_BucketDataString);
-            var entryData = Convert.FromBase64String(data.m_EntryDataString);
-            var keyData = Convert.FromBase64String(data.m_KeyDataString);
+            byte[] bucketData = Convert.FromBase64String(data.m_BucketDataString);
+            byte[] entryData = Convert.FromBase64String(data.m_EntryDataString);
+            byte[] keyData = Convert.FromBase64String(data.m_KeyDataString);
             int bucketCount = BitConverter.ToInt32(bucketData, 0);
             MelonLogger.Msg("bucketcount " + bucketCount);
-            var buckets = new Bucket[bucketCount];
+            Bucket[] buckets = new Bucket[bucketCount];
             int bi = 4;
             for (int i = 0; i < bucketCount; i++)
             {
-                var index = SerializationUtilities.ReadInt32FromByteArray(bucketData, bi);
+                int index = SerializationUtilities.ReadInt32FromByteArray(bucketData, bi);
                 bi += 4;
-                var entryCount = SerializationUtilities.ReadInt32FromByteArray(bucketData, bi);
+                int entryCount = SerializationUtilities.ReadInt32FromByteArray(bucketData, bi);
                 bi += 4;
-                var entryArray = new int[entryCount];
+                int[] entryArray = new int[entryCount];
                 for (int c = 0; c < entryCount; c++)
                 {
                     //entryArray[c] = SerializationUtilities.ReadInt32FromByteArray(bucketData, bi);
@@ -129,8 +127,8 @@ namespace Drova_Modding_API.Generation
                 buckets[i] = new Bucket { entries = entryArray, dataOffset = index };
             }
             MelonLogger.Msg("Buckets created");
-            var keyCount = BitConverter.ToInt32(keyData, 0);
-            var keys = new object[keyCount];
+            int keyCount = BitConverter.ToInt32(keyData, 0);
+            object[] keys = new object[keyCount];
             for (int i = 0; i < buckets.Length; i++)
                 keys[i] = ReadObjectFromByteArray(keyData, buckets[i].dataOffset);
             MelonLogger.Msg("Keys created");
@@ -141,20 +139,20 @@ namespace Drova_Modding_API.Generation
                 StringBuilder sb = new();
                 for (int i = 0; i < count; i++)
                 {
-                    var index = kBytesPerInt32 + i * (kBytesPerInt32 * k_EntryDataItemPerEntry);
-                    var internalId = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    int index = kBytesPerInt32 + (i * kBytesPerInt32 * k_EntryDataItemPerEntry);
+                    int internalId = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    var providerIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    int providerIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    var dependencyKeyIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    int dependencyKeyIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    var depHash = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    int depHash = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    var dataIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    int dataIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    var primaryKey = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    int primaryKey = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    var resourceType = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    int resourceType = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     //object data = dataIndex < 0 ? null : SerializationUtilities.ReadObjectFromByteArray(extraData, dataIndex);
                     sb.Append("Name/InternalId: " + data.m_InternalIds[internalId] + " Guid: " + keys[primaryKey].ToString() + " ressourceType: " + data.m_resourceTypes[resourceType].ClassName + "\n");
 

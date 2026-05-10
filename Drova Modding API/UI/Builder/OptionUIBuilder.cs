@@ -10,7 +10,6 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
 
-
 namespace Drova_Modding_API.UI.Builder
 {
     /// <summary>
@@ -73,7 +72,7 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateTitle(LocalizedString localizedString, Transform parent)
         {
-            var title = UnityEngine.Object.Instantiate(GetTitleObject(), parent);
+            GameObject title = UnityEngine.Object.Instantiate(GetTitleObject(), parent);
             SetLocalizedText(title, localizedString);
             gameObjects.Add(title);
             return this;
@@ -84,7 +83,7 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateDisclaimer(LocalizedString localizedString)
         {
-            var disclaimer = UnityEngine.Object.Instantiate(GetDisclaimerObject(), _parent);
+            GameObject disclaimer = UnityEngine.Object.Instantiate(GetDisclaimerObject(), _parent);
             SetLocalizedText(disclaimer, localizedString);
             gameObjects.Add(disclaimer);
             return this;
@@ -95,7 +94,7 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateHeader(LocalizedString localizedString)
         {
-            var header = UnityEngine.Object.Instantiate(GetHeaderObject(), _parent);
+            GameObject header = UnityEngine.Object.Instantiate(GetHeaderObject(), _parent);
             SetLocalizedText(header, localizedString);
             gameObjects.Add(header);
             return this;
@@ -111,21 +110,21 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateSlider(LocalizedString title, string optionKey, int min = 0, int max = 100, int defaultValue = 0)
         {
-            var slider = UnityEngine.Object.Instantiate(GetSliderObject(), _parent);
-            var left = slider.transform.FindChild("Left");
+            GameObject slider = UnityEngine.Object.Instantiate(GetSliderObject(), _parent);
+            Transform left = slider.transform.FindChild("Left");
             if (!left)
             {
                 MelonLogger.Error("Left not found in slider prefab");
                 return this;
             }
             SetLocalizedText(left.gameObject, title);
-            var rightOptionConfig = slider.transform.FindChild("Right/GUI_Slider_OptionConfig");
-            if(!rightOptionConfig)
+            Transform rightOptionConfig = slider.transform.FindChild("Right/GUI_Slider_OptionConfig");
+            if (!rightOptionConfig)
             {
                 MelonLogger.Error("Right option config not found in slider prefab");
                 return this;
             }
-            var unitySlider = rightOptionConfig.GetComponent<Slider>();
+            Slider unitySlider = rightOptionConfig.GetComponent<Slider>();
             if (!unitySlider)
             {
                 MelonLogger.Error("Slider not found in slider prefab");
@@ -145,7 +144,7 @@ namespace Drova_Modding_API.UI.Builder
             }
             unitySlider.value = defaultValue;
 
-            var sliderOption = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
+            GUI_ConfigOption_Slider sliderOption = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
             if (!sliderOption)
             {
                 MelonLogger.Error("SliderOption not found in slider prefab");
@@ -170,7 +169,7 @@ namespace Drova_Modding_API.UI.Builder
             {
 
                 sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
-                var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
+                ConfigOption_Int configOptionInt = new(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
                 sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionInt);
                 sliderOption.OnValueChangedListener(defaultValue);
                 sliderOption.UpdateOptionValue(defaultValue);
@@ -178,7 +177,7 @@ namespace Drova_Modding_API.UI.Builder
             }
             else
             {
-                var configOptionInt = new ConfigOption_Int(sliderOption._configHandler.GameplayConfig, optionKey, value);
+                ConfigOption_Int configOptionInt = new(sliderOption._configHandler.GameplayConfig, optionKey, value);
                 sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionInt);
                 sliderOption.OnValueChangedListener(value);
                 sliderOption.UpdateOptionValue(value);
@@ -198,15 +197,15 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateSlider(LocalizedString title, string optionKey, float min = 0, float max = 100, float defaultValue = 0, bool wholeNumbers = false)
         {
-            var slider = UnityEngine.Object.Instantiate(GetSliderObject(), _parent);
+            GameObject slider = UnityEngine.Object.Instantiate(GetSliderObject(), _parent);
             SetLocalizedText(slider.transform.FindChild("Left").gameObject, title);
-            var rightOptionConfig = slider.transform.FindChild("Right/GUI_Slider_OptionConfig");
+            Transform rightOptionConfig = slider.transform.FindChild("Right/GUI_Slider_OptionConfig");
             if (!rightOptionConfig)
             {
                 MelonLogger.Error("Right option config not found in slider prefab");
                 return this;
             }
-            var unitySlider = rightOptionConfig.GetComponent<Slider>();
+            Slider unitySlider = rightOptionConfig.GetComponent<Slider>();
             if (!unitySlider)
             {
                 MelonLogger.Error("Slider not found in slider prefab");
@@ -227,12 +226,12 @@ namespace Drova_Modding_API.UI.Builder
             unitySlider.value = defaultValue;
             unitySlider.wholeNumbers = wholeNumbers;
 
-            var sliderOption = rightOptionConfig.gameObject.AddComponent<GUI_ConfigOption_Slider_Float>();
-            sliderOption._uiElement = unitySlider;
-            sliderOption._configHandler = ProviderAccess.GetConfigGameHandler();
-            sliderOption._key = ScriptableObject.CreateInstance<ConfigOptionKey>();
-            sliderOption._key._key = optionKey;
-            var toDestroy = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
+            GUI_ConfigOption_Slider_Float sliderOption = rightOptionConfig.gameObject.AddComponent<GUI_ConfigOption_Slider_Float>();
+            sliderOption.UiElement = unitySlider;
+            sliderOption.ConfigHandler = ProviderAccess.GetConfigGameHandler();
+            sliderOption.Key = ScriptableObject.CreateInstance<ConfigOptionKey>();
+            sliderOption.Key._key = optionKey;
+            GUI_ConfigOption_Slider toDestroy = rightOptionConfig.GetComponent<GUI_ConfigOption_Slider>();
             if (toDestroy)
             {
                 UnityEngine.Object.Destroy(toDestroy);
@@ -242,33 +241,31 @@ namespace Drova_Modding_API.UI.Builder
                 MelonLogger.Error("Failed to destroy old slider component");
             }
 
-
             sliderOption.Init();
-            if (!sliderOption._configHandler)
+            if (!sliderOption.ConfigHandler)
             {
                 MelonLogger.Error("ConfigHandler not found in slider prefab");
                 return this;
             }
 
-            if (!sliderOption._configHandler.GameplayConfig._configFile.TryGetString(optionKey, out string value))
+            if (!sliderOption.ConfigHandler.GameplayConfig._configFile.TryGetString(optionKey, out string value))
             {
-                sliderOption._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
+                sliderOption.ConfigHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
 
-                var configOptionFloat = new ConfigOption_Float(sliderOption._configHandler.GameplayConfig, optionKey, defaultValue);
-                sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
+                ConfigOption_Float configOptionFloat = new(sliderOption.ConfigHandler.GameplayConfig, optionKey, defaultValue);
+                sliderOption.ConfigHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(defaultValue);
             }
             else
             {
-                var configOptionFloat = new ConfigOption_Float(sliderOption._configHandler.GameplayConfig, optionKey, float.Parse(value));
+                ConfigOption_Float configOptionFloat = new(sliderOption.ConfigHandler.GameplayConfig, optionKey, float.Parse(value));
 
-                sliderOption._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
+                sliderOption.ConfigHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(float.Parse(value));
             }
             gameObjects.Add(slider);
             return this;
         }
-
 
         /**
          * Create a switch.
@@ -281,11 +278,11 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateSwitch(LocalizedString title, LocalizedString onValue, LocalizedString offValue, string optionKey, bool defaultValue = false, bool useGreyText = true)
         {
-            var objectToInstantiate = GetSwitchObject();
-            var @switch = UnityEngine.Object.Instantiate(objectToInstantiate, _parent);
+            GameObject objectToInstantiate = GetSwitchObject();
+            GameObject @switch = UnityEngine.Object.Instantiate(objectToInstantiate, _parent);
             if (useGreyText)
             {
-                var row = @switch.GetComponent<GUI_OptionsRow>();
+                GUI_OptionsRow row = @switch.GetComponent<GUI_OptionsRow>();
                 if (!row)
                 {
                     MelonLogger.Error("Row not found in switch prefab");
@@ -295,28 +292,28 @@ namespace Drova_Modding_API.UI.Builder
                 row._rowType = GUI_OptionsRow.RowType.OptionChild;
                 row.SetRowType(GUI_OptionsRow.RowType.OptionChild);
             }
-            var leftChild = @switch.transform.FindChild("Left");
+            Transform leftChild = @switch.transform.FindChild("Left");
             if (!leftChild)
             {
                 MelonLogger.Error("Left child not found in switch prefab");
                 return this;
             }
-            var leftChildLocalized = leftChild.GetComponentInChildren<LocalizedTextMeshPro>();
+            LocalizedTextMeshPro leftChildLocalized = leftChild.GetComponentInChildren<LocalizedTextMeshPro>();
             if (!leftChildLocalized)
             {
                 MelonLogger.Error("LocalizedTextMeshPro not found in switch prefab");
                 return this;
             }
             leftChildLocalized._localizedString = title;
-            var configOption = @switch.transform.FindChild("Right/GUI_Switch_ConfigOption");
+            Transform configOption = @switch.transform.FindChild("Right/GUI_Switch_ConfigOption");
             if (!configOption)
             {
                 MelonLogger.Error("ConfigOption not found in switch prefab");
                 return this;
             }
             configOption.GetComponent<GUI_SwitchBhvr>()._toggle.isOn = defaultValue;
-            var onChild = configOption.FindChild("TextOn");
-            var offChild = configOption.FindChild("TextOff");
+            Transform onChild = configOption.FindChild("TextOn");
+            Transform offChild = configOption.FindChild("TextOff");
             if (!onChild || !offChild)
             {
                 MelonLogger.Error("TextOn or TextOff not found in switch prefab");
@@ -325,7 +322,7 @@ namespace Drova_Modding_API.UI.Builder
             onChild.GetComponent<LocalizedTextMeshPro>()._localizedString = onValue;
             offChild.GetComponent<LocalizedTextMeshPro>()._localizedString = offValue;
 
-            var toggle = configOption.GetComponent<GUI_ConfigOption_Toggle>();
+            GUI_ConfigOption_Toggle toggle = configOption.GetComponent<GUI_ConfigOption_Toggle>();
             if (!toggle)
             {
                 MelonLogger.Error("Toggle not found in switch prefab");
@@ -350,125 +347,19 @@ namespace Drova_Modding_API.UI.Builder
             if (!toggle._configHandler.GameplayConfig._configFile.TryGetBool(optionKey, out bool value))
             {
                 toggle._configHandler.GameplayConfig._configFile.SetValue(optionKey, defaultValue.ToString());
-                var configOptionBool = new ConfigOption_Bool(toggle._configHandler.GameplayConfig, optionKey, defaultValue);
+                ConfigOption_Bool configOptionBool = new(toggle._configHandler.GameplayConfig, optionKey, defaultValue);
                 toggle._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionBool);
                 toggle.UpdateOptionValue(defaultValue);
                 toggle.UpdateUIValue();
             }
             else
             {
-                var configOptionBool = new ConfigOption_Bool(toggle._configHandler.GameplayConfig, optionKey, value);
+                ConfigOption_Bool configOptionBool = new(toggle._configHandler.GameplayConfig, optionKey, value);
 
                 toggle._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionBool);
             }
             gameObjects.Add(@switch);
             return this;
-        }
-
-        /**
-         * Create a keybinding
-         * @param titleOfSection The title of the section.
-         * @param keybindings The keybindings to create.
-         */
-        public OptionUIBuilder CreateKeyBindingSection(List<Keybinding> keybindings, LocalizedString titleOfSection = null)
-        {
-            var keybindingPrefab = GetKeyBinding();
-            if (titleOfSection != null)
-            {
-                CreateTitle(titleOfSection);
-            };
-            return BuildKeyBinding(keybindings, keybindingPrefab);
-        }
-
-        private OptionUIBuilder BuildKeyBinding(List<Keybinding> keybindings, GameObject keybindingPrefab)
-        {
-            foreach (var keybinding in keybindings)
-            {
-                var keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, _parent);
-                var toDestroy = keyBinding.GetComponent<GUI_Option_Controls_KeyFieldElement>();
-                if (toDestroy)
-                {
-                    UnityEngine.Object.Destroy(toDestroy);
-
-                }
-                var components = keyBinding.GetComponentsInChildren<HorizontalLayoutGroup>();
-                foreach (var component in components)
-                {
-                    component.enabled = true;
-                }
-
-                var loadedKeycode = ActionKeyRegister.Instance.GetKeyCode(keybinding.ActionName);
-                if (loadedKeycode == KeyCode.None)
-                {
-                    ActionKeyRegister.Instance[keybinding.ActionName] = keybinding.DefaultActionKey;
-                }
-
-                var customKeyFieldElement = keyBinding.AddComponent<GUI_Options_Controls_KeyFieldElement_Custom>();
-                if (customKeyFieldElement != null)
-                {
-                    customKeyFieldElement.Init(keybinding.ActionName);
-                }
-                else
-                {
-                    MelonLogger.Error("Failed to create custom keybinding element");
-                }
-
-                var leftChild = keyBinding.transform.FindChild("Left");
-                if (!leftChild)
-                {
-                    MelonLogger.Error("Left child not found in keybinding prefab");
-                    return this;
-                }
-                var textMeshPro = leftChild.GetComponentInChildren<TextMeshProUGUI>();
-                if (!textMeshPro)
-                {
-                    MelonLogger.Error("TextMeshPro not found in keybinding prefab");
-                    return this;
-                }
-
-                var textMeshProObject = textMeshPro.gameObject;
-                var localized = textMeshProObject.AddComponent<LocalizedTextMeshPro>();
-
-                localized._text = textMeshPro;
-                localized._localizedString = keybinding.Title;
-                localized.UpdateLocalizedText();
-
-                var controller = keyBinding.transform.FindChild("Controller/ChangeButton");
-                controller.gameObject.SetActiveRecursively(false);
-                if (!controller)
-                {
-                    MelonLogger.Error("controller not found in keybinding prefab");
-                    return this;
-                }
-
-                var keyboard = keyBinding.transform.FindChild("Keyboard");
-                if (!keyboard)
-                {
-                    MelonLogger.Error("keyboard not found in keybinding prefab");
-                    return this;
-                }
-                var keyboardTitle = keyboard.GetComponentInChildren<TextMeshProUGUI>();
-                if (!keyboardTitle)
-                {
-                    MelonLogger.Error("keyboardTitle not found in keybinding prefab");
-                    return this;
-                }
-                keyboardTitle.text = loadedKeycode != KeyCode.None ? Enum.GetName(loadedKeycode) : Enum.GetName(keybinding.DefaultActionKey);
-                gameObjects.Add(keyBinding);
-            }
-            return this;
-        }
-
-        /**
-         * Create a keybinding section in the Controls Panel without a title.
-         * At the moment it is not working as intended, because the keybinding area recreates itself on the second time, which moves our elements from last to first!
-         * @param keybindings The keybindings to create.
-         */
-        public OptionUIBuilder CreateKeyBindingSection(List<Keybinding> keybindings)
-        {
-
-            var keybindingPrefab = GetKeyBinding();
-            return BuildKeyBinding(keybindings, keybindingPrefab);
         }
 
         /// <summary>
@@ -478,47 +369,47 @@ namespace Drova_Modding_API.UI.Builder
         /// <returns></returns>
         public OptionUIBuilder CreateInputActionSection(List<InputActionTemplate> inputActions)
         {
-            var keybindingPrefab = GetKeyBinding();
-            var exitButton = GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/GUI_Generic_Button_Exit_OnFrame");
+            GameObject keybindingPrefab = GetKeyBinding();
+            GameObject exitButton = GameObject.Find("SceneRoot/GUI_Window_Options(Clone)/Panel/GUI_Generic_Button_Exit_OnFrame");
             for (int i = 0; i < inputActions.Count; i++)
             {
                 InputActionTemplate inputAction = inputActions[i];
-                var keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, _parent);
-                var toDestroy = keyBinding.GetComponent<GUI_Option_Controls_KeyFieldElement>();
+                GameObject keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, _parent);
+                GUI_Option_Controls_KeyFieldElement toDestroy = keyBinding.GetComponent<GUI_Option_Controls_KeyFieldElement>();
                 if (toDestroy)
                 {
                     UnityEngine.Object.Destroy(toDestroy);
                 }
-                var components = keyBinding.GetComponentsInChildren<HorizontalLayoutGroup>();
-                foreach (var component in components)
+                Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<HorizontalLayoutGroup> components = keyBinding.GetComponentsInChildren<HorizontalLayoutGroup>();
+                foreach (HorizontalLayoutGroup component in components)
                 {
                     component.enabled = true;
                 }
-                var customKeyFieldElement = keyBinding.AddComponent<GUI_Options_Controls_KeyFieldElement_Custom>();
+                GUI_Options_Controls_KeyFieldElement_Custom customKeyFieldElement = keyBinding.AddComponent<GUI_Options_Controls_KeyFieldElement_Custom>();
                 if (customKeyFieldElement != null)
                 {
-                    customKeyFieldElement.Init(inputAction.ActionName, false, exitButton);
+                    customKeyFieldElement.Init(inputAction.ActionName, exitButton);
                 }
                 else
                 {
                     MelonLogger.Error("Failed to create custom keybinding element");
                 }
 
-                var leftChild = keyBinding.transform.FindChild("Left");
+                Transform leftChild = keyBinding.transform.FindChild("Left");
                 if (!leftChild)
                 {
                     MelonLogger.Error("Left child not found in keybinding prefab");
                     return this;
                 }
-                var textMeshPro = leftChild.GetComponentInChildren<TextMeshProUGUI>();
+                TextMeshProUGUI textMeshPro = leftChild.GetComponentInChildren<TextMeshProUGUI>();
                 if (!textMeshPro)
                 {
                     MelonLogger.Error("TextMeshPro not found in keybinding prefab");
                     return this;
                 }
 
-                var textMeshProObject = textMeshPro.gameObject;
-                var localized = textMeshProObject.AddComponent<LocalizedTextMeshPro>();
+                GameObject textMeshProObject = textMeshPro.gameObject;
+                LocalizedTextMeshPro localized = textMeshProObject.AddComponent<LocalizedTextMeshPro>();
 
                 localized._text = textMeshPro;
                 localized._localizedString = inputAction.Title;
@@ -537,8 +428,8 @@ namespace Drova_Modding_API.UI.Builder
         /// <param name="defaulValue">Value when option does not exist</param>
         public OptionUIBuilder CreateDropdown<E>(LocalizedString title, string optionKey, Dictionary<E, LocalizedString> dropdownOptions, E defaulValue) where E : Enum
         {
-            var dropdown = UnityEngine.Object.Instantiate(GetDropdownObject(), _parent);
-            var left = dropdown.transform.FindChild("Left");
+            GameObject dropdown = UnityEngine.Object.Instantiate(GetDropdownObject(), _parent);
+            Transform left = dropdown.transform.FindChild("Left");
             if (!left)
             {
                 MelonLogger.Error("Left not found in dropdown prefab");
@@ -546,14 +437,14 @@ namespace Drova_Modding_API.UI.Builder
             }
             SetLocalizedText(left.gameObject, title);
 
-            var rightOptionConfig = dropdown.transform.FindChild("Right/GUI_Dropdown_OptionConfig");
+            Transform rightOptionConfig = dropdown.transform.FindChild("Right/GUI_Dropdown_OptionConfig");
 
             if (!rightOptionConfig)
             {
                 MelonLogger.Error("Right option config not found in dropdown prefab");
                 return this;
             }
-            var toDestroy = rightOptionConfig.GetComponent<GUI_ConfigOption_Dropdown>();
+            GUI_ConfigOption_Dropdown toDestroy = rightOptionConfig.GetComponent<GUI_ConfigOption_Dropdown>();
             if (toDestroy)
             {
                 UnityEngine.Object.Destroy(toDestroy);
@@ -563,9 +454,9 @@ namespace Drova_Modding_API.UI.Builder
                 MelonLogger.Error("Failed to destroy old dropdown component");
             }
 
-            var dropdownHandler = rightOptionConfig.gameObject.AddComponent<DropdownHandler>();
+            DropdownHandler dropdownHandler = rightOptionConfig.gameObject.AddComponent<DropdownHandler>();
 
-            var configHandler = ProviderAccess.GetConfigGameHandler();
+            Il2CppDrova.ConfigGameHandler configHandler = ProviderAccess.GetConfigGameHandler();
 
             if (!configHandler)
             {
@@ -574,7 +465,7 @@ namespace Drova_Modding_API.UI.Builder
             }
 
             List<int> keys = [];
-            foreach (var key in dropdownOptions.Keys)
+            foreach (E key in dropdownOptions.Keys)
             {
                 keys.Add(Utils.GetIndexFromEnum(key));
             }
@@ -599,10 +490,10 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateButton(LocalizedString title, LocalizedString buttonName, Action onClick)
         {
-            var buttonPrefab = Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Button_ResetDefault).WaitForCompletion();
-            var button = UnityEngine.Object.Instantiate(buttonPrefab, _parent);
-            var left = button.transform.FindChild("Left");
-            var right = button.transform.FindChild("Right");
+            GameObject buttonPrefab = Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Button_ResetDefault).WaitForCompletion();
+            GameObject button = UnityEngine.Object.Instantiate(buttonPrefab, _parent);
+            Transform left = button.transform.FindChild("Left");
+            Transform right = button.transform.FindChild("Right");
             if (!left || !right)
             {
                 MelonLogger.Error("Left or right not found in button prefab");
@@ -610,7 +501,7 @@ namespace Drova_Modding_API.UI.Builder
             }
             SetLocalizedText(left.gameObject, title);
             SetLocalizedText(right.gameObject, buttonName);
-            var buttonJ2D = button.GetComponentInChildren<ButtonJ2D>();
+            ButtonJ2D buttonJ2D = button.GetComponentInChildren<ButtonJ2D>();
             if (!buttonJ2D)
             {
                 MelonLogger.Error("ButtonJ2D not found in button prefab");
@@ -637,7 +528,7 @@ namespace Drova_Modding_API.UI.Builder
                 MelonLogger.Error("GameObject is null in SetLocalizedText");
                 return;
             }
-            var localizedText = gameObject.GetComponentInChildren<LocalizedTextMeshPro>();
+            LocalizedTextMeshPro localizedText = gameObject.GetComponentInChildren<LocalizedTextMeshPro>();
             if (localizedText == null)
             {
                 MelonLogger.Error("LocalizedTextMeshPro not found in SetLocalizedText");
@@ -661,7 +552,6 @@ namespace Drova_Modding_API.UI.Builder
         /// <param name="Title">The title to display</param>
         /// <param name="ActionName">The actionname</param>
         public record InputActionTemplate(LocalizedString Title, string ActionName);
-
 
     }
 }

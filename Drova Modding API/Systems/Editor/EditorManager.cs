@@ -1,0 +1,63 @@
+﻿using Il2CppDrova;
+
+namespace Drova_Modding_API.Systems.Editor
+{
+    /// <summary>
+    /// Manager for the editing actions
+    /// </summary>
+    public static class EditorManager
+    {
+#if DEBUG
+        /// <summary>
+        /// Delegate for when an NPC is selected
+        /// </summary>
+        /// <param name="actor">The Npc</param>
+        public delegate void NpcSelected(Actor actor);
+        /// <summary>
+        /// Event that is triggered when an NPC is selected
+        /// </summary>
+        public static event NpcSelected OnNpcSelected;
+
+        /// <summary>
+        /// The last NPC that was invoked
+        /// </summary>
+        private static Actor _lastInvoked;
+
+        /// <summary>
+        /// Allow the selection of NPCs/Creatures
+        /// </summary>
+        public static bool AllowNpcSelection { get; set; } = true;
+
+        /// <summary>
+        /// If an editor is currently open
+        /// </summary>
+        public static bool InEditor { get; set; } = false;
+
+        /// <summary>
+        /// Trigger the event for when an NPC is selected
+        /// </summary>
+        /// <param name="actor">Npc to trigger</param>
+        internal static void TriggerNpcSelected(Actor actor)
+        {
+            if (!AllowNpcSelection)
+            {
+                return;
+            }
+            if (_lastInvoked == actor)
+            {
+                return;
+            }
+            _lastInvoked = actor;
+            OnNpcSelected?.Invoke(actor);
+        }
+
+        /// <summary>
+        /// Reset the last NPC that was invoked to null
+        /// </summary>
+        public static void ResetLastInvoked()
+        {
+            TriggerNpcSelected(null);
+        }
+#endif
+    }
+}

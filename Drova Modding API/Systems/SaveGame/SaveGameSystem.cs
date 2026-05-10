@@ -1,6 +1,5 @@
-﻿
+﻿using Drova_Modding_API.Systems.SaveGame.Store;
 using Il2CppDrova.Saveables;
-using Drova_Modding_API.Systems.SaveGame.Store;
 
 namespace Drova_Modding_API.Systems.SaveGame
 {
@@ -74,7 +73,7 @@ namespace Drova_Modding_API.Systems.SaveGame
             {
                 IStorable store = stores[i];
                 string loaded = "";
-                if(saveGame.Data.GetString(store.SaveGameKey, ref loaded))
+                if (saveGame.Data.GetString(store.SaveGameKey, ref loaded))
                 {
                     store.Load(loaded);
                 }

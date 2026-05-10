@@ -30,7 +30,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
             for (int i = 0; i < persitentEncounters.Count; i++)
             {
                 LazyActorCreator.LazyActorParams encounter = persitentEncounters[i];
-                var lazyActor = LazyActorCreator.CreateLazyActorCreature(encounter);
+                Il2CppDrova.Utilities.LazyLoading.LazyActor lazyActor = LazyActorCreator.CreateLazyActorCreature(encounter);
                 lazyActorStore.Add(new LazyActorSaveData(LazyActorCreator.LAZY_ACTOR_NAME, encounter.AssetReference.AssetGUID, encounter.EntityInfo.AssetGUID, lazyActor._guidstring));
             }
             WorldEventSystemManager.Instance.EndEvent();
