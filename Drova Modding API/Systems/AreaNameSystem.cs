@@ -57,9 +57,9 @@ namespace Drova_Modding_API.Systems
         /// <param name="areaName">The name of the area</param>
         public void OnAreaEntered(string areaName)
         {
-            MelonLogger.Msg("Entered " + areaName);
-            Regions.Add(RegionExtensions.GetRegionByName(areaName));
-            OnRegionChanged(RegionExtensions.GetRegionByName(areaName), true);
+            Region region = RegionExtensions.GetRegionByName(areaName);
+            Regions.Add(region);
+            OnRegionChanged?.Invoke(region, true);
         }
 
         /// <summary>
@@ -68,10 +68,10 @@ namespace Drova_Modding_API.Systems
         /// <param name="areaName">The name of the area</param>
         public void UnregisterAreaName(string areaName)
         {
-            MelonLogger.Msg("Unregistered " + areaName);
-            if (Regions.Remove(RegionExtensions.GetRegionByName(areaName)))
+            Region region = RegionExtensions.GetRegionByName(areaName);
+            if (Regions.Remove(region))
             {
-                OnRegionChanged(RegionExtensions.GetRegionByName(areaName), false);
+                OnRegionChanged?.Invoke(region, false);
             }
         }
 

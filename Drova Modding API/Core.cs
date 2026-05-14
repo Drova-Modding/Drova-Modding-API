@@ -6,6 +6,7 @@ using Drova_Modding_API.Register;
 using Drova_Modding_API.Systems;
 
 using Drova_Modding_API.Systems.ModdingUI;
+using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
 
 
@@ -24,10 +25,10 @@ namespace Drova_Modding_API
      */
     public class Core : MelonMod
     {
-        internal static string AssemblyLocation;
-        internal bool _inMainMenu = false;
+        internal static string? AssemblyLocation;
+        internal bool InMainMenu = false;
 #if DEBUG
-        private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
+        private readonly InputAction _consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
 #endif
 
         /// <inheritdoc/>
@@ -35,13 +36,13 @@ namespace Drova_Modding_API
         {
             base.OnInitializeMelon();
 #if DEBUG
-            consoleAction.Enable();
+            _consoleAction.Enable();
 #endif
             SystemInit.RegisterStores();
             LoggerInstance.Msg("Initialized Modding API.");
             OptionMenuAccess.Instance.OnOptionMenuClose += () =>
             {
-                if (!_inMainMenu) InputActionRegister.Instance.EnableGameplayActions();
+                if (!InMainMenu) InputActionRegister.Instance.EnableGameplayActions();
                 InputActionRegister.Instance.SaveActions();
             };
             OptionMenuAccess.Instance.OnOptionMenuOpen += () =>
@@ -67,7 +68,7 @@ namespace Drova_Modding_API
                 //_ttsFile.CreateDialogueFile();
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
-                _inMainMenu = true;
+                InMainMenu = true;
             }
             if (sceneName == SceneNames.GameplayMain)
             {
@@ -75,7 +76,8 @@ namespace Drova_Modding_API
                 OptionMenuAccess.OnOptionClose();
                 SystemInit.Init();
                 InputActionRegister.Instance.EnableGameplayActions();
-                _inMainMenu = false;
+                InMainMenu = false;
+
             }
             // if (sceneName == SceneNames.AILogic)
             // {
@@ -98,10 +100,18 @@ namespace Drova_Modding_API
         public override void OnUpdate()
         {
             base.OnUpdate();
-#if DEBUG
-            if (consoleAction.WasReleasedThisFrame())
+            if (Input.GetKeyDown(KeyCode.F5))
             {
-                ProviderAccess.GetCheatGameHandler().EnableCheatMode(!ProviderAccess.GetCheatGameHandler().IsCheatModeEnabled);
+                NpcCreator creator = new("Test", PlayerAccess.GetPlayer().transform.position);
+                creator.IsPlayerFriendly(false);
+                creator.Create();
+            }
+#if DEBUG
+            if (_consoleAction.WasReleasedThisFrame())
+            {
+                var cheatHandler = ProviderAccess.GetCheatGameHandler();
+                if (cheatHandler == null) return;
+                cheatHandler.EnableCheatMode(!cheatHandler.IsCheatModeEnabled);
             }
 #endif
         }

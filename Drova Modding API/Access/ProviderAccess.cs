@@ -19,7 +19,7 @@ namespace Drova_Modding_API.Access
     /// </summary>
     public static class ProviderAccess
     {
-        private static DrovaResourceProvider _DrovaResourceProvider;
+        private static DrovaResourceProvider _drovaResourceProvider;
         private static GameManager? _gameManager;
 
         /// <summary>
@@ -27,10 +27,10 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static DrovaResourceProvider GetDrovaResourceProvider()
         {
-            if (_DrovaResourceProvider != null)
-                return _DrovaResourceProvider;
-            _DrovaResourceProvider = UnityEngine.Object.FindAnyObjectByType<DrovaResourceProvider>();
-            return _DrovaResourceProvider;
+            if (_drovaResourceProvider != null)
+                return _drovaResourceProvider;
+            _drovaResourceProvider = UnityEngine.Object.FindAnyObjectByType<DrovaResourceProvider>();
+            return _drovaResourceProvider;
         }
 
         /// <summary>

@@ -64,7 +64,9 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     Vector2? randomPosition = WorldLocator.GetRandomFreePosition(new Vector2(position.x, position.y));
                     if (randomPosition.HasValue)
                     {
-                        _spawnedEncounters.Add(encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity).WaitForCompletion());
+                        GameObject spawned = encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity).WaitForCompletion();
+                        _spawnedEncounters.Add(spawned);
+                        OnEncounterSpawned(spawned, encounter.Key, randomPosition.Value);
                     }
                     else
                     {
@@ -75,6 +77,16 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 }
             }
             _melonCoroutineToken = MelonCoroutines.Start(SelfEnd());
+        }
+
+        /// <summary>
+        /// Called when an encounter is spawned. Can be used to modify the spawned object.
+        /// </summary>
+        /// <param name="spawnedObject">The spawned GameObject</param>
+        /// <param name="assetReference">The asset reference used to spawn the object</param>
+        /// <param name="position">The position where it was spawned</param>
+        protected virtual void OnEncounterSpawned(GameObject spawnedObject, AssetReferenceGameObject assetReference, Vector2 position)
+        {
         }
 
         /**

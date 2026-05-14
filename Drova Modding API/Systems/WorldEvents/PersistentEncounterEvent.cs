@@ -15,7 +15,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /**
          * The store for the lazy actors
          */
-        protected IStore<LazyActorSaveData> lazyActorStore;
+        protected IStore<LazyActorSaveData>? lazyActorStore;
 
         /// <inheritdoc/>
         public virtual void EndEvent()
