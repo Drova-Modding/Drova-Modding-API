@@ -40,9 +40,9 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         }
 
         /// <inheritdoc />
-        public void Apply(GameObject npc)
+        public void Apply(ModuleContext context)
         {
-            var inventory = npc.GetComponentInChildren<Il2CppDrova.InventorySystem.Inventory_StartupEquipSettings>();
+            var inventory = context.GetComponentInChildren<Il2CppDrova.InventorySystem.Inventory_StartupEquipSettings>();
             if (inventory == null) return;
 
             inventory._cosmeticPreset = ScriptableObject.CreateInstance<CosmeticPreset>();

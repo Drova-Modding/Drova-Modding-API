@@ -161,8 +161,15 @@ namespace Drova_Modding_API.Systems.Spawning
             GameObject npc = operation.Result;
             npc.name = _name;
 
-            foreach (var module in _modules)
-                module.Apply(npc);
+            var context = new ModuleContext(npc);
+            var orderedModules = _modules
+                .Select((module, index) => new { module, index })
+                .OrderBy(item => item.module.Priority)
+                .ThenBy(item => item.index)
+                .Select(item => item.module);
+
+            foreach (var module in orderedModules)
+                module.Apply(context);
 
             return npc;
         }

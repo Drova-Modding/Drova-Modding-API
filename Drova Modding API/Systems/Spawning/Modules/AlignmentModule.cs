@@ -1,6 +1,5 @@
 using Il2CppDrova;
 using Il2CppDrova.Alignment;
-using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Spawning.Modules
 {
@@ -21,13 +20,15 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         }
 
         /// <inheritdoc />
-        public void Apply(GameObject npc)
+        public void Apply(ModuleContext context)
         {
-            var actor = npc.GetComponent<Actor>();
-            if (actor == null) return;
+            var actor = context.GetComponent<Actor>();
+            var health = context.GetComponentInChildren<Health>();
+            if (actor == null || health == null) return;
 
             var alignmentModule = actor._alignmentModule;
             alignmentModule._defaultAlignment = _alignment;
+            health._canDieInCombat = _alignment._isEnemyWithPlayer;
 
             if (alignmentModule._service != null)
             {

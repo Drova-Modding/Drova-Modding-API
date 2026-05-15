@@ -1,3 +1,5 @@
+using Drova_Modding_API.GlobalFields;
+using Drova_Modding_API.Systems.Spawning.Modules;
 using Random = System.Random;
 using UnityEngine;
 
@@ -19,7 +21,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
     }
 
     /// <summary>
-    /// Factory for spawning bandit NPCs with varied weapon loadouts, randomised
+    /// Factory for spawning bandit NPCs with varied weapon loadouts, randomized
     /// bandit-themed cosmetics, and difficulty-scaled equipment quality.
     /// </summary>
     public static class BanditCreator
@@ -29,57 +31,152 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         // Daggers: crude knife → iron dagger → heart-seeker
         private static readonly string[] DaggerByDifficulty =
         [
-            "weapon_dagger_coarseDagger",
-            "weapon_dagger_ironDagger",
-            "weapon_dagger_heartSeeker"
+            ItemReadableIds.Weapon.DaggerGroup.CoarseDaggerId,
+            ItemReadableIds.Weapon.DaggerGroup.IronDaggerId,
+            ItemReadableIds.Weapon.DaggerGroup.HeartSeekerId
         ];
 
         // Swords: coarse broadsword → broadsword → longsword
         private static readonly string[] SwordByDifficulty =
         [
-            "weapon_sword_coarseBroadsword",
-            "weapon_sword_broadsword",
-            "weapon_sword_longsword"
+            ItemReadableIds.Weapon.SwordGroup.CoarseBroadswordId,
+            ItemReadableIds.Weapon.SwordGroup.BroadswordId,
+            ItemReadableIds.Weapon.SwordGroup.LongswordId
         ];
 
         // Axes: old axe → war axe → great axe
         private static readonly string[] AxeByDifficulty =
         [
-            "weapon_axe_oldAxe",
-            "weapon_axe_warAxe",
-            "weapon_axe_greatAxe"
+            ItemReadableIds.Weapon.AxeGroup.OldAxeId,
+            ItemReadableIds.Weapon.AxeGroup.WarAxeId,
+            ItemReadableIds.Weapon.AxeGroup.GreatAxeId
         ];
 
         // Spears: wooden spear → spear → hunting spear
         private static readonly string[] SpearByDifficulty =
         [
-            "weapon_spear_woodenSpear",
-            "weapon_spear_spear",
-            "weapon_spear_huntingSpear"
+            ItemReadableIds.Weapon.SpearGroup.WoodenSpearId,
+            ItemReadableIds.Weapon.SpearGroup.SpearId,
+            ItemReadableIds.Weapon.SpearGroup.HuntingSpearId
         ];
 
         // Bows: simple bow → hunting bow → battle bow
         private static readonly string[] BowByDifficulty =
         [
-            "weapon_bow_simpleBow",
-            "weapon_bow_huntingBow",
-            "weapon_bow_battleBow"
+            ItemReadableIds.Weapon.BowGroup.SimpleBowId,
+            ItemReadableIds.Weapon.BowGroup.HuntingBowId,
+            ItemReadableIds.Weapon.BowGroup.BattleBowId
         ];
 
         // Shields: small wooden → round shield → bronze shield
         private static readonly string[] ShieldByDifficulty =
         [
-            "weapon_shield_smallWoodenShield",
-            "weapon_shield_roundShield",
-            "weapon_shield_bronzeShield"
+            ItemReadableIds.Weapon.ShieldGroup.SmallWoodenShieldId,
+            ItemReadableIds.Weapon.ShieldGroup.RoundShieldId,
+            ItemReadableIds.Weapon.ShieldGroup.BronzeShieldId
         ];
 
         // Slingshots: coarse sling → simple slingshot → battle slingshot
         private static readonly string[] SlingshotByDifficulty =
         [
-            "weapon_sling_coarseSling",
-            "weapon_sling_simpleSlingshot",
-            "weapon_sling_battleSlingshot"
+            ItemReadableIds.Weapon.SlingGroup.CoarseSlingId,
+            ItemReadableIds.Weapon.SlingGroup.SimpleSlingshotId,
+            ItemReadableIds.Weapon.SlingGroup.BattleSlingshotId
+        ];
+
+        // Talent progression tracks (Easy => first, Normal => first two, Hard => first three)
+        private static readonly string[] DaggerTalentsByDifficulty =
+        [
+            TalentReadableIds.Daggers.Talent00,
+            TalentReadableIds.Daggers.Talent01,
+            TalentReadableIds.Daggers.Talent02
+        ];
+
+        private static readonly string[] DaggerHardBonusTalents =
+        [
+            TalentReadableIds.Daggers.SurpriseAttack,
+            TalentReadableIds.Daggers.GoingWithTheFlow,
+            TalentReadableIds.Daggers.EfficientStrikes
+        ];
+
+        private static readonly string[] SwordTalentsByDifficulty =
+        [
+            TalentReadableIds.Sword.Talent00,
+            TalentReadableIds.Sword.Talent01,
+            TalentReadableIds.Sword.Talent02
+        ];
+
+        private static readonly string[] SwordHardBonusTalents =
+        [
+            TalentReadableIds.Sword.Chancer,
+            TalentReadableIds.Sword.Accuracy,
+            TalentReadableIds.Sword.EmpoweredBlows
+        ];
+
+        private static readonly string[] AxeTalentsByDifficulty =
+        [
+            TalentReadableIds.Axe.Talent00,
+            TalentReadableIds.Axe.Talent01,
+            TalentReadableIds.Axe.Talent02
+        ];
+
+        private static readonly string[] AxeHardBonusTalents =
+        [
+            TalentReadableIds.Axe.MightySwing,
+            TalentReadableIds.Axe.BattleFrenzy,
+            TalentReadableIds.Axe.FinalGrace
+        ];
+
+        private static readonly string[] SpearTalentsByDifficulty =
+        [
+            TalentReadableIds.Spear.Talent00,
+            TalentReadableIds.Spear.Talent01,
+            TalentReadableIds.Spear.Talent02
+        ];
+
+        private static readonly string[] SpearHardBonusTalents =
+        [
+            TalentReadableIds.Spear.PeakPerformance,
+            TalentReadableIds.Spear.FocusedStrikes
+        ];
+
+        private static readonly string[] BowTalentsByDifficulty =
+        [
+            TalentReadableIds.Bow.Talent00,
+            TalentReadableIds.Bow.Talent01,
+            TalentReadableIds.Bow.Talent02
+        ];
+
+        private static readonly string[] BowHardBonusTalents =
+        [
+            TalentReadableIds.Bow.Quickdraw,
+            TalentReadableIds.Bow.Bullseye
+        ];
+
+        private static readonly string[] ShieldTalentsByDifficulty =
+        [
+            TalentReadableIds.Shield.Talent00,
+            TalentReadableIds.Shield.Talent01,
+            TalentReadableIds.Shield.Talent02
+        ];
+
+        private static readonly string[] ShieldHardBonusTalents =
+        [
+            TalentReadableIds.Shield.BalanceBreaker,
+            TalentReadableIds.Shield.IsThatAllYouGot
+        ];
+
+        private static readonly string[] SlingTalentsByDifficulty =
+        [
+            TalentReadableIds.Sling.Talent00,
+            TalentReadableIds.Sling.Talent01,
+            TalentReadableIds.Sling.Talent02
+        ];
+
+        private static readonly string[] SlingHardBonusTalents =
+        [
+            TalentReadableIds.Sling.DoubleTheLoad,
+            TalentReadableIds.Sling.Concussion
         ];
 
         // ── Armour pools (indexed by BanditDifficulty) ─────────────────────────
@@ -87,70 +184,70 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         private static readonly string[][] ChestByDifficulty =
         [
             // Easy — rags
-            ["armor_chest_tunic_ragged_2", "armor_chest_shirt_ragged_name", "armor_chest_tunic_name"],
+            [ItemReadableIds.Armor.ChestGroup.TunicRagged2Id, ItemReadableIds.Armor.ChestGroup.ShirtRaggedNameId, ItemReadableIds.Armor.ChestGroup.TunicNameId],
             // Normal — standard bandit
-            ["armor_chest_bandit_T1", "armor_chest_bandit_T2", "armor_chest_leather_name"],
+            [ItemReadableIds.Armor.ChestGroup.BanditT1Id, ItemReadableIds.Armor.ChestGroup.BanditT2Id, ItemReadableIds.Armor.ChestGroup.LeatherNameId],
             // Hard — heavy bandit / strong leather
-            ["armor_chest_bandit_T4", "armor_chest_leather_strong_name", "armor_chest_bandit_T2"]
+            [ItemReadableIds.Armor.ChestGroup.BanditT4Id, ItemReadableIds.Armor.ChestGroup.LeatherStrongNameId, ItemReadableIds.Armor.ChestGroup.BanditT2Id]
         ];
 
         // ── Cosmetic pools (shared across all difficulties) ────────────────────
 
         private static readonly string[] HoodPool =
         [
-            "helmet_hood_bandit_name",
-            "helmet_hood_bandit_t4_name",
-            "helmet_none",           // some bandits go bare-headed
-            "helmet_leathercap_name",
-            "helmet_barbarian_name"
+            ItemReadableIds.Helmet.HoodGroup.BanditNameId,
+            ItemReadableIds.Helmet.HoodGroup.BanditT4NameId,
+            ItemReadableIds.Helmet.GeneralGroup.NoneId,           // some bandits go bare-headed
+            ItemReadableIds.Helmet.LeathercapGroup.NameId,
+            ItemReadableIds.Helmet.BarbarianGroup.NameId
         ];
 
         private static readonly string[] HairPool =
         [
-            "hair_bald",
-            "hair_balding_1",
-            "hair_balding_2",
-            "hair_short_spiky",
-            "hair_short_spiky_2",
-            "hair_shaggy",
-            "hair_short_sidecut"
+            ItemReadableIds.Hair.GeneralGroup.BaldId,
+            ItemReadableIds.Hair.BaldingGroup.N1Id,
+            ItemReadableIds.Hair.BaldingGroup.N2Id,
+            ItemReadableIds.Hair.ShortGroup.SpikyId,
+            ItemReadableIds.Hair.ShortGroup.Spiky2Id,
+            ItemReadableIds.Hair.GeneralGroup.ShaggyId,
+            ItemReadableIds.Hair.ShortGroup.SidecutId
         ];
 
         private static readonly string[] BeardPool =
         [
-            "beard_full_short",
-            "beard_full_short_1",
-            "beard_partial_big",
-            "beard_partial_spiky",
-            "beard_forked",
-            "beard_spikey",
-            "beard_mustache_big",
-            "beard_whiskers",
-            "beard_empty"
+            ItemReadableIds.Beard.FullGroup.ShortId,
+            ItemReadableIds.Beard.FullGroup.Short1Id,
+            ItemReadableIds.Beard.PartialGroup.BigId,
+            ItemReadableIds.Beard.PartialGroup.SpikyId,
+            ItemReadableIds.Beard.GeneralGroup.ForkedId,
+            ItemReadableIds.Beard.GeneralGroup.SpikeyId,
+            ItemReadableIds.Beard.MustacheGroup.BigId,
+            ItemReadableIds.Beard.GeneralGroup.WhiskersId,
+            ItemReadableIds.Beard.GeneralGroup.EmptyId
         ];
 
         // Deco slot 0 — face marks
         private static readonly string[] Deco0Pool =
         [
-            "deco_scar_cheek_left",
-            "deco_scar_cheek_right",
-            "deco_scar_eye_left",
-            "deco_scar_eye_right",
-            "deco_scar_forehead_big",
-            "deco_eyepatch",
-            "deco_none",
-            "deco_dirt_0",
-            "deco_dirt_1"
+            ItemReadableIds.Deco.ScarGroup.CheekLeftId,
+            ItemReadableIds.Deco.ScarGroup.CheekRightId,
+            ItemReadableIds.Deco.ScarGroup.EyeLeftId,
+            ItemReadableIds.Deco.ScarGroup.EyeRightId,
+            ItemReadableIds.Deco.ScarGroup.ForeheadBigId,
+            ItemReadableIds.Deco.GeneralGroup.EyepatchId,
+            ItemReadableIds.Deco.GeneralGroup.NoneId,
+            ItemReadableIds.Deco.DirtGroup.N0Id,
+            ItemReadableIds.Deco.DirtGroup.N1Id
         ];
 
         // Deco slot 1 — extra grime / scars
         private static readonly string[] Deco1Pool =
         [
-            "deco1_scar_cheek_left",
-            "deco1_scar_eye_right",
-            "deco1_dirt_0",
-            "deco1_dirt_1",
-            "deco1_none"
+            ItemReadableIds.Deco1.ScarGroup.CheekLeftId,
+            ItemReadableIds.Deco1.ScarGroup.EyeRightId,
+            ItemReadableIds.Deco1.DirtGroup.N0Id,
+            ItemReadableIds.Deco1.DirtGroup.N1Id,
+            ItemReadableIds.Deco1.GeneralGroup.NoneId
         ];
 
         // ── Helpers ────────────────────────────────────────────────────────────
@@ -159,6 +256,61 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
 
         private static int DifficultyIndex(BanditDifficulty difficulty)
             => Math.Clamp((int)difficulty, 0, 2);
+
+        private static NpcCreator WithScaledTalents(this NpcCreator creator, BanditDifficulty difficulty, string[] talentTrack)
+        {
+            if (talentTrack.Length == 0) return creator;
+
+            var module = new TalentPresetModule();
+            var maxIndex = Mathf.Clamp(DifficultyIndex(difficulty), 0, talentTrack.Length - 1);
+            for (var i = 0; i <= maxIndex; i++)
+            {
+                module.With(talentTrack[i]);
+            }
+
+            return creator.WithModule(module);
+        }
+
+        private static NpcCreator WithHardOnlyTalents(this NpcCreator creator, BanditDifficulty difficulty, params string[] talentIds)
+        {
+            if (difficulty != BanditDifficulty.Hard || talentIds.Length == 0) return creator;
+
+            var module = new TalentPresetModule();
+            foreach (var talentId in talentIds)
+            {
+                module.With(talentId);
+            }
+
+            return creator.WithModule(module);
+        }
+
+        private static string[] MergeTalents(params string[][] talentGroups)
+        {
+            var merged = new List<string>();
+            foreach (var group in talentGroups)
+            {
+                if (group.Length == 0) continue;
+                merged.AddRange(group);
+            }
+
+            return merged.ToArray();
+        }
+
+        private static NpcCreator WithBanditCombatModules(this NpcCreator creator, BanditDifficulty difficulty, string[]? hardBonusTalents = null, params string[][] talentTracks)
+        {
+            foreach (var talentTrack in talentTracks)
+            {
+                creator = creator.WithScaledTalents(difficulty, talentTrack);
+            }
+
+            if (hardBonusTalents != null)
+            {
+                creator = creator.WithHardOnlyTalents(difficulty, hardBonusTalents);
+            }
+
+            // All bandits use the default spell preset template as baseline.
+            return creator.WithModule(new FlowPresetModule().UseDefaultPresetTemplate());
+        }
 
         /// <summary>
         /// Applies a randomised bandit-appropriate cosmetic look that scales with
@@ -191,6 +343,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(DaggerByDifficulty[DifficultyIndex(difficulty)])
+                .WithBanditCombatModules(difficulty, DaggerHardBonusTalents, DaggerTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -208,6 +361,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SwordByDifficulty[DifficultyIndex(difficulty)])
+                .WithBanditCombatModules(difficulty, SwordHardBonusTalents, SwordTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -225,6 +379,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(AxeByDifficulty[DifficultyIndex(difficulty)])
+                .WithBanditCombatModules(difficulty, AxeHardBonusTalents, AxeTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -244,6 +399,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SwordByDifficulty[d])
                 .WithItem(ShieldByDifficulty[d])
+                .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, ShieldHardBonusTalents), SwordTalentsByDifficulty, ShieldTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -261,6 +417,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SpearByDifficulty[DifficultyIndex(difficulty)])
+                .WithBanditCombatModules(difficulty, SpearHardBonusTalents, SpearTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -280,6 +437,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SpearByDifficulty[d])
                 .WithItem(ShieldByDifficulty[d])
+                .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, ShieldHardBonusTalents), SpearTalentsByDifficulty, ShieldTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -297,7 +455,8 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(BowByDifficulty[DifficultyIndex(difficulty)])
-                .WithItem("quiver_simple_name")
+                .WithItem(ItemReadableIds.Quiver.SimpleGroup.NameId)
+                .WithBanditCombatModules(difficulty, BowHardBonusTalents, BowTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -318,6 +477,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SpearByDifficulty[d])
                 .WithItem(SlingshotByDifficulty[d])
+                .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, SlingHardBonusTalents), SpearTalentsByDifficulty, SlingTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -338,6 +498,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SwordByDifficulty[d])
                 .WithItem(SlingshotByDifficulty[d])
+                .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, SlingHardBonusTalents), SwordTalentsByDifficulty, SlingTalentsByDifficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }

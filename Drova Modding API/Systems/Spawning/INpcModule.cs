@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Drova_Modding_API.Systems.Spawning
 {
     /// <summary>
@@ -8,10 +6,16 @@ namespace Drova_Modding_API.Systems.Spawning
     public interface INpcModule
     {
         /// <summary>
-        /// Applies the module's logic to the given NPC GameObject.
+        /// Gets the module priority used when applying NPC modules.
+        /// Lower values run first; modules with the same priority keep their insertion order.
         /// </summary>
-        /// <param name="npc">The instantiated NPC GameObject</param>
-        void Apply(GameObject npc);
+        int Priority => 0;
+
+        /// <summary>
+        /// Applies the module's logic to the given NPC using the provided context.
+        /// </summary>
+        /// <param name="context">The module context for component resolution and caching</param>
+        void Apply(ModuleContext context);
     }
 }
 

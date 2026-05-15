@@ -448,6 +448,7 @@
 		<Compile Include="Extensions\ActorExtension.cs" />
 		<Compile Include="Generation\AddressableGeneration.cs" />
 		<Compile Include="GlobalFields\SceneNames.cs" />
+		<Compile Include="GlobalFields\TalentReadableIds.cs" />
 		<Compile Include="Patches\AreaNamePatch.cs" />
 		<Compile Include="Patches\DialogueTreePatch.cs" />
 		<Compile Include="Patches\DS_DialogueUGUI_Patch.cs" />
@@ -490,6 +491,7 @@
 		<Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
 		<Compile Include="Systems\Dialogues\DialogGraph.cs" />
 		<Compile Include="Systems\Spawning\INpcModule.cs" />
+		<Compile Include="Systems\Spawning\ModuleContext.cs" />
 		<Compile Include="Systems\Spawning\Modules\AlignmentModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\CosmeticsPresetModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\EquipmentPresetModule.cs" />
@@ -497,8 +499,12 @@
 		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
 		<Compile Include="Systems\Spawning\ActorWorldLocator.cs" />
 		<Compile Include="Systems\Spawning\LazyActorCreator.cs" />
+		<Compile Include="Systems\Spawning\Modules\FlowPresetModule.cs" />
+		<Compile Include="Systems\Spawning\Modules\HealthPresetModule.cs" />
+		<Compile Include="Systems\Spawning\Modules\TalentPresetModule.cs" />
 		<Compile Include="Systems\Spawning\NpcCreator.cs" />
 		<Compile Include="Systems\Spawning\Templates\BanditCreator.cs" />
+		<Compile Include="Systems\Talents\TalentContainerDatabase.cs" />
 		<Compile Include="Systems\SystemInit.cs" />
 		<Compile Include="Systems\WorldEvents\EncounterEvent.cs" />
 		<Compile Include="Systems\WorldEvents\IWorldEvent.cs" />

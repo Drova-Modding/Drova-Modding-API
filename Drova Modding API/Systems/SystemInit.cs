@@ -7,6 +7,7 @@ using Drova_Modding_API.Systems.GlobalVars;
 using Drova_Modding_API.Systems.SaveGame;
 using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.Spawning;
+using Drova_Modding_API.Systems.Talents;
 using Drova_Modding_API.Systems.WorldEvents;
 using Il2CppDrova.Saveables;
 using UnityEngine;
@@ -18,6 +19,7 @@ namespace Drova_Modding_API.Systems
     {
         internal static void Init()
         {
+            TalentContainerDatabase.InitializeDatabase();
             if (ProviderAccess.TryGetGameManager(out Il2Cpp.GameManager gameManager))
             {
                 GameObject moddingAPISystemRoot = new("ModdingAPI");
