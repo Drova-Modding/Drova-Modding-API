@@ -1,7 +1,6 @@
 ﻿using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Spawning.Modules;
 using Il2CppDrova.Alignment;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Spawning
@@ -130,13 +129,16 @@ namespace Drova_Modding_API.Systems.Spawning
         }
 
         /// <summary>
-        /// Sets the NPC friendly or foe to the player.
-        /// When <paramref name="isPlayerFriendly"/> is <c>false</c> the
-        /// cached <c>Alignment_Wild_Human</c> container is applied (falls back to a
-        /// live search if <see cref="CacheAlignments"/> was not called beforehand).
+        /// Sets whether the NPC is friendly to the player.
+        /// Passing <c>false</c> applies the cached <c>Alignment_Wild_Human</c> container
+        /// (falls back to a live search if <see cref="CacheAlignments"/> was not called beforehand).
+        /// Passing <c>true</c> removes any previously added alignment override so the
+        /// NPC keeps its template/default alignment.
         /// </summary>
         public NpcCreator IsPlayerFriendly(bool isPlayerFriendly)
         {
+            _modules.RemoveAll(module => module is AlignmentModule);
+
             if (!isPlayerFriendly)
             {
                 // Use cache; populate lazily if CacheAlignments() was never called.

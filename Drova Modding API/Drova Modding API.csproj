@@ -450,6 +450,7 @@
 		<Compile Include="GlobalFields\SceneNames.cs" />
 		<Compile Include="GlobalFields\TalentReadableIds.cs" />
 		<Compile Include="GlobalFields\StatReadableIds.cs" />
+		<Compile Include="Patches\Actor_AddLoadingComp_Patch.cs" />
 		<Compile Include="Patches\AreaNamePatch.cs" />
 		<Compile Include="Patches\DialogueTreePatch.cs" />
 		<Compile Include="Patches\DS_DialogueUGUI_Patch.cs" />
@@ -511,9 +512,12 @@
 		<Compile Include="Systems\WorldEvents\EncounterEvent.cs" />
 		<Compile Include="Systems\WorldEvents\IWorldEvent.cs" />
 		<Compile Include="Systems\WorldEvents\PersistentEncounterEvent.cs" />
+		<Compile Include="Systems\WorldEvents\RegionalEventRegistry.cs" />
 		<Compile Include="Systems\WorldEvents\Regional\ARegionalEvent.cs" />
 		<Compile Include="Systems\WorldEvents\TimedEvent.cs" />
+		<Compile Include="Systems\WorldEvents\WorldEventPicker.cs" />
 		<Compile Include="Systems\WorldEvents\WorldEventSystemManager.cs" />
+		<Compile Include="Systems\WorldEvents\WorldRegionCoordinator.cs" />
 		<Compile Include="UI\Builder\OptionUIBuilder.cs" />
 		<Compile Include="UI\DropdownHandler.cs" />
 		<Compile Include="UI\GUI_ConfigOption_Slider_Float.cs" />

@@ -1,4 +1,4 @@
-﻿
+﻿#if DEBUG
 using Il2CppDrova;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using MelonLoader;
@@ -13,7 +13,6 @@ namespace Drova_Modding_API.Systems.Editor
     [RegisterTypeInIl2Cpp]
     public class NpcMouseRaycast(IntPtr ptr) : MonoBehaviour(ptr)
     {
-#if DEBUG
         private readonly Il2CppStructArray<RaycastHit2D> hits = new RaycastHit2D[10]; // Pre-allocated array for raycast results.
         private readonly string[] IGNORED_LAYERS = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"]; // Layer to ignore when casting ray.
 
@@ -59,6 +58,6 @@ namespace Drova_Modding_API.Systems.Editor
                 }
             }
         }
-#endif
     }
 }
+#endif

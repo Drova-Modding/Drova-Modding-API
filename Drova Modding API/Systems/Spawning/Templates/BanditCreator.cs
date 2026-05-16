@@ -349,11 +349,12 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             int d = DifficultyIndex(difficulty);
             return creator
                 .WithCosmetic(Pick(HoodPool, rng))
-                .WithCosmetic(Pick(ChestByDifficulty[d], rng))
                 .WithCosmetic(Pick(HairPool, rng))
                 .WithCosmetic(Pick(BeardPool, rng))
                 .WithCosmetic(Pick(Deco0Pool, rng))
-                .WithCosmetic(Pick(Deco1Pool, rng));
+                .WithCosmetic(Pick(Deco1Pool, rng))
+                .WithItem(Pick(ChestByDifficulty[d], rng))
+                ;
         }
 
         // ── Public factory methods ─────────────────────────────────────────────

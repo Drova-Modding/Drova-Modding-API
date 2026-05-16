@@ -30,9 +30,6 @@ namespace Drova_Modding_API.Systems.Talents
 
             // Build flat cache for fast lookups
             _talentCache = talentsInDatabase.ToDictionary(tc => tc.name);
-
-            MelonLogger.Msg($"[TalentContainerDatabase] Database initialized with {talentsInDatabase.Length} talents " +
-                      $"across {_groupedDatabase.Count} categories.");
         }
 
         /// <summary>

@@ -6,7 +6,6 @@ using Drova_Modding_API.Register;
 using Drova_Modding_API.Systems;
 
 using Drova_Modding_API.Systems.ModdingUI;
-using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
 
 
@@ -14,7 +13,7 @@ using MelonLoader;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.0", "Drova Modding", null)]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.1", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
@@ -100,12 +99,6 @@ namespace Drova_Modding_API
         public override void OnUpdate()
         {
             base.OnUpdate();
-            if (Input.GetKeyDown(KeyCode.F5))
-            {
-                NpcCreator creator = new("Test", PlayerAccess.GetPlayer().transform.position);
-                creator.IsPlayerFriendly(false);
-                creator.Create();
-            }
 #if DEBUG
             if (_consoleAction.WasReleasedThisFrame())
             {

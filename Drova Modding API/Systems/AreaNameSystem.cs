@@ -4,6 +4,11 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems
 {
+    /**
+     * The delegate that is called when the player enters or leaves a region.
+     */
+    public delegate void RegionChanged(Region region, bool hasEntered);
+
     /// <summary>
     /// A system that manages the area names.
     /// </summary>
@@ -16,12 +21,8 @@ namespace Drova_Modding_API.Systems
         /// <summary>
         /// The regions the Player is currently in
         /// </summary>
-        public readonly List<Region> Regions = [];
+        internal readonly List<Region> Regions = [];
 
-        /**
-         * The delegate that is called when the player enters or leaves a region.
-         */
-        public delegate void RegionChanged(Region region, bool hasEntered);
 
         /**
          * The event that is called when the player enters or leaves a region.
@@ -32,8 +33,10 @@ namespace Drova_Modding_API.Systems
         /**
          * The instance of the AreaNameSystem.
          */
+        [HideFromIl2Cpp]
         public static AreaNameSystem? Instance
         {
+            [HideFromIl2Cpp]
             get
             {
                 return _instance;
@@ -55,6 +58,7 @@ namespace Drova_Modding_API.Systems
         /// Called when the player enters an area.
         /// </summary>
         /// <param name="areaName">The name of the area</param>
+        [HideFromIl2Cpp]
         public void OnAreaEntered(string areaName)
         {
             Region region = RegionExtensions.GetRegionByName(areaName);
@@ -66,6 +70,7 @@ namespace Drova_Modding_API.Systems
         /// Called when the player leaves an area.
         /// </summary>
         /// <param name="areaName">The name of the area</param>
+        [HideFromIl2Cpp]
         public void UnregisterAreaName(string areaName)
         {
             Region region = RegionExtensions.GetRegionByName(areaName);
@@ -79,6 +84,7 @@ namespace Drova_Modding_API.Systems
         /// Checks if the player is currently in a cave. This is determined by checking if any of the current Regions are caves.
         /// </summary>
         /// <returns></returns>
+        [HideFromIl2Cpp]
         public bool IsInCave()
         {
 #if DEBUG

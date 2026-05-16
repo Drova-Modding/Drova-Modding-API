@@ -9,41 +9,31 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems.WorldEvents
 {
+
     /// <summary>
     /// A System that handles spawn Events for classes which implements <see cref="IWorldEvent"/>, or <see cref="ARegionalEvent"/>.
     /// The system will handle the cooldown and the start of the events.
     /// You can register your Events with <see cref="RegisterWorldEvents(IEnumerable{IWorldEvent})"/> and <see cref="RegisterWorldEvent(IWorldEvent)"/>.
     /// You can register your Regional Events with <see cref="RegisterRegionalEvents(IEnumerable{ARegionalEvent})"/> and <see cref="RegisterRegionalEvent(ARegionalEvent)"/>.
-    /// It will kill automatically Events which are running more than 10 times the cooldown.
+    /// It will kill automatically Events which are running more than 5 times the cooldown.
     /// It will also block when the Player is in a Dialogue, Option menu, or in a blocked region
     /// </summary>
     [RegisterTypeInIl2Cpp]
     public class WorldEventSystemManager(IntPtr ptr) : MonoBehaviour(ptr)
     {
-
         private static readonly List<IWorldEvent> WorldEvents = [];
-        private static readonly Dictionary<Region, List<ARegionalEvent>> RegionEvents = [];
+        private const int DefaultRegionalCooldownMinutes = 1;
         private readonly List<ARegionalEvent> _runningRegionalEvents = [];
+        private readonly WorldEventPicker _worldEventPicker = new();
+        private WorldRegionCoordinator? _regionCoordinator;
         private short _skipOnEvents = 0;
         private object? _cooldownCoroutine;
-        private readonly HashSet<Region> _blockedRegions =
-        [
-            Region.Nemeton,
-            Region.EntryNemeton,
-            Region.RedTower,
-            Region.Tavern,
-            Region.Academy,
-            Region.WoodCamp,
-            Region.Magecamp,
-            Region.Ruinexplorer,
-            Region.RuinSchmuggler,
-            Region.RuinsCamp
-        ];
         internal AreaNameSystem AreaNameSystem;
 
         /**
          * The instance of the WorldEventSystemManager.
          */
+        [HideFromIl2Cpp]
         public static WorldEventSystemManager? Instance { get; private set; }
 
         /**
@@ -82,72 +72,28 @@ namespace Drova_Modding_API.Systems.WorldEvents
         internal void Awake()
         {
             Instance = this;
+            _regionCoordinator = new WorldRegionCoordinator(_runningRegionalEvents, GetRegionalCooldownSeconds);
             _cooldownCoroutine = MelonCoroutines.Start(Instance.StartEventCooldown());
-            AreaNameSystem.OnRegionChanged += OnRegionListener;
+            AreaNameSystem.OnRegionChanged += _regionCoordinator.OnRegionChanged;
         }
 
         internal void OnDestroy()
         {
-            if (AreaNameSystem != null)
-                AreaNameSystem.OnRegionChanged -= OnRegionListener;
+            if (AreaNameSystem != null && _regionCoordinator != null)
+                AreaNameSystem.OnRegionChanged -= _regionCoordinator.OnRegionChanged;
             if(_cooldownCoroutine != null)
                 MelonCoroutines.Stop(_cooldownCoroutine);
         }
 
         [HideFromIl2Cpp]
-        private void HandleRunningEvents(Region region, bool hasEntered)
+        private static float GetRegionalCooldownSeconds()
         {
-            if (hasEntered && RegionEvents.TryGetValue(region, out List<ARegionalEvent>? regionalEvents) && regionalEvents != null)
+            if (ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.RegionalEventCooldownOptionKey, out int cooldownInMinutes))
             {
-                if (regionalEvents.Count > 0)
-                {
-                    ARegionalEvent randomEvent = regionalEvents[UnityEngine.Random.Range(0, regionalEvents.Count)];
-                    randomEvent.StartEvent();
-                    _runningRegionalEvents.Add(randomEvent);
-                }
-                for (int index = 0; index < regionalEvents.Count; index++)
-                {
-                    ARegionalEvent regionalEvent = regionalEvents[index];
-                    if (!regionalEvent.IsRunning && regionalEvent.CanRunParallel())
-                    {
-                        regionalEvent.StartEvent();
-                        _runningRegionalEvents.Add(regionalEvent);
-                    }
-                }
+                return Mathf.Max(0, cooldownInMinutes) * 60f;
+            }
 
-            }
-            else if (RegionEvents.ContainsKey(region))
-            {
-                foreach (ARegionalEvent runningEvent in _runningRegionalEvents)
-                {
-                    if (runningEvent.Region == region)
-                    {
-                        runningEvent.EndEvent();
-                    }
-                }
-                _runningRegionalEvents.Clear();
-            }
-        }
-
-        [HideFromIl2Cpp]
-        private static void HandleRegionChange(Region region, bool hasEntered)
-        {
-            if (hasEntered && RegionEvents.TryGetValue(region, out List<ARegionalEvent>? regionalEvents1) && regionalEvents1 != null)
-            {
-                for (int index = 0; index < regionalEvents1.Count; index++)
-                {
-                    ARegionalEvent regionalEvent = regionalEvents1[index];
-                    regionalEvent.OnRegionEntered();
-                }
-            }
-            else if (!hasEntered && RegionEvents.TryGetValue(region, out List<ARegionalEvent>? regionalEvents) && regionalEvents != null)
-            {
-                for (int index = 0; index < regionalEvents.Count; index++)
-                {
-                    ARegionalEvent regionalEvent = regionalEvents[index];
-                    regionalEvent.OnRegionLeft();
-                }
-            }
+            return DefaultRegionalCooldownMinutes * 60f;
         }
 
         /// <summary>
@@ -156,7 +102,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         [HideFromIl2Cpp]
         public void AddBlockedRegion(Region region)
         {
-            _blockedRegions.Add(region);
+            _regionCoordinator?.AddBlockedRegion(region);
         }
 
         /// <summary>
@@ -165,7 +111,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         [HideFromIl2Cpp]
         public void RemoveBlockedRegion(Region region)
         {
-            _blockedRegions.Remove(region);
+            _regionCoordinator?.RemoveBlockedRegion(region);
         }
 
         /// <summary>
@@ -211,23 +157,33 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 if (CurrentEvent == null && WorldEvents.Count > 0 && !IsPlayerInBlockedRegion())
                 {
                     _skipOnEvents = 0;
-                    IWorldEvent worldEvent = WorldEvents[UnityEngine.Random.Range(0, WorldEvents.Count)];
-                    StartEvent(worldEvent);
+                    IWorldEvent? worldEvent = PickNextWorldEvent();
+                    if (worldEvent != null)
+                    {
+                        StartEvent(worldEvent);
+                    }
                 }
                 else
                 {
                     _skipOnEvents++;
                 }
-                if (_skipOnEvents > 10 && CurrentEvent != null)
+                if (_skipOnEvents > 5 && CurrentEvent != null)
                 {
                     EndEvent();
                 }
             }
         }
 
+        [HideFromIl2Cpp]
+        private IWorldEvent? PickNextWorldEvent()
+        {
+            return _worldEventPicker.Pick(WorldEvents);
+        }
+
         /**
          * Register a world event.
          */
+        [HideFromIl2Cpp]
         public static void RegisterWorldEvent(IWorldEvent worldEvent)
         {
             WorldEvents.Add(worldEvent);
@@ -236,6 +192,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /**
          * Register multiple world events.
          */
+        [HideFromIl2Cpp]
         public static void RegisterWorldEvents(IEnumerable<IWorldEvent> worldEvents)
         {
             WorldEvents.AddRange(worldEvents);
@@ -244,21 +201,16 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /**
          * Register a regional event.
          */
+        [HideFromIl2Cpp]
         public static void RegisterRegionalEvent(ARegionalEvent regionalEvent)
         {
-            if (RegionEvents.TryGetValue(regionalEvent.Region, out List<ARegionalEvent>? events)  && events != null)
-            {
-                events.Add(regionalEvent);
-            }
-            else
-            {
-                RegionEvents[regionalEvent.Region] = [regionalEvent];
-            }
+            RegionalEventRegistry.RegisterRegionalEvent(regionalEvent);
         }
 
         /**
          * Register multiple regional events.
          */
+        [HideFromIl2Cpp]
         public static void RegisterRegionalEvents(IEnumerable<ARegionalEvent> regionalEvents)
         {
             foreach (ARegionalEvent regionalEvent in regionalEvents)
@@ -270,6 +222,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// End the current world event.
         /// </summary>
+        [HideFromIl2Cpp]
         public void EndEvent()
         {
             if (CurrentEvent == null)
@@ -303,15 +256,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         [HideFromIl2Cpp]
         public bool IsPlayerInBlockedRegion()
         {
-            if (AreaNameSystem == null) return false;
-            return AreaNameSystem.Regions.Any(r => _blockedRegions.Contains(r));
-        }
-
-        [HideFromIl2Cpp]
-        private void OnRegionListener(Region region, bool hasEntered)
-        {
-            HandleRegionChange(region, hasEntered);
-            HandleRunningEvents(region, hasEntered);
+            return _regionCoordinator?.IsPlayerInBlockedRegion(AreaNameSystem) == true;
         }
 
     }

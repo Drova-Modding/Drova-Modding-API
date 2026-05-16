@@ -1,6 +1,7 @@
 ﻿using Drova_Modding_API.Register;
 using Il2Cpp;
 using Il2CppDrova.GUI;
+using Il2CppInterop.Runtime.Attributes;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
@@ -28,7 +29,7 @@ namespace Drova_Modding_API.UI
         GameObject _keyboard;
         GameObject? _exitButton;
         RebindingOperation? _rebindOperation;
-
+        
         private const string GamePadGroup = "Gamepad";
         private const string KeyboardGroup = "Keyboard;Mouse";
 
@@ -45,6 +46,7 @@ namespace Drova_Modding_API.UI
         /**
          * Initialize the keybinding element.
          */
+        [HideFromIl2Cpp]
         public void Init(string actionName, GameObject? exitButton = null)
         {
             _exitButton = exitButton;
@@ -88,6 +90,7 @@ namespace Drova_Modding_API.UI
             InputSystem.add_onDeviceChange(new Action<InputDevice, InputDeviceChange>(this.OnDeviceChange));
         }
 
+        [HideFromIl2Cpp]
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
             bool isGamePad = device.TryCast<Gamepad>() != null;
@@ -101,6 +104,7 @@ namespace Drova_Modding_API.UI
             }
         }
 
+        [HideFromIl2Cpp]
         private void InitGamepad()
         {
             _controllerButton.gameObject.SetActive(true);
@@ -116,12 +120,14 @@ namespace Drova_Modding_API.UI
             _controllerKeybindingText.text = action.bindings[bindingIndex].ToDisplayString();
         }
 
+        [HideFromIl2Cpp]
         private void RemoveGamepad()
         {
             _controllerButton.onClick.RemoveAllListeners();
             _controllerButton.gameObject.SetActive(false);
         }
 
+        [HideFromIl2Cpp]
         private void InitKeyboard()
         {
             _keyboard.SetActive(true);
@@ -137,6 +143,7 @@ namespace Drova_Modding_API.UI
             _keybindingText.text = action.bindings[bindingIndex].ToDisplayString();
         }
 
+        [HideFromIl2Cpp]
         private void Init()
         {
             if (Gamepad.current != null)
@@ -150,18 +157,21 @@ namespace Drova_Modding_API.UI
             InitKeyboard();
         }
 
+        [HideFromIl2Cpp]
         private void RegisterListen()
         {
             _keybindingText.text = "...";
             ListenForRebinding(_keybindingText, KeyboardGroup, "<Gamepad>");
         }
 
+        [HideFromIl2Cpp]
         private void RegisterListenController()
         {
             _controllerKeybindingText.text = "...";
             ListenForRebinding(_controllerKeybindingText, GamePadGroup, "<Keyboard>", "<Pointer>");
         }
 
+        [HideFromIl2Cpp]
         private void ListenForRebinding(TextMeshProUGUI textMesh, string group, string excludeGroup, string secondaryExcludeGroup = null)
         {
             InputAction action = InputActionRegister.Instance[_actionName];
@@ -209,6 +219,7 @@ namespace Drova_Modding_API.UI
             rebindOperation.Start();
         }
 
+        [HideFromIl2Cpp]
         private void FinishRebinding(RebindingOperation operation)
         {
             InputActionRegister.isMappingCurrently = false;
@@ -220,6 +231,7 @@ namespace Drova_Modding_API.UI
             operation.Dispose();
         }
 
+        [HideFromIl2Cpp]
         private void CancelCurrentRebinding()
         {
             if (_rebindOperation == null)

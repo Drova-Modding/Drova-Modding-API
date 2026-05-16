@@ -1,6 +1,7 @@
 ﻿using Il2CppDrova.GUI.Options;
 using Il2CppDrova.ConfigOptions;
 using Il2CppDrova;
+using Il2CppInterop.Runtime.Attributes;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
@@ -45,6 +46,7 @@ namespace Drova_Modding_API.UI
         /// <summary>
         /// Initialize the float slider.
         /// </summary>
+        [HideFromIl2Cpp]
         public void Init()
         {
             _amountText = gameObject.transform.parent.GetComponentInChildren<TextMeshProUGUI>();
@@ -64,6 +66,7 @@ namespace Drova_Modding_API.UI
         /// <summary>
         /// Set the value of the slider and text.
         /// </summary>
+        [HideFromIl2Cpp]
         public void SetUIValueCustom(float value)
         {
             if (UiElement == null)
@@ -84,6 +87,7 @@ namespace Drova_Modding_API.UI
         /// Value Change listener for the slider.
         /// </summary>
         /// <param name="value"></param>
+        [HideFromIl2Cpp]
         protected void OnValueChangedListener(float value)
         {
             if (_amountText == null)
