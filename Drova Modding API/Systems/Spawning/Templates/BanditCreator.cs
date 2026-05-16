@@ -257,6 +257,34 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         private static int DifficultyIndex(BanditDifficulty difficulty)
             => Math.Clamp((int)difficulty, 0, 2);
 
+        private static int RollHealthForDifficulty(BanditDifficulty difficulty, Random rng)
+        {
+            return difficulty switch
+            {
+                BanditDifficulty.Easy => rng.Next(200, 401),
+                BanditDifficulty.Normal => rng.Next(700, 901),
+                BanditDifficulty.Hard => rng.Next(1700, 2501),
+                _ => rng.Next(700, 901)
+            };
+        }
+
+        private static NpcCreator WithBanditHealth(this NpcCreator creator, BanditDifficulty difficulty, Random rng)
+            => creator.WithModule(new HealthPresetModule().With(RollHealthForDifficulty(difficulty, rng)));
+
+        private static int XpForDifficulty(BanditDifficulty difficulty)
+        {
+            return difficulty switch
+            {
+                BanditDifficulty.Easy => 60,
+                BanditDifficulty.Normal => 120,
+                BanditDifficulty.Hard => 180,
+                _ => 120
+            };
+        }
+
+        private static NpcCreator WithBanditXp(this NpcCreator creator, BanditDifficulty difficulty)
+            => creator.WithModule(new CustomStatsModule().WithExpOnDead(XpForDifficulty(difficulty)));
+
         private static NpcCreator WithScaledTalents(this NpcCreator creator, BanditDifficulty difficulty, string[] talentTrack)
         {
             if (talentTrack.Length == 0) return creator;
@@ -339,11 +367,13 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateDaggerBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(DaggerByDifficulty[DifficultyIndex(difficulty)])
                 .WithBanditCombatModules(difficulty, DaggerHardBonusTalents, DaggerTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -357,11 +387,13 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateSwordBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SwordByDifficulty[DifficultyIndex(difficulty)])
                 .WithBanditCombatModules(difficulty, SwordHardBonusTalents, SwordTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -375,11 +407,13 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateAxeBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(AxeByDifficulty[DifficultyIndex(difficulty)])
                 .WithBanditCombatModules(difficulty, AxeHardBonusTalents, AxeTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -393,13 +427,15 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateSwordShieldBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             int d = DifficultyIndex(difficulty);
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SwordByDifficulty[d])
                 .WithItem(ShieldByDifficulty[d])
                 .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, ShieldHardBonusTalents), SwordTalentsByDifficulty, ShieldTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -413,11 +449,13 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateSpearBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SpearByDifficulty[DifficultyIndex(difficulty)])
                 .WithBanditCombatModules(difficulty, SpearHardBonusTalents, SpearTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -431,13 +469,15 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateSpearShieldBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             int d = DifficultyIndex(difficulty);
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SpearByDifficulty[d])
                 .WithItem(ShieldByDifficulty[d])
                 .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, ShieldHardBonusTalents), SpearTalentsByDifficulty, ShieldTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -451,12 +491,14 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateBowBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(BowByDifficulty[DifficultyIndex(difficulty)])
                 .WithItem(ItemReadableIds.Quiver.SimpleGroup.NameId)
                 .WithBanditCombatModules(difficulty, BowHardBonusTalents, BowTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -471,13 +513,15 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateSpearSlingshotBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             int d = DifficultyIndex(difficulty);
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SpearByDifficulty[d])
                 .WithItem(SlingshotByDifficulty[d])
                 .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, SlingHardBonusTalents), SpearTalentsByDifficulty, SlingTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -492,13 +536,15 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateSwordSlingshotBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            var rng = new Random();
+            var rng = Random.Shared;
             int d = DifficultyIndex(difficulty);
             return new NpcCreator(name, position)
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(SwordByDifficulty[d])
                 .WithItem(SlingshotByDifficulty[d])
                 .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, SlingHardBonusTalents), SwordTalentsByDifficulty, SlingTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
         }
@@ -512,7 +558,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         public static GameObject CreateRandomBandit(string name, Vector2 position,
             BanditDifficulty difficulty = BanditDifficulty.Normal)
         {
-            return new Random().Next(8) switch
+            return Random.Shared.Next(8) switch
             {
                 0 => CreateDaggerBandit(name, position, difficulty),
                 1 => CreateSwordBandit(name, position, difficulty),

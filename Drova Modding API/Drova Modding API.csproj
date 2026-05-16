@@ -449,6 +449,7 @@
 		<Compile Include="Generation\AddressableGeneration.cs" />
 		<Compile Include="GlobalFields\SceneNames.cs" />
 		<Compile Include="GlobalFields\TalentReadableIds.cs" />
+		<Compile Include="GlobalFields\StatReadableIds.cs" />
 		<Compile Include="Patches\AreaNamePatch.cs" />
 		<Compile Include="Patches\DialogueTreePatch.cs" />
 		<Compile Include="Patches\DS_DialogueUGUI_Patch.cs" />
@@ -494,6 +495,7 @@
 		<Compile Include="Systems\Spawning\ModuleContext.cs" />
 		<Compile Include="Systems\Spawning\Modules\AlignmentModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\CosmeticsPresetModule.cs" />
+		<Compile Include="Systems\Spawning\Modules\CustomStatsModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\EquipmentPresetModule.cs" />
 		<Compile Include="Systems\Spawning\LazyActorSaveData.cs" />
 		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
