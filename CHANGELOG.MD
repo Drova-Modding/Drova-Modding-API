@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.1 - 2026-05-16]
+### Added
+- World event handling infrastructure with EncounterEvent, PersistentEncounterEvent, RegionalEventRegistry, WorldEventPicker, and WorldEventSystemManager
+- Region management improvements with WorldRegionCoordinator for regional event coordination
+- Modular NPC creator system with configurable trait modules (Alignment, CustomStats, EquipmentPreset, HealthPreset, TalentPreset, CosmeticsPreset, FlowPreset)
+- BanditCreator enhanced with health and experience scaling for difficulty management
+- Player-friendly NPC configuration with default factory methods and centralized readable IDs
+- New NPC module architecture with INpcModule interface for extensibility
+- Additional asset references and improved addressable file generation
+
+### Changed
+- NpcCreator refactored with modular prioritization and context-based handling
+- Enhanced region and event handling throughout the API for better world event management
+- UI improvements with better editor picker functionality (NpcMouseRaycast)
+- Improved naming consistency across region and event management systems
+- Better separation of concerns in NPC spawning and talent systems
+
+### Fixed
+- Apply suggestions from code review for code quality improvements
+- Various system refinements and edge case handling
+
 ## [0.4.0 - 2026-05-03]
 ### Added
 - Functional dialogue system with graph editor support (nodes, tasks, multiple choice flow)

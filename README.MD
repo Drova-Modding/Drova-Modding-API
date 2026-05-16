@@ -53,19 +53,172 @@ See [Wiki](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
 - Audio System to play audio clips on actors
 - GlobalVarList inspector editor for easier debugging and management of global variables (F6)
 
+## Quick Start Examples
+
+### Creating an Options Menu Panel
+```csharp
+public class MyModMenu : MelonMod
+{
+    public override void OnInitializeMelon()
+    {
+        var builder = OptionMenuAccess.CreateModdingPanel("MyMod");
+        builder.AddKeyBinding("MyBinding", "My Key Binding", InputActionType.Custom);
+        builder.AddDropdown("MyDropdown", "Select Option", new[] { "Option 1", "Option 2" });
+        builder.AddSlider("MySlider", "Volume", 0f, 100f, 50f);
+    }
+}
+```
+
+### Spawning Bandits
+```csharp
+public class BanditSpawner : MelonMod
+{
+    public override void OnInitializeMelon()
+    {
+        // Spawn a difficulty-scaled sword & shield bandit at a position
+        Vector2 spawnPos = new Vector2(0, 0);
+        GameObject bandit = BanditCreator.CreateSwordShieldBandit(
+            "Tough Bandit", 
+            spawnPos, 
+            BanditDifficulty.Hard
+        );
+    }
+}
+```
+
+### Spawning Custom NPCs
+```csharp
+public class CustomNPCSpawner : MelonMod
+{
+    public override void OnInitializeMelon()
+    {
+        Vector2 spawnPos = new Vector2(10, 20);
+        var npc = new NpcCreator("My NPC", spawnPos)
+            .WithCosmetic("hair_short_1")
+            .WithItem("sword_iron")
+            .IsPlayerFriendly(true)
+            .Create();
+    }
+}
+```
+
+### Handling World Events
+```csharp
+public class EventListener : MelonMod
+{
+    public override void OnInitializeMelon()
+    {
+        // Register a world event to be picked randomly by the event system
+        WorldEventSystemManager.RegisterWorldEvent(new MyCustomEvent());
+        
+        // Or start an event immediately
+        var myEvent = new MyCustomEvent();
+        WorldEventSystemManager.Instance?.StartEvent(myEvent);
+    }
+}
+```
+
+### Persisting NPCs (Permanent Spawning)
+```csharp
+public class PersistentNPCSpawner : MelonMod
+{
+    public override void OnInitializeMelon()
+    {
+        // Create a lazy actor that will be saved and reloaded
+        var lazyActorParams = new LazyActorCreator.LazyActorParams
+        {
+            AssetReference = AddressableAccess.Creatures.Wolf,
+            EntityInfo = new AssetReference("path_to_entity_info"),
+            Position = new Vector2(0, 0),
+            HasCustomHealth = true,
+            MaxHealth = 500,
+            CurrentHealth = 500
+        };
+        
+        var lazyActor = LazyActorCreator.CreateLazyActorCreature(lazyActorParams);
+    }
+}
+```
+
 ## Bindings in Dev/Debug
-- F6 – GlobalVarList inspector editor
-- ^ – Toggle the cheats menu
-- When Cheats Menu is open:
-  - Left-click on an actor to get on the bottom left a menu with options to enter the dialogue editor
-- When in the Dialogue Editor:
-  - Right-click on the graph background to open the graph context menu
-  - Left-click on a node and pressing to drag it around
-  - Middle click and drag to pan the graph
-  - Scroll to zoom in and out of the graph
-  - Double-click on a subgraph node to open the subgraph
 
+### General
+- F6 – GlobalVarList inspector editor for runtime variable debugging and editing
+- ^ (Caret) – Toggle the cheats menu
 
+### Cheats Menu
+When Cheats Menu is open:
+- Left-click on an actor to get a menu on the bottom left with options to enter the dialogue editor
 
-### Contributing
-Feel free to contribute to this project. If you have any questions or ideas, feel free to ask.
+### Dialogue Editor
+When in the Dialogue Editor:
+- Right-click on the graph background to open the graph context menu
+- Left-click on a node and drag to move it around
+- Middle click and drag to pan the graph
+- Scroll wheel to zoom in and out of the graph
+- Double-click on a subgraph node to open the subgraph
+
+## Documentation
+
+For detailed documentation on specific systems:
+- **Dialogue System**: See [Wiki - Dialogue System](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
+- **NPC Spawning**: See [Wiki - NPC Creation](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
+- **World Events**: See [Wiki - World Events](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
+- **Options Menu**: See [Wiki - Options Menu](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
+
+## Current Version
+
+**Version 0.4.1** includes major improvements and new systems:
+- Complete world event infrastructure with regional coordination
+- Modular NPC creator system with configurable traits
+- Enhanced region management for better event handling
+- Improved asset generation and addressable references
+
+See [CHANGELOG](./CHANGELOG.MD) for detailed version history.
+
+## API Overview
+
+### Core Systems
+- **OptionMenuAccess** - Create and manage custom mod menu panels
+- **PlayerAccess** - Access player stats, equipment, and data
+- **AddressableAccess** - Load game assets (items, creatures, spells, interactions)
+- **InputAccess** - Handle input through Rewired integration
+- **ProviderAccess** - Access core game managers and handlers
+- **AreaNameSystem** - Track player location in the game world
+- **AudioSystem** - Play and manage audio on actors with distance-based volume
+- **DialogueSystem** - Create complex dialogue trees with 40+ node types
+- **WorldEventSystem** - Create and manage world events with regional coordination
+- **NpcCreator** - Spawn and configure NPCs with modular trait system
+
+## License
+
+This project is provided as-is for modding purposes. See [LICENSE](./LICENSE) for details.
+
+## Troubleshooting
+
+### Common Issues
+
+**Q: The mod doesn't load**
+- Ensure MelonLoader is properly installed
+- Check that the Drova_Modding_API.dll is in your Mods folder
+- Verify your mod has the correct MelonAdditionalDependencies attribute
+
+**Q: Getting IL2Cpp errors**
+- This is expected behavior with IL2Cpp mods
+- Ensure you're following the IL2Cpp modding guide from MelonWiki
+- Use UnhollowerBaseLib types for game object interactions
+
+**Q: Dialogue Editor crashes**
+- Try clearing the cache and rebuilding
+- Ensure nodes are properly connected
+- Check the console for detailed error messages
+
+## Contributing
+
+Feel free to contribute to this project! We welcome:
+- Bug reports and fixes
+- Feature suggestions
+- Documentation improvements
+- Examples and tutorials
+
+If you have any questions or ideas, feel free to ask on the [Discord](https://discord.com/channels/779751611756707890/1304552763761492089) or create an issue on GitHub.
