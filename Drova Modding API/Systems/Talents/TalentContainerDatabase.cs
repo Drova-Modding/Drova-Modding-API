@@ -69,7 +69,7 @@ namespace Drova_Modding_API.Systems.Talents
         {
             if (_groupedDatabase == null)
             {
-                Debug.LogWarning("[TalentContainerDatabase] Database not initialized. Call InitializeDatabase() first.");
+                MelonLogger.Warning("[TalentContainerDatabase] Database not initialized. Call InitializeDatabase() first.");
             }
 
             return _groupedDatabase?.TryGetValue(category, out var talents) == true 

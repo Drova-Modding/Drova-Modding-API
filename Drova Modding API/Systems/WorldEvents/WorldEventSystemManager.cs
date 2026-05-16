@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.WorldEvents
 {
     /// <summary>
-    /// A System that handles spawn Events for classes which implements <see cref="IWorldEvent"/>. Or <see cref="ARegionalEvent"/>"/>
+    /// A System that handles spawn Events for classes which implements <see cref="IWorldEvent"/>, or <see cref="ARegionalEvent"/>.
     /// The system will handle the cooldown and the start of the events.
     /// You can register your Events with <see cref="RegisterWorldEvents(IEnumerable{IWorldEvent})"/> and <see cref="RegisterWorldEvent(IWorldEvent)"/>.
     /// You can register your Regional Events with <see cref="RegisterRegionalEvents(IEnumerable{ARegionalEvent})"/> and <see cref="RegisterRegionalEvent(ARegionalEvent)"/>.
@@ -186,7 +186,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         {
             while (true)
             {
-                if (OptionMenuAccess.Instance.IsMenuOpen || IsPlayerInDialogueOrTeleporting())
+                if (OptionMenuAccess.Instance?.IsMenuOpen == true || IsPlayerInDialogueOrTeleporting())
                 {
                     yield return new WaitForSeconds(1);
                     continue;
@@ -283,9 +283,9 @@ namespace Drova_Modding_API.Systems.WorldEvents
         }
 
         /// <summary>
-        /// Returns if the Player is alive and a Dialogue or teleports
+        /// Returns true if the player is alive and is currently in a dialogue or teleporting.
         /// </summary>
-        /// <returns>True if in a Dialogue</returns>
+        /// <returns>True if the player is alive and is in a dialogue or teleporting; otherwise, false.</returns>
         [HideFromIl2Cpp]
         public static bool IsPlayerInDialogueOrTeleporting()
         {
@@ -297,7 +297,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         }
 
         /// <summary>
-        /// Gives back if the Player is one of the blocked regions for spawning world events.
+        /// Gives back whether the Player is in one of the blocked regions for spawning world events.
         /// </summary>
         /// <returns>True if the player is in a blocked region</returns>
         [HideFromIl2Cpp]

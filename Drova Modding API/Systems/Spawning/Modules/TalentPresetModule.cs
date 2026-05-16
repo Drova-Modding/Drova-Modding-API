@@ -55,7 +55,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                 var hasTalent = TalentContainerDatabase.TryGetTalent(readableId, out TalentContainer? talent);
                 if (!hasTalent)
                 {
-                    MelonLogger.Warning($"Could not resolve equipment readable id '{readableId}'.");
+                    MelonLogger.Warning($"Could not resolve talent readable id '{readableId}'.");
                     continue;
                 }
 
