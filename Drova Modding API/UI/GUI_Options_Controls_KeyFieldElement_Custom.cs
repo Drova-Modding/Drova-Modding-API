@@ -1,10 +1,13 @@
 ﻿using Drova_Modding_API.Register;
+using Il2Cpp;
 using Il2CppDrova.GUI;
+using Il2CppInterop.Runtime.Attributes;
 using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using static UnityEngine.InputSystem.InputActionRebindingExtensions;
 
 namespace Drova_Modding_API.UI
@@ -12,7 +15,7 @@ namespace Drova_Modding_API.UI
     /**
      * This class is used to create a custom keybinding element for the option menu.
      */
-    [RegisterTypeInIl2Cpp]
+    [RegisterTypeInIl2CppWithInterfaces(typeof(ISelectHandler), typeof(ISubmitHandler))]
     public class GUI_Options_Controls_KeyFieldElement_Custom(IntPtr ptr) : MonoBehaviour(ptr)
     {
         Button _keybindingButton;
@@ -26,7 +29,7 @@ namespace Drova_Modding_API.UI
         GameObject _keyboard;
         GameObject? _exitButton;
         RebindingOperation? _rebindOperation;
-
+        
         private const string GamePadGroup = "Gamepad";
         private const string KeyboardGroup = "Keyboard;Mouse";
 
@@ -43,6 +46,7 @@ namespace Drova_Modding_API.UI
         /**
          * Initialize the keybinding element.
          */
+        [HideFromIl2Cpp]
         public void Init(string actionName, GameObject? exitButton = null)
         {
             _exitButton = exitButton;
@@ -86,6 +90,7 @@ namespace Drova_Modding_API.UI
             InputSystem.add_onDeviceChange(new Action<InputDevice, InputDeviceChange>(this.OnDeviceChange));
         }
 
+        [HideFromIl2Cpp]
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
         {
             bool isGamePad = device.TryCast<Gamepad>() != null;
@@ -99,6 +104,7 @@ namespace Drova_Modding_API.UI
             }
         }
 
+        [HideFromIl2Cpp]
         private void InitGamepad()
         {
             _controllerButton.gameObject.SetActive(true);
@@ -114,12 +120,14 @@ namespace Drova_Modding_API.UI
             _controllerKeybindingText.text = action.bindings[bindingIndex].ToDisplayString();
         }
 
+        [HideFromIl2Cpp]
         private void RemoveGamepad()
         {
             _controllerButton.onClick.RemoveAllListeners();
             _controllerButton.gameObject.SetActive(false);
         }
 
+        [HideFromIl2Cpp]
         private void InitKeyboard()
         {
             _keyboard.SetActive(true);
@@ -135,6 +143,7 @@ namespace Drova_Modding_API.UI
             _keybindingText.text = action.bindings[bindingIndex].ToDisplayString();
         }
 
+        [HideFromIl2Cpp]
         private void Init()
         {
             if (Gamepad.current != null)
@@ -148,18 +157,21 @@ namespace Drova_Modding_API.UI
             InitKeyboard();
         }
 
+        [HideFromIl2Cpp]
         private void RegisterListen()
         {
             _keybindingText.text = "...";
             ListenForRebinding(_keybindingText, KeyboardGroup, "<Gamepad>");
         }
 
+        [HideFromIl2Cpp]
         private void RegisterListenController()
         {
             _controllerKeybindingText.text = "...";
             ListenForRebinding(_controllerKeybindingText, GamePadGroup, "<Keyboard>", "<Pointer>");
         }
 
+        [HideFromIl2Cpp]
         private void ListenForRebinding(TextMeshProUGUI textMesh, string group, string excludeGroup, string secondaryExcludeGroup = null)
         {
             InputAction action = InputActionRegister.Instance[_actionName];
@@ -207,6 +219,7 @@ namespace Drova_Modding_API.UI
             rebindOperation.Start();
         }
 
+        [HideFromIl2Cpp]
         private void FinishRebinding(RebindingOperation operation)
         {
             InputActionRegister.isMappingCurrently = false;
@@ -218,6 +231,7 @@ namespace Drova_Modding_API.UI
             operation.Dispose();
         }
 
+        [HideFromIl2Cpp]
         private void CancelCurrentRebinding()
         {
             if (_rebindOperation == null)
@@ -228,6 +242,45 @@ namespace Drova_Modding_API.UI
             RebindingOperation operation = _rebindOperation;
             _rebindOperation = null;
             operation.Cancel();
+        }
+
+        /// <summary>
+        /// Implements ISelectHandler to ensure that when the row is selected, the appropriate button (controller or keyboard) is also selected for visual feedback.
+        /// </summary>
+        /// <param name="eventData"></param>
+        public void OnSelect(BaseEventData eventData)
+        {
+            // OnSelect is called when the GameObject itself is selected by the EventSystem.
+            // This is primarily used for controller navigation to ensure visual feedback.
+            // In Drova's UI, when a row is selected, it should highlight the interactable button.
+            
+            if (Gamepad.current == null) return;
+
+            // Select the appropriate button based on active device group
+            if (_controllerButton != null && _controllerButton.gameObject.activeInHierarchy)
+            {
+                _controllerButton.Select();
+            }
+            else if (_keybindingButton != null && _keybindingButton.gameObject.activeInHierarchy)
+            {
+                _keybindingButton.Select();
+            }
+        }
+
+        /// <summary>
+        /// Implements ISubmitHandler to ensure that when the user presses the submit button (e.g., "A" on a controller), it triggers the rebinding process for the appropriate button.
+        /// </summary>
+        /// <param name="eventData"></param>
+        public void OnSubmit(BaseEventData eventData)
+        {
+            if (Gamepad.current != null)
+            {
+                RegisterListenController();
+            }
+            else
+            {
+                RegisterListen();
+            }
         }
     }
 }

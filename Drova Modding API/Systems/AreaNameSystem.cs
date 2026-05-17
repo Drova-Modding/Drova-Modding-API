@@ -4,6 +4,11 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems
 {
+    /**
+     * The delegate that is called when the player enters or leaves a region.
+     */
+    public delegate void RegionChanged(Region region, bool hasEntered);
+
     /// <summary>
     /// A system that manages the area names.
     /// </summary>
@@ -11,14 +16,13 @@ namespace Drova_Modding_API.Systems
     [RegisterTypeInIl2Cpp]
     public class AreaNameSystem(IntPtr ptr) : MonoBehaviour(ptr)
     {
-        private static AreaNameSystem _instance;
+        private static AreaNameSystem? _instance;
 
-        private readonly List<Region> regions = [];
+        /// <summary>
+        /// The regions the Player is currently in
+        /// </summary>
+        internal readonly List<Region> Regions = [];
 
-        /**
-         * The delegate that is called when the player enters or leaves a region.
-         */
-        public delegate void RegionChanged(Region region, bool hasEntered);
 
         /**
          * The event that is called when the player enters or leaves a region.
@@ -29,8 +33,10 @@ namespace Drova_Modding_API.Systems
         /**
          * The instance of the AreaNameSystem.
          */
+        [HideFromIl2Cpp]
         public static AreaNameSystem? Instance
         {
+            [HideFromIl2Cpp]
             get
             {
                 return _instance;
@@ -52,35 +58,40 @@ namespace Drova_Modding_API.Systems
         /// Called when the player enters an area.
         /// </summary>
         /// <param name="areaName">The name of the area</param>
+        [HideFromIl2Cpp]
         public void OnAreaEntered(string areaName)
         {
-            regions.Add(RegionExtensions.GetRegionByName(areaName));
-            OnRegionChanged?.Invoke(RegionExtensions.GetRegionByName(areaName), true);
+            Region region = RegionExtensions.GetRegionByName(areaName);
+            Regions.Add(region);
+            OnRegionChanged?.Invoke(region, true);
         }
 
         /// <summary>
         /// Called when the player leaves an area.
         /// </summary>
         /// <param name="areaName">The name of the area</param>
+        [HideFromIl2Cpp]
         public void UnregisterAreaName(string areaName)
         {
-            if (regions.Remove(RegionExtensions.GetRegionByName(areaName)))
+            Region region = RegionExtensions.GetRegionByName(areaName);
+            if (Regions.Remove(region))
             {
-                OnRegionChanged?.Invoke(RegionExtensions.GetRegionByName(areaName), false);
+                OnRegionChanged?.Invoke(region, false);
             }
         }
 
         /// <summary>
-        /// Checks if the player is currently in a cave. This is determined by checking if any of the current regions are caves.
+        /// Checks if the player is currently in a cave. This is determined by checking if any of the current Regions are caves.
         /// </summary>
         /// <returns></returns>
+        [HideFromIl2Cpp]
         public bool IsInCave()
         {
 #if DEBUG
-            MelonLogger.Msg("Checking if player is in a cave. Current regions: " + string.Join(", ", regions.Select(r => r.ToString())));
-            MelonLogger.Msg("Is player in cave? " + regions.IsARegionInCave());
+            MelonLogger.Msg("Checking if player is in a cave. Current Regions: " + string.Join(", ", Regions.Select(r => r.ToString())));
+            MelonLogger.Msg("Is player in cave? " + Regions.IsARegionInCave());
 #endif
-            return regions.IsARegionInCave();
+            return Regions.IsARegionInCave();
         }
     }
 }

@@ -6,6 +6,8 @@ using Drova_Modding_API.Systems.GlobalVars;
 #endif
 using Drova_Modding_API.Systems.SaveGame;
 using Drova_Modding_API.Systems.SaveGame.Store;
+using Drova_Modding_API.Systems.Spawning;
+using Drova_Modding_API.Systems.Talents;
 using Drova_Modding_API.Systems.WorldEvents;
 using Il2CppDrova.Saveables;
 using UnityEngine;
@@ -17,13 +19,14 @@ namespace Drova_Modding_API.Systems
     {
         internal static void Init()
         {
+            TalentContainerDatabase.InitializeDatabase();
             if (ProviderAccess.TryGetGameManager(out Il2Cpp.GameManager gameManager))
             {
                 GameObject moddingAPISystemRoot = new("ModdingAPI");
                 moddingAPISystemRoot.SetActive(false);
                 AreaNameSystem areaNameSystem = moddingAPISystemRoot.AddComponent<AreaNameSystem>();
                 WorldEventSystemManager worldEventSystem = moddingAPISystemRoot.AddComponent<WorldEventSystemManager>();
-                worldEventSystem.areaNameSystem = areaNameSystem;
+                worldEventSystem.AreaNameSystem = areaNameSystem;
 #if DEBUG
                 moddingAPISystemRoot.AddComponent<GlobalVarInspectorSystem>();
 #endif
@@ -32,6 +35,7 @@ namespace Drova_Modding_API.Systems
                 // TODO Fix me, it doesn't move the object to the scene
                 SceneManager.MoveGameObjectToScene(moddingAPISystemRoot, gameManager.gameObject.scene);
                 SaveGameSystem.Instance.OnLoad(Savegame.Current);
+                NpcCreator.CacheAlignments();
             }
 #if DEBUG
             EditorUI.Init();

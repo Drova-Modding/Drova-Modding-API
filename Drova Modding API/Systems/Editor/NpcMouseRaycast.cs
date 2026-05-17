@@ -1,4 +1,4 @@
-﻿
+﻿#if DEBUG
 using Il2CppDrova;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using MelonLoader;
@@ -7,15 +7,20 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Editor
 {
     /// <summary>
-    /// A class that casts a ray from the mouse position and detects if it hits an NPC.
+    /// A class that casts a ray from the mouse position and detects if it _hits an NPC.
     /// </summary>
     /// <param name="ptr">Do not instantiate with new</param>
     [RegisterTypeInIl2Cpp]
     public class NpcMouseRaycast(IntPtr ptr) : MonoBehaviour(ptr)
     {
-#if DEBUG
-        private readonly Il2CppStructArray<RaycastHit2D> hits = new RaycastHit2D[10]; // Pre-allocated array for raycast results.
-        private readonly string[] IGNORED_LAYERS = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"]; // Layer to ignore when casting ray.
+        private readonly Il2CppStructArray<RaycastHit2D> _hits = new RaycastHit2D[10]; // Pre-allocated array for raycast results.
+        private readonly string[] _ignoredLayers = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"]; // Layer to ignore when casting ray.
+        private Camera _camera;
+        
+        internal void Awake()
+        {
+            _camera = Camera.main!;
+        }
 
         internal void Update()
         {
@@ -29,19 +34,19 @@ namespace Drova_Modding_API.Systems.Editor
         void CastRayFromMouse()
         {
             // Convert mouse position to world coordinates.
-            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 mousePosition = _camera.ScreenToWorldPoint(Input.mousePosition);
             Vector2 mousePosition2D = new(mousePosition.x, mousePosition.y);
 
             // Cast a ray from the mouse position.
-            int hitCount = Physics2D.RaycastNonAlloc(mousePosition2D, Vector2.down, hits, 10f);
+            int hitCount = Physics2D.RaycastNonAlloc(mousePosition2D, Vector2.down, _hits, 10f);
 
-            // Check if the ray hits something.
+            // Check if the ray _hits something.
             if (hitCount > 0)
             {
                 for (int i = 0; i < hitCount; i++)
                 {
-                    RaycastHit2D hit = hits[i];
-                    if (IGNORED_LAYERS.Any((ignore) => hit.collider.name == ignore)) continue;
+                    RaycastHit2D hit = _hits[i];
+                    if (_ignoredLayers.Any((ignore) => hit.collider.name == ignore)) continue;
                     Actor npc = hit.collider.GetComponent<Actor>();
                     // Npc Shadow
                     if (npc != null)
@@ -59,6 +64,6 @@ namespace Drova_Modding_API.Systems.Editor
                 }
             }
         }
-#endif
     }
 }
+#endif

@@ -1,4 +1,6 @@
-﻿namespace Drova_Modding_API.Systems
+﻿using MelonLoader;
+
+namespace Drova_Modding_API.Systems
 {
     /**
      * Regions in the game.

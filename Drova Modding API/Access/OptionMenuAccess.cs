@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.UI.Builder;
+﻿using Drova_Modding_API.GlobalFields;
+using Drova_Modding_API.UI.Builder;
 using Il2Cpp;
 using Il2CppDrova.GUI;
 using MelonLoader;
@@ -13,20 +14,20 @@ namespace Drova_Modding_API.Access
     public class OptionMenuAccess
     {
         private OptionMenuAccess() { }
-        private GUI_Window _GUI_Window;
-        private Transform moddingPanel;
-        private readonly List<string> idsAdded = [];
-        private GUI_Window_ATabManager.GUI_TabPanel guiPanel;
+        private GUI_Window _guiWindow;
+        private Transform? _moddingPanel;
+        private readonly List<string> _idsAdded = [];
+        private GUI_Window_ATabManager.GUI_TabPanel _guiPanel;
         private const string ScrollBarName = "ScrollRectView";
-        /**
-         * The name of the scene where the option menu is located.
-         */
+        /// <summary>
+        /// Obsolete and will be replaced later on
+        /// </summary>
+        [Obsolete("Use instead SceneNames")]
         public const string OptionSceneName = "RuntimeScene_GUI";
-        private static readonly OptionMenuAccess _instance = new();
         /**
          * The instance of the option menu access.
          */
-        public static OptionMenuAccess Instance { get; } = _instance;
+        public static OptionMenuAccess Instance { get; } = new();
 
         /**
          * Delegate for the option menu open/close action.
@@ -43,14 +44,20 @@ namespace Drova_Modding_API.Access
         */
         public event OptionMenuAction OnOptionMenuClose;
 
+        /**
+         * Returns true if the option menu is open.
+         */
+        public bool IsMenuOpen { get; private set; }
+
         internal static void OnOptionOpen()
         {
-            GameObject guiWindow = _instance.GetGUIWindow();
+            GameObject guiWindow = Instance.GetGUIWindow();
             if (!guiWindow)
             {
                 return;
             }
-            _instance.OnOptionMenuOpen.Invoke();
+            Instance.IsMenuOpen = true;
+            Instance.OnOptionMenuOpen.Invoke();
             GUI_Window_Options manager = guiWindow.GetComponent<GUI_Window_Options>();
             // Workaround for Update 1.0.2.1 where the modded panel is not activated for whatever reason.
             if (manager._currentPanelIndex == -1 || manager._currentPanelIndex >= 5)
@@ -61,16 +68,18 @@ namespace Drova_Modding_API.Access
 
         internal static void OnOptionClose()
         {
-            GameObject window = _instance.GetGUIWindow();
+            GameObject window = Instance.GetGUIWindow();
             if (!window)
             {
-                _instance.idsAdded.Clear();
+                Instance.IsMenuOpen = false;
+                Instance._idsAdded.Clear();
                 return;
             }
             if (!window.gameObject.activeSelf)
             {
+                Instance.IsMenuOpen = false;
                 window.GetComponent<GUI_Window_Options>()._currentPanelIndex = 0;
-                _instance.OnOptionMenuClose.Invoke();
+                Instance.OnOptionMenuClose.Invoke();
             }
         }
 
@@ -80,7 +89,7 @@ namespace Drova_Modding_API.Access
          * @param name The name of the header. It needs to be unique and named liked: GUI_Button_OptionTab_YOUROPTION.
          * @return The created transfrom for the builder or if the Elements already exists null.
          */
-        public Transform AddPanel(Sprite icon, string name)
+        public Transform? AddPanel(Sprite? icon, string name)
         {
             if (!name.StartsWith("GUI_Button_OptionTab_"))
             {
@@ -116,31 +125,35 @@ namespace Drova_Modding_API.Access
             if (!componentToRegister) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimationElement");
 
             GameObject scrollbar = GetScrollBar(panel);
-            if (!scrollbar) MelonLogger.Error("Failed to get scrollbar");
-            scrollbar.name = ScrollBarName;
-
-            Transform layoutGroup = scrollbar.transform.GetChild(0);
-            if (!layoutGroup) MelonLogger.Error("Failed to get LayoutGroup");
-            layoutGroup?.DestroyAllChildren();
-
-            GUI_ButtonNavigationAnimation nagivation = root.GetComponent<GUI_ButtonNavigationAnimation>();
-            if (!nagivation) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimation");
-            nagivation?.AddElement(componentToRegister);
-
-            GameObject window = GetGUIWindow();
-            if (window)
+            if (scrollbar != null)
             {
-                window.GetComponent<GUI_GameMenu_NavigationSwitcher>().legacyElements.Add(componentToRegister);
-                OverrideNavigation(newHeader, panel);
+                scrollbar.name = ScrollBarName;
+
+                Transform layoutGroup = scrollbar.transform.GetChild(0);
+                if (!layoutGroup) MelonLogger.Error("Failed to get LayoutGroup");
+                layoutGroup?.DestroyAllChildren();
+
+                GUI_ButtonNavigationAnimation navigation = root.GetComponent<GUI_ButtonNavigationAnimation>();
+                if (!navigation) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimation");
+                navigation?.AddElement(componentToRegister);
+
+                GameObject window = GetGUIWindow();
+                if (window)
+                {
+                    window.GetComponent<GUI_GameMenu_NavigationSwitcher>().legacyElements.Add(componentToRegister);
+                    OverrideNavigation(newHeader, panel);
+                }
+                else
+                {
+                    MelonLogger.Error("Failed to get GetGUIWindow");
+                }
+                return layoutGroup;
             }
-            else
-            {
-                MelonLogger.Error("Failed to get GetGUIWindow");
-            }
-            return layoutGroup;
+            MelonLogger.Error("Failed to get scrollbar");
+            return null;
         }
 
-        private static GameObject GetScrollBar(GameObject panel)
+        private static GameObject? GetScrollBar(GameObject panel)
         {
             return panel.transform.GetChild(1)?.gameObject;
         }
@@ -152,15 +165,15 @@ namespace Drova_Modding_API.Access
          */
         private void OverrideNavigation(GameObject header, GameObject panel)
         {
-            GUI_Window_Options manager = GetGUIWindow().GetComponent<GUI_Window_Options>();
+            GUI_Window_Options manager = GetGUIWindow()?.GetComponent<GUI_Window_Options>();
             if (!manager) { MelonLogger.Error("Failed to get manager to override the navigation"); return; }
-            guiPanel = new GUI_Window_ATabManager.GUI_TabPanel
+            _guiPanel = new GUI_Window_ATabManager.GUI_TabPanel
             {
                 Instance = panel.GetComponent<GUI_GameMenu_APanel>(),
                 Id = header.transform.GetSiblingIndex() + 1,
                 NavigationElement = header.GetComponent<GUI_ButtonNavigationAnimationElement>()
             };
-            manager.GuiPanels.Add(guiPanel);
+            manager.GuiPanels.Add(_guiPanel);
             manager.SetupPanelNavigationElements();
             // Rerender panel, otherwise its empty. 
             manager.ChangePanelDefault(0);
@@ -171,7 +184,7 @@ namespace Drova_Modding_API.Access
          * @param header The header to add the panel to. It needs a name with GUI_Button_OptionTab_YOUROPTION
          * @return The created panel game object.
          */
-        private static GameObject AddPanel(GameObject header)
+        private static GameObject? AddPanel(GameObject header)
         {
             GameObject root = GetRootOfOptionWindow();
             Transform panelPrefab = root.transform.GetChild(4);
@@ -202,34 +215,34 @@ namespace Drova_Modding_API.Access
         /// </summary>
         /// <param name="id">Unique identifier for your mod</param>
         /// <returns></returns>
-        public OptionUIBuilder GetBuilder(string id)
+        public OptionUIBuilder? GetBuilder(string id)
         {
-            if (!moddingPanel)
+            if (!_moddingPanel)
             {
-                moddingPanel = AddPanel(null, "GUI_Button_OptionTab_Modding");
+                _moddingPanel = AddPanel(null, "GUI_Button_OptionTab_Modding");
             }
-            if (!moddingPanel) return null;
-            if (idsAdded.Contains(id)) return null;
-            idsAdded.Add(id);
-            return new OptionUIBuilder(moddingPanel);
+            if (!_moddingPanel) return null;
+            if (_idsAdded.Contains(id)) return null;
+            _idsAdded.Add(id);
+            return new OptionUIBuilder(_moddingPanel);
         }
 
         /**
          * Get the GUI window.
          * @return The root of the option window.
          */
-        public GameObject GetGUIWindow()
+        public GameObject? GetGUIWindow()
         {
-            if (_GUI_Window)
+            if (_guiWindow)
             {
-                return _GUI_Window.gameObject;
+                return _guiWindow.gameObject;
             }
             Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<GUI_Window> allWindows = UnityEngine.Object.FindObjectsByType<GUI_Window>(FindObjectsSortMode.None);
             foreach (GUI_Window window in allWindows)
             {
-                if (window.gameObject.scene.name == OptionSceneName && window.name == "GUI_Window_Options(Clone)")
+                if (window.gameObject.scene.name == SceneNames.OptionSceneName && window.name == "GUI_Window_Options(Clone)")
                 {
-                    _GUI_Window = window;
+                    _guiWindow = window;
                     return window.gameObject;
                 }
             }

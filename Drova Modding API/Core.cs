@@ -13,7 +13,7 @@ using MelonLoader;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.0", "Drova Modding", null)]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.1", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
@@ -24,10 +24,10 @@ namespace Drova_Modding_API
      */
     public class Core : MelonMod
     {
-        internal static string AssemblyLocation;
-        internal bool _inMainMenu = false;
+        internal static string? AssemblyLocation;
+        internal bool InMainMenu = false;
 #if DEBUG
-        private readonly InputAction consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
+        private readonly InputAction _consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
 #endif
 
         /// <inheritdoc/>
@@ -35,13 +35,13 @@ namespace Drova_Modding_API
         {
             base.OnInitializeMelon();
 #if DEBUG
-            consoleAction.Enable();
+            _consoleAction.Enable();
 #endif
             SystemInit.RegisterStores();
             LoggerInstance.Msg("Initialized Modding API.");
             OptionMenuAccess.Instance.OnOptionMenuClose += () =>
             {
-                if (!_inMainMenu) InputActionRegister.Instance.EnableGameplayActions();
+                if (!InMainMenu) InputActionRegister.Instance.EnableGameplayActions();
                 InputActionRegister.Instance.SaveActions();
             };
             OptionMenuAccess.Instance.OnOptionMenuOpen += () =>
@@ -67,7 +67,7 @@ namespace Drova_Modding_API
                 //_ttsFile.CreateDialogueFile();
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
-                _inMainMenu = true;
+                InMainMenu = true;
             }
             if (sceneName == SceneNames.GameplayMain)
             {
@@ -75,7 +75,8 @@ namespace Drova_Modding_API
                 OptionMenuAccess.OnOptionClose();
                 SystemInit.Init();
                 InputActionRegister.Instance.EnableGameplayActions();
-                _inMainMenu = false;
+                InMainMenu = false;
+
             }
             // if (sceneName == SceneNames.AILogic)
             // {
@@ -99,9 +100,11 @@ namespace Drova_Modding_API
         {
             base.OnUpdate();
 #if DEBUG
-            if (consoleAction.WasReleasedThisFrame())
+            if (_consoleAction.WasReleasedThisFrame())
             {
-                ProviderAccess.GetCheatGameHandler().EnableCheatMode(!ProviderAccess.GetCheatGameHandler().IsCheatModeEnabled);
+                var cheatHandler = ProviderAccess.GetCheatGameHandler();
+                if (cheatHandler == null) return;
+                cheatHandler.EnableCheatMode(!cheatHandler.IsCheatModeEnabled);
             }
 #endif
         }

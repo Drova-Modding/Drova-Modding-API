@@ -132,9 +132,11 @@ namespace Drova_Modding_API.Generation
             for (int i = 0; i < buckets.Length; i++)
                 keys[i] = ReadObjectFromByteArray(keyData, buckets[i].dataOffset);
             MelonLogger.Msg("Keys created");
-            //var locator = new ResourceLocationMap("test", buckets.Length);
+            const int kBytesPerInt32 = 4;
+            const int k_EntryDataItemPerEntry = 7;
             int count = SerializationUtilities.ReadInt32FromByteArray(entryData, 0);
-            using (FileStream stream = File.Create(Path.Combine(assembly.Location, "..", "test.txt")))
+            string addressablesPath = Path.Combine(assembly.Location, "..", "addressables.txt");
+            using (FileStream stream = File.Create(addressablesPath))
             {                     //var locations = new IResourceLocation[count];
                 StringBuilder sb = new();
                 for (int i = 0; i < count; i++)
@@ -160,7 +162,7 @@ namespace Drova_Modding_API.Generation
                 stream.Write(Encoding.ASCII.GetBytes(sb.ToString()));
             }
 
-            MelonLogger.Msg("File Created");
+            MelonLogger.Msg("Addressable File Created at " + addressablesPath);
 
         }
     }

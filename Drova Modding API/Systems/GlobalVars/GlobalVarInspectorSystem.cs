@@ -22,7 +22,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
         private const float DefaultWindowHeight = 900f;
         private const float MinScrollHeight = 220f;
         private const float RowHeight = 24f;
-
+        
         private readonly record struct ListRow(GVarList List, string Name);
         private readonly record struct VarRow(AGVarBase Var, string TypeName, string Name);
 
