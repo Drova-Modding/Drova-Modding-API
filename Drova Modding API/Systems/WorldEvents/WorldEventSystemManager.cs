@@ -29,6 +29,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         private short _skipOnEvents = 0;
         private object? _cooldownCoroutine;
         internal AreaNameSystem AreaNameSystem;
+        private readonly WaitForSeconds _startEventCooldown = new(1);
 
         /**
          * The instance of the WorldEventSystemManager.
@@ -132,9 +133,10 @@ namespace Drova_Modding_API.Systems.WorldEvents
         {
             while (true)
             {
+                
                 if (OptionMenuAccess.Instance?.IsMenuOpen == true || IsPlayerInDialogueOrTeleporting())
                 {
-                    yield return new WaitForSeconds(1);
+                    yield return _startEventCooldown;
                     continue;
                 }
 
@@ -151,7 +153,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 }
                 else
                 {
-                    yield return new WaitForSeconds(1);
+                    yield return _startEventCooldown;
                 }
 
                 if (CurrentEvent == null && WorldEvents.Count > 0 && !IsPlayerInBlockedRegion())
