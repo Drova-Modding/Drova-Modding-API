@@ -34,6 +34,25 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
+        private static bool _templatePrewarmed;
+
+        /// <summary>
+        /// Pre-loads the Human NPC template and caches alignment lookups so the first
+        /// <see cref="Create"/> call doesn't stall on Addressables I/O. Safe to call multiple
+        /// times — later invocations are no-ops. Call once during mod startup.
+        /// </summary>
+        public static void Prewarm()
+        {
+            CacheAlignments();
+
+            if (_templatePrewarmed) return;
+            // LoadAssetAsync keeps the GameObject template resident; later InstantiateAsync
+            // calls resolve from cache instead of hitting disk/AssetBundle.
+            var op = AddressableAccess.NPCs.Human_Template.LoadAssetAsync();
+            op.WaitForCompletion();
+            _templatePrewarmed = true;
+        }
+
         private readonly string _name;
         private readonly Vector2 _spawnPosition;
         private readonly List<INpcModule> _modules = new();
@@ -85,7 +104,7 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Adds a cosmetic item to the NPC by readable ID (hair, beard, helmet, etc.).
         /// Multiple calls reuse the same <see cref="CosmeticsPresetModule"/> module.
         /// </summary>
-        /// <param name="readableId">The item readable ID from <see cref="GlobalFields.ItemReadableIds"/>.</param>
+        /// <param name="readableId">The item-readable ID from <see cref="GlobalFields.ItemReadableIds"/>.</param>
         public NpcCreator WithCosmetic(string readableId)
         {
             if (_cosmeticsPreset == null)
@@ -116,7 +135,7 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Adds an equipment item to the NPC inventory by readable ID.
         /// Multiple calls reuse the same <see cref="EquipmentPresetModule"/> module.
         /// </summary>
-        /// <param name="readableId">The item readable ID from <see cref="GlobalFields.ItemReadableIds"/>.</param>
+        /// <param name="readableId">The item-readable ID from <see cref="GlobalFields.ItemReadableIds"/>.</param>
         public NpcCreator WithItem(string readableId)
         {
             if (_equipmentPreset == null)
@@ -164,14 +183,25 @@ namespace Drova_Modding_API.Systems.Spawning
             npc.name = _name;
 
             var context = new ModuleContext(npc);
-            var orderedModules = _modules
-                .Select((module, index) => new { module, index })
-                .OrderBy(item => item.module.Priority)
-                .ThenBy(item => item.index)
-                .Select(item => item.module);
 
-            foreach (var module in orderedModules)
-                module.Apply(context);
+            // Stable sort by Priority in-place.
+            int count = _modules.Count;
+            if (count > 1)
+            {
+                bool needsSort = false;
+                for (int i = 1; i < count; i++)
+                {
+                    if (_modules[i].Priority < _modules[i - 1].Priority) { needsSort = true; break; }
+                }
+                if (needsSort)
+                {
+                    var sorted = _modules.OrderBy(m => m.Priority).ToArray();
+                    for (int i = 0; i < count; i++) _modules[i] = sorted[i];
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+                _modules[i].Apply(context);
 
             return npc;
         }
