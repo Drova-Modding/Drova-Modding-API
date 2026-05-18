@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.2 - 2026-05-18]
+
+### Fixed
+- Fixed an issue where the loading screen could freeze
+
 ## [0.4.1 - 2026-05-16]
 ### Added
 - World event handling infrastructure with EncounterEvent, PersistentEncounterEvent, RegionalEventRegistry, WorldEventPicker, and WorldEventSystemManager
