@@ -48,8 +48,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (_templatePrewarmed) return;
             // LoadAssetAsync keeps the GameObject template resident; later InstantiateAsync
             // calls resolve from cache instead of hitting disk/AssetBundle.
-            var op = AddressableAccess.NPCs.Human_Template.LoadAssetAsync();
-            op.WaitForCompletion();
+            AddressableAccess.NPCs.Human_Template.LoadAssetAsync();
             _templatePrewarmed = true;
         }
 
