@@ -70,16 +70,13 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             var inventory = context.GetComponentInChildren<Inventory_StartupEquipSettings>();
             if (inventory == null) return;
 
-            if (inventory._equipPreset == null)
-            {
-                inventory._equipPreset = ScriptableObject.CreateInstance<ActorEquipPreset>();
-            }
+            var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
 
-            if (inventory._equipPreset._spellEquipPreset == null)
+            if (equipPreset._spellEquipPreset == null)
             {
                 var spellPreset = ScriptableObject.CreateInstance<SpellEquipPreset>();
                 InitializeSpellPreset(spellPreset);
-                inventory._equipPreset._spellEquipPreset = spellPreset;
+                equipPreset._spellEquipPreset = spellPreset;
             }
 
             var pendingFlows = new List<Item>();
@@ -110,11 +107,11 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                 pendingFlows.Add(handle.Result);
             }
 
-            var slots = inventory._equipPreset._spellEquipPreset._slots;
+            var slots = equipPreset._spellEquipPreset._slots;
             if (slots == null || slots.Count == 0)
             {
-                InitializeSpellPreset(inventory._equipPreset._spellEquipPreset);
-                slots = inventory._equipPreset._spellEquipPreset._slots;
+                InitializeSpellPreset(equipPreset._spellEquipPreset);
+                slots = equipPreset._spellEquipPreset._slots;
                 if (slots == null || slots.Count == 0) return;
             }
 

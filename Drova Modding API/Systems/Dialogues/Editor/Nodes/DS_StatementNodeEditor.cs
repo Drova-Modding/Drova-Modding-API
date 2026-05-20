@@ -1,4 +1,5 @@
-﻿using Il2CppNodeCanvas.DialogueTrees;
+﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
+using Il2CppNodeCanvas.DialogueTrees;
 
 using UnityEngine;
 
@@ -23,13 +24,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             if (CastedNode == null) return;
 
             Color previousColor = GUI.color;
-            GUI.color = Color.green;
-            GUI.Box(new(position.x, position.y, nodeSize.x, nodeSize.y + 50), new GUIContent("DS_StatementNode", CastedNode.GetLocalizedString()));
-
             Color previousBackgroundColor = GUI.backgroundColor;
 
-            GUI.backgroundColor = Color.black;
             GUI.color = Color.white;
+            GUI.Box(new(position.x, position.y, nodeSize.x, nodeSize.y + 50), new GUIContent("DS_StatementNode", CastedNode.GetLocalizedString()), EditorBoxStyles.StatementNode);
 
             // Editable TextFields for type and property
             if (CastedNode.statement.useGlobalLoca)

@@ -1,5 +1,6 @@
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Systems.Spawning.Modules;
+using Il2CppDrova.Utilities.LazyLoading;
 using Random = System.Random;
 using UnityEngine;
 
@@ -357,6 +358,11 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 ;
         }
 
+        private static NpcCreator WithBanditRoutine(this NpcCreator creator)
+        {
+            return creator.WithModule(new RoutineModule());
+        }
+
         // ── Public factory methods ─────────────────────────────────────────────
 
         /// <summary>
@@ -410,6 +416,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         {
             var rng = Random.Shared;
             return new NpcCreator(name, position)
+                .WithBanditRoutine()
                 .WithBanditCosmetics(difficulty, rng)
                 .WithItem(AxeByDifficulty[DifficultyIndex(difficulty)])
                 .WithBanditCombatModules(difficulty, AxeHardBonusTalents, AxeTalentsByDifficulty)
@@ -417,6 +424,30 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 .WithBanditXp(difficulty)
                 .IsPlayerFriendly(false)
                 .Create();
+        }
+
+        /// <summary>
+        /// Lazy bandit armed with an axe. Uses the same template modules as <see cref="CreateAxeBandit"/>
+        /// but applies them on each lazy actor load.
+        /// </summary>
+        /// <param name="name">NPC display name.</param>
+        /// <param name="position">World spawn position.</param>
+        /// <param name="difficulty">Equipment quality tier.</param>
+        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
+        public static LazyActor CreateAxeBanditLazy(string name, Vector2 position,
+            BanditDifficulty difficulty = BanditDifficulty.Normal,
+            bool saveToLazyActorStore = false)
+        {
+            var rng = Random.Shared;
+            return new NpcCreator(name, position)
+                .WithBanditRoutine()
+                .WithBanditCosmetics(difficulty, rng)
+                .WithItem(AxeByDifficulty[DifficultyIndex(difficulty)])
+                .WithBanditCombatModules(difficulty, AxeHardBonusTalents, AxeTalentsByDifficulty)
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
+                .IsPlayerFriendly(false)
+                .CreateLazy(saveToLazyActorStore);
         }
 
         /// <summary>

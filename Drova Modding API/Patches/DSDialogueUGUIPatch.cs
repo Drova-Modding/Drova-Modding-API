@@ -1,15 +1,13 @@
-﻿using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
 using HarmonyLib;
 using Il2CppDrova.DialogueNew;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.DialogueTrees.UI;
-using MelonLoader;
 using UnityEngine;
 
 [HarmonyPatch(typeof(DS_DialogueUGUI), nameof(DS_DialogueUGUI.OnSubtitlesRequest), [typeof(SubtitlesRequestInfo)])]
-internal static class DS_DialogueUGUI_Patch
+internal static class DSDialogueUGUIPatch
 {
 #if DEBUG
     private static void Prefix(SubtitlesRequestInfo info, DS_DialogueUGUI __instance)
@@ -40,20 +38,3 @@ internal static class DS_DialogueUGUI_Patch
     }
 }
 
-//[HarmonyPatch(typeof(DS_DialogueUGUI), nameof(DS_DialogueUGUI.UnregisterDLGTreeEvents))]
-//internal static class DS_DialogueUGUI_Patch_UnregisterDLGTreeEvents
-//{
-//    private static void Prefix()
-//    {
-//        AudioLog.Msg("Unregistering DLGTree events");
-//    }
-//}
-
-//[HarmonyPatch(typeof(DS_DialogueUGUI), nameof(DS_DialogueUGUI.RegisterDLGTreeEvents))]
-//internal static class DS_DialogueUGUI_Patch_RegisterEvents
-//{
-//    private static void Prefix()
-//    {
-//        AudioLog.Msg("Registering DLGTree events");
-//    }
-//}

@@ -38,13 +38,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             float totalHeight = 70 + (130 * conditionCount);
 
             Color previousColor = GUI.color;
-            Color previousBg = GUI.backgroundColor;
 
             GUI.color = Color.white;
-            GUI.backgroundColor = new Color(0.15f, 0.2f, 0.45f, 0.95f);
             Rect drawRect = new(position.x, position.y, 380, totalHeight);
-            GUI.Box(drawRect, "GBoolConditionTask");
-            GUI.backgroundColor = previousBg;
+            GUI.Box(drawRect, "GBoolConditionTask", EditorBoxStyles.Task);
 
             Rect rect = new(position.x, position.y + 20, 220, 20);
             for (int i = 0; i < _castedTask.Conditions.Count; i++)

@@ -1,5 +1,4 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Register;
@@ -8,8 +7,8 @@ using Drova_Modding_API.Systems;
 using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
 
-
 #if DEBUG
+using Drova_Modding_API.Systems.Spawning.Templates;
 using UnityEngine.InputSystem;
 #endif
 
@@ -46,7 +45,6 @@ namespace Drova_Modding_API
             };
             OptionMenuAccess.Instance.OnOptionMenuOpen += () =>
             {
-
                 InputActionRegister.Instance.DisableGameplayActions();
             };
         }
@@ -76,7 +74,6 @@ namespace Drova_Modding_API
                 SystemInit.Init();
                 InputActionRegister.Instance.EnableGameplayActions();
                 InMainMenu = false;
-
             }
             // if (sceneName == SceneNames.AILogic)
             // {
@@ -100,6 +97,14 @@ namespace Drova_Modding_API
         {
             base.OnUpdate();
 #if DEBUG
+            if (Input.GetKeyDown(KeyCode.F5))
+            {
+                var player = PlayerAccess.GetPlayer();
+                if (player != null)
+                {
+                    BanditCreator.CreateAxeBanditLazy("lazy_test_axe_bandit", player.transform.position);
+                }
+            }
             if (_consoleAction.WasReleasedThisFrame())
             {
                 var cheatHandler = ProviderAccess.GetCheatGameHandler();

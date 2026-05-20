@@ -1,14 +1,13 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using HarmonyLib;
 using Il2CppDrova.GUI;
 
 [HarmonyPatch(typeof(GUI_Window_Options), "CloseWindow")]
-static class GUI_Window_Patch_Close
+static class GUIWindowPatchClose
 {
     private const string WindowName = "GUI_Window_Options(Clone)";
-#pragma warning disable IDE0051 // Remove unused private members
+    
     private static void Postfix(GUI_Window __instance)
-#pragma warning restore IDE0051 // Remove unused private members
     {
         if (__instance.name == WindowName)
             OptionMenuAccess.OnOptionClose();
@@ -16,15 +15,15 @@ static class GUI_Window_Patch_Close
 }
 
 [HarmonyPatch(typeof(GUI_Window), "ShowWindow")]
-static class GUI_Window_Patch_Open
+static class GUIWindowPatchOpen
 {
     private const string WindowName = "GUI_Window_Options(Clone)";
-#pragma warning disable IDE0051 // Remove unused private members
+    
     private static void Postfix(GUI_Window __instance)
-#pragma warning restore IDE0051 // Remove unused private members
     {
         if (__instance.name == WindowName)
             OptionMenuAccess.OnOptionOpen();
     }
 }
+
 

@@ -15,11 +15,11 @@ namespace Drova_Modding_API.Systems.Editor
     {
         private readonly Il2CppStructArray<RaycastHit2D> _hits = new RaycastHit2D[10]; // Pre-allocated array for raycast results.
         private readonly string[] _ignoredLayers = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"]; // Layer to ignore when casting ray.
-        private Camera _camera;
+        private Camera? _camera;
         
         internal void Awake()
         {
-            _camera = Camera.main!;
+            _camera = Camera.main;
         }
 
         internal void Update()
@@ -33,6 +33,8 @@ namespace Drova_Modding_API.Systems.Editor
 
         void CastRayFromMouse()
         {
+            if (!_camera) _camera = Camera.main;
+            if (!_camera) return;
             // Convert mouse position to world coordinates.
             Vector3 mousePosition = _camera.ScreenToWorldPoint(Input.mousePosition);
             Vector2 mousePosition2D = new(mousePosition.x, mousePosition.y);
@@ -49,14 +51,14 @@ namespace Drova_Modding_API.Systems.Editor
                     if (_ignoredLayers.Any((ignore) => hit.collider.name == ignore)) continue;
                     Actor npc = hit.collider.GetComponent<Actor>();
                     // Npc Shadow
-                    if (npc != null)
+                    if (npc)
                     {
                         EditorManager.TriggerNpcSelected(npc);
                         return;
                     }
                     npc = hit.collider.transform.parent.GetComponent<Actor>();
                     // NPC trigger colliders
-                    if (npc != null)
+                    if (npc)
                     {
                         EditorManager.TriggerNpcSelected(npc);
                         return;

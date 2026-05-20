@@ -1,7 +1,14 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.SaveGame;
+using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.Spawning.Modules;
+using Il2CppDrova;
 using Il2CppDrova.Alignment;
+using Il2CppDrova.Saveables;
+using Il2CppDrova.Utilities.LazyLoading;
+using MelonLoader;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Drova_Modding_API.Systems.Spawning
 {
@@ -56,6 +63,10 @@ namespace Drova_Modding_API.Systems.Spawning
         private readonly Vector2 _spawnPosition;
         private readonly List<INpcModule> _modules = new();
 
+        private readonly AssetReferenceGameObject _lazyActorReference = AddressableAccess.NPCs.Human_Template;
+        private AssetReference? _lazyEntityInfoReference = AddressableAccess.EntityInfos.EntityInfo_Bandit;
+        private EntityInfo? _customLazyEntityInfo;
+
         // Single shared preset instances — reused across calls on this builder.
         private CosmeticsPresetModule? _cosmeticsPreset;
         private EquipmentPresetModule? _equipmentPreset;
@@ -82,13 +93,32 @@ namespace Drova_Modding_API.Systems.Spawning
             return this;
         }
 
+        /// <summary>
+        /// Sets the entity info reference used by <see cref="CreateLazy"/>.
+        /// </summary>
+        public NpcCreator WithLazyEntityInfo(AssetReference entityInfoReference)
+        {
+            _lazyEntityInfoReference = entityInfoReference;
+            _customLazyEntityInfo = null;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets a preloaded custom entity info used by <see cref="CreateLazy"/>.
+        /// </summary>
+        public NpcCreator WithLazyEntityInfo(EntityInfo entityInfo)
+        {
+            _customLazyEntityInfo = entityInfo;
+            return this;
+        }
+
         // ── Convenience helpers ────────────────────────────────────────────────
 
         /// <summary>
         /// Adds a cosmetic item to the NPC (hair, beard, etc.).
         /// Multiple calls reuse the same <see cref="CosmeticsPresetModule"/> module.
         /// </summary>
-        public NpcCreator WithCosmetic(UnityEngine.AddressableAssets.AssetReferenceT<Il2CppDrova.Items.Item> item)
+        public NpcCreator WithCosmetic(AssetReferenceT<Il2CppDrova.Items.Item> item)
         {
             if (_cosmeticsPreset == null)
             {
@@ -119,7 +149,7 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Adds an equipment item to the NPC inventory.
         /// Multiple calls reuse the same <see cref="EquipmentPresetModule"/> module.
         /// </summary>
-        public NpcCreator WithItem(UnityEngine.AddressableAssets.AssetReferenceT<Il2CppDrova.Items.Item> item)
+        public NpcCreator WithItem(AssetReferenceT<Il2CppDrova.Items.Item> item)
         {
             if (_equipmentPreset == null)
             {
@@ -180,29 +210,73 @@ namespace Drova_Modding_API.Systems.Spawning
 
             GameObject npc = operation.Result;
             npc.name = _name;
+            ApplyModules(npc);
+            return npc;
+        }
 
-            var context = new ModuleContext(npc);
+        /// <summary>
+        /// Creates a lazy NPC and applies modules every time the runtime actor is loaded.
+        /// </summary>
+        /// <param name="saveToLazyActorStore">If true, writes lazy actor metadata to the save store for restore.</param>
+        /// <returns>The configured lazy actor handle.</returns>
+        public LazyActor CreateLazy(bool saveToLazyActorStore = false)
+        {
+            LazyActor lazyActor = LazyActorCreator.CreateLazyActor(_name, _lazyActorReference, _spawnPosition, _lazyEntityInfoReference, _customLazyEntityInfo, true);
 
-            // Stable sort by Priority in-place.
-            int count = _modules.Count;
-            if (count > 1)
+            // Register a pre-init callback so module logic runs before Actor.StartInitAsync.
+            // We cannot use ActorSpawnEvent because SpawnArgs is a non-blittable struct and
+            // Il2CppInterop refuses to convert the delegate.
+            LazyActorPreInitRegistry.Register(lazyActor, OnActorLoaded);
+
+            if (!saveToLazyActorStore)
             {
-                bool needsSort = false;
-                for (int i = 1; i < count; i++)
-                {
-                    if (_modules[i].Priority < _modules[i - 1].Priority) { needsSort = true; break; }
-                }
-                if (needsSort)
-                {
-                    var sorted = _modules.OrderBy(m => m.Priority).ToArray();
-                    for (int i = 0; i < count; i++) _modules[i] = sorted[i];
-                }
+                return lazyActor;
             }
 
-            for (int i = 0; i < count; i++)
-                _modules[i].Apply(context);
+            if (_lazyEntityInfoReference == null)
+            {
+                MelonLogger.Warning("NpcCreator.CreateLazy(saveToLazyActorStore: true) requires an entity-info addressable reference. Use WithLazyEntityInfo(AssetReference) when saving is needed.");
+                return lazyActor;
+            }
 
-            return npc;
+            IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            lazyActorStore.Add(new LazyActorSaveData(_name, _lazyActorReference.AssetGUID, _lazyEntityInfoReference.AssetGUID, lazyActor._guidstring));
+            return lazyActor;
+
+            void OnActorLoaded(Actor actor)
+            {
+                if (actor == null)
+                    return;
+                ApplyModules(actor.gameObject);
+            }
+        }
+
+        private void ApplyModules(GameObject npc)
+        {
+            MelonLogger.Msg("Applying modules");
+            var context = new ModuleContext(npc);
+            INpcModule[] modules = GetOrderedModules();
+            for (int i = 0; i < modules.Length; i++)
+                modules[i].Apply(context);
+        }
+
+        private INpcModule[] GetOrderedModules()
+        {
+            int count = _modules.Count;
+            if (count <= 1)
+                return _modules.ToArray();
+
+            bool needsSort = false;
+            for (int i = 1; i < count; i++)
+            {
+                if (_modules[i].Priority < _modules[i - 1].Priority) { needsSort = true; break; }
+            }
+
+            if (!needsSort)
+                return [.. _modules];
+
+            // LINQ OrderBy is stable, preserving insertion order for equal priorities.
+            return _modules.OrderBy(m => m.Priority).ToArray();
         }
 
         /// <summary>
@@ -212,5 +286,11 @@ namespace Drova_Modding_API.Systems.Spawning
         /// <param name="spawnPosition">Where to spawn it</param>
         public static GameObject CreateNpc(string name, Vector2 spawnPosition)
             => new NpcCreator(name, spawnPosition).Create();
+
+        /// <summary>
+        /// Convenience factory — creates a lazy NPC with default settings.
+        /// </summary>
+        public static LazyActor CreateLazyNpc(string name, Vector2 spawnPosition, bool saveToLazyActorStore = false)
+            => new NpcCreator(name, spawnPosition).CreateLazy(saveToLazyActorStore);
     }
 }

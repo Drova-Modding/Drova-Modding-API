@@ -1,9 +1,9 @@
-﻿using Drova_Modding_API.Register;
+using Drova_Modding_API.Register;
 using HarmonyLib;
 using Il2CppDrova.GUI;
 
 [HarmonyPatch(typeof(GUI_Window_Options), nameof(GUI_Window_Options.CloseWindow))]
-static class GUI_Window_Options_CloseWindowPatch
+static class GUIWindowOptionsCloseWindowPatch
 {
     static bool Prefix(GUI_Window_Options __instance)
     {
@@ -15,4 +15,5 @@ static class GUI_Window_Options_CloseWindowPatch
         return true; // Allow the original method to execute
     }
 }
+
 

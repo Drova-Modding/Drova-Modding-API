@@ -1,11 +1,9 @@
 using HarmonyLib;
-using Il2CppCysharp.Threading.Tasks;
 using Il2CppDrova;
 using MelonLoader;
-using UnityEngine;
 
 [HarmonyPatch(typeof(Actor), nameof(Actor.AddLoadingComp))]
-internal static class Actor_AddLoadingComp_Patch
+internal static class ActorAddLoadingCompPatch
 {
     private const int MaxDiagnosticLogs = 10;
     private static readonly HashSet<string> SeenMessages = [];
@@ -53,3 +51,4 @@ internal static class Actor_AddLoadingComp_Patch
         MelonLogger.Msg($"[AddLoadingComp] Suppressed warning for '{actor.name}': {message}");
     }
 }
+
