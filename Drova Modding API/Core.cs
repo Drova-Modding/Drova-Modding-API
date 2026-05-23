@@ -102,14 +102,6 @@ namespace Drova_Modding_API
         {
             base.OnUpdate();
 #if DEBUG
-            if (Input.GetKeyDown(KeyCode.F5))
-            {
-                var player = PlayerAccess.GetPlayer();
-                if (player != null)
-                {
-                    BanditCreator.CreateAxeBanditLazy("lazy_test_axe_bandit", player.transform.position + new Vector3(200, 150));
-                }
-            }
             if (_consoleAction.WasReleasedThisFrame())
             {
                 var cheatHandler = ProviderAccess.GetCheatGameHandler();

@@ -1,4 +1,19 @@
 # Changelog
+## [0.4.3 - 2026-05-32]
+
+### Added
+- Added a RoutineSystem for modders to define custom routines for Npcs. For now only wait points are supported.
+- Added NoSaveGuidRegistry to track spawned entities that should not be saved.
+- Added Npc creation via lazy, to prepare all fully fleshed npc since this is needed as part of the Drova Actor system and also to support the new RoutineSystem.
+- Added a Cleanup callback for INpcModules to clean up any spawned entities when the lazy actor is unloaded.
+
+### Changed
+- Clean up the codebase and added some nullables where appropriate
+
+### Fixed
+- Fixed that bandit spawned by the mod no longer saves their data in the Savegame when not intended by the mod developer.
+- Fixed a visual in the DS_HubNodeEdtior, it should now be better readable
+- Fixed starting gear of harder bandits, which was actually easy equipment on some
 
 ## [0.4.2 - 2026-05-18]
 

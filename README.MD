@@ -203,16 +203,6 @@ This project is provided as-is for modding purposes. See [LICENSE](./LICENSE) fo
 - Check that the Drova_Modding_API.dll is in your Mods folder
 - Verify your mod has the correct MelonAdditionalDependencies attribute
 
-**Q: Getting IL2Cpp errors**
-- This is expected behavior with IL2Cpp mods
-- Ensure you're following the IL2Cpp modding guide from MelonWiki
-- Use UnhollowerBaseLib types for game object interactions
-
-**Q: Dialogue Editor crashes**
-- Try clearing the cache and rebuilding
-- Ensure nodes are properly connected
-- Check the console for detailed error messages
-
 ## Contributing
 
 Feel free to contribute to this project! We welcome:
