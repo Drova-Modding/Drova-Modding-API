@@ -46,7 +46,7 @@ See [Wiki](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
 - Create your own loc files for your mods
 - Easier access to the Drova Providers and GameManager and Player
 - Access to the Addressables, including GUI, Items/Recipies/Spells, Creatures, Bandits and Interactions
-- Spawning persistent and non-persistent actors in the world
+- Spawning actors with the lazy actor system for save/load persistence
 - Event System to hook into the game events and create your own events
 - Dialog System with 40+ nodes to create your own dialogs and hook into the existing ones
 - Area Name System to know where the player is currently
@@ -69,35 +69,103 @@ public class MyModMenu : MelonMod
 }
 ```
 
-### Spawning Bandits
+### Subscribing to Slider Changes
+```csharp
+public class MyModMenu : MelonMod
+{
+    private const string MinKey = "MyModMin";
+    private const string MaxKey = "MyModMax";
+
+    public override void OnInitializeMelon()
+    {
+        OptionMenuAccess.Instance.OnOptionMenuOpen += BuildOptions;
+    }
+
+    private void BuildOptions()
+    {
+        var builder = OptionMenuAccess.Instance.GetBuilder("MyMod");
+        if (builder == null) return;
+
+        List<GameObject> built = builder
+            .CreateTitle(LocalizationAccess.GetLocalizedString("MyMod", "Title"))
+            .CreateSlider(LocalizationAccess.GetLocalizedString("MyMod", "MinLabel"), MinKey, 1, 120, 30)
+            .CreateSlider(LocalizationAccess.GetLocalizedString("MyMod", "MaxLabel"), MaxKey, 2, 360, 60)
+            .Build();
+
+        // Layout: 0 title, 1 min slider, 2 max slider
+        if (built.Count < 3) return;
+
+        Slider minSlider = built[1].GetComponentInChildren<Slider>();
+        GUI_ConfigOption_Slider minOptions = built[1].GetComponentInChildren<GUI_ConfigOption_Slider>();
+        Slider maxSlider = built[2].GetComponentInChildren<Slider>();
+        GUI_ConfigOption_Slider maxOptions = built[2].GetComponentInChildren<GUI_ConfigOption_Slider>();
+        if (minSlider == null || minOptions == null || maxSlider == null || maxOptions == null) return;
+
+        minSlider.onValueChanged.AddListener(new Action<float>((value) =>
+        {
+            if (value >= maxSlider.value)
+            {
+                maxOptions.OnValueChangedListener(value + 1);
+                maxOptions.UpdateOptionValue((int)value + 1);
+            }
+
+            // Run your mod logic when slider changes.
+            ApplyRuntimeChanges((int)value, (int)maxSlider.value);
+        }));
+
+        maxSlider.onValueChanged.AddListener(new Action<float>((value) =>
+        {
+            if (value <= minSlider.value)
+            {
+                minOptions.OnValueChangedListener(value - 1);
+                minOptions.UpdateOptionValue((int)value - 1);
+            }
+
+            // Run your mod logic when slider changes.
+            ApplyRuntimeChanges((int)minSlider.value, (int)value);
+        }));
+    }
+
+    private static void ApplyRuntimeChanges(int minMinutes, int maxMinutes)
+    {
+        // Example: update your own event scheduler/audio range/etc.
+    }
+}
+```
+
+### Spawning Bandits (Lazy Actors)
 ```csharp
 public class BanditSpawner : MelonMod
 {
     public override void OnInitializeMelon()
     {
-        // Spawn a difficulty-scaled sword & shield bandit at a position
         Vector2 spawnPos = new Vector2(0, 0);
-        GameObject bandit = BanditCreator.CreateSwordShieldBandit(
-            "Tough Bandit", 
-            spawnPos, 
-            BanditDifficulty.Hard
+
+        // Uses the bandit template pipeline and creates a lazy actor.
+        var lazyBandit = BanditCreator.CreateSwordShieldBanditLazy(
+            "Tough Bandit",
+            spawnPos,
+            BanditDifficulty.Hard,
+            saveToLazyActorStore: true
         );
     }
 }
 ```
 
-### Spawning Custom NPCs
+### Spawning Custom NPCs (Lazy Actors)
 ```csharp
 public class CustomNPCSpawner : MelonMod
 {
     public override void OnInitializeMelon()
     {
         Vector2 spawnPos = new Vector2(10, 20);
-        var npc = new NpcCreator("My NPC", spawnPos)
+
+        // NpcCreator can now build lazy actors via CreateLazy.
+        var lazyNpc = new NpcCreator("My NPC", spawnPos)
             .WithCosmetic("hair_short_1")
             .WithItem("sword_iron")
             .IsPlayerFriendly(true)
-            .Create();
+            .CreateLazy(saveToLazyActorStore: true);
     }
 }
 ```
@@ -118,7 +186,7 @@ public class EventListener : MelonMod
 }
 ```
 
-### Persisting NPCs (Permanent Spawning)
+### Persisting NPCs (Lazy Actors)
 ```csharp
 public class PersistentNPCSpawner : MelonMod
 {
@@ -167,12 +235,6 @@ For detailed documentation on specific systems:
 - **Options Menu**: See [Wiki - Options Menu](https://github.com/Drova-Modding/Drova-Modding-API/wiki)
 
 ## Current Version
-
-**Version 0.4.1** includes major improvements and new systems:
-- Complete world event infrastructure with regional coordination
-- Modular NPC creator system with configurable traits
-- Enhanced region management for better event handling
-- Improved asset generation and addressable references
 
 See [CHANGELOG](./CHANGELOG.MD) for detailed version history.
 
