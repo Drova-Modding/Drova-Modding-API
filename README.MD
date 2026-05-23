@@ -8,7 +8,7 @@ This is a growing project and will be updated with more features step by step.
 
 Follow Instructions for https://melonwiki.xyz/#/README?id=automated-installation
 
-After that: https://melonwiki.xyz/#/modders/quickstart (Be aware that Drova is a IL2Cpp Project and follow the instrcutions for that)
+After that: https://melonwiki.xyz/#/modders/quickstart (Be aware that Drova is a IL2Cpp Project and follow the instructions for that)
 
 ## Usage
 Put into your Drova Installation Mods the .dll file (you can find it under Releases or build it yourself).
