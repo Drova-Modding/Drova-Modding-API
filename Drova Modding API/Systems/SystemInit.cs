@@ -1,6 +1,6 @@
-﻿using Drova_Modding_API.Access;
-using Drova_Modding_API.Systems.Audio;
+﻿using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
+using Drova_Modding_API.Systems.Routines;
 #if DEBUG
 using Drova_Modding_API.Systems.GlobalVars;
 #endif
@@ -17,26 +17,23 @@ namespace Drova_Modding_API.Systems
 {
     internal static class SystemInit
     {
-        internal static void Init()
+        internal static void GameplayInit()
         {
             TalentContainerDatabase.InitializeDatabase();
-            if (ProviderAccess.TryGetGameManager(out Il2Cpp.GameManager gameManager))
-            {
-                GameObject moddingAPISystemRoot = new("ModdingAPI");
-                moddingAPISystemRoot.SetActive(false);
-                AreaNameSystem areaNameSystem = moddingAPISystemRoot.AddComponent<AreaNameSystem>();
-                WorldEventSystemManager worldEventSystem = moddingAPISystemRoot.AddComponent<WorldEventSystemManager>();
-                worldEventSystem.AreaNameSystem = areaNameSystem;
+            GameObject moddingAPISystemRoot = new("ModdingAPI");
+            moddingAPISystemRoot.SetActive(false);
+            AreaNameSystem areaNameSystem = moddingAPISystemRoot.AddComponent<AreaNameSystem>();
+            WorldEventSystemManager worldEventSystem = moddingAPISystemRoot.AddComponent<WorldEventSystemManager>();
+            worldEventSystem.AreaNameSystem = areaNameSystem;
 #if DEBUG
-                moddingAPISystemRoot.AddComponent<GlobalVarInspectorSystem>();
+            moddingAPISystemRoot.AddComponent<GlobalVarInspectorSystem>();
 #endif
-                moddingAPISystemRoot.AddComponent<DialogueAudioDistanceManager>();
-                moddingAPISystemRoot.SetActive(true);
-                // TODO Fix me, it doesn't move the object to the scene
-                SceneManager.MoveGameObjectToScene(moddingAPISystemRoot, gameManager.gameObject.scene);
-                SaveGameSystem.Instance.OnLoad(Savegame.Current);
-                NpcCreator.CacheAlignments();
-            }
+            moddingAPISystemRoot.AddComponent<DialogueAudioDistanceManager>();
+
+            moddingAPISystemRoot.SetActive(true);
+            SaveGameSystem.Instance.OnLoad(Savegame.Current);
+            NpcCreator.CacheAlignments();
+
 #if DEBUG
             EditorUI.Init();
 #endif
@@ -45,6 +42,13 @@ namespace Drova_Modding_API.Systems
         internal static void RegisterStores()
         {
             SaveGameSystem.Instance.AddStore(new LazyActorStore());
+        }
+
+        internal static void AiLogicInit(Scene scene)
+        {
+            GameObject moddingAPIAiLogicSystemRoot = new("ModdingAPI_AILogic");
+            SceneManager.MoveGameObjectToScene(moddingAPIAiLogicSystemRoot, scene);
+            RoutineSystem.RoutineRoot = moddingAPIAiLogicSystemRoot;
         }
     }
 }

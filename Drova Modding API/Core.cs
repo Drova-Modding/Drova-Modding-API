@@ -1,5 +1,4 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Register;
@@ -7,13 +6,14 @@ using Drova_Modding_API.Systems;
 
 using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
-
+using UnityEngine.SceneManagement;
 
 #if DEBUG
+using Drova_Modding_API.Systems.Spawning.Templates;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.2", "Drova Modding", null)]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.4.3", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
@@ -46,7 +46,6 @@ namespace Drova_Modding_API
             };
             OptionMenuAccess.Instance.OnOptionMenuOpen += () =>
             {
-
                 InputActionRegister.Instance.DisableGameplayActions();
             };
         }
@@ -73,10 +72,13 @@ namespace Drova_Modding_API
             {
                 // Retrigger it to make sure that the close call is registered
                 OptionMenuAccess.OnOptionClose();
-                SystemInit.Init();
+                SystemInit.GameplayInit();
                 InputActionRegister.Instance.EnableGameplayActions();
                 InMainMenu = false;
-
+            }
+            if (sceneName == SceneNames.AILogic)
+            {
+                SystemInit.AiLogicInit(SceneManager.GetSceneByName(sceneName));
             }
             // if (sceneName == SceneNames.AILogic)
             // {

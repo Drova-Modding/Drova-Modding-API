@@ -1,4 +1,5 @@
-﻿using Il2CppNodeCanvas.DialogueTrees;
+﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
+using Il2CppNodeCanvas.DialogueTrees;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
@@ -54,23 +55,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             additionalHeight += 25; // Add Choice button
             additionalHeight += 30; // Tag row + bottom padding
 
-            Color previousBackgroundColor = GUI.backgroundColor;
-
-            GUI.color = Color.green;
-            NodeSizeInternal = new Vector2(350, additionalHeight);
-            if (TransparentOuterBox)
-            {
-                GUI.backgroundColor = Color.clear;
-                GUI.Box(new Rect(position.x, position.y, 350, additionalHeight), "DS_MultipleChoiceNode");
-                GUI.backgroundColor = previousBackgroundColor;
-            }
-            else
-            {
-                GUI.Box(new Rect(position.x, position.y, 350, additionalHeight), "DS_MultipleChoiceNode");
-            }
-
-            GUI.backgroundColor = Color.black;
             GUI.color = Color.white;
+            NodeSizeInternal = new Vector2(350, additionalHeight);
+            if (!TransparentOuterBox)
+            {
+                GUI.Box(new Rect(position.x, position.y, 350, additionalHeight), "DS_MultipleChoiceNode", EditorBoxStyles.MultipleChoice);
+            }
             int step = 20;
             for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
@@ -82,7 +72,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 if (_taskHeights.TryGetValue(i, out float prevTaskHeight))
                     choiceBoxHeight += (int)prevTaskHeight + 10;
 
-                GUI.Box(new Rect(position.x + 5, position.y + step, 340, choiceBoxHeight), new GUIContent($"Choice {i}:", _castedNode.GetLocalizedString(choice.statement)));
+                GUI.Box(new Rect(position.x + 5, position.y + step, 340, choiceBoxHeight), new GUIContent($"Choice {i}:", _castedNode.GetLocalizedString(choice.statement)), EditorBoxStyles.Choice);
                 step += 20; // space for "Choice i:" header label
                 if (choice.statement.useGlobalLoca)
                 {
@@ -118,8 +108,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.Label(new Rect(position.x + 5, position.y + step, 50, 20), "Tag:");
             _castedNode.tag = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), _castedNode.tag);
-
-            GUI.backgroundColor = previousBackgroundColor;
 
             GUI.color = previousColor;
         }

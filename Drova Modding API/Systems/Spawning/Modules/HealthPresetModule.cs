@@ -38,10 +38,8 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             var inventory = context.GetComponentInChildren<Inventory_StartupEquipSettings>();
             if (inventory == null) return;
 
-            if(inventory._equipPreset != null)
-            {
-                inventory._equipPreset._health = _health;
-            }
+            var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
+            equipPreset._health = _health;
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2Cpp;
 using Il2CppDrova.Cutscenes;
-using Il2CppSystem.Linq;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes

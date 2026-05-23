@@ -9,8 +9,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     /// </summary>
     internal class DS_CheckGVarListConditionTaskEditor : DrawTaskEditor
     {
-        private DS_CheckGVarListConditionTask _castedTask;
-        private GUIGvarSelectionEditor _gvarSelectionEditor;
+        private DS_CheckGVarListConditionTask? _castedTask;
+        private GUIGvarSelectionEditor? _gvarSelectionEditor;
 
         public override void Init()
         {

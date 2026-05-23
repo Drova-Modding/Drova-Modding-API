@@ -289,9 +289,6 @@
 		<Reference Include="UnityEngine.ParticleSystemModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ParticleSystemModule.dll</HintPath>
 		</Reference>
-		<Reference Include="UnityEngine.PerformanceReportingModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.PerformanceReportingModule.dll</HintPath>
-		</Reference>
 		<Reference Include="UnityEngine.Physics2DModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.Physics2DModule.dll</HintPath>
 		</Reference>
@@ -450,16 +447,25 @@
 		<Compile Include="GlobalFields\SceneNames.cs" />
 		<Compile Include="GlobalFields\TalentReadableIds.cs" />
 		<Compile Include="GlobalFields\StatReadableIds.cs" />
-		<Compile Include="Patches\Actor_AddLoadingComp_Patch.cs" />
+		<Compile Include="Patches\ActorAddLoadingCompPatch.cs" />
+		<Compile Include="Patches\ActorRoutineModulePatch.cs" />
+		<Compile Include="Patches\ActorStartInitAsyncPatch.cs" />
 		<Compile Include="Patches\AreaNamePatch.cs" />
+		<Compile Include="Patches\ASaveRootLoadStatePatch.cs" />
+		<Compile Include="Patches\ASaveRootSaveStatePatch.cs" />
 		<Compile Include="Patches\DialogueTreePatch.cs" />
-		<Compile Include="Patches\DS_DialogueUGUI_Patch.cs" />
+		<Compile Include="Patches\DSDialogueUGUIPatch.cs" />
+		<Compile Include="Patches\DSStatementPatch.cs" />
 		<Compile Include="Patches\DS_MultipleChoiceNodePatch.cs" />
 		<Compile Include="Patches\DS_StatementNodePatch.cs" />
-		<Compile Include="Patches\DS_Statement_Patch.cs" />
-		<Compile Include="Patches\GUI_Window_Options.cs" />
-		<Compile Include="Patches\GUI_Window_Patch.cs" />
+		<Compile Include="Patches\GUIWindowOptions.cs" />
+		<Compile Include="Patches\GUIWindowPatch.cs" />
+		<Compile Include="Patches\LazyActorPatch.cs" />
+		<Compile Include="Patches\SaveableHealthPatch.cs" />
+		<Compile Include="Patches\SaveableStatusEffectHandlerPatch.cs" />
+		<Compile Include="Patches\SaveBBParametersToSavegameIndexPatch.cs" />
 		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
+		<Compile Include="Patches\SetSaveGameRouteIndexPatch.cs" />
 		<Compile Include="Register\InputActionRegister.cs" />
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
@@ -487,16 +493,20 @@
 		<Compile Include="Systems\Relocators\ItemRelocator.cs" />
 		<Compile Include="Systems\Relocators\ObjectRelocatorFactory.cs" />
 		<Compile Include="Systems\Relocators\RelocatorSaveData.cs" />
+		<Compile Include="Systems\Routines\RoutineSystem.cs" />
+		<Compile Include="Systems\SaveGame\NoSaveGuidRegistry.cs" />
 		<Compile Include="Systems\SaveGame\Store\IStorable.cs" />
 		<Compile Include="Systems\SaveGame\Store\IStore.cs" />
 		<Compile Include="Systems\SaveGame\Store\LazyActorStore.cs" />
 		<Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
 		<Compile Include="Systems\Dialogues\DialogGraph.cs" />
 		<Compile Include="Systems\Spawning\INpcModule.cs" />
+		<Compile Include="Systems\Spawning\LazyActorPreInitRegistry.cs" />
 		<Compile Include="Systems\Spawning\ModuleContext.cs" />
 		<Compile Include="Systems\Spawning\Modules\AlignmentModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\CosmeticsPresetModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\CustomStatsModule.cs" />
+		<Compile Include="Systems\Spawning\Modules\EquipPresetHelper.cs" />
 		<Compile Include="Systems\Spawning\Modules\EquipmentPresetModule.cs" />
 		<Compile Include="Systems\Spawning\LazyActorSaveData.cs" />
 		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
@@ -504,6 +514,7 @@
 		<Compile Include="Systems\Spawning\LazyActorCreator.cs" />
 		<Compile Include="Systems\Spawning\Modules\FlowPresetModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\HealthPresetModule.cs" />
+		<Compile Include="Systems\Spawning\Modules\RoutineModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\TalentPresetModule.cs" />
 		<Compile Include="Systems\Spawning\NpcCreator.cs" />
 		<Compile Include="Systems\Spawning\Templates\BanditCreator.cs" />
@@ -623,6 +634,7 @@
 		<Compile Include="Systems\Dialogues\Editor\Tasks\GBoolConditionTaskEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Tasks\GIntConditionTaskEditor.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Tasks\NullTaskEditor.cs" />
+		<Compile Include="Systems\Dialogues\Editor\Utils\EditorBoxStyles.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Utils\GUICreateConditionTask.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Utils\GUIDropdown.cs" />
 		<Compile Include="Systems\Dialogues\Editor\Utils\GUIDropdownWithFilter.cs" />

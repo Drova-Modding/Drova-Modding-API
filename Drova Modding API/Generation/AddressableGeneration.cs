@@ -4,7 +4,6 @@ using System.Text.Json;
 using UnityEngine;
 using UnityEngine.AddressableAssets.Utility;
 using UnityEngine.ResourceManagement.Util;
-using static UnityEngine.AddressableAssets.ResourceLocators.ContentCatalogData;
 
 namespace Drova_Modding_API.Generation
 {

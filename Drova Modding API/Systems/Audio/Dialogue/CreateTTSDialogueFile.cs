@@ -66,7 +66,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         private readonly StringBuilder _sbGeneric = new();
         private readonly StringBuilder _sbGenericTreeNames = new();
         private readonly StringBuilder _sbAllDialogueNames = new();
-        private readonly List<string> _ignoreDuplicateTrees = new(["DT_Quest_GuardTree_NPC_Niala"]);
+        private readonly List<string> _ignoreDuplicateTrees = ["DT_Quest_GuardTree_NPC_Niala"];
 
 
         private bool _isInitialized = false;
@@ -142,7 +142,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     {
                         if (node.inConnections.Count == 0 && node.outConnections.Count == 0)
                         {
-                            MelonLogger.Msg("Skipping node without connections in " + dialogueTree.name);;
+                            MelonLogger.Msg("Skipping node without connections in " + dialogueTree.name);
                             continue;
                         }
                         for (int k = 0; k < multipleChoice.availableChoices.Count; k++)
@@ -204,7 +204,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         {
                             MelonLogger.Msg("Skipping subgraph " + subTree.subGraph.name + " in " + tree.name);
                             continue;
-                        };
+                        }
                         MelonLogger.Msg("Found generic Dialog " + subTree.subGraph.name + " in " + tree.name);
                         subTree.SetParametersMap();
                         subTree.currentInstance = subTree.TryCast<IGraphAssignable>().CheckInstance(true).TryCast<DialogueTree>();
@@ -216,13 +216,13 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         {
                             DialogueTree holdingTree = dialogueTrees
                                  .FirstOrDefault(d => d.allNodes.ToArray().ToList()
-                                 .Find(node => node.TryCast<SubDialogueTree>() != null && node.Cast<SubDialogueTree>().subGraph?.name == tree.name
+                                 .Find(innerNode => innerNode.TryCast<SubDialogueTree>() != null && innerNode.Cast<SubDialogueTree>().subGraph?.name == tree.name
                                  ) != null
                              );
                             if (holdingTree != null)
                             {
                                 SubDialogueTree subTreeUnderHolding = holdingTree.allNodes.ToArray().ToList()
-                                     .Find(node => node.TryCast<SubDialogueTree>() != null && node.Cast<SubDialogueTree>().subGraph?.name == tree.name)
+                                     .Find(innerNode => innerNode.TryCast<SubDialogueTree>() != null && innerNode.Cast<SubDialogueTree>().subGraph?.name == tree.name)
                                      .Cast<SubDialogueTree>();
                                 subTreeUnderHolding.SetParametersMap();
                                 subTreeUnderHolding.currentInstance = subTree.TryCast<IGraphAssignable>().CheckInstance(true).TryCast<DialogueTree>();
@@ -442,7 +442,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         }
                         if (subGraphNode.inConnections.Count == 0 && subGraphNode.outConnections.Count == 0)
                         {
-                            MelonLogger.Msg("Skipping node without connections in " + subTree.subGraph.name);;
+                            MelonLogger.Msg("Skipping node without connections in " + subTree.subGraph.name);
                             continue;
                         }
                         sb

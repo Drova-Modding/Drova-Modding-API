@@ -2,7 +2,6 @@ using Drova_Modding_API.Systems.Talents;
 using Il2CppDrova.InventorySystem;
 using Il2CppDrova.Talent;
 using MelonLoader;
-using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Spawning.Modules
 {
@@ -45,10 +44,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             var inventory = context.GetComponentInChildren<Inventory_StartupEquipSettings>();
             if (inventory == null) return;
 
-            if (inventory._equipPreset == null)
-            {
-                inventory._equipPreset = ScriptableObject.CreateInstance<ActorEquipPreset>();
-            }
+            var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
 
             foreach (var readableId in _readableIds)
             {
@@ -59,12 +55,12 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                     continue;
                 }
 
-                inventory._equipPreset._startTalents.Add(talent);
+                equipPreset._startTalents.Add(talent);
             }
 
             foreach (var talent in _talentContainers)
             {
-                inventory._equipPreset._startTalents.Add(talent);
+                equipPreset._startTalents.Add(talent);
             }
         }
     }

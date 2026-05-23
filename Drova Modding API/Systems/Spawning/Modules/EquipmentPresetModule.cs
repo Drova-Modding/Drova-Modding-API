@@ -1,7 +1,6 @@
 using Il2CppDrova.InventorySystem;
 using Il2CppDrova.Items;
 using MelonLoader;
-using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Drova_Modding_API.Access;
 
@@ -44,10 +43,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         {
             var inventory = context.GetComponentInChildren<Inventory_StartupEquipSettings>();
             if (inventory == null) return;
-
-            if(inventory._equipPreset == null) {
-                inventory._equipPreset = ScriptableObject.CreateInstance<ActorEquipPreset>();
-            }
+            var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
 
             foreach (var readableId in _readableIds)
             {
@@ -58,7 +54,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                     continue;
                 }
 
-                inventory._equipPreset._equipment.Add(item);
+                equipPreset._equipment.Add(item);
             }
 
             foreach (var itemRef in _items)
@@ -66,7 +62,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                 var handle = itemRef.LoadAssetAsync();
                 handle.WaitForCompletion();
                 if (handle.Result != null)
-                    inventory._equipPreset._equipment.Add(handle.Result);
+                    equipPreset._equipment.Add(handle.Result);
             }
         }
     }

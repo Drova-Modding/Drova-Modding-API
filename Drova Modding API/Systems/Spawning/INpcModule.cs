@@ -16,6 +16,13 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         /// <param name="context">The module context for component resolution and caching</param>
         void Apply(ModuleContext context);
+
+        /// <summary>
+        /// Cleans up resources previously created by this module.
+        /// Called when the owning lazy actor is destroyed.
+        /// </summary>
+        /// <param name="context">The module context for cleanup resolution and metadata</param>
+        void Cleanup(ModuleContext context) { }
     }
 }
 

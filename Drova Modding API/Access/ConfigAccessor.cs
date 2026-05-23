@@ -19,14 +19,14 @@ namespace Drova_Modding_API.Access
             Il2CppDrova.DrovaResourceProvider ressource = ProviderAccess.GetDrovaResourceProvider();
             if (ressource == null)
             {
-                MelonLogger.Error("DrovaResourceProvider is null. The Game might still be bootstrapping");
+                MelonLogger.Warning("DrovaResourceProvider is null. The Game might still be bootstrapping");
                 value = default;
                 return false;
             }
             Il2CppDrova.ConfigGameHandler provider = ProviderAccess.GetConfigGameHandler();
             if (provider == null)
             {
-                MelonLogger.Error("ConfigGameHandler is null. The Game might still be bootstrapping");
+                MelonLogger.Warning("ConfigGameHandler is null. The Game might still be bootstrapping");
                 value = default;
                 return false;
             }
