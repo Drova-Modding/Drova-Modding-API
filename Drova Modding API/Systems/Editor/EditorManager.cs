@@ -16,7 +16,7 @@ namespace Drova_Modding_API.Systems.Editor
         /// <summary>
         /// Event that is triggered when an NPC is selected
         /// </summary>
-        public static event NpcSelected OnNpcSelected;
+        public static event NpcSelected? OnNpcSelected;
 
         /// <summary>
         /// The last NPC that was invoked

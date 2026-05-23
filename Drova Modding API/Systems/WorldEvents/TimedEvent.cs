@@ -43,7 +43,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Coroutine that runs the event and ends it after the duration.
         /// </summary>
-        public virtual IEnumerator RunEvent()
+        protected virtual IEnumerator RunEvent()
         {
             yield return Wait;
             EndEvent();

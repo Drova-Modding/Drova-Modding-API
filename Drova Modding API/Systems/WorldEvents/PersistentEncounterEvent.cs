@@ -9,13 +9,13 @@ namespace Drova_Modding_API.Systems.WorldEvents
     /// A persistent encounter event that will spawn a list of encounters that will not despawn even when the event ends.
     /// If you don't want to persist the encounters, use <see cref="EncounterEvent"/> instead.
     /// </summary>
-    /// <param name="persitentEncounters">The list to spawn</param>
-    public class PersistentEncounterEvent(List<LazyActorCreator.LazyActorParams> persitentEncounters) : IWorldEvent
+    /// <param name="persistentEncounters">The list to spawn</param>
+    public class PersistentEncounterEvent(List<LazyActorCreator.LazyActorParams> persistentEncounters) : IWorldEvent
     {
         /**
          * The store for the lazy actors
          */
-        protected IStore<LazyActorSaveData>? lazyActorStore;
+        protected IStore<LazyActorSaveData>? LazyActorStore;
 
         /// <inheritdoc/>
         public virtual void EndEvent()
@@ -26,14 +26,14 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <inheritdoc/>
         public virtual void StartEvent()
         {
-            lazyActorStore ??= SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
-            for (int i = 0; i < persitentEncounters.Count; i++)
+            LazyActorStore ??= SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            for (int i = 0; i < persistentEncounters.Count; i++)
             {
-                LazyActorCreator.LazyActorParams encounter = persitentEncounters[i];
+                LazyActorCreator.LazyActorParams encounter = persistentEncounters[i];
                 Il2CppDrova.Utilities.LazyLoading.LazyActor lazyActor = LazyActorCreator.CreateLazyActorCreature(encounter);
-                lazyActorStore.Add(new LazyActorSaveData(LazyActorCreator.LAZY_ACTOR_NAME, encounter.AssetReference.AssetGUID, encounter.EntityInfo.AssetGUID, lazyActor._guidstring));
+                LazyActorStore.Add(new LazyActorSaveData(LazyActorCreator.LazyActorName, encounter.AssetReference.AssetGUID, encounter.EntityInfo.AssetGUID, lazyActor._guidstring));
             }
-            WorldEventSystemManager.Instance.EndEvent();
+            WorldEventSystemManager.Instance?.EndEvent();
         }
     }
 }

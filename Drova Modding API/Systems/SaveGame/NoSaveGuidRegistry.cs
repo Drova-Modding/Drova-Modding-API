@@ -26,7 +26,7 @@ namespace Drova_Modding_API.Systems.SaveGame
         private static readonly HashSet<string> Guids = [];
 
         /// <summary>
-        /// Registers a GUID so that any <c>ASaveRoot</c> whose instance key matches
+        /// Registers a GUID so that any save whose instance key matches
         /// will be skipped during save and load.
         /// </summary>
         /// <param name="guid">The instance key (GUID) of the actor to exclude.</param>

@@ -1,5 +1,4 @@
-﻿using Il2CppDrova.GUI.Options;
-using Il2CppDrova.ConfigOptions;
+﻿using Il2CppDrova.ConfigOptions;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.Attributes;
 using Il2CppTMPro;

@@ -9,32 +9,28 @@ namespace Drova_Modding_API.Systems.SaveGame
     public class SaveGameSystem
     {
         /**
-         * The key for the lazy actors in the savegame
-         */
-        public const string SAVEGAME_KEY_LAZY_ACTORS = "DrovaModdingAPI_Lazy_Actors";
-        /**
          * Delegate for savegame events
          */
         public delegate void SaveGameDelegate(Savegame saveGame);
         /**
          * Triggered before a savegame is loaded
          */
-        public static event SaveGameDelegate BeforeSaveGameLoaded;
+        public static event SaveGameDelegate? BeforeSaveGameLoaded;
         /**
          * Triggered after a savegame is loaded
          */
-        public static event SaveGameDelegate AfterSaveGameLoaded;
+        public static event SaveGameDelegate? AfterSaveGameLoaded;
         /**
          * Triggered before a savegame is saved
          */
-        public static event SaveGameDelegate BeforeSaveGameSaving;
+        public static event SaveGameDelegate? BeforeSaveGameSaving;
 
         /**
          * The instance of the save game system
          */
-        public static SaveGameSystem Instance { get; private set; } = new SaveGameSystem();
+        public static SaveGameSystem Instance { get; private set; } = new();
 
-        internal List<IStorable> stores = [];
+        internal List<IStorable> Stores = [];
 
         private SaveGameSystem()
         {
@@ -44,9 +40,9 @@ namespace Drova_Modding_API.Systems.SaveGame
         private void OnSave(Savegame saveGame)
         {
 
-            for (int i = 0; i < stores.Count; i++)
+            for (int i = 0; i < Stores.Count; i++)
             {
-                IStorable store = stores[i];
+                IStorable store = Stores[i];
                 string saved = store.Save();
                 saveGame.Data.SetString(store.SaveGameKey, saved);
             }
@@ -69,9 +65,9 @@ namespace Drova_Modding_API.Systems.SaveGame
 
         internal void OnLoad(Savegame saveGame)
         {
-            for (int i = 0; i < stores.Count; i++)
+            for (int i = 0; i < Stores.Count; i++)
             {
-                IStorable store = stores[i];
+                IStorable store = Stores[i];
                 string loaded = "";
                 if (saveGame.Data.GetString(store.SaveGameKey, ref loaded))
                 {
@@ -86,7 +82,7 @@ namespace Drova_Modding_API.Systems.SaveGame
         /// <param name="store">The store</param>
         public void AddStore(IStorable store)
         {
-            stores.Add(store);
+            Stores.Add(store);
         }
 
         /// <summary>
@@ -96,7 +92,7 @@ namespace Drova_Modding_API.Systems.SaveGame
         /// <returns>Your store or default</returns>
         public IStore<T> GetStore<T>()
         {
-            return stores.OfType<IStore<T>>().FirstOrDefault();
+            return Stores.OfType<IStore<T>>().FirstOrDefault();
         }
 
         /// <summary>
@@ -106,7 +102,7 @@ namespace Drova_Modding_API.Systems.SaveGame
         /// <returns></returns>
         public IStorable GetStore(string saveGameKey)
         {
-            return stores.FirstOrDefault(x => x.SaveGameKey == saveGameKey);
+            return Stores.FirstOrDefault(x => x.SaveGameKey == saveGameKey);
         }
     }
 }

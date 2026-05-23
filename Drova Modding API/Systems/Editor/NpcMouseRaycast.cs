@@ -1,5 +1,6 @@
 ﻿#if DEBUG
 using Il2CppDrova;
+using Il2CppInterop.Runtime.Attributes;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using MelonLoader;
 using UnityEngine;
@@ -31,6 +32,7 @@ namespace Drova_Modding_API.Systems.Editor
             }
         }
 
+        [HideFromIl2Cpp]
         void CastRayFromMouse()
         {
             if (!_camera) _camera = Camera.main;

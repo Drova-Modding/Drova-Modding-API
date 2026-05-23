@@ -15,14 +15,14 @@ namespace Drova_Modding_API.Systems.Spawning
     {
         // Keyed by the LazyActor's native Il2Cpp pointer so that GC / equality issues
         // with managed wrappers are avoided.
-        private static readonly Dictionary<IntPtr, List<Action<Actor>>> Callbacks = [];
+        private static readonly Dictionary<IntPtr, List<Action<Actor, LazyActor>>> Callbacks = [];
 
         /// <summary>
         /// Registers a callback that will be invoked every time a lazy-controlled actor
         /// owned by <paramref name="lazyActor"/> is about to be initialized (right before
         /// <c>StartInitAsync</c>). Re-registering the same LazyActor appends another callback.
         /// </summary>
-        public static void Register(LazyActor lazyActor, Action<Actor> callback)
+        public static void Register(LazyActor lazyActor, Action<Actor, LazyActor> callback)
         {
             IntPtr key = lazyActor.Pointer;
             if (!Callbacks.TryGetValue(key, out var list))
@@ -51,16 +51,16 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Invokes all callbacks registered for a given LazyActor pointer.
         /// Called from the Harmony patch below.
         /// </summary>
-        internal static void Invoke(IntPtr lazyActorPtr, Actor actor)
+        internal static void Invoke(LazyActor lazyActor, Actor actor)
         {
-            if (!Callbacks.TryGetValue(lazyActorPtr, out var list))
+            if (!Callbacks.TryGetValue(lazyActor.Pointer, out var list))
                 return;
 
             for (int i = 0; i < list.Count; i++)
             {
                 try
                 {
-                    list[i](actor);
+                    list[i](actor, lazyActor);
                 }
                 catch (Exception ex)
                 {

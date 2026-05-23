@@ -7,9 +7,9 @@ namespace Drova_Modding_API.Systems.SaveGame.Store
     {
         private readonly List<LazyActorSaveData> lazyActors = [];
 
-        private const string SAVEGAME_KEY_LAZY_ACTORS = "DrovaModdingAPI_Lazy_Actors";
+        private const string SavegameKeyLazyActors = "DrovaModdingAPI_Lazy_Actors";
 
-        public string SaveGameKey { get => SAVEGAME_KEY_LAZY_ACTORS; }
+        public string SaveGameKey { get => SavegameKeyLazyActors; }
 
         public void Add(LazyActorSaveData item)
         {

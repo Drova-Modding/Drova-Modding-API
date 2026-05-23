@@ -30,7 +30,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// </summary>
         protected readonly int SelfEndInSecond = selfEndInSecond;
         private object? _melonCoroutineToken;
-        private bool _isRunning = false;
+        private bool _isRunning;
 
         /// <summary>
         /// Called when the event starts. Checks if the player is alive and not teleporting.
@@ -53,17 +53,18 @@ namespace Drova_Modding_API.Systems.WorldEvents
             _isRunning = true;
             if (!PlayerAccess.TryGetPlayer(out Actor player))
             {
-                WorldEventSystemManager.Instance.EndEvent();
+                WorldEventSystemManager.Instance?.EndEvent();
             }
+            Vector3 position = player.transform.position;
             foreach (KeyValuePair<AssetReferenceGameObject, int> encounter in EncountersToSpawn)
             {
                 for (int i = 0; i < encounter.Value; i++)
                 {
-                    Vector3 position = player.transform.position;
 
                     Vector2? randomPosition = WorldLocator.GetRandomFreePosition(new Vector2(position.x, position.y));
                     if (randomPosition.HasValue)
                     {
+                        // TODO: Rewrite when il2cpp is on Version 2, than we can finally use EVENTS WOHOOOOOOOO
                         GameObject spawned = encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity).WaitForCompletion();
                         _spawnedEncounters.Add(spawned);
                         OnEncounterSpawned(spawned, encounter.Key, randomPosition.Value);
@@ -71,7 +72,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     else
                     {
                         MelonLogger.Warning("Couldn't find a free position to spawn the encounter.");
-                        WorldEventSystemManager.Instance.EndEvent();
+                        WorldEventSystemManager.Instance?.EndEvent();
                         return;
                     }
                 }
@@ -92,12 +93,12 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /**
          * Coroutine to end the event after a certain amount of time as safety.
          */
-        public virtual IEnumerator SelfEnd()
+        protected virtual IEnumerator SelfEnd()
         {
             yield return new WaitForSeconds(SelfEndInSecond);
             if (_isRunning)
             {
-                WorldEventSystemManager.Instance.EndEvent();
+                WorldEventSystemManager.Instance?.EndEvent();
             }
         }
 
@@ -123,8 +124,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 }
             }
             _spawnedEncounters.Clear();
-            WorldEventSystemManager.Instance.EndEvent();
-
+            WorldEventSystemManager.Instance?.EndEvent();
         }
     }
 }

@@ -26,8 +26,9 @@ namespace Drova_Modding_API.Systems.WorldEvents
         private readonly List<ARegionalEvent> _runningRegionalEvents = [];
         private readonly WorldEventPicker _worldEventPicker = new();
         private WorldRegionCoordinator? _regionCoordinator;
-        private short _skipOnEvents = 0;
+        private short _skipOnEvents;
         private object? _cooldownCoroutine;
+        private bool _cooldownRunning;
         internal AreaNameSystem AreaNameSystem;
         private readonly WaitForSeconds _startEventCooldown = new(1);
 
@@ -73,6 +74,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         internal void Awake()
         {
             Instance = this;
+            _cooldownRunning = true;
             _regionCoordinator = new WorldRegionCoordinator(_runningRegionalEvents, GetRegionalCooldownSeconds);
             _cooldownCoroutine = MelonCoroutines.Start(Instance.StartEventCooldown());
             AreaNameSystem.OnRegionChanged += _regionCoordinator.OnRegionChanged;
@@ -80,6 +82,8 @@ namespace Drova_Modding_API.Systems.WorldEvents
 
         internal void OnDestroy()
         {
+            _cooldownRunning = false;
+            Instance = null;
             if (AreaNameSystem != null && _regionCoordinator != null)
                 AreaNameSystem.OnRegionChanged -= _regionCoordinator.OnRegionChanged;
             if(_cooldownCoroutine != null)
@@ -131,10 +135,10 @@ namespace Drova_Modding_API.Systems.WorldEvents
         [HideFromIl2Cpp]
         internal IEnumerator StartEventCooldown()
         {
-            while (true)
+            while (_cooldownRunning)
             {
                 
-                if (OptionMenuAccess.Instance?.IsMenuOpen == true || IsPlayerInDialogueOrTeleporting())
+                if (OptionMenuAccess.Instance.IsMenuOpen || IsPlayerInDialogueOrTeleporting())
                 {
                     yield return _startEventCooldown;
                     continue;
@@ -148,7 +152,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     yield return new WaitForSeconds(UnityEngine.Random.Range(min * 30, max * 30));
 #else
                     yield return new WaitForSeconds(UnityEngine.Random.Range(min * 60, max * 60));
-
 #endif
                 }
                 else

@@ -6,6 +6,7 @@ using Drova_Modding_API.Systems;
 
 using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
+using UnityEngine.SceneManagement;
 
 #if DEBUG
 using Drova_Modding_API.Systems.Spawning.Templates;
@@ -71,9 +72,13 @@ namespace Drova_Modding_API
             {
                 // Retrigger it to make sure that the close call is registered
                 OptionMenuAccess.OnOptionClose();
-                SystemInit.Init();
+                SystemInit.GameplayInit();
                 InputActionRegister.Instance.EnableGameplayActions();
                 InMainMenu = false;
+            }
+            if (sceneName == SceneNames.AILogic)
+            {
+                SystemInit.AiLogicInit(SceneManager.GetSceneByName(sceneName));
             }
             // if (sceneName == SceneNames.AILogic)
             // {
@@ -102,7 +107,7 @@ namespace Drova_Modding_API
                 var player = PlayerAccess.GetPlayer();
                 if (player != null)
                 {
-                    BanditCreator.CreateAxeBanditLazy("lazy_test_axe_bandit", player.transform.position);
+                    BanditCreator.CreateAxeBanditLazy("lazy_test_axe_bandit", player.transform.position + new Vector3(200, 150));
                 }
             }
             if (_consoleAction.WasReleasedThisFrame())

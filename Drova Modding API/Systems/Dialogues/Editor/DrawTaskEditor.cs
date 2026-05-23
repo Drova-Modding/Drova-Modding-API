@@ -19,7 +19,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         public GraphEditorManager GraphEditorManager;
 
         /// <summary>
-        /// Init the task, when the <see cref="Task"/> is set and on the first draw
+        /// GameplayInit the task, when the <see cref="Task"/> is set and on the first draw
         /// </summary>
         public virtual void Init()
         {

@@ -28,7 +28,7 @@ internal static class ActorStartInitAsyncPatch
         if (lazyActor == null)
             return;
 
-        LazyActorPreInitRegistry.Invoke(lazyActor.Pointer, __instance);
+        LazyActorPreInitRegistry.Invoke(lazyActor, __instance);
     }
 }
 

@@ -118,7 +118,8 @@ namespace Drova_Modding_API.Systems.Editor
         {
             return Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
         }
-
+        
+        [HideFromIl2Cpp]
         private void OnEditNpc()
         {
             _npcEditButton.gameObject.SetActive(false);

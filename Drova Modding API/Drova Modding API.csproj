@@ -463,7 +463,9 @@
 		<Compile Include="Patches\LazyActorPatch.cs" />
 		<Compile Include="Patches\SaveableHealthPatch.cs" />
 		<Compile Include="Patches\SaveableStatusEffectHandlerPatch.cs" />
+		<Compile Include="Patches\SaveBBParametersToSavegameIndexPatch.cs" />
 		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
+		<Compile Include="Patches\SetSaveGameRouteIndexPatch.cs" />
 		<Compile Include="Register\InputActionRegister.cs" />
 		<Compile Include="Systems\AreaNameSystem.cs" />
 		<Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
@@ -491,6 +493,7 @@
 		<Compile Include="Systems\Relocators\ItemRelocator.cs" />
 		<Compile Include="Systems\Relocators\ObjectRelocatorFactory.cs" />
 		<Compile Include="Systems\Relocators\RelocatorSaveData.cs" />
+		<Compile Include="Systems\Routines\RoutineSystem.cs" />
 		<Compile Include="Systems\SaveGame\NoSaveGuidRegistry.cs" />
 		<Compile Include="Systems\SaveGame\Store\IStorable.cs" />
 		<Compile Include="Systems\SaveGame\Store\IStore.cs" />
@@ -514,7 +517,6 @@
 		<Compile Include="Systems\Spawning\Modules\RoutineModule.cs" />
 		<Compile Include="Systems\Spawning\Modules\TalentPresetModule.cs" />
 		<Compile Include="Systems\Spawning\NpcCreator.cs" />
-		<Compile Include="Systems\Spawning\Overrides\ModdedRoutineKeyGenerator.cs" />
 		<Compile Include="Systems\Spawning\Templates\BanditCreator.cs" />
 		<Compile Include="Systems\Talents\TalentContainerDatabase.cs" />
 		<Compile Include="Systems\SystemInit.cs" />

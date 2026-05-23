@@ -4,7 +4,6 @@ using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.Spawning.Modules;
 using Il2CppDrova;
 using Il2CppDrova.Alignment;
-using Il2CppDrova.Saveables;
 using Il2CppDrova.Utilities.LazyLoading;
 using MelonLoader;
 using UnityEngine;
@@ -104,7 +103,7 @@ namespace Drova_Modding_API.Systems.Spawning
         }
 
         /// <summary>
-        /// Sets a preloaded custom entity info used by <see cref="CreateLazy"/>.
+        /// Sets preloaded self-created entity info used by <see cref="CreateLazy"/>.
         /// </summary>
         public NpcCreator WithLazyEntityInfo(EntityInfo entityInfo)
         {
@@ -227,34 +226,65 @@ namespace Drova_Modding_API.Systems.Spawning
             // We cannot use ActorSpawnEvent because SpawnArgs is a non-blittable struct and
             // Il2CppInterop refuses to convert the delegate.
             LazyActorPreInitRegistry.Register(lazyActor, OnActorLoaded);
+            lazyActor.LazyActorDestroyedEvent.AddEventListener(new Action<LazyActor>(OnActorDestroyed));
 
             if (!saveToLazyActorStore)
             {
                 return lazyActor;
             }
 
-            if (_lazyEntityInfoReference == null)
+            IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+
+            // Handle custom EntityInfo with parameters
+            if (_customLazyEntityInfo != null)
             {
-                MelonLogger.Warning("NpcCreator.CreateLazy(saveToLazyActorStore: true) requires an entity-info addressable reference. Use WithLazyEntityInfo(AssetReference) when saving is needed.");
-                return lazyActor;
+                string entityInfoGuid = _customLazyEntityInfo.GUID ?? "";
+
+                LazyActorSaveData customEntityInfoData = LazyActorSaveData.FromCustom(
+                    _name,
+                    _lazyActorReference.AssetGUID,
+                    lazyActor._guidstring,
+                    entityInfoGuid,
+                    true
+                );
+                lazyActorStore.Add(customEntityInfoData);
+            }
+            // Handle addressable EntityInfo reference
+            else if (_lazyEntityInfoReference != null)
+            {
+                LazyActorSaveData addressableEntityInfoData = new(
+                    _name,
+                    _lazyActorReference.AssetGUID,
+                    _lazyEntityInfoReference.AssetGUID,
+                    lazyActor._guidstring,
+                    true
+                );
+                lazyActorStore.Add(addressableEntityInfoData);
+            }
+            else
+            {
+                MelonLogger.Warning(
+                    "NpcCreator.CreateLazy(saveToLazyActorStore: true) requires either an entity-info addressable reference or custom entity info parameters. Use WithLazyEntityInfo() or WithCustomEntityInfoParams().");
             }
 
-            IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
-            lazyActorStore.Add(new LazyActorSaveData(_name, _lazyActorReference.AssetGUID, _lazyEntityInfoReference.AssetGUID, lazyActor._guidstring));
             return lazyActor;
 
-            void OnActorLoaded(Actor actor)
+            void OnActorLoaded(Actor actor, LazyActor lazy)
             {
                 if (actor == null)
                     return;
-                ApplyModules(actor.gameObject);
+                ApplyModules(actor.gameObject, lazy);
+            }
+
+            void OnActorDestroyed(LazyActor lazy)
+            {
+                CleanupModules(lazy);
             }
         }
 
-        private void ApplyModules(GameObject npc)
+        private void ApplyModules(GameObject npc, LazyActor? lazyActor = null)
         {
-            MelonLogger.Msg("Applying modules");
-            var context = new ModuleContext(npc);
+            var context = new ModuleContext(npc, lazyActor);
             INpcModule[] modules = GetOrderedModules();
             for (int i = 0; i < modules.Length; i++)
                 modules[i].Apply(context);
@@ -264,19 +294,31 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             int count = _modules.Count;
             if (count <= 1)
-                return _modules.ToArray();
+                return [.. _modules];
 
             bool needsSort = false;
             for (int i = 1; i < count; i++)
             {
-                if (_modules[i].Priority < _modules[i - 1].Priority) { needsSort = true; break; }
+                if (_modules[i].Priority < _modules[i - 1].Priority)
+                {
+                    needsSort = true;
+                    break;
+                }
             }
 
             if (!needsSort)
                 return [.. _modules];
 
             // LINQ OrderBy is stable, preserving insertion order for equal priorities.
-            return _modules.OrderBy(m => m.Priority).ToArray();
+            return [.. _modules.OrderBy(m => m.Priority)];
+        }
+
+        private void CleanupModules(LazyActor lazyActor)
+        {
+            var context = new ModuleContext(null, lazyActor);
+            INpcModule[] modules = GetOrderedModules();
+            for (int i = 0; i < modules.Length; i++)
+                modules[i].Cleanup(context);
         }
 
         /// <summary>
