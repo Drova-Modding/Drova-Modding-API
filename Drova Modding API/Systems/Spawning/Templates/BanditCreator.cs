@@ -13,13 +13,13 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
     /// </summary>
     public enum BanditDifficulty
     {
-        /// <summary>Coarse / improvised weapons, ragged armour.</summary>
+        /// <summary>Coarse / improvised weapons, ragged armor.</summary>
         Easy = 0,
 
-        /// <summary>Standard bandit weapons and T1/T2 bandit armour.</summary>
+        /// <summary>Standard bandit weapons and T1/T2 bandit armor.</summary>
         Normal = 1,
 
-        /// <summary>Quality weapons, T4 armour and heavier shields.</summary>
+        /// <summary>Quality weapons, T4 armor, and heavier shields.</summary>
         Hard = 2
     }
 
@@ -182,7 +182,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             TalentReadableIds.Sling.Concussion
         ];
 
-        // ── Armour pools (indexed by BanditDifficulty) ─────────────────────────
+        // ── Armor pools (indexed by BanditDifficulty) ─────────────────────────
 
         private static readonly string[][] ChestByDifficulty =
         [
@@ -345,7 +345,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
 
         /// <summary>
         /// Applies a randomized bandit-appropriate cosmetic look that scales with
-        /// <paramref name="difficulty"/> (harder tiers use better armour pieces).
+        /// <paramref name="difficulty"/> (harder tiers use better armor pieces).
         /// </summary>
         private static NpcCreator WithBanditCosmetics(this NpcCreator creator, BanditDifficulty difficulty, Random rng)
         {

@@ -1,4 +1,10 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Nodes;
+using Il2CppDrova;
+using Il2CppDrova.ActorActions;
+using Il2CppDrova.Cutscenes;
+using Il2CppDrova.DialogueNew;
+using Il2CppNodeCanvas.DialogueTrees;
+using Il2CppNodeCanvas.DialogueTrees.UI;
 using MelonLoader;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
@@ -53,6 +59,58 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             { "DS_SetGIntNode", typeof(DS_SetGIntNodeEditor) },
         };
 
+        private readonly Dictionary<string, Func<DialogueTree, DTNode>> _nodeCreators = new()
+        {
+            { "DS_StatementNode", tree => CreateNode<DS_StatementNode>(tree) },
+            { "DS_MultipleChoiceNode", tree => CreateNode<DS_MultipleChoiceNode>(tree) },
+            { "DS_GiveExp", tree => CreateNode<DS_GiveExp>(tree) },
+            { "DS_ChangeStanceNode", tree => CreateNode<DS_ChangeStanceNode>(tree) },
+            { "DS_DebugNode", tree => CreateNode<DS_DebugNode>(tree) },
+            { "DS_HideDialogWindow", tree => CreateNode<DS_HideDialogWindow>(tree) },
+            { "DS_SetFactionNode", tree => CreateNode<DS_SetFactionNode>(tree) },
+            { "DS_SetFirstChapter", tree => CreateNode<DS_SetFirstChapter>(tree) },
+            { "DS_InteractAABaseNode", tree => CreateNode<DS_InteractAABaseNode>(tree) },
+            { "DS_GiveItemNode", tree => CreateNode<DS_GiveItemNode>(tree) },
+            { "DS_RevisitMultipleChoiceNode", tree => CreateNode<DS_RevisitMultipleChoiceNode>(tree) },
+            { "DS_DefineActiveActors", tree => CreateNode<DS_DefineActiveActors>(tree) },
+            { "MultipleConditionNode", tree => CreateNode<MultipleConditionNode>(tree) },
+            { "DS_SetGBoolNode", tree => CreateNode<DS_SetGBoolNode>(tree) },
+            { "ConditionNode", tree => CreateNode<ConditionNode>(tree) },
+            { "DS_HubNode", tree => CreateNode<DS_HubNode>(tree) },
+            { "DS_HubJumpNode", tree => CreateNode<DS_HubJumpNode>(tree) },
+            { "FinishNode", tree => CreateNode<FinishNode>(tree) },
+            { "SubDialogueTree", tree => CreateNode<SubDialogueTree>(tree) },
+            { "DS_OverrideLookAtSpeaker", tree => CreateNode<DS_OverrideLookAtSpeaker>(tree) },
+            { "DS_OverrideFixCamPos", tree => CreateNode<DS_OverrideFixCamPos>(tree) },
+            { "CS_CutsceneActionNode", tree => CreateNode<CS_CutsceneActionNode>(tree) },
+            { "DS_SetDialogueRequirementsNode", tree => CreateNode<DS_SetDialogueRequirementsNode>(tree) },
+            { "DS_OpenTradeWindowNode", tree => CreateNode<DS_OpenTradeWindowNode>(tree) },
+            { "DS_SetTextSpeedNode", tree => CreateNode<DS_SetTextSpeedNode>(tree) },
+            { "DS_CanTeachAnything", tree => CreateNode<DS_CanTeachAnything>(tree) },
+            { "DS_HealActor", tree => CreateNode<DS_HealActor>(tree) },
+            { "DS_EquipNode", tree => CreateNode<DS_EquipNode>(tree) },
+            { "DS_UseItem", tree => CreateNode<DS_UseItem>(tree) },
+            { "DS_SetSpellToActiveAbiSlot", tree => CreateNode<DS_SetSpellToActiveAbiSlot>(tree) },
+            { "DS_UnEquipNodeEditor", tree => CreateNode<DS_UnEquipNode>(tree) },
+            { "DS_KatsaSilverMine", tree => CreateNode<DS_KatsaSilverMine>(tree) },
+            { "DS_LearnStatNode", tree => CreateNode<DS_LearnStatNode>(tree) },
+            { "DS_LearnTalentNode", tree => CreateNode<DS_LearnTalentNode>(tree) },
+            { "DS_ReleaseActiveActors", tree => CreateNode<DS_ReleaseActiveActors>(tree) },
+            { "DS_RestartNode", tree => CreateNode<DS_RestartNode>(tree) },
+            { "DS_LearnAttributeNode_Single", tree => CreateNode<DS_LearnAttributeNode_Single>(tree) },
+            { "DS_PlaySfx", tree => CreateNode<DS_PlaySfx>(tree) },
+            { "DS_DelayedTeach_Statement", tree => CreateNode<DS_DelayedTeach_Statement>(tree) },
+            { "ProbabilitySelector", tree => CreateNode<ProbabilitySelector>(tree) },
+            { "DS_SetGIntNode", tree => CreateNode<DS_SetGIntNode>(tree) },
+        };
+
+        private static DTNode CreateNode<T>(DialogueTree tree) where T : DTNode
+        {
+            T node = tree.AddNode<T>();
+            node.TryGenerateUID();
+            return node;
+        }
+
         /// <summary>
         /// Get all the node names
         /// </summary>
@@ -100,6 +158,27 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             catch (Exception e)
             {
                 MelonLogger.Error("Error creating DrawNodeEditor from type: " + e);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Creates a new dialogue node from a known node name.
+        /// </summary>
+        public DTNode? CreateNodeByName(DialogueTree tree, string name)
+        {
+            if (!_nodeCreators.TryGetValue(name, out Func<DialogueTree, DTNode> creator))
+            {
+                return null;
+            }
+
+            try
+            {
+                return creator.Invoke(tree);
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("Error creating dialogue node {0}: {1}", name, e);
                 return null;
             }
         }

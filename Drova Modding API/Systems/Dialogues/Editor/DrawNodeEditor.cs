@@ -4,14 +4,14 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Dialogues.Editor
 {
     /// <summary>
-    /// Abstract class that helps creating custom node editors for the graph editor
+    /// Abstract class that helps create custom node editors for the graph editor
     /// </summary>
     public abstract class DrawNodeEditor
     {
         /// <summary>
         /// Constructor
         /// </summary>
-        public DrawNodeEditor() { }
+        protected DrawNodeEditor() { }
 
         /// <summary>
         /// List of connected nodes
@@ -48,7 +48,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         public DTNode Node;
 
         /// <summary>
-        /// The max amount of out connections
+        /// The max number of out connections
         /// </summary>
         protected int MaxOutConnections = 1;
 
@@ -64,13 +64,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         public virtual void Init() { }
 
         /// <summary>
-        /// Called when the node is double clicked
+        /// Called when the node is double-clicked
         /// </summary>
         /// <param name="mousePosition">The mousePositíon when it was clicked (translated in gui cords)</param>
         public virtual void OnDoubleClick(Vector2 mousePosition) { }
 
         /// <summary>
-        /// Called when the node is right clicked
+        /// Called when the node is right-clicked
         /// </summary>
         /// <param name="mousePosition">The mousePositíon when it was right clicked (translated in gui cords)</param>
         public virtual void OnRightClick(Vector2 mousePosition) { }

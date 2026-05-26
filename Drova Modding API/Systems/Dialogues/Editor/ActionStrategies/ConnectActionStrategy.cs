@@ -4,12 +4,24 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 {
     internal class ConnectActionStrategy : IActionStrategy
     {
-        public void OnCancel(GraphEditorManager editorManager, DrawNodeEditor selection)
+        private const string ConnectHint = "Click a target node to connect. Press Esc or right-click to cancel.";
+
+        // Source node captured at OnStart — independent of selection changes during the action.
+        private DrawNodeEditor? _sourceNode;
+
+        public void OnCancel(GraphEditorActionContext context)
         {
+            _sourceNode = null;
+            context.SetHint(null);
         }
 
-        public void OnEnd(GraphEditorManager editorManager, DrawNodeEditor selection, Vector2 clickPosition)
+        public void OnEnd(GraphEditorActionContext context)
         {
+            GraphEditorManager editorManager = context.Manager;
+            Vector2 clickPosition = context.PointerPosition;
+            DrawNodeEditor? selection = _sourceNode ?? context.Selection;
+            if (selection == null || editorManager.DialogueTree == null) return;
+
             foreach (KeyValuePair<string, DrawNodeEditor> editor in editorManager.DrawNodeEditors)
             {
                 Rect nodeRect = new(editor.Value.Position, editor.Value.NodeSize);
@@ -23,17 +35,38 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
                     break;
                 }
             }
+
+            _sourceNode = null;
+            context.SetHint(null);
         }
 
-        public void OnGui(GraphEditorManager editorManager, DrawNodeEditor selection, Vector2 mousePosition)
+        public void OnGui(GraphEditorActionContext context)
         {
+            DrawNodeEditor? selection = _sourceNode ?? context.Selection;
+            if (selection == null || selection.NodeSize.x <= 0) return;
+
+            GraphEditorManager editorManager = context.Manager;
+            // Read mouse in raw screen space to avoid GUI.matrix transformed coordinates.
+            Vector2 mouseScreen = Input.mousePosition;
+            mouseScreen.y = Screen.height - mouseScreen.y;
+            Vector2 mousePosition = editorManager.ScreenToGraph(mouseScreen);
             Vector2 nodeCenter = selection.Position + (selection.NodeSize / 2);
             Vector2 nodeEdge = GraphEditorManager.GetEdgePoint(nodeCenter, selection.NodeSize, mousePosition);
-            editorManager.DrawLine(nodeEdge, mousePosition, Color.magenta, 0);
+            Vector2 nodeEdgeScreen = editorManager.GraphToScreen(nodeEdge);
+            
+            // Reset GUI.matrix to screen space before drawing the line
+            Matrix4x4 previousMatrix = GUI.matrix;
+            GUI.matrix = Matrix4x4.identity;
+            GraphEditorManager.DrawLineScreenSpace(nodeEdgeScreen, mouseScreen, Color.magenta);
+            GUI.matrix = previousMatrix;
+            
+            context.SetHint(ConnectHint);
         }
 
-        public void OnStart(GraphEditorManager editorManager, DrawNodeEditor selection, Vector2 clickPosition)
+        public void OnStart(GraphEditorActionContext context)
         {
+            _sourceNode = context.Selection;
+            context.SetHint(ConnectHint);
         }
     }
 }

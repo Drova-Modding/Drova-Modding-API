@@ -4,14 +4,15 @@ using Il2CppNodeCanvas.DialogueTrees;
 namespace Drova_Modding_API.Systems.Spawning.Modules
 {
     /// <summary>
-    /// Applies a stored custom dialogue tree to an NPC's dialogue controller.
+    /// Applies a stored custom dialogue tree to an NPCs dialogue controller.
     /// </summary>
-    internal sealed class DialoguePresetModule(string dialogueId) : INpcModule
+    public sealed class DialogueModule(string dialogueId) : INpcModule
     {
-        private readonly DialogueStore _dialogueStore = new();
-
+        
+        /// <inheritdoc/>
         public int Priority => 200;
 
+        /// <inheritdoc/>
         public void Apply(ModuleContext context)
         {
             if (string.IsNullOrWhiteSpace(dialogueId))
@@ -21,13 +22,12 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             if (dialogueTreeController == null)
                 return;
 
-            if (!_dialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) || loadedDialogue == null)
+            if (!DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) || loadedDialogue == null)
                 return;
 
             loadedDialogue.Serialize(null);
             dialogueTreeController.graph = loadedDialogue;
         }
-
     }
 }
 

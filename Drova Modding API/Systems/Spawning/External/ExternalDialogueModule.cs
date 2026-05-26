@@ -38,7 +38,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (string.IsNullOrWhiteSpace(state.DialogueId))
                 return;
 
-            creator.WithModule(new DialoguePresetModule(state.DialogueId));
+            creator.WithModule(new DialogueModule(state.DialogueId));
         }
 
         internal static string GetDialogueId(string? payload)

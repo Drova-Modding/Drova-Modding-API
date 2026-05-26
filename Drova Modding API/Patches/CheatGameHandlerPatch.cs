@@ -12,9 +12,9 @@ namespace Drova_Modding_API.Patches
     [HarmonyPatch(typeof(CheatGameHandler), nameof(CheatGameHandler.EnableCheatMode))]
     internal static class CheatGameHandlerPatch
     {
-        static void Postfix(bool enable)    
+        static void Postfix(bool value)    
         {
-            if (enable)
+            if (value)
             {
                 CheatMenuAccess.NotifyCheatModeEnabled();
             }

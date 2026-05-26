@@ -38,14 +38,26 @@ namespace Drova_Modding_API.Systems.Spawning
         private Vector2 _definitionsScroll;
         private List<ExternalNpcPlacementSystem.ExternalNpcDefinition> _cachedDefinitions = [];
         private readonly Dictionary<string, bool> _moduleExpandedByKey = new(StringComparer.OrdinalIgnoreCase);
-        private readonly DialogueStore _dialogueStore = new();
         private GraphEditorManager? _graphEditorManager;
         private bool _gameplayInputBlockedByWizard;
+        private string? _loadedDefinitionId;
+        private string? _loadedDialogueDefinitionId;
+        private string? _loadedDialogueId;
+        private PendingOverwriteAction _pendingOverwriteAction;
+        private string _pendingOverwriteMessage = string.Empty;
 
         private ExternalNpcPlacementSystem.ExternalNpcDefinition _definition = CreateDefaultDefinitionAtPlayerPosition();
         private string _status = "Use cheat command 'npc_wizard' to open this window.";
         private string _positionXInput = string.Empty;
         private string _positionYInput = string.Empty;
+
+        private enum PendingOverwriteAction
+        {
+            None,
+            SaveDefinition,
+            SaveDefinitionAndSpawn,
+            SaveDialogue
+        }
 
         internal void Awake()
         {
@@ -138,7 +150,10 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!string.IsNullOrWhiteSpace(_status))
                 GUILayout.Label(_status);
 
-            DrawActionButtons();
+            if (HasPendingOverwrite())
+                DrawOverwriteConfirmationPrompt();
+            else
+                DrawActionButtons();
 
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
@@ -234,7 +249,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 GUILayout.Label("Dialogue actions require a spawned NPC.");
 
             GUILayout.BeginHorizontal();
-            GUI.enabled = isCurrentDefinitionSpawned;
+            GUI.enabled = isCurrentDefinitionSpawned && !HasPendingOverwrite();
 
             if (GUILayout.Button("Edit Graph", GUILayout.Width(120f)))
             {
@@ -285,6 +300,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (GUILayout.Button("New"))
             {
                 _definition = CreateDefaultDefinitionAtPlayerPosition();
+                MarkCurrentDefinitionAsUnloaded();
                 SyncPositionInputs();
                 _status = "Created a fresh definition template.";
             }
@@ -295,6 +311,8 @@ namespace Drova_Modding_API.Systems.Spawning
                 {
                     _definition = found;
                     ExternalNpcModuleRegistry.EnsureDefaults(_definition);
+                    MarkCurrentDefinitionAsLoaded();
+                    ClearDialogueLoadedMarker();
                     SyncPositionInputs();
                     _status = $"Loaded definition '{_definition.Id}'.";
                 }
@@ -309,10 +327,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 if (!ValidateForSave())
                     return;
 
-                if (ExternalNpcPlacementSystem.UpsertDefinition(_definition))
-                    _status = $"Saved definition '{_definition.Id}'.";
-                else
-                    _status = "Failed to save definition.";
+                TrySaveDefinitionWithOptionalConfirmation(spawnAfterSave: false);
             }
 
             if (GUILayout.Button("Save + Spawn"))
@@ -320,10 +335,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 if (!ValidateForSave())
                     return;
 
-                bool saved = ExternalNpcPlacementSystem.UpsertDefinition(_definition);
-                bool spawned = ExternalNpcPlacementSystem.SpawnDefinition(_definition, skipIfAlreadySpawned: true, requireEnabled: false);
-                _status = $"Save: {(saved ? "ok" : "failed")}, Spawn: {(spawned ? "spawned" : "skipped")}.";
-                RefreshDefinitionsCache();
+                TrySaveDefinitionWithOptionalConfirmation(spawnAfterSave: true);
             }
 
             GUI.enabled = isCurrentDefinitionSpawned;
@@ -385,16 +397,15 @@ namespace Drova_Modding_API.Systems.Spawning
                 {
                     _definition = definition;
                     ExternalNpcModuleRegistry.EnsureDefaults(_definition);
+                    MarkCurrentDefinitionAsLoaded();
+                    ClearDialogueLoadedMarker();
                     SyncPositionInputs();
                     _status = $"Loaded definition '{_definition.Id}' from browser.";
                 }
 
                 if (GUILayout.Button("Teleport", GUILayout.Width(90f)))
                 {
-                    if (TryTeleportPlayerToDefinition(definition))
-                        _status = $"Teleported player to '{definition.Id}'.";
-                    else
-                        _status = "Player was not found. Teleport failed.";
+                    _status = TryTeleportPlayerToDefinition(definition) ? $"Teleported player to '{definition.Id}'." : "Player was not found. Teleport failed.";
                 }
 
                 if (GUILayout.Button("Spawn", GUILayout.Width(90f)))
@@ -431,7 +442,7 @@ namespace Drova_Modding_API.Systems.Spawning
         [HideFromIl2Cpp]
         private static bool TryTeleportPlayerToDefinition(ExternalNpcPlacementSystem.ExternalNpcDefinition definition)
         {
-            if (!PlayerAccess.TryGetPlayer(out Il2CppDrova.Actor player) || player == null)
+            if (!PlayerAccess.TryGetPlayer(out Actor player) || player == null)
                 return false;
 
             Vector3 current = player.transform.position;
@@ -500,10 +511,11 @@ namespace Drova_Modding_API.Systems.Spawning
             if (controller.graph != null)
                 return true;
 
-            if (_dialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) && loadedDialogue != null)
+            if (DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) && loadedDialogue != null)
             {
                 loadedDialogue.Serialize(null);
                 controller.graph = loadedDialogue;
+                MarkCurrentDialogueAsLoaded(dialogueId);
                 _status = $"Loaded stored dialogue '{dialogueId}'.";
                 return true;
             }
@@ -517,6 +529,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
             createdDialogue.Serialize(null);
             controller.graph = createdDialogue;
+            ClearDialogueLoadedMarker();
             _status = $"Created new starter dialogue '{dialogueId}'.";
             return true;
         }
@@ -572,6 +585,18 @@ namespace Drova_Modding_API.Systems.Spawning
         [HideFromIl2Cpp]
         private bool TrySaveDialogueForCurrentDefinition()
         {
+            if (HasPendingOverwrite())
+            {
+                _status = "Confirm or cancel the pending overwrite first.";
+                return false;
+            }
+
+            return TrySaveDialogueForCurrentDefinitionInternal(overwriteConfirmed: false);
+        }
+
+        [HideFromIl2Cpp]
+        private bool TrySaveDialogueForCurrentDefinitionInternal(bool overwriteConfirmed)
+        {
             if (!TryGetCurrentDialogueId(out string dialogueId))
                 return false;
 
@@ -595,13 +620,22 @@ namespace Drova_Modding_API.Systems.Spawning
                 return false;
             }
 
-            bool saved = _dialogueStore.SaveDialogue(dialogueId, dialogueTree);
+            if (!overwriteConfirmed && RequiresDialogueOverwriteConfirmation(dialogueId))
+            {
+                QueueOverwriteConfirmation(
+                    PendingOverwriteAction.SaveDialogue,
+                    $"Dialogue '{dialogueId}' already exists in store and is not currently loaded. Overwrite existing dialogue configuration?");
+                return false;
+            }
+
+            bool saved = DialogueStore.SaveDialogue(dialogueId, dialogueTree);
             if (!saved)
             {
                 _status = $"Failed to save dialogue '{dialogueId}'.";
                 return false;
             }
 
+            MarkCurrentDialogueAsLoaded(dialogueId);
             return true;
         }
 
@@ -624,7 +658,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 return false;
             }
 
-            if (!_dialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) || loadedDialogue == null)
+            if (!DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) || loadedDialogue == null)
             {
                 _status = $"No stored dialogue found for '{dialogueId}'.";
                 return false;
@@ -632,7 +666,169 @@ namespace Drova_Modding_API.Systems.Spawning
 
             loadedDialogue.Serialize(null);
             controller.graph = loadedDialogue;
+            MarkCurrentDialogueAsLoaded(dialogueId);
             return true;
+        }
+
+        [HideFromIl2Cpp]
+        private bool HasPendingOverwrite()
+            => _pendingOverwriteAction != PendingOverwriteAction.None;
+
+        [HideFromIl2Cpp]
+        private void DrawOverwriteConfirmationPrompt()
+        {
+            GUILayout.Space(6f);
+            GUILayout.BeginVertical("box");
+            GUILayout.Label(_pendingOverwriteMessage);
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Overwrite", GUILayout.Width(130f)))
+                ExecutePendingOverwrite();
+
+            if (GUILayout.Button("Cancel", GUILayout.Width(130f)))
+            {
+                ClearPendingOverwrite();
+                _status = "Overwrite canceled.";
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+        }
+
+        [HideFromIl2Cpp]
+        private void QueueOverwriteConfirmation(PendingOverwriteAction action, string message)
+        {
+            _pendingOverwriteAction = action;
+            _pendingOverwriteMessage = message;
+            _status = "Overwrite confirmation required.";
+        }
+
+        [HideFromIl2Cpp]
+        private void ClearPendingOverwrite()
+        {
+            _pendingOverwriteAction = PendingOverwriteAction.None;
+            _pendingOverwriteMessage = string.Empty;
+        }
+
+        [HideFromIl2Cpp]
+        private void ExecutePendingOverwrite()
+        {
+            PendingOverwriteAction action = _pendingOverwriteAction;
+            ClearPendingOverwrite();
+
+            switch (action)
+            {
+                case PendingOverwriteAction.SaveDefinition:
+                    SaveDefinitionInternal(spawnAfterSave: false);
+                    break;
+                case PendingOverwriteAction.SaveDefinitionAndSpawn:
+                    SaveDefinitionInternal(spawnAfterSave: true);
+                    break;
+                case PendingOverwriteAction.SaveDialogue:
+                    if (TrySaveDialogueForCurrentDefinitionInternal(overwriteConfirmed: true))
+                        _status = "Saved spawned NPC dialogue to dialogue store.";
+                    break;
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private void TrySaveDefinitionWithOptionalConfirmation(bool spawnAfterSave)
+        {
+            if (HasPendingOverwrite())
+            {
+                _status = "Confirm or cancel the pending overwrite first.";
+                return;
+            }
+
+            if (RequiresDefinitionOverwriteConfirmation())
+            {
+                QueueOverwriteConfirmation(
+                    spawnAfterSave ? PendingOverwriteAction.SaveDefinitionAndSpawn : PendingOverwriteAction.SaveDefinition,
+                    $"Definition '{_definition.Id}' already exists and is not currently loaded. Overwrite existing configuration?");
+                return;
+            }
+
+            SaveDefinitionInternal(spawnAfterSave);
+        }
+
+        [HideFromIl2Cpp]
+        private void SaveDefinitionInternal(bool spawnAfterSave)
+        {
+            bool saved = ExternalNpcPlacementSystem.UpsertDefinition(_definition);
+            if (!saved)
+            {
+                _status = "Failed to save definition.";
+                return;
+            }
+
+            MarkCurrentDefinitionAsLoaded();
+            if (!spawnAfterSave)
+            {
+                _status = $"Saved definition '{_definition.Id}'.";
+                RefreshDefinitionsCache();
+                return;
+            }
+
+            bool spawned = ExternalNpcPlacementSystem.SpawnDefinition(_definition, skipIfAlreadySpawned: true, requireEnabled: false);
+            _status = $"Save: ok, Spawn: {(spawned ? "spawned" : "skipped")}.";
+            RefreshDefinitionsCache();
+        }
+
+        [HideFromIl2Cpp]
+        private bool RequiresDefinitionOverwriteConfirmation()
+        {
+            if (string.IsNullOrWhiteSpace(_definition.Id))
+                return false;
+
+            if (!ExternalNpcPlacementSystem.TryGetDefinition(_definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? existingDefinition) || existingDefinition == null)
+                return false;
+
+            return !string.Equals(_loadedDefinitionId, _definition.Id, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [HideFromIl2Cpp]
+        private bool RequiresDialogueOverwriteConfirmation(string dialogueId)
+        {
+            if (string.IsNullOrWhiteSpace(dialogueId))
+                return false;
+
+            if (!DialogueExistsInStore(dialogueId))
+                return false;
+
+            bool loadedForCurrentDefinition =
+                string.Equals(_loadedDialogueDefinitionId, _definition.Id, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(_loadedDialogueId, dialogueId, StringComparison.OrdinalIgnoreCase);
+            return !loadedForCurrentDefinition;
+        }
+
+        [HideFromIl2Cpp]
+        private static bool DialogueExistsInStore(string dialogueId)
+            => File.Exists(DialogueStore.GetDialogueFilePath(dialogueId));
+
+        [HideFromIl2Cpp]
+        private void MarkCurrentDefinitionAsLoaded()
+        {
+            _loadedDefinitionId = _definition.Id;
+        }
+
+        [HideFromIl2Cpp]
+        private void MarkCurrentDefinitionAsUnloaded()
+        {
+            _loadedDefinitionId = null;
+            ClearDialogueLoadedMarker();
+        }
+
+        [HideFromIl2Cpp]
+        private void MarkCurrentDialogueAsLoaded(string dialogueId)
+        {
+            _loadedDialogueDefinitionId = _definition.Id;
+            _loadedDialogueId = dialogueId;
+        }
+
+        [HideFromIl2Cpp]
+        private void ClearDialogueLoadedMarker()
+        {
+            _loadedDialogueDefinitionId = null;
+            _loadedDialogueId = null;
         }
 
         [HideFromIl2Cpp]
@@ -665,7 +861,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (graphEditorRoot == null)
             {
                 graphEditorRoot = new GameObject(WizardGraphEditorName);
-                UnityEngine.Object.DontDestroyOnLoad(graphEditorRoot);
+                DontDestroyOnLoad(graphEditorRoot);
             }
 
             _graphEditorManager = graphEditorRoot.GetComponent<GraphEditorManager>();
@@ -686,7 +882,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (_initialPlayerPositionApplied)
                 return;
 
-            if (!PlayerAccess.TryGetPlayer(out Il2CppDrova.Actor player) || player == null)
+            if (!PlayerAccess.TryGetPlayer(out Actor player) || player == null)
                 return;
 
             Vector3 playerPosition = player.transform.position;
@@ -699,7 +895,7 @@ namespace Drova_Modding_API.Systems.Spawning
         private static ExternalNpcPlacementSystem.ExternalNpcDefinition CreateDefaultDefinitionAtPlayerPosition()
         {
             ExternalNpcPlacementSystem.ExternalNpcDefinition definition = ExternalNpcPlacementSystem.CreateDefaultDefinition();
-            if (PlayerAccess.TryGetPlayer(out Il2CppDrova.Actor player) && player != null)
+            if (PlayerAccess.TryGetPlayer(out Actor player) && player != null)
             {
                 Vector3 playerPosition = player.transform.position;
                 definition.PositionX = playerPosition.x;
@@ -804,7 +1000,4 @@ namespace Drova_Modding_API.Systems.Spawning
         }
     }
 }
-
-
-
 

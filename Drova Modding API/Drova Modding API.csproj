@@ -478,6 +478,10 @@
 		<Compile Include="Systems\Audio\IAudioProvider.cs" />
 		<Compile Include="Systems\Audio\AudioLog.cs" />
 		<Compile Include="Systems\Audio\AudioManager.cs" />
+		<Compile Include="Systems\Dialogues\Editor\ActionStrategies\CreateNodeActionStrategy.cs" />
+		<Compile Include="Systems\Dialogues\Editor\ActionStrategies\DeleteNodeActionStrategy.cs" />
+		<Compile Include="Systems\Dialogues\Editor\ActionStrategies\DuplicateNodeActionStrategy.cs" />
+		<Compile Include="Systems\Dialogues\Editor\ActionStrategies\GraphEditorActionContext.cs" />
 		<Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
 		<Compile Include="Systems\Editor\EditorManager.cs" />
 		<Compile Include="Systems\Editor\NpcMouseRaycast.cs" />
@@ -513,7 +517,7 @@
 		<Compile Include="Systems\Spawning\INpcModule.cs" />
 		<Compile Include="Systems\Spawning\LazyActorPreInitRegistry.cs" />
 		<Compile Include="Systems\Spawning\ModuleContext.cs" />
-		<Compile Include="Systems\Spawning\Modules\DialoguePresetModule.cs" />
+		<Compile Include="Systems\Spawning\Modules\DialogueModule.cs" />
 		<Compile Include="Systems\Spawning\Wizard\NpcWizardSystem.cs" />
 		<Compile Include="Systems\Spawning\Wizard\NpcWizardUI.cs" />
 		<Compile Include="Systems\Spawning\Modules\AlignmentModule.cs" />
@@ -676,9 +680,6 @@
 	<ItemGroup>
 	  <Content Include="..\.gitignore">
 	    <Link>.gitignore</Link>
-	  </Content>
-	  <Content Include="..\Agents.md">
-	    <Link>Agents.md</Link>
 	  </Content>
 	</ItemGroup>
 
