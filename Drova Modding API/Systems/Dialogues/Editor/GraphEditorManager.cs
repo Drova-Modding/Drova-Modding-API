@@ -26,8 +26,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// </summary>
         protected List<GraphEditorSnapshot> GraphEditorSnapshots = [];
 
-        private DialogueTree _dialogueTree;
-        private bool _isActive = false;
+        private DialogueTree? _dialogueTree;
+        private bool _isActive;
         private readonly DialogueStore _dialogueStore = new();
         private IActionStrategy? _activeAction;
 
@@ -56,14 +56,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 _dialogueTree = value;
                 if (_isActive) return;
                 EditorManager.AllowNpcSelection = false;
-                InputAccess.ToggleGampeplayActionMaps(false);
+                InputAccess.ToggleGameplayActionMaps(false);
                 Time.timeScale = 0;
                 _isActive = true;
             }
         }
 
         // Currently selected node
-        private DrawNodeEditor? _selectedNode = null;
+        private DrawNodeEditor? _selectedNode;
 
         // Offset between the mouse position and node position
         private Vector2 _dragOffset;
@@ -81,10 +81,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         public DrawTaskEditorFactory DrawTaskEditorFactory { get; set; }
 
         // Track whether the context menu is open
-        private bool _showContextMenu = false;
+        private bool _showContextMenu;
 
         // Track whether the sub-context menu is open
-        private bool _showSubContextMenu = false;
+        private bool _showSubContextMenu;
 
         // Position where the right-click occurred
         private Vector2 _contextMenuPosition;
@@ -98,9 +98,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         // Start point for panning drag
         private Vector2 _dragStart;
         // Is panning in progress?
-        private bool _isDragging = false;
+        private bool _isDragging;
         // Is a node being dragged?
-        private bool _isDraggingNode = false;
+        private bool _isDraggingNode;
 
         private bool _isFirstDraw = true;
 
@@ -213,10 +213,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // Draw the tooltip
             if (GUI.tooltip != "")
             {
-                GUIStyle style = new(GUI.skin.label);
-                style.normal.textColor = Color.white;
-                style.fontSize = 12;
-                style.alignment = TextAnchor.MiddleCenter;
+                GUIStyle style = new(GUI.skin.label)
+                {
+                    normal =
+                    {
+                        textColor = Color.white
+                    },
+                    fontSize = 12,
+                    alignment = TextAnchor.MiddleCenter
+                };
 
                 float width = style.CalcSize(new GUIContent(GUI.tooltip)).x;
                 float height = style.CalcHeight(new GUIContent(GUI.tooltip), width);
@@ -364,7 +369,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (GUI.Button(new(Screen.width - 110, 70, 100, 60), "Save Graph"))
             {
                 DialogueTree.Serialize(null);
-                this._dialogueStore.SaveDialogue(DialogueTree);
+                string dialogueId = string.IsNullOrWhiteSpace(DialogueTree.Key) ? DialogueTree.name : DialogueTree.Key;
+                this._dialogueStore.SaveDialogue(dialogueId, DialogueTree);
             }
             if (GUI.Button(new(Screen.width - 160, 130, 150, 60), "Resolve Overlaps"))
             {
@@ -407,7 +413,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // Restore the previous timescale if the game is paused which is the case when the graph is opened
             if (Time.timeScale == 0)
                 Time.timeScale = 1;
-            InputAccess.ToggleGampeplayActionMaps(true);
+            InputAccess.ToggleGameplayActionMaps(true);
         }
 
         [HideFromIl2Cpp]
@@ -731,16 +737,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         void DrawSubContextMenu()
         {
             float menuWidth = 200;
-            string[] _subContextMenuOptions = DrawNodeEditorFactory.GetNodeNames();
+            string[] subContextMenuOptions = DrawNodeEditorFactory.GetNodeNames();
 
-            DrawContextMenu(_subContextMenuOptions.Length, menuWidth);
+            DrawContextMenu(subContextMenuOptions.Length, menuWidth);
 
             // Display each option as a button
-            for (int i = 0; i < _subContextMenuOptions.Length; i++)
+            for (int i = 0; i < subContextMenuOptions.Length; i++)
             {
-                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), _subContextMenuOptions[i]))
+                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), subContextMenuOptions[i]))
                 {
-                    HandleSubContextMenuSelection(_subContextMenuOptions[i]);
+                    HandleSubContextMenuSelection(subContextMenuOptions[i]);
                     _showSubContextMenu = false; // Close the menu after selection
                 }
             }

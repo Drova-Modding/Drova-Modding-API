@@ -10,9 +10,8 @@ namespace Drova_Modding_API.Access
     /// <summary>
     /// This class is used to access the localization system.
     /// </summary>
-    public class LocalizationAccess
+    public static class LocalizationAccess
     {
-        private LocalizationAccess() { }
 
         /// <summary>
         /// Changes the language of the game.

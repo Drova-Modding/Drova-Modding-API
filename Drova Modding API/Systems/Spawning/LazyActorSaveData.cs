@@ -39,6 +39,11 @@
          */
         public string CustomEntityInfoGuid { get; set; }
 
+        /**
+         * Optional identifier when this lazy actor was created from an external NPC definition file.
+         */
+        public string? ExternalDefinitionId { get; set; }
+
         /// <summary>
         /// Empty constructor
         /// </summary>

@@ -33,6 +33,8 @@ namespace Drova_Modding_API.Systems
             moddingAPISystemRoot.SetActive(true);
             SaveGameSystem.Instance.OnLoad(Savegame.Current);
             NpcCreator.CacheAlignments();
+            ExternalNpcPlacementSystem.SpawnConfiguredNpcs();
+            NpcWizardSystem.Initialize();
 
 #if DEBUG
             EditorUI.Init();

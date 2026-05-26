@@ -217,8 +217,9 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Creates a lazy NPC and applies modules every time the runtime actor is loaded.
         /// </summary>
         /// <param name="saveToLazyActorStore">If true, writes lazy actor metadata to the save store for restore.</param>
+        /// <param name="externalDefinitionId">Optional external definition id used to deduplicate JSON-driven NPC placements.</param>
         /// <returns>The configured lazy actor handle.</returns>
-        public LazyActor CreateLazy(bool saveToLazyActorStore = false)
+        public LazyActor CreateLazy(bool saveToLazyActorStore = false, string? externalDefinitionId = null)
         {
             LazyActor lazyActor = LazyActorCreator.CreateLazyActor(_name, _lazyActorReference, _spawnPosition, _lazyEntityInfoReference, _customLazyEntityInfo, true);
 
@@ -247,6 +248,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     entityInfoGuid,
                     true
                 );
+                customEntityInfoData.ExternalDefinitionId = externalDefinitionId;
                 lazyActorStore.Add(customEntityInfoData);
             }
             // Handle addressable EntityInfo reference
@@ -259,6 +261,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     lazyActor._guidstring,
                     true
                 );
+                addressableEntityInfoData.ExternalDefinitionId = externalDefinitionId;
                 lazyActorStore.Add(addressableEntityInfoData);
             }
             else

@@ -170,6 +170,103 @@ public class CustomNPCSpawner : MelonMod
 }
 ```
 
+### Placing NPCs Without Code (External JSON)
+You can now place and configure NPCs without writing C#.
+
+#### In-game Wizard (recommended)
+1. Enable cheat mode and open the terminal.
+2. Run `npc_wizard`.
+3. Configure base data + modules in the window.
+4. Click **Save Definition** or **Save + Spawn**.
+
+The wizard is designed to be extensible: newly registered external NPC modules will automatically show up in the UI.
+New definitions created in the wizard default their spawn position to the player's current position.
+
+#### Small module author example
+```csharp
+using Drova_Modding_API.Systems.Spawning;
+using System.Text.Json;
+
+public sealed class MyTagModule : ExternalNpcModuleRegistry.IExternalNpcModule
+{
+    public string Key => "myTag";
+    public string DisplayName => "My Tag";
+
+    public string CreateDefaultPayload() => JsonSerializer.Serialize(new State { Tag = "Guard" });
+
+    public string DrawWizardUiAndSerialize(string payload)
+    {
+        State state = Parse(payload);
+        GUILayout.Label("Tag text");
+        state.Tag = GUILayout.TextField(state.Tag);
+        return JsonSerializer.Serialize(state);
+    }
+
+    public void ApplyToCreator(NpcCreator creator, string? payload)
+    {
+        State state = Parse(payload);
+        creator.WithModule(new RenameWithTagModule(state.Tag));
+    }
+
+    private static State Parse(string? payload)
+        => string.IsNullOrWhiteSpace(payload)
+            ? new State()
+            : JsonSerializer.Deserialize<State>(payload) ?? new State();
+
+    private sealed class State
+    {
+        public string Tag { get; set; } = "Guard";
+    }
+
+    private sealed class RenameWithTagModule(string tag) : INpcModule
+    {
+        public int Priority => 1000;
+        public void Apply(ModuleContext context)
+        {
+            if (context.Npc != null && !string.IsNullOrWhiteSpace(tag))
+                context.Npc.name = $"{context.Npc.name} [{tag}]";
+        }
+    }
+}
+
+// Register once during your mod initialization:
+// ExternalNpcModuleRegistry.Register(new MyTagModule());
+```
+
+#### Direct JSON editing (for mod authors)
+Every mod can ship its own `*.json` file inside the `Mods/Modding_API/NpcPlacement/` folder.
+All files in that folder are scanned on game start — each mod's file is completely independent.
+
+1. Create a file, e.g. `Mods/Modding_API/NpcPlacement/my_mod_npcs.json`.
+2. Populate it with the structure below and set `enabled` to `true`.
+3. On game start, enabled entries are spawned as lazy actors and then managed by the normal save pipeline.
+
+The in-game wizard saves wizard-created definitions to `wizard_placements.json` in the same folder and never touches mod-provided files.
+
+Example entry:
+```json
+{
+  "version": 1,
+  "npcs": [
+    {
+      "id": "my_first_custom_npc",
+      "name": "Custom NPC",
+      "positionX": 12.5,
+      "positionY": -3.0,
+      "moduleConfig": {
+        "friendly": "{\"isPlayerFriendly\":true}",
+        "equipment": "{\"itemReadableIds\":[\"sword_iron\"]}",
+        "cosmetics": "{\"cosmeticReadableIds\":[\"hair_short_1\"]}",
+        "entityInfo": "{\"assetGuid\":\"\"}"
+      },
+      "enabled": true
+    }
+  ]
+}
+```
+
+`moduleConfig` is the canonical schema for external NPC definitions.
+
 ### Handling World Events
 ```csharp
 public class EventListener : MelonMod

@@ -11,9 +11,9 @@ namespace Drova_Modding_API
         /// <summary>
         /// The folder name of the Modding API.
         /// </summary>
-        public const string ModdingAPI_FolderName = "Modding_API";
+        public const string ModdingApiFolderName = "Modding_API";
 
-        internal static string SavePath = Path.Combine(Core.AssemblyLocation, "..", ModdingAPI_FolderName);
+        internal static readonly string SavePath = Path.Combine(Path.GetDirectoryName(Core.AssemblyLocation)!, ModdingApiFolderName);
         /**
          * Converts an enum to its index.
          */
@@ -161,12 +161,6 @@ namespace Drova_Modding_API
                 Key.F10 => KeyCode.F10,
                 Key.F11 => KeyCode.F11,
                 Key.F12 => KeyCode.F12,
-                Key.OEM1 => unknownKey,
-                Key.OEM2 => unknownKey,
-                Key.OEM3 => unknownKey,
-                Key.OEM4 => unknownKey,
-                Key.OEM5 => unknownKey,
-                Key.IMESelected => unknownKey,
                 _ => unknownKey,
             };
         }

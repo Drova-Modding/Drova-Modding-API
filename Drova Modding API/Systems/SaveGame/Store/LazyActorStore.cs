@@ -46,6 +46,7 @@ namespace Drova_Modding_API.Systems.SaveGame.Store
             lazyActors.Clear();
             lazyActors.AddRange(JsonSerializer.Deserialize<List<LazyActorSaveData>>(loaded));
             LazyActorCreator.RestoreLazyActor(lazyActors);
+            ExternalNpcPlacementSystem.HydrationRebuildSpawnedActorsFromStore();
         }
 
         public string Save()

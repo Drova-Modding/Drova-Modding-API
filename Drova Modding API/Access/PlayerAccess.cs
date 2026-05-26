@@ -5,7 +5,7 @@ namespace Drova_Modding_API.Access
     /// <summary>
     /// Access to the player actor and its properties.
     /// </summary>
-    public class PlayerAccess
+    public static class PlayerAccess
     {
         /// <summary>
         /// Get the actor reference of the player. Can be null in menus.
