@@ -474,6 +474,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (Time.timeScale == 0)
                 Time.timeScale = 1;
             InputAccess.ToggleGameplayActionMaps(true);
+            gameObject.SetActive(false);
         }
 
         [HideFromIl2Cpp]

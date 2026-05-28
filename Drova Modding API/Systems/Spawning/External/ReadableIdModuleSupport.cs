@@ -20,44 +20,28 @@ namespace Drova_Modding_API.Systems.Spawning
             public int SuggestionSelectionIndex;
         }
 
-        private static IReadOnlyList<string> _cachedIds = [];
-        private static IReadOnlyList<string> _cachedCategories = [AllCategory];
-        private static IReadOnlyDictionary<string, IReadOnlyList<string>> _cachedIdsByCategory = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
+        internal sealed class EditorDataSource
+        {
+            public EditorDataSource(IReadOnlyList<string> ids, Func<string, string>? categorySelector = null)
+            {
+                Ids = ids;
+                Func<string, string> selector = categorySelector ?? GetCategoryForId;
+                IdsByCategory = BuildCategoryBuckets(Ids, selector);
+                Categories = BuildCategories(IdsByCategory.Keys);
+            }
+
+            public IReadOnlyList<string> Ids { get; }
+            public IReadOnlyList<string> Categories { get; }
+            public IReadOnlyDictionary<string, IReadOnlyList<string>> IdsByCategory { get; }
+        }
+
+        private static EditorDataSource _defaultDataSource = new([], GetCategoryForId);
         private static bool _cacheInitialized;
-        private static int _cachedFingerprint;
-        private static string _lastSearchQuery = string.Empty;
-        private static string _lastSearchCategory = AllCategory;
-        private static int _lastSearchMaxResults;
-        private static int _lastSearchFingerprint = int.MinValue;
-        private static IReadOnlyList<string> _lastSearchResults = [];
 
         public static IReadOnlyList<string> Search(string? query, string? categoryFilter, int maxResults)
         {
-            if (maxResults <= 0)
-                return [];
-
             EnsureCacheUpToDate();
-            string normalizedCategory = NormalizeCategory(categoryFilter);
-            IReadOnlyList<string> sourceIds = GetSourceIds(normalizedCategory);
-            if (sourceIds.Count == 0)
-                return [];
-
-            string normalizedQuery = query?.Trim() ?? string.Empty;
-            if (_lastSearchFingerprint == _cachedFingerprint
-                && _lastSearchMaxResults == maxResults
-                && string.Equals(_lastSearchCategory, normalizedCategory, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(_lastSearchQuery, normalizedQuery, StringComparison.OrdinalIgnoreCase))
-            {
-                return _lastSearchResults;
-            }
-
-            IReadOnlyList<string> matches = CollectMatches(sourceIds, normalizedQuery, maxResults);
-            _lastSearchQuery = normalizedQuery;
-            _lastSearchCategory = normalizedCategory;
-            _lastSearchMaxResults = maxResults;
-            _lastSearchFingerprint = _cachedFingerprint;
-            _lastSearchResults = matches;
-            return matches;
+            return Search(_defaultDataSource, query, categoryFilter, maxResults);
         }
 
         public static void WarmUpCache()
@@ -102,21 +86,13 @@ namespace Drova_Modding_API.Systems.Spawning
         public static IReadOnlyList<string> GetCategories()
         {
             EnsureCacheUpToDate();
-            return _cachedCategories;
+            return _defaultDataSource.Categories;
         }
 
         public static void InvalidateCache()
         {
-            _cachedIds = [];
-            _cachedCategories = [AllCategory];
-            _cachedIdsByCategory = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
+            _defaultDataSource = new EditorDataSource([], GetCategoryForId);
             _cacheInitialized = false;
-            _cachedFingerprint = 0;
-            _lastSearchQuery = string.Empty;
-            _lastSearchCategory = AllCategory;
-            _lastSearchMaxResults = 0;
-            _lastSearchFingerprint = int.MinValue;
-            _lastSearchResults = [];
         }
 
         public static List<string> SplitCsv(string? raw)
@@ -141,7 +117,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (uiState == null)
                 throw new ArgumentNullException(nameof(uiState));
 
-            DrawEditor(
+            DrawEditorInternal(
                 label,
                 ref rawInput,
                 ref uiState.AutoCompleteInput,
@@ -153,10 +129,42 @@ namespace Drova_Modding_API.Systems.Spawning
                 ref uiState.SuggestionDropdownScroll,
                 ref uiState.SuggestionSelectionIndex,
                 out selectedIds,
-                uiKey);
+                uiKey,
+                Search,
+                GetCategories);
         }
 
         public static void DrawEditor(
+            string label,
+            ref string? rawInput,
+            EditorUiState uiState,
+            out List<string> selectedIds,
+            string uiKey,
+            EditorDataSource dataSource)
+        {
+            if (uiState == null)
+                throw new ArgumentNullException(nameof(uiState));
+            if (dataSource == null)
+                throw new ArgumentNullException(nameof(dataSource));
+
+            DrawEditorInternal(
+                label,
+                ref rawInput,
+                ref uiState.AutoCompleteInput,
+                ref uiState.CategoryFilter,
+                ref uiState.ShowCategoryDropdown,
+                ref uiState.CategoryDropdownScroll,
+                ref uiState.CategorySelectionIndex,
+                ref uiState.ShowSuggestionDropdown,
+                ref uiState.SuggestionDropdownScroll,
+                ref uiState.SuggestionSelectionIndex,
+                out selectedIds,
+                uiKey,
+                (query, categoryFilter, maxResults) => Search(dataSource, query, categoryFilter, maxResults),
+                () => dataSource.Categories);
+        }
+
+        private static void DrawEditorInternal(
             string label,
             ref string? rawInput,
             ref string autoCompleteInput,
@@ -168,11 +176,14 @@ namespace Drova_Modding_API.Systems.Spawning
             ref Vector2 suggestionDropdownScroll,
             ref int suggestionSelectionIndex,
             out List<string> selectedIds,
-            string uiKey)
+            string uiKey,
+            Func<string?, string?, int, IReadOnlyList<string>> searchProvider,
+            Func<IReadOnlyList<string>> categoriesProvider)
         {
             selectedIds = SplitCsv(rawInput);
             rawInput ??= string.Join(Environment.NewLine, selectedIds);
             categoryFilter = string.IsNullOrWhiteSpace(categoryFilter) ? AllCategory : categoryFilter;
+            IReadOnlyList<string> categories = categoriesProvider();
 
             GUILayout.Label($"{label} (one id per line, comma/newline/semicolon supported)");
             rawInput = GUILayout.TextArea(rawInput, GUILayout.MinHeight(120f));
@@ -180,6 +191,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
             GUILayout.Space(4f);
             DrawCategoryFilter(
+                categories,
                 ref categoryFilter,
                 ref showCategoryDropdown,
                 ref categoryDropdownScroll,
@@ -188,7 +200,7 @@ namespace Drova_Modding_API.Systems.Spawning
             GUILayout.Space(2f);
             GUILayout.Label("Search readable ids");
             GUILayout.BeginHorizontal();
-            autoCompleteInput = GUILayout.TextField(autoCompleteInput ?? string.Empty);
+            autoCompleteInput = GUILayout.TextField(autoCompleteInput);
             if (GUILayout.Button(showSuggestionDropdown ? "Hide" : "Show", GUILayout.Width(70f)))
                 showSuggestionDropdown = !showSuggestionDropdown;
             GUILayout.EndHorizontal();
@@ -200,7 +212,7 @@ namespace Drova_Modding_API.Systems.Spawning
             bool shouldRenderSuggestions = showSuggestionDropdown || !string.IsNullOrWhiteSpace(autoCompleteInput);
             if (shouldRenderSuggestions)
             {
-                suggestions = Search(autoCompleteInput, categoryFilter, maxResults: 80);
+                suggestions = searchProvider(autoCompleteInput, categoryFilter, 80);
                 HandleSuggestionKeyboardNavigation(
                     suggestions,
                     ref showSuggestionDropdown,
@@ -228,7 +240,7 @@ namespace Drova_Modding_API.Systems.Spawning
                         if (!GUILayout.Button(buttonText, GUILayout.ExpandWidth(true)))
                             continue;
 
-                        AddSuggestionIfMissing(suggestion, selectedIds, ref rawInput);
+                        AddSuggestionIfMissing(suggestion, selectedIds, out rawInput);
                         suggestionSelectionIndex = i;
                         autoCompleteInput = string.Empty;
                         showSuggestionDropdown = false;
@@ -243,6 +255,25 @@ namespace Drova_Modding_API.Systems.Spawning
             GUILayout.Label($"{uiKey} ids selected: {selectedIds.Count}");
         }
 
+        public static IReadOnlyList<string> Search(EditorDataSource? dataSource, string? query, string? categoryFilter, int maxResults)
+        {
+            if (dataSource == null)
+                return [];
+            if (maxResults <= 0)
+                return [];
+
+            string normalizedCategory = NormalizeCategory(categoryFilter);
+            IReadOnlyList<string>? sourceIds = string.Equals(normalizedCategory, AllCategory, StringComparison.OrdinalIgnoreCase)
+                ? dataSource.Ids
+                : (dataSource.IdsByCategory.TryGetValue(normalizedCategory, out IReadOnlyList<string>? ids) ? ids : []);
+
+            if (sourceIds == null || sourceIds.Count == 0)
+                return [];
+
+            string normalizedQuery = query?.Trim() ?? string.Empty;
+            return CollectMatches(sourceIds, normalizedQuery, maxResults);
+        }
+
         private static void EnsureCacheUpToDate()
         {
             if (_cacheInitialized)
@@ -252,11 +283,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (snapshot == null)
                 return;
 
-            _cachedIds = snapshot.Value.Ids;
-            _cachedCategories = snapshot.Value.Categories;
-            _cachedIdsByCategory = snapshot.Value.IdsByCategory;
-            _cachedFingerprint = snapshot.Value.Fingerprint;
-            _lastSearchFingerprint = int.MinValue;
+            _defaultDataSource = snapshot.Value.DataSource;
             _cacheInitialized = true;
         }
 
@@ -266,7 +293,7 @@ namespace Drova_Modding_API.Systems.Spawning
             {
                 Il2CppStringArray readableIds = ProviderAccess.ItemDatabase.GetItemReadableIds();
                 if (readableIds == null || readableIds.Length == 0)
-                    return new CacheSnapshot([], [AllCategory], new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase), 0);
+                    return new CacheSnapshot(new EditorDataSource([], GetCategoryForId));
 
                 HashSet<string> ids = new(StringComparer.OrdinalIgnoreCase);
                 for (int i = 0; i < readableIds.Length; i++)
@@ -279,11 +306,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 List<string> orderedIds = ids
                     .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
                     .ToList();
-
-                IReadOnlyDictionary<string, IReadOnlyList<string>> idsByCategory = BuildCategoryBuckets(orderedIds);
-                IReadOnlyList<string> categories = BuildCategories(idsByCategory.Keys);
-                int fingerprint = ComputeFingerprint(orderedIds);
-                return new CacheSnapshot(orderedIds, categories, idsByCategory, fingerprint);
+                return new CacheSnapshot(new EditorDataSource(orderedIds, GetCategoryForId));
             }
             catch
             {
@@ -291,13 +314,13 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private static IReadOnlyDictionary<string, IReadOnlyList<string>> BuildCategoryBuckets(IReadOnlyList<string> ids)
+        private static IReadOnlyDictionary<string, IReadOnlyList<string>> BuildCategoryBuckets(IReadOnlyList<string> ids, Func<string, string> categorySelector)
         {
             Dictionary<string, List<string>> buckets = new(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < ids.Count; i++)
             {
                 string id = ids[i];
-                string category = GetCategoryForId(id);
+                string category = categorySelector(id);
                 if (!buckets.TryGetValue(category, out List<string>? list))
                 {
                     list = [];
@@ -323,26 +346,6 @@ namespace Drova_Modding_API.Systems.Spawning
             return ordered;
         }
 
-        private static int ComputeFingerprint(IReadOnlyList<string> ids)
-        {
-            HashCode hash = new();
-            hash.Add(ids.Count);
-            for (int i = 0; i < ids.Count; i++)
-                hash.Add(ids[i], StringComparer.OrdinalIgnoreCase);
-
-            return hash.ToHashCode();
-        }
-
-        private static IReadOnlyList<string>? GetSourceIds(string normalizedCategory)
-        {
-            if (string.Equals(normalizedCategory, AllCategory, StringComparison.OrdinalIgnoreCase))
-                return _cachedIds;
-
-            return _cachedIdsByCategory.TryGetValue(normalizedCategory, out IReadOnlyList<string>? ids)
-                ? ids
-                : [];
-        }
-
         private static string NormalizeCategory(string? categoryFilter)
             => string.IsNullOrWhiteSpace(categoryFilter) ? AllCategory : categoryFilter.Trim();
 
@@ -358,11 +361,7 @@ namespace Drova_Modding_API.Systems.Spawning
             return result;
         }
 
-        private readonly record struct CacheSnapshot(
-            IReadOnlyList<string> Ids,
-            IReadOnlyList<string> Categories,
-            IReadOnlyDictionary<string, IReadOnlyList<string>> IdsByCategory,
-            int Fingerprint);
+        private readonly record struct CacheSnapshot(EditorDataSource DataSource);
 
         private static string GetCategoryForId(string id)
         {
@@ -375,6 +374,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
 
         private static void DrawCategoryFilter(
+            IReadOnlyList<string> categories,
             ref string categoryFilter,
             ref bool showCategoryDropdown,
             ref Vector2 categoryDropdownScroll,
@@ -395,12 +395,15 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!showCategoryDropdown)
                 return;
 
-            IReadOnlyList<string> categories = GetCategories();
+            string? keyboardSelectedCategory;
             HandleCategoryKeyboardNavigation(
                 categories,
-                ref categoryFilter,
                 ref showCategoryDropdown,
-                ref categorySelectionIndex);
+                ref categorySelectionIndex,
+                out keyboardSelectedCategory);
+            if (!string.IsNullOrWhiteSpace(keyboardSelectedCategory))
+                categoryFilter = keyboardSelectedCategory;
+
             GUILayout.BeginVertical("box");
             categoryDropdownScroll = GUILayout.BeginScrollView(categoryDropdownScroll, GUILayout.Height(120f));
             for (int i = 0; i < categories.Count; i++)
@@ -421,10 +424,11 @@ namespace Drova_Modding_API.Systems.Spawning
 
         private static void HandleCategoryKeyboardNavigation(
             IReadOnlyList<string> categories,
-            ref string categoryFilter,
             ref bool showCategoryDropdown,
-            ref int categorySelectionIndex)
+            ref int categorySelectionIndex,
+            out string? selectedCategory)
         {
+            selectedCategory = null;
             if (categories.Count == 0)
             {
                 categorySelectionIndex = 0;
@@ -448,7 +452,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     break;
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
-                    categoryFilter = categories[categorySelectionIndex];
+                    selectedCategory = categories[categorySelectionIndex];
                     showCategoryDropdown = false;
                     evt.Use();
                     break;
@@ -493,7 +497,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     break;
                 case KeyCode.Return:
                 case KeyCode.KeypadEnter:
-                    AddSuggestionIfMissing(suggestions[suggestionSelectionIndex], selectedIds, ref rawInput);
+                    AddSuggestionIfMissing(suggestions[suggestionSelectionIndex], selectedIds, out rawInput);
                     autoCompleteInput = string.Empty;
                     showSuggestionDropdown = false;
                     evt.Use();
@@ -505,7 +509,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private static void AddSuggestionIfMissing(string suggestion, List<string> selectedIds, ref string? rawInput)
+        private static void AddSuggestionIfMissing(string suggestion, List<string> selectedIds, out string? rawInput)
         {
             if (!selectedIds.Contains(suggestion, StringComparer.OrdinalIgnoreCase))
                 selectedIds.Add(suggestion);

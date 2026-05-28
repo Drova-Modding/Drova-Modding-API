@@ -15,6 +15,8 @@ namespace Drova_Modding_API.Systems.Spawning
             Register(new ExternalCosmeticsModule());
             Register(new ExternalEntityInfoModule());
             Register(new ExternalDialogueModule());
+            Register(new ExternalHealthModule());
+            Register(new ExternalTalentModule());
         }
 
         /// <summary>
@@ -67,6 +69,3 @@ namespace Drova_Modding_API.Systems.Spawning
         }
     }
 }
-
-
-

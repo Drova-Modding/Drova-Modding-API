@@ -1,11 +1,8 @@
 using Drova_Modding_API.Access;
-using Drova_Modding_API.Systems.Dialogues;
-using Drova_Modding_API.Systems.Dialogues.Editor;
-using Drova_Modding_API.Systems.Dialogues.Store;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.Attributes;
-using Il2CppNodeCanvas.DialogueTrees;
 using MelonLoader;
+using System.Collections;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Spawning
@@ -13,74 +10,83 @@ namespace Drova_Modding_API.Systems.Spawning
     [RegisterTypeInIl2Cpp]
     internal class NpcWizardUI(IntPtr ptr) : MonoBehaviour(ptr)
     {
+        #region Fields
         private static NpcWizardUI? _instance;
-
-        private const float WindowWidthRatio = 0.62f;
-        private const float WindowHeightRatio = 0.80f;
-        private const float MinWindowWidth = 820f;
-        private const float MinWindowHeight = 620f;
-        private const float DefinitionsWindowWidth = 760f;
-        private const float DefinitionsWindowHeight = 520f;
-        private const float ScreenPadding = 16f;
-        private const string WizardGraphEditorName = "ModdingAPI_WizardGraphEditor";
+        private const string InitialStatusMessage = "Use cheat command 'npc_wizard' to open this window.";
 
         private bool _visible;
         private bool _initialPlayerPositionApplied;
-        private Rect _windowRect = new(40f, 40f, 700f, 760f);
-        private bool _windowRectInitialized;
-        private bool _isResizing;
-        private Vector2 _resizeStartMouse;
-        private Vector2 _resizeStartSize;
+        private readonly NpcWizardWindowLayout _windowLayout = new();
+        private readonly NpcWizardDefinitionsBrowser _definitionsBrowser = new();
         private Vector2 _scroll;
         private bool _definitionsVisible;
-        private Rect _definitionsWindowRect = new(70f, 70f, DefinitionsWindowWidth, DefinitionsWindowHeight);
-        private bool _definitionsWindowRectInitialized;
-        private Vector2 _definitionsScroll;
-        private List<ExternalNpcPlacementSystem.ExternalNpcDefinition> _cachedDefinitions = [];
         private readonly Dictionary<string, bool> _moduleExpandedByKey = new(StringComparer.OrdinalIgnoreCase);
-        private GraphEditorManager? _graphEditorManager;
+        private readonly NpcWizardDialogueService _dialogueService = new();
+        private readonly NpcWizardOverwriteState<PendingOverwriteAction> _overwriteState = new();
+        private readonly NpcWizardState _state = new(
+            NpcWizardDefinitionHelpers.CreateDefaultDefinitionAtPlayerPosition(),
+            InitialStatusMessage);
         private bool _gameplayInputBlockedByWizard;
-        private string? _loadedDefinitionId;
-        private string? _loadedDialogueDefinitionId;
-        private string? _loadedDialogueId;
-        private PendingOverwriteAction _pendingOverwriteAction;
-        private string _pendingOverwriteMessage = string.Empty;
+        private object? _pendingRespawnRoutine;
+        private ExternalNpcPlacementSystem.ExternalNpcDefinition? _pendingRespawnDefinition;
+        private bool _compactLayoutActiveForDialogueEditor;
+        private bool _dialogueEditorEventsSubscribed;
+        #endregion
 
-        private ExternalNpcPlacementSystem.ExternalNpcDefinition _definition = CreateDefaultDefinitionAtPlayerPosition();
-        private string _status = "Use cheat command 'npc_wizard' to open this window.";
-        private string _positionXInput = string.Empty;
-        private string _positionYInput = string.Empty;
+        #region State Proxies
+        private ExternalNpcPlacementSystem.ExternalNpcDefinition Definition
+        {
+            get => _state.Definition;
+            set => _state.Definition = value;
+        }
 
+        private string Status
+        {
+            get => _state.Status;
+            set => _state.Status = value;
+        }
+
+        private string PositionXInput
+        {
+            get => _state.PositionXInput;
+            set => _state.PositionXInput = value;
+        }
+
+        private string PositionYInput
+        {
+            get => _state.PositionYInput;
+            set => _state.PositionYInput = value;
+        }
+        #endregion
+
+        #region Types
         private enum PendingOverwriteAction
         {
-            None,
             SaveDefinition,
             SaveDefinitionAndSpawn,
             SaveDialogue
         }
+        #endregion
 
+        #region Unity Lifecycle
         internal void Awake()
         {
             _instance = this;
-            ExternalNpcModuleRegistry.EnsureDefaults(_definition);
+            ExternalNpcModuleRegistry.EnsureDefaults(Definition);
             TrySyncDefinitionPositionFromPlayer();
             SyncPositionInputs();
         }
 
         internal void OnDestroy()
         {
+            UnsubscribeFromDialogueEditorEvents();
+            ApplyDialogueEditorLayoutIfNeeded(false);
+            _windowLayout.PersistNow();
             SetGameplayInputBlocked(false);
+            CancelPendingRespawn();
 
             if (_instance == this)
                 _instance = null;
-        }
-
-        internal void Update()
-        {
-            // Keep gameplay maps disabled while the wizard is open, even if another
-            // tool toggles them back on.
-            if (_visible && !_gameplayInputBlockedByWizard)
-                SetGameplayInputBlocked(true);
         }
 
         internal void OnGUI()
@@ -88,16 +94,18 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!_visible)
                 return;
 
-            EnsureWindowRectFitsScreen();
-            _windowRect = GUI.Window(487319, _windowRect, new Action<int>(DrawWindow), "NPC Wizard");
+            _windowLayout.EnsureMainWindowRectFitsScreen();
+            _windowLayout.SetMainWindowRect(GUI.Window(487319, _windowLayout.MainWindowRect, new Action<int>(DrawWindow), "NPC Wizard"));
 
             if (_definitionsVisible)
             {
-                EnsureDefinitionsWindowRectFitsScreen();
-                _definitionsWindowRect = GUI.Window(487320, _definitionsWindowRect, new Action<int>(DrawDefinitionsWindow), "NPC Definitions");
+                _windowLayout.EnsureDefinitionsWindowRectFitsScreen();
+                _windowLayout.SetDefinitionsWindowRect(GUI.Window(487320, _windowLayout.DefinitionsWindowRect, new Action<int>(DrawDefinitionsWindow), "NPC Definitions"));
             }
         }
+        #endregion
 
+        #region Visibility and Input
         [HideFromIl2Cpp]
         public static void Toggle()
         {
@@ -107,12 +115,12 @@ namespace Drova_Modding_API.Systems.Spawning
             _instance.SetWizardVisible(!_instance._visible);
             if (_instance._visible)
             {
-                ExternalNpcModuleRegistry.EnsureDefaults(_instance._definition);
+                ExternalNpcModuleRegistry.EnsureDefaults(_instance.Definition);
                 ReadableIdModuleSupport.WarmUpCache();
                 _instance.TrySyncDefinitionPositionFromPlayer();
                 _instance.SyncPositionInputs();
                 _instance.RefreshDefinitionsCache();
-                _instance._status = $"Placement folder: {ExternalNpcPlacementSystem.GetNpcPlacementFolderPath()}  |  Wizard file: {ExternalNpcPlacementSystem.GetWizardFilePath()}";
+                _instance.Status = $"Placement folder: {ExternalNpcPlacementSystem.GetNpcPlacementFolderPath()}  |  Wizard file: {ExternalNpcPlacementSystem.GetWizardFilePath()}";
             }
         }
 
@@ -120,16 +128,28 @@ namespace Drova_Modding_API.Systems.Spawning
         private void SetWizardVisible(bool visible)
         {
             _visible = visible;
+            if (_visible)
+            {
+                SubscribeToDialogueEditorEvents();
+                ApplyDialogueEditorLayoutIfNeeded(_dialogueService.IsDialogueEditorOpen());
+            }
+
             if (!_visible)
+            {
+                UnsubscribeFromDialogueEditorEvents();
+                ApplyDialogueEditorLayoutIfNeeded(false);
+                _windowLayout.PersistNow();
                 _definitionsVisible = false;
+                CancelPendingRespawn();
+            }
 
             SetGameplayInputBlocked(_visible);
         }
 
         [HideFromIl2Cpp]
-        private void SetGameplayInputBlocked(bool blocked)
+        private void SetGameplayInputBlocked(bool blocked, bool forceApply = false)
         {
-            if (_gameplayInputBlockedByWizard == blocked)
+            if (!forceApply && _gameplayInputBlockedByWizard == blocked)
                 return;
 
             InputAccess.ToggleGameplayActionMaps(!blocked);
@@ -137,18 +157,81 @@ namespace Drova_Modding_API.Systems.Spawning
         }
 
         [HideFromIl2Cpp]
+        private void ApplyDialogueEditorLayoutIfNeeded(bool dialogueEditorOpen)
+        {
+            if (dialogueEditorOpen)
+            {
+                if (_compactLayoutActiveForDialogueEditor)
+                    return;
+
+                _windowLayout.EnterCompactDialogueLayout();
+                _compactLayoutActiveForDialogueEditor = true;
+                return;
+            }
+
+            if (!_compactLayoutActiveForDialogueEditor)
+                return;
+
+            _windowLayout.ExitCompactDialogueLayout();
+            _compactLayoutActiveForDialogueEditor = false;
+        }
+
+        [HideFromIl2Cpp]
+        private void SubscribeToDialogueEditorEvents()
+        {
+            if (_dialogueEditorEventsSubscribed)
+                return;
+
+            _dialogueService.DialogueEditorOpened += HandleDialogueEditorOpened;
+            _dialogueService.DialogueEditorClosed += HandleDialogueEditorClosed;
+            _dialogueEditorEventsSubscribed = true;
+        }
+
+        [HideFromIl2Cpp]
+        private void UnsubscribeFromDialogueEditorEvents()
+        {
+            if (!_dialogueEditorEventsSubscribed)
+                return;
+
+            _dialogueService.DialogueEditorOpened -= HandleDialogueEditorOpened;
+            _dialogueService.DialogueEditorClosed -= HandleDialogueEditorClosed;
+            _dialogueEditorEventsSubscribed = false;
+        }
+
+        [HideFromIl2Cpp]
+        private void HandleDialogueEditorOpened()
+        {
+            if (!_visible)
+                return;
+
+            ApplyDialogueEditorLayoutIfNeeded(true);
+        }
+
+        [HideFromIl2Cpp]
+        private void HandleDialogueEditorClosed()
+        {
+            if (!_visible)
+                return;
+
+            ApplyDialogueEditorLayoutIfNeeded(false);
+            SetGameplayInputBlocked(true, forceApply: true);
+        }
+        #endregion
+
+        #region Main Window
+        [HideFromIl2Cpp]
         private void DrawWindow(int id)
         {
             GUILayout.BeginVertical();
-            _scroll = GUILayout.BeginScrollView(_scroll, GUILayout.Height(_windowRect.height - 150f));
+            _scroll = GUILayout.BeginScrollView(_scroll, GUILayout.Height(_windowLayout.MainWindowRect.height - 150f));
 
             DrawBaseFields();
             DrawModuleFields();
 
             GUILayout.EndScrollView();
 
-            if (!string.IsNullOrWhiteSpace(_status))
-                GUILayout.Label(_status);
+            if (!string.IsNullOrWhiteSpace(Status))
+                GUILayout.Label(Status);
 
             if (HasPendingOverwrite())
                 DrawOverwriteConfirmationPrompt();
@@ -158,14 +241,14 @@ namespace Drova_Modding_API.Systems.Spawning
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("Reset Size", GUILayout.Width(110f)))
-                ResetWindowRectToScreen();
+                _windowLayout.ResetMainWindowRectToScreen();
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();
 
-            Rect resizeHandleRect = new(_windowRect.width - 24f, _windowRect.height - 24f, 18f, 18f);
+            Rect resizeHandleRect = new(_windowLayout.MainWindowRect.width - 24f, _windowLayout.MainWindowRect.height - 24f, 18f, 18f);
             GUI.Box(resizeHandleRect, "");
-            HandleResize(resizeHandleRect);
+            _windowLayout.HandleMainResize(resizeHandleRect);
 
             GUI.DragWindow(new Rect(0f, 0f, 10000f, 20f));
         }
@@ -175,24 +258,24 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             GUILayout.Label("Base Definition");
             GUILayout.Label("Definition Id");
-            _definition.Id = GUILayout.TextField(_definition.Id);
+            Definition.Id = GUILayout.TextField(Definition.Id);
 
             GUILayout.Label("Display Name");
-            _definition.Name = GUILayout.TextField(_definition.Name);
+            Definition.Name = GUILayout.TextField(Definition.Name);
 
             GUILayout.BeginHorizontal();
             GUILayout.Label("Position X", GUILayout.Width(140f));
-            _positionXInput = GUILayout.TextField(_positionXInput);
+            PositionXInput = GUILayout.TextField(PositionXInput);
             GUILayout.Label("Position Y", GUILayout.Width(140f));
-            _positionYInput = GUILayout.TextField(_positionYInput);
+            PositionYInput = GUILayout.TextField(PositionYInput);
             GUILayout.EndHorizontal();
 
-            if (float.TryParse(_positionXInput, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float x))
-                _definition.PositionX = x;
-            if (float.TryParse(_positionYInput, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float y))
-                _definition.PositionY = y;
+            if (float.TryParse(PositionXInput, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float x))
+                Definition.PositionX = x;
+            if (float.TryParse(PositionYInput, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float y))
+                Definition.PositionY = y;
 
-            _definition.Enabled = GUILayout.Toggle(_definition.Enabled, "Enabled for auto spawn on game start");
+            Definition.Enabled = GUILayout.Toggle(Definition.Enabled, "Enabled for auto spawn on game start");
         }
 
         [HideFromIl2Cpp]
@@ -221,16 +304,16 @@ namespace Drova_Modding_API.Systems.Spawning
                     _moduleExpandedByKey[module.Key] = expanded;
                 }
 
-                if (!_definition.ModuleConfig.TryGetValue(module.Key, out string? payload))
+                if (!Definition.ModuleConfig.TryGetValue(module.Key, out string? payload))
                 {
                     payload = module.CreateDefaultPayload();
-                    _definition.ModuleConfig[module.Key] = payload;
+                    Definition.ModuleConfig[module.Key] = payload;
                 }
 
                 if (expanded)
                 {
                     payload ??= module.CreateDefaultPayload();
-                    _definition.ModuleConfig[module.Key] = module.DrawWizardUiAndSerialize(payload);
+                    Definition.ModuleConfig[module.Key] = module.DrawWizardUiAndSerialize(payload);
 
                     if (string.Equals(module.Key, ExternalDialogueModule.ModuleKey, StringComparison.OrdinalIgnoreCase))
                         DrawDialogueModuleActions();
@@ -238,11 +321,12 @@ namespace Drova_Modding_API.Systems.Spawning
                 GUILayout.EndVertical();
             }
         }
+        #endregion
 
         [HideFromIl2Cpp]
         private void DrawDialogueModuleActions()
         {
-            bool isCurrentDefinitionSpawned = ExternalNpcPlacementSystem.IsDefinitionSpawned(_definition.Id);
+            bool isCurrentDefinitionSpawned = ExternalNpcPlacementSystem.IsDefinitionSpawned(Definition.Id);
 
             GUILayout.Space(4f);
             if (!isCurrentDefinitionSpawned)
@@ -254,19 +338,19 @@ namespace Drova_Modding_API.Systems.Spawning
             if (GUILayout.Button("Edit Graph", GUILayout.Width(120f)))
             {
                 if (TryOpenDialogueEditorForCurrentDefinition())
-                    _status = "Opened dialogue editor for spawned NPC.";
+                    Status = "Opened dialogue editor for spawned NPC.";
             }
 
             if (GUILayout.Button("Save To Store", GUILayout.Width(120f)))
             {
                 if (TrySaveDialogueForCurrentDefinition())
-                    _status = "Saved spawned NPC dialogue to dialogue store.";
+                    Status = "Saved spawned NPC dialogue to dialogue store.";
             }
 
             if (GUILayout.Button("Load To Spawned", GUILayout.Width(130f)))
             {
                 if (TryLoadDialogueForCurrentDefinition())
-                    _status = "Loaded stored dialogue into spawned NPC.";
+                    Status = "Loaded stored dialogue into spawned NPC.";
             }
 
             GUI.enabled = true;
@@ -295,30 +379,32 @@ namespace Drova_Modding_API.Systems.Spawning
         private void DrawActionButtons()
         {
             GUILayout.BeginHorizontal();
-            bool isCurrentDefinitionSpawned = ExternalNpcPlacementSystem.IsDefinitionSpawned(_definition.Id);
+            bool isCurrentDefinitionSpawned = ExternalNpcPlacementSystem.IsDefinitionSpawned(Definition.Id);
 
             if (GUILayout.Button("New"))
             {
-                _definition = CreateDefaultDefinitionAtPlayerPosition();
+                CancelPendingRespawn();
+                Definition = NpcWizardDefinitionHelpers.CreateDefaultDefinitionAtPlayerPosition();
                 MarkCurrentDefinitionAsUnloaded();
                 SyncPositionInputs();
-                _status = "Created a fresh definition template.";
+                Status = "Created a fresh definition template.";
             }
 
             if (GUILayout.Button("Load By Id"))
             {
-                if (ExternalNpcPlacementSystem.TryGetDefinition(_definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? found) && found != null)
+                CancelPendingRespawn();
+                if (ExternalNpcPlacementSystem.TryGetDefinition(Definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? found) && found != null)
                 {
-                    _definition = found;
-                    ExternalNpcModuleRegistry.EnsureDefaults(_definition);
+                    Definition = found;
+                    ExternalNpcModuleRegistry.EnsureDefaults(Definition);
                     MarkCurrentDefinitionAsLoaded();
                     ClearDialogueLoadedMarker();
                     SyncPositionInputs();
-                    _status = $"Loaded definition '{_definition.Id}'.";
+                    Status = $"Loaded definition '{Definition.Id}'.";
                 }
                 else
                 {
-                    _status = $"Definition '{_definition.Id}' was not found.";
+                    Status = $"Definition '{Definition.Id}' was not found.";
                 }
             }
 
@@ -327,6 +413,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 if (!ValidateForSave())
                     return;
 
+                CancelPendingRespawn();
                 TrySaveDefinitionWithOptionalConfirmation(spawnAfterSave: false);
             }
 
@@ -341,10 +428,11 @@ namespace Drova_Modding_API.Systems.Spawning
             GUI.enabled = isCurrentDefinitionSpawned;
             if (GUILayout.Button("Despawn"))
             {
-                bool despawned = ExternalNpcPlacementSystem.DespawnDefinition(_definition.Id);
-                _status = despawned
-                    ? $"Despawned definition '{_definition.Id}'."
-                    : $"Definition '{_definition.Id}' is not currently spawned.";
+                CancelPendingRespawn();
+                bool despawned = ExternalNpcPlacementSystem.DespawnDefinition(Definition.Id);
+                Status = despawned
+                    ? $"Despawned definition '{Definition.Id}'."
+                    : $"Definition '{Definition.Id}' is not currently spawned.";
                 RefreshDefinitionsCache();
             }
             GUI.enabled = true;
@@ -353,7 +441,7 @@ namespace Drova_Modding_API.Systems.Spawning
             {
                 _definitionsVisible = !_definitionsVisible;
                 if (_definitionsVisible)
-                    RefreshDefinitionsCache();
+                    _definitionsBrowser.Refresh();
             }
 
             if (GUILayout.Button("Close"))
@@ -364,222 +452,50 @@ namespace Drova_Modding_API.Systems.Spawning
             GUILayout.EndHorizontal();
         }
 
+        #region Definitions Browser
         [HideFromIl2Cpp]
         private void DrawDefinitionsWindow(int id)
         {
-            GUILayout.BeginVertical();
-
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Refresh", GUILayout.Width(90f)))
-                RefreshDefinitionsCache();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Close", GUILayout.Width(90f)))
-            {
+            bool keepOpen = _definitionsBrowser.DrawWindow(
+                LoadDefinitionFromBrowser,
+                status => Status = status);
+            if (!keepOpen)
                 _definitionsVisible = false;
-                GUILayout.EndHorizontal();
-                GUILayout.EndVertical();
-                return;
-            }
-            GUILayout.EndHorizontal();
 
-            _definitionsScroll = GUILayout.BeginScrollView(_definitionsScroll);
-            for (int i = 0; i < _cachedDefinitions.Count; i++)
-            {
-                ExternalNpcPlacementSystem.ExternalNpcDefinition definition = _cachedDefinitions[i];
-                bool isSpawned = ExternalNpcPlacementSystem.IsDefinitionSpawned(definition.Id);
-
-                GUILayout.BeginVertical("box");
-                GUILayout.Label($"{definition.Name} ({definition.Id})");
-                GUILayout.Label($"Pos: {definition.PositionX:0.##}, {definition.PositionY:0.##}  |  Enabled: {(definition.Enabled ? "yes" : "no")}  |  Spawned: {(isSpawned ? "yes" : "no")}");
-
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Load", GUILayout.Width(90f)))
-                {
-                    _definition = definition;
-                    ExternalNpcModuleRegistry.EnsureDefaults(_definition);
-                    MarkCurrentDefinitionAsLoaded();
-                    ClearDialogueLoadedMarker();
-                    SyncPositionInputs();
-                    _status = $"Loaded definition '{_definition.Id}' from browser.";
-                }
-
-                if (GUILayout.Button("Teleport", GUILayout.Width(90f)))
-                {
-                    _status = TryTeleportPlayerToDefinition(definition) ? $"Teleported player to '{definition.Id}'." : "Player was not found. Teleport failed.";
-                }
-
-                if (GUILayout.Button("Spawn", GUILayout.Width(90f)))
-                {
-                    bool spawned = ExternalNpcPlacementSystem.SpawnDefinition(definition, skipIfAlreadySpawned: true, requireEnabled: false);
-                    _status = spawned ? $"Spawned '{definition.Id}'." : $"Spawn skipped for '{definition.Id}'.";
-                    RefreshDefinitionsCache();
-                }
-
-                GUI.enabled = isSpawned;
-                if (GUILayout.Button("Despawn", GUILayout.Width(90f)))
-                {
-                    bool despawned = ExternalNpcPlacementSystem.DespawnDefinition(definition.Id);
-                    _status = despawned ? $"Despawned '{definition.Id}'." : $"Despawn skipped for '{definition.Id}'.";
-                    RefreshDefinitionsCache();
-                }
-                GUI.enabled = true;
-
-                GUILayout.EndHorizontal();
-                GUILayout.EndVertical();
-            }
-            GUILayout.EndScrollView();
-
-            GUILayout.EndVertical();
             GUI.DragWindow(new Rect(0f, 0f, 10000f, 20f));
         }
 
         [HideFromIl2Cpp]
         private void RefreshDefinitionsCache()
         {
-            _cachedDefinitions = ExternalNpcPlacementSystem.ReadAllDefinitions();
+            _definitionsBrowser.Refresh();
         }
+        #endregion
 
-        [HideFromIl2Cpp]
-        private static bool TryTeleportPlayerToDefinition(ExternalNpcPlacementSystem.ExternalNpcDefinition definition)
-        {
-            if (!PlayerAccess.TryGetPlayer(out Actor player) || player == null)
-                return false;
-
-            Vector3 current = player.transform.position;
-            player.transform.position = new Vector3(definition.PositionX, definition.PositionY, current.z);
-            return true;
-        }
-
+        #region Validation
         [HideFromIl2Cpp]
         private bool ValidateForSave()
         {
-            _definition.Id = _definition.Id.Trim();
-            _definition.Name = _definition.Name.Trim();
+            bool valid = NpcWizardDefinitionHelpers.ValidateForSave(Definition, out string status);
+            if (!valid)
+                Status = status;
 
-            if (string.IsNullOrWhiteSpace(_definition.Id))
-            {
-                _status = "Definition Id is required.";
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(_definition.Name))
-            {
-                _status = "Display Name is required.";
-                return false;
-            }
-
-            return true;
+            return valid;
         }
+        #endregion
 
+        #region Dialogue Actions
         [HideFromIl2Cpp]
         private bool TryOpenDialogueEditorForCurrentDefinition()
         {
             if (!TryGetCurrentDialogueId(out string dialogueId))
                 return false;
-
-            if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(_definition.Id, out Actor? actor) || actor == null)
-            {
-                _status = "Spawn the current definition first, then open dialogue editor.";
-                return false;
-            }
-
-            DS_DialogueTreeController controller = actor.GetComponentInChildren<DS_DialogueTreeController>();
-            if (controller == null)
-            {
-                _status = "Selected NPC has no dialogue controller.";
-                return false;
-            }
-
-            if (!TryEnsureDialogueGraphForActor(actor, controller, dialogueId))
-                return false;
-
-            EnsureWizardGraphEditor();
-            if (_graphEditorManager == null)
-            {
-                _status = "Failed to initialize graph editor.";
-                return false;
-            }
-
-            _graphEditorManager.gameObject.SetActive(true);
-            _graphEditorManager.Init(actor);
-            return true;
-        }
-
-        [HideFromIl2Cpp]
-        private bool TryEnsureDialogueGraphForActor(Actor actor, DS_DialogueTreeController controller, string dialogueId)
-        {
-            if (controller.graph != null)
-                return true;
-
-            if (DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) && loadedDialogue != null)
-            {
-                loadedDialogue.Serialize(null);
-                controller.graph = loadedDialogue;
-                MarkCurrentDialogueAsLoaded(dialogueId);
-                _status = $"Loaded stored dialogue '{dialogueId}'.";
-                return true;
-            }
-
-            DialogueTree createdDialogue = CreateStarterDialogueTree(actor, dialogueId);
-            if (createdDialogue == null)
-            {
-                _status = "Failed to create starter dialogue graph.";
-                return false;
-            }
-
-            createdDialogue.Serialize(null);
-            controller.graph = createdDialogue;
-            ClearDialogueLoadedMarker();
-            _status = $"Created new starter dialogue '{dialogueId}'.";
-            return true;
-        }
-
-        [HideFromIl2Cpp]
-        private static DialogueTree CreateStarterDialogueTree(Actor actor, string dialogueId)
-        {
-            DialogueTree tree = ScriptableObject.CreateInstance<DialogueTree>();
-            tree.actorParameters = new Il2CppSystem.Collections.Generic.List<DialogueTree.ActorParameter>();
-
-            string actorParameterId = Il2CppSystem.Guid.NewGuid().ToString();
-            tree.actorParameters.Add(new DialogueTree.ActorParameter
-            {
-                _keyName = actor.name,
-                Actor = null,
-                ActorGuid = actor.GetGuidComponent()._guidString,
-                _id = actorParameterId
-            });
-
-            DialogueTree.ActorParameter playerParameter = ActorParameterHelper.GetPlayerActorParameters();
-            tree.actorParameters.Add(playerParameter);
-
-            DS_StatementNode startNode = tree.AddNode<DS_StatementNode>();
-            DS_Statement statement = new()
-            {
-                useGlobalLoca = true,
-                GlobalLocaPath = "Modding_API/NpcWizard",
-                locaKey = "StarterLine"
-            };
-            startNode.statement = statement;
-            startNode.actorName = actor.name;
-            startNode._actorParameterID = actorParameterId;
-            startNode.TryGenerateUID();
-
-            DS_MultipleChoiceNode endNode = tree.AddNode<DS_MultipleChoiceNode>();
-            endNode.actorName = playerParameter._keyName;
-            endNode._actorParameterID = playerParameter.ID;
-            endNode.availableChoices = new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
-            endNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice
-            {
-                statement = statement,
-                isEndNode = true,
-                UID = Il2CppSystem.Guid.NewGuid().ToString()
-            });
-            endNode.TryGenerateUID();
-
-            tree.ConnectNodes(startNode, endNode);
-            tree.primeNode = startNode;
-            tree.name = dialogueId;
-            return tree;
+            return _dialogueService.TryOpenDialogueEditor(
+                Definition.Id,
+                dialogueId,
+                status => Status = status,
+                MarkCurrentDialogueAsLoaded,
+                ClearDialogueLoadedMarker);
         }
 
         [HideFromIl2Cpp]
@@ -587,7 +503,7 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             if (HasPendingOverwrite())
             {
-                _status = "Confirm or cancel the pending overwrite first.";
+                Status = "Confirm or cancel the pending overwrite first.";
                 return false;
             }
 
@@ -600,26 +516,6 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!TryGetCurrentDialogueId(out string dialogueId))
                 return false;
 
-            if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(_definition.Id, out Actor? actor) || actor == null)
-            {
-                _status = "Spawn the current definition first, then save dialogue.";
-                return false;
-            }
-
-            DS_DialogueTreeController controller = actor.GetComponentInChildren<DS_DialogueTreeController>();
-            if (controller == null || controller.graph == null)
-            {
-                _status = "Selected NPC has no dialogue graph to save.";
-                return false;
-            }
-
-            DialogueTree dialogueTree = controller.graph.TryCast<DialogueTree>();
-            if (dialogueTree == null)
-            {
-                _status = "Current NPC graph is not a DialogueTree.";
-                return false;
-            }
-
             if (!overwriteConfirmed && RequiresDialogueOverwriteConfirmation(dialogueId))
             {
                 QueueOverwriteConfirmation(
@@ -628,15 +524,11 @@ namespace Drova_Modding_API.Systems.Spawning
                 return false;
             }
 
-            bool saved = DialogueStore.SaveDialogue(dialogueId, dialogueTree);
-            if (!saved)
-            {
-                _status = $"Failed to save dialogue '{dialogueId}'.";
-                return false;
-            }
-
-            MarkCurrentDialogueAsLoaded(dialogueId);
-            return true;
+            return NpcWizardDialogueService.TrySaveDialogue(
+                Definition.Id,
+                dialogueId,
+                status => Status = status,
+                MarkCurrentDialogueAsLoaded);
         }
 
         [HideFromIl2Cpp]
@@ -645,41 +537,25 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!TryGetCurrentDialogueId(out string dialogueId))
                 return false;
 
-            if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(_definition.Id, out Actor? actor) || actor == null)
-            {
-                _status = "Spawn the current definition first, then load dialogue.";
-                return false;
-            }
-
-            DS_DialogueTreeController controller = actor.GetComponentInChildren<DS_DialogueTreeController>();
-            if (controller == null)
-            {
-                _status = "Selected NPC has no dialogue controller.";
-                return false;
-            }
-
-            if (!DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) || loadedDialogue == null)
-            {
-                _status = $"No stored dialogue found for '{dialogueId}'.";
-                return false;
-            }
-
-            loadedDialogue.Serialize(null);
-            controller.graph = loadedDialogue;
-            MarkCurrentDialogueAsLoaded(dialogueId);
-            return true;
+            return NpcWizardDialogueService.TryLoadDialogue(
+                Definition.Id,
+                dialogueId,
+                status => Status = status,
+                MarkCurrentDialogueAsLoaded);
         }
+        #endregion
 
+        #region Overwrite Flow
         [HideFromIl2Cpp]
         private bool HasPendingOverwrite()
-            => _pendingOverwriteAction != PendingOverwriteAction.None;
+            => _overwriteState.HasPending;
 
         [HideFromIl2Cpp]
         private void DrawOverwriteConfirmationPrompt()
         {
             GUILayout.Space(6f);
             GUILayout.BeginVertical("box");
-            GUILayout.Label(_pendingOverwriteMessage);
+            GUILayout.Label(_overwriteState.Message);
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Overwrite", GUILayout.Width(130f)))
@@ -688,7 +564,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (GUILayout.Button("Cancel", GUILayout.Width(130f)))
             {
                 ClearPendingOverwrite();
-                _status = "Overwrite canceled.";
+                Status = "Overwrite canceled.";
             }
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
@@ -697,23 +573,21 @@ namespace Drova_Modding_API.Systems.Spawning
         [HideFromIl2Cpp]
         private void QueueOverwriteConfirmation(PendingOverwriteAction action, string message)
         {
-            _pendingOverwriteAction = action;
-            _pendingOverwriteMessage = message;
-            _status = "Overwrite confirmation required.";
+            _overwriteState.Queue(action, message);
+            Status = "Overwrite confirmation required.";
         }
 
         [HideFromIl2Cpp]
         private void ClearPendingOverwrite()
         {
-            _pendingOverwriteAction = PendingOverwriteAction.None;
-            _pendingOverwriteMessage = string.Empty;
+            _overwriteState.Clear();
         }
 
         [HideFromIl2Cpp]
         private void ExecutePendingOverwrite()
         {
-            PendingOverwriteAction action = _pendingOverwriteAction;
-            ClearPendingOverwrite();
+            if (!_overwriteState.TryConsume(out PendingOverwriteAction action))
+                return;
 
             switch (action)
             {
@@ -725,7 +599,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     break;
                 case PendingOverwriteAction.SaveDialogue:
                     if (TrySaveDialogueForCurrentDefinitionInternal(overwriteConfirmed: true))
-                        _status = "Saved spawned NPC dialogue to dialogue store.";
+                        Status = "Saved spawned NPC dialogue to dialogue store.";
                     break;
             }
         }
@@ -735,7 +609,7 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             if (HasPendingOverwrite())
             {
-                _status = "Confirm or cancel the pending overwrite first.";
+                Status = "Confirm or cancel the pending overwrite first.";
                 return;
             }
 
@@ -743,46 +617,129 @@ namespace Drova_Modding_API.Systems.Spawning
             {
                 QueueOverwriteConfirmation(
                     spawnAfterSave ? PendingOverwriteAction.SaveDefinitionAndSpawn : PendingOverwriteAction.SaveDefinition,
-                    $"Definition '{_definition.Id}' already exists and is not currently loaded. Overwrite existing configuration?");
+                    $"Definition '{Definition.Id}' already exists and is not currently loaded. Overwrite existing configuration?");
                 return;
             }
 
             SaveDefinitionInternal(spawnAfterSave);
         }
+        #endregion
 
+        #region Definition Save and Overwrite Checks
         [HideFromIl2Cpp]
         private void SaveDefinitionInternal(bool spawnAfterSave)
         {
-            bool saved = ExternalNpcPlacementSystem.UpsertDefinition(_definition);
+            bool saved = ExternalNpcPlacementSystem.UpsertDefinition(Definition);
             if (!saved)
             {
-                _status = "Failed to save definition.";
+                Status = "Failed to save definition.";
                 return;
             }
 
             MarkCurrentDefinitionAsLoaded();
             if (!spawnAfterSave)
             {
-                _status = $"Saved definition '{_definition.Id}'.";
+                Status = $"Saved definition '{Definition.Id}'.";
                 RefreshDefinitionsCache();
                 return;
             }
 
-            bool spawned = ExternalNpcPlacementSystem.SpawnDefinition(_definition, skipIfAlreadySpawned: true, requireEnabled: false);
-            _status = $"Save: ok, Spawn: {(spawned ? "spawned" : "skipped")}.";
+            if (HasPendingRespawn())
+            {
+                QueueRespawnNextFrame(CloneDefinition(Definition));
+                Status = "Save: ok, Respawn: updated.";
+                RefreshDefinitionsCache();
+                return;
+            }
+
+            bool wasAlreadySpawned = ExternalNpcPlacementSystem.IsDefinitionSpawned(Definition.Id);
+            if (wasAlreadySpawned)
+            {
+                bool despawned = ExternalNpcPlacementSystem.DespawnDefinition(Definition.Id);
+                if (!despawned)
+                {
+                    Status = $"Save: ok, Respawn: failed (could not despawn '{Definition.Id}').";
+                    RefreshDefinitionsCache();
+                    return;
+                }
+
+                QueueRespawnNextFrame(CloneDefinition(Definition));
+                Status = "Save: ok, Respawn: queued.";
+                RefreshDefinitionsCache();
+                return;
+            }
+
+            bool spawned = ExternalNpcPlacementSystem.SpawnDefinition(Definition, skipIfAlreadySpawned: false, requireEnabled: false);
+            Status = $"Save: ok, Spawn: {(spawned ? "spawned" : "failed")}.";
             RefreshDefinitionsCache();
         }
 
         [HideFromIl2Cpp]
+        private void QueueRespawnNextFrame(ExternalNpcPlacementSystem.ExternalNpcDefinition definitionToSpawn)
+        {
+            CancelPendingRespawn();
+
+            _pendingRespawnDefinition = definitionToSpawn;
+            _pendingRespawnRoutine = MelonCoroutines.Start(RespawnNextFrameCoroutine());
+        }
+
+        [HideFromIl2Cpp]
+        private bool HasPendingRespawn()
+            => _pendingRespawnRoutine != null;
+
+        [HideFromIl2Cpp]
+        private void CancelPendingRespawn()
+        {
+            if (_pendingRespawnRoutine != null)
+                MelonCoroutines.Stop(_pendingRespawnRoutine);
+
+            _pendingRespawnRoutine = null;
+            _pendingRespawnDefinition = null;
+        }
+
+        [HideFromIl2Cpp]
+        private IEnumerator RespawnNextFrameCoroutine()
+        {
+            // Destroy() completes at end-of-frame, so respawn on the next frame.
+            yield return null;
+
+            ExternalNpcPlacementSystem.ExternalNpcDefinition? definitionToSpawn = _pendingRespawnDefinition;
+            _pendingRespawnDefinition = null;
+
+            if (definitionToSpawn == null)
+            {
+                _pendingRespawnRoutine = null;
+                yield break;
+            }
+
+            bool spawned = ExternalNpcPlacementSystem.SpawnDefinition(definitionToSpawn, skipIfAlreadySpawned: false, requireEnabled: false);
+            Status = $"Save: ok, Respawn: {(spawned ? "ok" : "failed")}.";
+            RefreshDefinitionsCache();
+            _pendingRespawnRoutine = null;
+        }
+
+        [HideFromIl2Cpp]
+        private static ExternalNpcPlacementSystem.ExternalNpcDefinition CloneDefinition(ExternalNpcPlacementSystem.ExternalNpcDefinition source)
+            => new()
+            {
+                Id = source.Id,
+                Name = source.Name,
+                PositionX = source.PositionX,
+                PositionY = source.PositionY,
+                Enabled = source.Enabled,
+                ModuleConfig = new Dictionary<string, string>(source.ModuleConfig, StringComparer.OrdinalIgnoreCase)
+            };
+
+        [HideFromIl2Cpp]
         private bool RequiresDefinitionOverwriteConfirmation()
         {
-            if (string.IsNullOrWhiteSpace(_definition.Id))
+            if (string.IsNullOrWhiteSpace(Definition.Id))
                 return false;
 
-            if (!ExternalNpcPlacementSystem.TryGetDefinition(_definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? existingDefinition) || existingDefinition == null)
+            if (!ExternalNpcPlacementSystem.TryGetDefinition(Definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? existingDefinition) || existingDefinition == null)
                 return false;
 
-            return !string.Equals(_loadedDefinitionId, _definition.Id, StringComparison.OrdinalIgnoreCase);
+            return !_state.IsDefinitionLoadedFromCurrentSession();
         }
 
         [HideFromIl2Cpp]
@@ -794,57 +751,45 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!DialogueExistsInStore(dialogueId))
                 return false;
 
-            bool loadedForCurrentDefinition =
-                string.Equals(_loadedDialogueDefinitionId, _definition.Id, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(_loadedDialogueId, dialogueId, StringComparison.OrdinalIgnoreCase);
-            return !loadedForCurrentDefinition;
+            return !_state.IsDialogueLoadedForCurrentDefinition(dialogueId);
         }
+        #endregion
 
+        #region State Helpers
         [HideFromIl2Cpp]
         private static bool DialogueExistsInStore(string dialogueId)
-            => File.Exists(DialogueStore.GetDialogueFilePath(dialogueId));
+            => NpcWizardDialogueService.DialogueExistsInStore(dialogueId);
 
         [HideFromIl2Cpp]
         private void MarkCurrentDefinitionAsLoaded()
-        {
-            _loadedDefinitionId = _definition.Id;
-        }
+            => _state.MarkCurrentDefinitionAsLoaded();
 
         [HideFromIl2Cpp]
         private void MarkCurrentDefinitionAsUnloaded()
-        {
-            _loadedDefinitionId = null;
-            ClearDialogueLoadedMarker();
-        }
+            => _state.MarkCurrentDefinitionAsUnloaded();
 
         [HideFromIl2Cpp]
         private void MarkCurrentDialogueAsLoaded(string dialogueId)
-        {
-            _loadedDialogueDefinitionId = _definition.Id;
-            _loadedDialogueId = dialogueId;
-        }
+            => _state.MarkCurrentDialogueAsLoaded(dialogueId);
 
         [HideFromIl2Cpp]
         private void ClearDialogueLoadedMarker()
-        {
-            _loadedDialogueDefinitionId = null;
-            _loadedDialogueId = null;
-        }
+            => _state.ClearDialogueLoadedMarker();
 
         [HideFromIl2Cpp]
         private bool TryGetCurrentDialogueId(out string dialogueId)
         {
             dialogueId = string.Empty;
-            if (!_definition.ModuleConfig.TryGetValue(ExternalDialogueModule.ModuleKey, out string? payload))
+            if (!Definition.ModuleConfig.TryGetValue(ExternalDialogueModule.ModuleKey, out string? payload))
             {
-                _status = "Dialogue module payload was not found on this definition.";
+                Status = "Dialogue module payload was not found on this definition.";
                 return false;
             }
 
             dialogueId = ExternalDialogueModule.GetDialogueId(payload);
             if (string.IsNullOrWhiteSpace(dialogueId))
             {
-                _status = "Set a Dialogue Id in the Dialogue module first.";
+                Status = "Set a Dialogue Id in the Dialogue module first.";
                 return false;
             }
 
@@ -852,29 +797,8 @@ namespace Drova_Modding_API.Systems.Spawning
         }
 
         [HideFromIl2Cpp]
-        private void EnsureWizardGraphEditor()
-        {
-            if (_graphEditorManager != null)
-                return;
-
-            GameObject graphEditorRoot = GameObject.Find(WizardGraphEditorName);
-            if (graphEditorRoot == null)
-            {
-                graphEditorRoot = new GameObject(WizardGraphEditorName);
-                DontDestroyOnLoad(graphEditorRoot);
-            }
-
-            _graphEditorManager = graphEditorRoot.GetComponent<GraphEditorManager>();
-            if (_graphEditorManager == null)
-                _graphEditorManager = graphEditorRoot.AddComponent<GraphEditorManager>();
-        }
-
-        [HideFromIl2Cpp]
         private void SyncPositionInputs()
-        {
-            _positionXInput = _definition.PositionX.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            _positionYInput = _definition.PositionY.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        }
+            => _state.SyncPositionInputs();
 
         [HideFromIl2Cpp]
         private void TrySyncDefinitionPositionFromPlayer()
@@ -886,118 +810,23 @@ namespace Drova_Modding_API.Systems.Spawning
                 return;
 
             Vector3 playerPosition = player.transform.position;
-            _definition.PositionX = playerPosition.x;
-            _definition.PositionY = playerPosition.y;
+            Definition.PositionX = playerPosition.x;
+            Definition.PositionY = playerPosition.y;
             _initialPlayerPositionApplied = true;
         }
 
         [HideFromIl2Cpp]
-        private static ExternalNpcPlacementSystem.ExternalNpcDefinition CreateDefaultDefinitionAtPlayerPosition()
+        private void LoadDefinitionFromBrowser(ExternalNpcPlacementSystem.ExternalNpcDefinition definition)
         {
-            ExternalNpcPlacementSystem.ExternalNpcDefinition definition = ExternalNpcPlacementSystem.CreateDefaultDefinition();
-            if (PlayerAccess.TryGetPlayer(out Actor player) && player != null)
-            {
-                Vector3 playerPosition = player.transform.position;
-                definition.PositionX = playerPosition.x;
-                definition.PositionY = playerPosition.y;
-            }
-
-            return definition;
+            Definition = definition;
+            ExternalNpcModuleRegistry.EnsureDefaults(Definition);
+            MarkCurrentDefinitionAsLoaded();
+            ClearDialogueLoadedMarker();
+            SyncPositionInputs();
+            Status = $"Loaded definition '{Definition.Id}' from browser.";
         }
+        #endregion
 
-        [HideFromIl2Cpp]
-        private void EnsureWindowRectFitsScreen()
-        {
-            if (!_windowRectInitialized)
-            {
-                ResetWindowRectToScreen();
-                return;
-            }
-
-            float availableWidth = Mathf.Max(360f, Screen.width - (ScreenPadding * 2f));
-            float availableHeight = Mathf.Max(320f, Screen.height - (ScreenPadding * 2f));
-            float minWidth = Mathf.Min(MinWindowWidth, availableWidth);
-            float minHeight = Mathf.Min(MinWindowHeight, availableHeight);
-            float maxWidth = Mathf.Max(minWidth, Screen.width - (_windowRect.x + ScreenPadding));
-            float maxHeight = Mathf.Max(minHeight, Screen.height - (_windowRect.y + ScreenPadding));
-            _windowRect.width = Mathf.Clamp(_windowRect.width, minWidth, maxWidth);
-            _windowRect.height = Mathf.Clamp(_windowRect.height, minHeight, maxHeight);
-            _windowRect.x = Mathf.Clamp(_windowRect.x, ScreenPadding, Mathf.Max(ScreenPadding, Screen.width - _windowRect.width - ScreenPadding));
-            _windowRect.y = Mathf.Clamp(_windowRect.y, ScreenPadding, Mathf.Max(ScreenPadding, Screen.height - _windowRect.height - ScreenPadding));
-        }
-
-        [HideFromIl2Cpp]
-        private void ResetWindowRectToScreen()
-        {
-            float availableWidth = Mathf.Max(360f, Screen.width - (ScreenPadding * 2f));
-            float availableHeight = Mathf.Max(320f, Screen.height - (ScreenPadding * 2f));
-            float minWidth = Mathf.Min(MinWindowWidth, availableWidth);
-            float minHeight = Mathf.Min(MinWindowHeight, availableHeight);
-            float width = Mathf.Clamp(Screen.width * WindowWidthRatio, minWidth, availableWidth);
-            float height = Mathf.Clamp(Screen.height * WindowHeightRatio, minHeight, availableHeight);
-            float x = Mathf.Max(ScreenPadding, (Screen.width - width) * 0.5f);
-            float y = Mathf.Max(ScreenPadding, (Screen.height - height) * 0.5f);
-            _windowRect = new Rect(x, y, width, height);
-            _windowRectInitialized = true;
-        }
-
-        [HideFromIl2Cpp]
-        private void EnsureDefinitionsWindowRectFitsScreen()
-        {
-            if (!_definitionsWindowRectInitialized)
-            {
-                float width = Mathf.Min(DefinitionsWindowWidth, Screen.width - (ScreenPadding * 2f));
-                float height = Mathf.Min(DefinitionsWindowHeight, Screen.height - (ScreenPadding * 2f));
-                float x = Mathf.Max(ScreenPadding, (Screen.width - width) * 0.5f + 40f);
-                float y = Mathf.Max(ScreenPadding, (Screen.height - height) * 0.5f + 20f);
-                _definitionsWindowRect = new Rect(x, y, width, height);
-                _definitionsWindowRectInitialized = true;
-                return;
-            }
-
-            float maxX = Mathf.Max(ScreenPadding, Screen.width - _definitionsWindowRect.width - ScreenPadding);
-            float maxY = Mathf.Max(ScreenPadding, Screen.height - _definitionsWindowRect.height - ScreenPadding);
-            _definitionsWindowRect.x = Mathf.Clamp(_definitionsWindowRect.x, ScreenPadding, maxX);
-            _definitionsWindowRect.y = Mathf.Clamp(_definitionsWindowRect.y, ScreenPadding, maxY);
-        }
-
-        [HideFromIl2Cpp]
-        private void HandleResize(Rect resizeHandleRect)
-        {
-            Event evt = Event.current;
-            if (evt == null)
-                return;
-
-            if (evt.type == EventType.MouseDown && evt.button == 0 && resizeHandleRect.Contains(evt.mousePosition))
-            {
-                _isResizing = true;
-                _resizeStartMouse = evt.mousePosition;
-                _resizeStartSize = new Vector2(_windowRect.width, _windowRect.height);
-                evt.Use();
-                return;
-            }
-
-            if (evt.type == EventType.MouseDrag && _isResizing)
-            {
-                Vector2 delta = evt.mousePosition - _resizeStartMouse;
-                float availableWidth = Mathf.Max(360f, Screen.width - (ScreenPadding * 2f));
-                float availableHeight = Mathf.Max(320f, Screen.height - (ScreenPadding * 2f));
-                float minWidth = Mathf.Min(MinWindowWidth, availableWidth);
-                float minHeight = Mathf.Min(MinWindowHeight, availableHeight);
-                float maxWidth = Mathf.Max(minWidth, Screen.width - (_windowRect.x + ScreenPadding));
-                float maxHeight = Mathf.Max(minHeight, Screen.height - (_windowRect.y + ScreenPadding));
-                _windowRect.width = Mathf.Clamp(_resizeStartSize.x + delta.x, minWidth, maxWidth);
-                _windowRect.height = Mathf.Clamp(_resizeStartSize.y + delta.y, minHeight, maxHeight);
-                evt.Use();
-                return;
-            }
-
-            if (evt.type == EventType.MouseUp && _isResizing)
-            {
-                _isResizing = false;
-                evt.Use();
-            }
-        }
     }
 }
 
