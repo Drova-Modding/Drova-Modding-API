@@ -63,6 +63,7 @@ namespace Drova_Modding_API
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
 #if DEBUG
                 ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
+                MainMenuModdingUI.Init();
                 //_ttsFile.CreateDialogueFile();
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();

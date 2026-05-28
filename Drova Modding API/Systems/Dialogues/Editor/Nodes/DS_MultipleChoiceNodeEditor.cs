@@ -44,11 +44,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _castedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
 
             // Pre-calculate total height using cached DrawTask heights from the previous frame
-            // Per choice: 20 (header) + 35 (loca) + 35 (statement) + 10 (gap) = 100 base
+            // Per choice: 20 (header) + 35 (loca) + 35 (statement) + 25 (end node) + 10 (gap) = 125 base
             int additionalHeight = 20; // top padding
             for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
-                additionalHeight += 100; // header(20) + locaPath row(35) + statement row(35) + bottom gap(10)
+                additionalHeight += 125; // header(20) + locaPath row(35) + statement row(35) + end node row(25) + bottom gap(10)
                 if (_taskHeights.TryGetValue(i, out float cachedHeight))
                     additionalHeight += (int)cachedHeight + 10;
             }
@@ -67,10 +67,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
 
                 // Calculate per-choice box height (base + optional task height from cache)
-                // 20 (header label) + 35 (loca) + 35 (statement) + 10 (padding) = 100 base
-                int choiceBoxHeight = 100;
+                // 20 (header label) + 35 (loca) + 35 (statement) + 25 (end node) + 10 (padding) = 125 base
+                int choiceBoxHeight = 125;
                 if (_taskHeights.TryGetValue(i, out float prevTaskHeight))
                     choiceBoxHeight += (int)prevTaskHeight + 10;
+                
 
                 GUI.Box(new Rect(position.x + 5, position.y + step, 340, choiceBoxHeight), new GUIContent($"Choice {i}:", _castedNode.GetLocalizedString(choice.statement)), EditorBoxStyles.Choice);
                 step += 20; // space for "Choice i:" header label
@@ -87,12 +88,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Statement:");
                 choice.statement._locaKey = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.statement._locaKey);
                 step += 35;
+                GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "End Node:");
+                choice.isEndNode = GUI.Toggle(new Rect(position.x + 110, position.y + step, 100, 20), choice.isEndNode, "");
+                step += 25;
                 if (_choices.TryGetValue(i, out DrawTaskEditor editor))
                 {
                     Rect size = editor.DrawTask(new Vector2(position.x + 5, position.y + step));
                     _taskHeights[i] = size.height; // cache for next frame's height calculation
                     step += (int)size.height + 10;
                 }
+
+                // Ensure value-type choices persist modified primitive fields like isEndNode.
+                _castedNode.availableChoices[i] = choice;
                 step += 10; // gap between choices
             }
 

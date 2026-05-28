@@ -20,6 +20,11 @@ namespace Drova_Modding_API.Access
         private static readonly List<PendingCheat> _pendingCheats = [];
 
         /// <summary>
+        /// Cached CommandShell for using cheats without opening the console.
+        /// </summary>
+        private static CommandShell? _commandShell;
+
+        /// <summary>
         /// Raised when cheat mode is enabled. Internal use only – the patch calls this.
         /// </summary>
         internal static event Action? OnCheatModeEnabled;
@@ -92,15 +97,45 @@ namespace Drova_Modding_API.Access
             if (!Terminal._isInitialized)
                 Terminal.Init();
             CommandShell shell = Terminal.Shell;
-            shell.AddCommand(name, new CommandInfo()
+            shell.AddCommand(name,
+                new CommandInfo()
+                {
+                    proc = action,
+                    help = help,
+                    hint = hint,
+                    min_arg_count = minArgs,
+                    max_arg_count = maxArgs,
+                    CamelCaseName = name
+                });
+            if (_commandShell == null)
             {
-                proc = action,
-                help = help,
-                hint = hint,
-                min_arg_count = minArgs,
-                max_arg_count = maxArgs,
-                CamelCaseName = name
-            });
+                _commandShell = new CommandShell();
+                _commandShell.RegisterCommands();
+            }
+            _commandShell.AddCommand(name,
+                new CommandInfo()
+                {
+                    proc = action,
+                    help = help,
+                    hint = hint,
+                    min_arg_count = minArgs,
+                    max_arg_count = maxArgs,
+                    CamelCaseName = name
+                });
+        }
+
+        /// <summary>
+        /// Fires a cheat command as if it was user input
+        /// </summary>
+        /// <param name="command"></param>
+        public static void FireCommand(string command)
+        {
+            if (_commandShell == null)
+            {
+                _commandShell = new CommandShell();
+                _commandShell.RegisterCommands();
+            }
+            _commandShell.RunCommand(command);
         }
     }
 }

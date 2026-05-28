@@ -485,6 +485,7 @@
 		<Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
 		<Compile Include="Systems\Editor\EditorManager.cs" />
 		<Compile Include="Systems\Editor\NpcMouseRaycast.cs" />
+		<Compile Include="Systems\ModdingUI\MainMenuModdingUI.cs" />
 		<Compile Include="Systems\ModdingUI\ModdingUI.cs" />
 		<Compile Include="Systems\Morphing\MorphManager.cs" />
 		<Compile Include="Systems\Region.cs" />

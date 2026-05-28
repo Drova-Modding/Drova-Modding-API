@@ -20,6 +20,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
                 return;
             }
 
+            editorManager.ApplyDefaultActorParameter(newNode);
+
             DrawNodeEditor nodeEditor = editorManager.DrawNodeEditorFactory.GetDrawNodeEditorFromType(newNode.GetIl2CppType());
             if (nodeEditor == null)
             {
