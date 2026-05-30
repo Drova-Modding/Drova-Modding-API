@@ -17,6 +17,8 @@ namespace Drova_Modding_API.Systems
 {
     internal static class SystemInit
     {
+        private const string ActorSpawnRootName = "ModdingAPI_Actors";
+
         internal static void GameplayInit()
         {
             TalentContainerDatabase.InitializeDatabase();
@@ -34,9 +36,9 @@ namespace Drova_Modding_API.Systems
             SaveGameSystem.Instance.OnLoad(Savegame.Current);
             NpcCreator.CacheAlignments();
             ExternalNpcPlacementSystem.SpawnConfiguredNpcs();
-            NpcWizardSystem.Initialize();
 
 #if DEBUG
+            NpcWizardSystem.Initialize();
             EditorUI.Init();
 #endif
         }
@@ -51,6 +53,16 @@ namespace Drova_Modding_API.Systems
             GameObject moddingAPIAiLogicSystemRoot = new("ModdingAPI_AILogic");
             SceneManager.MoveGameObjectToScene(moddingAPIAiLogicSystemRoot, scene);
             RoutineSystem.RoutineRoot = moddingAPIAiLogicSystemRoot;
+        }
+
+        internal static void ActorInit(Scene scene)
+        {
+            GameObject actorSpawnRoot = GameObject.Find(ActorSpawnRootName);
+            if (actorSpawnRoot == null)
+                actorSpawnRoot = new GameObject(ActorSpawnRootName);
+
+            SceneManager.MoveGameObjectToScene(actorSpawnRoot, scene);
+            NpcCreator.SetSpawnRoot(actorSpawnRoot.transform);
         }
     }
 }

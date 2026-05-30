@@ -438,7 +438,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 DialogueTree!.Serialize(null);
                 string dialogueId = string.IsNullOrWhiteSpace(DialogueTree.Key) ? DialogueTree.name : DialogueTree.Key;
-                DialogueStore.SaveDialogue(dialogueId, DialogueTree);
+                bool saved = DialogueStore.SaveDialogue(dialogueId, DialogueTree);
+                if (saved)
+                {
+                    // Patch the live in-memory instance so vanilla NPCs referencing
+                    // this DialogueTree pick up the changes immediately.
+                    DialogueStore.TryPatchInMemoryDialogue(dialogueId);
+                }
             }
             if (GUI.Button(new(Screen.width - 160, 130, 150, 60), "Resolve Overlaps"))
             {

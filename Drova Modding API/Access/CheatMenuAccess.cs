@@ -17,7 +17,7 @@ namespace Drova_Modding_API.Access
             string Help,
             string Hint);
 
-        private static readonly List<PendingCheat> _pendingCheats = [];
+        private static readonly List<PendingCheat> PendingCheats = [];
 
         /// <summary>
         /// Cached CommandShell for using cheats without opening the console.
@@ -69,7 +69,7 @@ namespace Drova_Modding_API.Access
             }
 
             // Queue for when cheat mode is enabled later
-            _pendingCheats.Add(new PendingCheat(name, action, minArgs, maxArgs, help, hint));
+            PendingCheats.Add(new PendingCheat(name, action, minArgs, maxArgs, help, hint));
             return false;
         }
 
@@ -83,13 +83,13 @@ namespace Drova_Modding_API.Access
 
         private static void FlushPendingCheats()
         {
-            if (_pendingCheats.Count == 0) return;
+            if (PendingCheats.Count == 0) return;
 
-            foreach (var cheat in _pendingCheats)
+            foreach (var cheat in PendingCheats)
             {
                 RegisterCheatInternal(cheat.Name, cheat.Action, cheat.MinArgs, cheat.MaxArgs, cheat.Help, cheat.Hint);
             }
-            _pendingCheats.Clear();
+            PendingCheats.Clear();
         }
 
         private static void RegisterCheatInternal(string name, Action<Il2CppReferenceArray<CommandArg>> action, int minArgs, int maxArgs, string help, string hint)

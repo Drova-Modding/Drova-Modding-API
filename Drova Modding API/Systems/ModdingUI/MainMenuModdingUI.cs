@@ -40,7 +40,6 @@ namespace Drova_Modding_API.Systems.ModdingUI
                 yield return new WaitForSeconds(2);
             }
             CheatMenuAccess.FireCommand("noclip");
-            CheatMenuAccess.FireCommand("camstop");
             CheatMenuAccess.FireCommand("god");
             CheatMenuAccess.FireCommand("invincibility");
         }

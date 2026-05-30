@@ -18,6 +18,8 @@ namespace Drova_Modding_API.Systems.Spawning
     public class NpcCreator
     {
         private const string EnemyAlignmentName = "Alignment_Wild_Human";
+        private static Transform? _npcSpawnRoot;
+        private static readonly List<Transform> PendingSpawnedObjects = [];
 
         // Cached once at first use — FindObjectsOfTypeAll is expensive.
         private static AlignmentContainer? _cachedEnemyAlignment;
@@ -39,6 +41,43 @@ namespace Drova_Modding_API.Systems.Spawning
                 }
             }
         }
+
+        internal static void SetSpawnRoot(Transform? root)
+        {
+            _npcSpawnRoot = root;
+            if (!IsSpawnRootAlive())
+                return;
+
+            for (int i = PendingSpawnedObjects.Count - 1; i >= 0; i--)
+            {
+                Transform pending = PendingSpawnedObjects[i];
+                if (pending == null)
+                {
+                    PendingSpawnedObjects.RemoveAt(i);
+                    continue;
+                }
+
+                pending.SetParent(_npcSpawnRoot, true);
+                PendingSpawnedObjects.RemoveAt(i);
+            }
+        }
+
+        internal static void TrackSpawnedObject(Transform spawnedTransform)
+        {
+            if (spawnedTransform == null)
+                return;
+
+            if (IsSpawnRootAlive())
+            {
+                spawnedTransform.SetParent(_npcSpawnRoot, true);
+                return;
+            }
+
+            PendingSpawnedObjects.Add(spawnedTransform);
+        }
+
+        private static bool IsSpawnRootAlive()
+            => _npcSpawnRoot != null;
 
         private static bool _templatePrewarmed;
 
@@ -209,6 +248,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
             GameObject npc = operation.Result;
             npc.name = _name;
+            TrackSpawnedObject(npc.transform);
             ApplyModules(npc);
             return npc;
         }
@@ -222,6 +262,7 @@ namespace Drova_Modding_API.Systems.Spawning
         public LazyActor CreateLazy(bool saveToLazyActorStore = false, string? externalDefinitionId = null)
         {
             LazyActor lazyActor = LazyActorCreator.CreateLazyActor(_name, _lazyActorReference, _spawnPosition, _lazyEntityInfoReference, _customLazyEntityInfo, true);
+            TrackSpawnedObject(lazyActor.transform);
 
             // Register a pre-init callback so module logic runs before Actor.StartInitAsync.
             // We cannot use ActorSpawnEvent because SpawnArgs is a non-blittable struct and

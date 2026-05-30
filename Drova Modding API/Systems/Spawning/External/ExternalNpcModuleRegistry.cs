@@ -17,6 +17,7 @@ namespace Drova_Modding_API.Systems.Spawning
             Register(new ExternalDialogueModule());
             Register(new ExternalHealthModule());
             Register(new ExternalTalentModule());
+            Register(new ExternalRoutineModule());
         }
 
         /// <summary>
