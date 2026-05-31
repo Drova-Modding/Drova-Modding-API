@@ -70,7 +70,6 @@ namespace Drova_Modding_API.Systems.Spawning
             else
             {
                 DrawFreecamClickMode();
-                HandleFreecamMouseClick();
             }
 
             // Points list
@@ -172,16 +171,12 @@ namespace Drova_Modding_API.Systems.Spawning
             GUILayout.Label("Left-click in the world while freecam is active to add a routine point.");
         }
 
-        private void HandleFreecamMouseClick()
+        public void OnWizardUpdate()
         {
-            if (!_freecamActive)
+            if (!_freecamActive || _editorMode != RoutineEditorMode.FreecamClick)
                 return;
 
-            Event evt = Event.current;
-            if (evt == null || evt.type != EventType.MouseDown || evt.button != 0)
-                return;
-
-            if (GUIUtility.hotControl != 0)
+            if (!Input.GetMouseButtonDown(0))
                 return;
 
             if (!TryGetMouseWorldPosition(out Vector2 worldPosition))
@@ -190,7 +185,6 @@ namespace Drova_Modding_API.Systems.Spawning
             _cachedState.Points.Add(worldPosition);
             _serializedPayload = JsonSerializer.Serialize(_cachedState);
             _lastPayload = _serializedPayload;
-            evt.Use();
         }
 
         private static bool TryGetMouseWorldPosition(out Vector2 worldPosition)

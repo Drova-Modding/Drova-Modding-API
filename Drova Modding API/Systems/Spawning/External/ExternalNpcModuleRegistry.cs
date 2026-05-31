@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
         static ExternalNpcModuleRegistry()
         {
-            Register(new ExternalFriendlyModule());
+            Register(new ExternalAlignmentContainerModule());
             Register(new ExternalEquipmentModule());
             Register(new ExternalCosmeticsModule());
             Register(new ExternalEntityInfoModule());

@@ -103,6 +103,27 @@ namespace Drova_Modding_API.Systems.Spawning
                 _windowLayout.SetDefinitionsWindowRect(GUI.Window(487320, _windowLayout.DefinitionsWindowRect, new Action<int>(DrawDefinitionsWindow), "NPC Definitions"));
             }
         }
+
+        internal void Update()
+        {
+            if (!_visible)
+                return;
+
+            // IMGUI rects use top-left origin; Input.mousePosition uses bottom-left origin.
+            // Suppress world-click dispatch when the pointer is over the wizard window,
+            // which also prevents UI button clicks (e.g. "Stop Freecam") from registering as world points.
+            Vector2 mouseScreenPos = Input.mousePosition;
+            Vector2 guiMousePos = new(mouseScreenPos.x, Screen.height - mouseScreenPos.y);
+            if (_windowLayout.MainWindowRect.Contains(guiMousePos))
+                return;
+
+            IReadOnlyList<IExternalNpcModule> modules = ExternalNpcModuleRegistry.Modules;
+            for (int i = 0; i < modules.Count; i++)
+            {
+                if (GetModuleExpandedState(modules[i].Key))
+                    modules[i].OnWizardUpdate();
+            }
+        }
         #endregion
 
         #region Visibility and Input

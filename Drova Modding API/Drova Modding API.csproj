@@ -494,6 +494,7 @@
         <Compile Include="Systems\SaveGame\Store\LazyActorStore.cs"/>
         <Compile Include="Systems\Dialogues\ActorParameterHelper.cs"/>
         <Compile Include="Systems\Dialogues\DialogGraph.cs"/>
+        <Compile Include="Systems\Spawning\External\ExternalAlignmentContainerModule.cs"/>
         <Compile Include="Systems\Spawning\External\ExternalCosmeticsModule.cs"/>
         <Compile Include="Systems\Spawning\External\ExternalDialogueModule.cs"/>
         <Compile Include="Systems\Spawning\External\ExternalEntityInfoModule.cs"/>
@@ -501,7 +502,6 @@
         <Compile Include="Systems\Spawning\External\ExternalHealthModule.cs"/>
         <Compile Include="Systems\Spawning\External\ExternalNpcModuleRegistry.cs"/>
         <Compile Include="Systems\Spawning\External\ExternalNpcPlacementSystem.cs"/>
-        <Compile Include="Systems\Spawning\External\ExternalFriendlyModule.cs"/>
         <Compile Include="Systems\Spawning\External\ExternalRoutineModule.cs"/>
         <Compile Include="Systems\Spawning\External\RoutinePointVisualizer.cs"/>
         <Compile Include="Systems\Spawning\External\ExternalTalentModule.cs"/>

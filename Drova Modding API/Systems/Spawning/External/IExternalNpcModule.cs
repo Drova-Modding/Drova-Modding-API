@@ -29,6 +29,12 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Applies this module configuration to an <see cref="NpcCreator"/>.
         /// </summary>
         void ApplyToCreator(NpcCreator creator, string? payload);
+
+        /// <summary>
+        /// Called every frame while the wizard is visible and this module is expanded.
+        /// Override to handle runtime input or per-frame logic. No-op by default.
+        /// </summary>
+        void OnWizardUpdate() { }
     }
 }
 
