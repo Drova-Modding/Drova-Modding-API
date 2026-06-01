@@ -1,6 +1,12 @@
 ﻿using Il2CppNodeCanvas.DialogueTrees;
+using Il2CppDrova.Utilities;
+#if DEBUG
+using Il2CppNodeCanvas.Framework.Internal;
+using Il2CppSirenix.Serialization;
+#endif
 using MelonLoader;
 using System.Text.Json;
+using System.Reflection;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Store
@@ -23,6 +29,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
             public int Version { get; set; } = 1;
             public string DialogueId { get; set; } = string.Empty;
             public string SerializedGraphBytesBase64 { get; set; } = string.Empty;
+            public List<ObjectReferenceData> ObjectReferences { get; set; } = [];
+        }
+
+        [Serializable]
+        private sealed class ObjectReferenceData
+        {
+            public bool IsNull { get; set; }
+            public string Name { get; set; } = string.Empty;
+            public string TypeName { get; set; } = string.Empty;
+            public string HierarchyPath { get; set; } = string.Empty;
+            public string StableId { get; set; } = string.Empty;
+            public int InstanceId { get; set; }
         }
 
         private static readonly JsonSerializerOptions JsonOptions = new()
@@ -63,7 +81,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
                     DialogueId = dialogueId.Trim(),
                     SerializedGraphBytesBase64 = serializedBytes.Length == 0
                         ? string.Empty
-                        : Convert.ToBase64String(serializedBytes)
+                        : Convert.ToBase64String(serializedBytes),
+                    ObjectReferences = BuildObjectReferenceData(dialogue._objectByteReferences)
                 };
 
                 if (string.IsNullOrWhiteSpace(saveData.SerializedGraphBytesBase64))
@@ -71,6 +90,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
 
                 string savePath = GetDialogueFilePath(saveData.DialogueId);
                 File.WriteAllText(savePath, JsonSerializer.Serialize(saveData, JsonOptions));
+#if DEBUG
+                TrySaveDebugGraphJson(saveData.DialogueId, dialogue);
+#endif
                 return true;
             }
             catch (Exception ex)
@@ -121,7 +143,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
                 }
 
                 target._serializedBytes = bytes;
-                target._objectByteReferences ??= new Il2CppSystem.Collections.Generic.List<UnityEngine.Object>();
+                Dictionary<Type, UnityEngine.Object[]> candidateCache = [];
+                Il2CppSystem.Collections.Generic.List<UnityEngine.Object> restoredReferences =
+                    BuildObjectReferenceList(saveData.ObjectReferences, out int resolvedReferences, candidateCache);
+                if (resolvedReferences > 0 || target._objectByteReferences == null || target._objectByteReferences.Count == 0)
+                    target._objectByteReferences = restoredReferences;
                 target.SelfDeserialize();
                 target.DeserializeIfNotDoneYet(true);
 
@@ -165,7 +191,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
                     return false;
 
                 loaded._serializedBytes = bytes;
-                loaded._objectByteReferences = new Il2CppSystem.Collections.Generic.List<UnityEngine.Object>();
+                Dictionary<Type, UnityEngine.Object[]> candidateCache = [];
+                loaded._objectByteReferences = BuildObjectReferenceList(saveData.ObjectReferences, out int resolvedReferences, candidateCache);
+                if (resolvedReferences == 0 && TryGetLiveObjectReferences(dialogueId, out Il2CppSystem.Collections.Generic.List<UnityEngine.Object>? liveReferences))
+                    loaded._objectByteReferences = liveReferences;
                 loaded.UseByteSerialization = true;
                 loaded.SelfDeserialize();
 
@@ -230,6 +259,261 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
             if (!Directory.Exists(folderPath))
                 Directory.CreateDirectory(folderPath);
         }
+
+        private static List<ObjectReferenceData> BuildObjectReferenceData(Il2CppSystem.Collections.Generic.List<UnityEngine.Object>? objectReferences)
+        {
+            List<ObjectReferenceData> serializedReferences = [];
+            if (objectReferences == null || objectReferences.Count == 0)
+                return serializedReferences;
+
+            for (int i = 0; i < objectReferences.Count; i++)
+            {
+                UnityEngine.Object unityObject = objectReferences[i];
+                if (unityObject == null)
+                {
+                    serializedReferences.Add(new ObjectReferenceData { IsNull = true });
+                    continue;
+                }
+
+                Type objectType = unityObject.GetType();
+                serializedReferences.Add(new ObjectReferenceData
+                {
+                    IsNull = false,
+                    Name = unityObject.name,
+                    TypeName = objectType.AssemblyQualifiedName ?? objectType.FullName ?? string.Empty,
+                    HierarchyPath = GetHierarchyPath(unityObject),
+                    StableId = TryGetStableObjectId(unityObject),
+                    InstanceId = unityObject.GetInstanceID()
+                });
+            }
+
+            return serializedReferences;
+        }
+
+        private static Il2CppSystem.Collections.Generic.List<UnityEngine.Object> BuildObjectReferenceList(
+            List<ObjectReferenceData>? serializedReferences,
+            out int resolvedReferences,
+            Dictionary<Type, UnityEngine.Object[]>? candidateCache = null)
+        {
+            Il2CppSystem.Collections.Generic.List<UnityEngine.Object> references = new();
+            resolvedReferences = 0;
+            if (serializedReferences == null || serializedReferences.Count == 0)
+                return references;
+
+            candidateCache ??= [];
+
+            for (int i = 0; i < serializedReferences.Count; i++)
+            {
+                ObjectReferenceData referenceData = serializedReferences[i];
+                if (referenceData.IsNull)
+                {
+                    references.Add(null);
+                    continue;
+                }
+
+                UnityEngine.Object resolved = ResolveObjectReference(referenceData, candidateCache);
+                if (resolved != null)
+                    resolvedReferences++;
+
+                references.Add(resolved);
+            }
+
+            return references;
+        }
+
+        private static UnityEngine.Object? ResolveObjectReference(
+            ObjectReferenceData referenceData,
+            Dictionary<Type, UnityEngine.Object[]> candidateCache)
+        {
+            if (string.IsNullOrWhiteSpace(referenceData.TypeName))
+                return null;
+
+            Type objectType = Type.GetType(referenceData.TypeName, false);
+            if (objectType == null)
+                return null;
+
+            UnityEngine.Object[] candidates = GetCandidatesForType(objectType, candidateCache);
+            if (candidates.Length == 0)
+                return null;
+
+            UnityEngine.Object byInstanceId = null;
+            UnityEngine.Object byStableId = null;
+            UnityEngine.Object fallbackByName = null;
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                UnityEngine.Object candidate = candidates[i];
+                if (candidate == null)
+                    continue;
+
+                if (!objectType.IsAssignableFrom(candidate.GetType()))
+                    continue;
+
+                if (referenceData.InstanceId != 0 && candidate.GetInstanceID() == referenceData.InstanceId)
+                    byInstanceId = candidate;
+
+                if (byStableId == null
+                    && !string.IsNullOrWhiteSpace(referenceData.StableId)
+                    && string.Equals(TryGetStableObjectId(candidate), referenceData.StableId, StringComparison.Ordinal))
+                {
+                    byStableId = candidate;
+                }
+
+                if (!string.Equals(candidate.name, referenceData.Name, StringComparison.Ordinal))
+                    continue;
+
+                if (fallbackByName == null)
+                    fallbackByName = candidate;
+
+                if (string.IsNullOrWhiteSpace(referenceData.HierarchyPath))
+                    continue;
+
+                string candidatePath = GetHierarchyPath(candidate);
+                if (string.Equals(candidatePath, referenceData.HierarchyPath, StringComparison.Ordinal))
+                    return candidate;
+            }
+
+            if (byInstanceId != null)
+                return byInstanceId;
+
+            if (byStableId != null)
+                return byStableId;
+
+            return fallbackByName;
+        }
+
+        private static UnityEngine.Object[] GetCandidatesForType(
+            Type objectType,
+            Dictionary<Type, UnityEngine.Object[]> candidateCache)
+        {
+            if (candidateCache.TryGetValue(objectType, out UnityEngine.Object[] cachedCandidates))
+                return cachedCandidates;
+
+            UnityEngine.Object[] candidates;
+            try
+            {
+                Il2CppSystem.Type il2CppType = Il2CppSystem.Type.GetType(objectType.AssemblyQualifiedName)
+                    ?? Il2CppSystem.Type.GetType(objectType.FullName);
+                if (il2CppType == null)
+                {
+                    candidateCache[objectType] = [];
+                    return candidateCache[objectType];
+                }
+
+                candidates = Resources.FindObjectsOfTypeAll(il2CppType);
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Warning($"DialogueStore: failed to enumerate objects of type '{objectType.FullName}': {ex.Message}");
+                candidates = [];
+            }
+
+            candidateCache[objectType] = candidates;
+            return candidates;
+        }
+
+        private static bool TryGetLiveObjectReferences(string dialogueId, out Il2CppSystem.Collections.Generic.List<UnityEngine.Object>? references)
+        {
+            references = null;
+            string trimmedId = dialogueId.Trim();
+            DialogueTree[] allTrees = Resources.FindObjectsOfTypeAll<DialogueTree>();
+            DialogueTree? liveTree = allTrees.FirstOrDefault(t => t.Key == trimmedId)
+                                  ?? allTrees.FirstOrDefault(t => t.name == trimmedId);
+            if (liveTree == null || liveTree._objectByteReferences == null)
+                return false;
+
+            references = liveTree._objectByteReferences;
+            return references.Count > 0;
+        }
+
+        private static string TryGetStableObjectId(UnityEngine.Object unityObject)
+        {
+            if (unityObject == null)
+                return string.Empty;
+
+            // IL2CPP objects are safer to probe via TryCast than C# type pattern matching.
+            ScriptableGuidObject guidObject = unityObject.TryCast<ScriptableGuidObject>();
+            if (guidObject != null)
+            {
+                string guid = guidObject.GUID;
+                if (!string.IsNullOrWhiteSpace(guid))
+                    return guid;
+            }
+
+            Type objectType = unityObject.GetType();
+            const BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+            string[] propertyNames = ["Key", "ID", "Guid", "GUID", "guid"];
+            for (int i = 0; i < propertyNames.Length; i++)
+            {
+                PropertyInfo? propertyInfo = objectType.GetProperty(propertyNames[i], bindingFlags);
+                if (propertyInfo == null || propertyInfo.GetIndexParameters().Length != 0)
+                    continue;
+
+                object? value = propertyInfo.GetValue(unityObject, null);
+                if (value is string stringValue && !string.IsNullOrWhiteSpace(stringValue))
+                    return stringValue;
+            }
+
+            string[] fieldNames = ["_key", "_id", "_guidString", "guid", "Guid"];
+            for (int i = 0; i < fieldNames.Length; i++)
+            {
+                FieldInfo? fieldInfo = objectType.GetField(fieldNames[i], bindingFlags);
+                if (fieldInfo == null)
+                    continue;
+
+                object? value = fieldInfo.GetValue(unityObject);
+                if (value is string stringValue && !string.IsNullOrWhiteSpace(stringValue))
+                    return stringValue;
+            }
+
+            return string.Empty;
+        }
+
+        private static string GetHierarchyPath(UnityEngine.Object unityObject)
+        {
+            Transform targetTransform = null;
+            if (unityObject is GameObject gameObject)
+                targetTransform = gameObject.transform;
+            else if (unityObject is Component component)
+                targetTransform = component.transform;
+
+            if (targetTransform == null)
+                return string.Empty;
+
+            List<string> pathSegments = [];
+            Transform current = targetTransform;
+            while (current != null)
+            {
+                pathSegments.Add(current.name);
+                current = current.parent;
+            }
+
+            pathSegments.Reverse();
+            return string.Join("/", pathSegments);
+        }
+
+#if DEBUG
+        private static void TrySaveDebugGraphJson(string dialogueId, DialogueTree dialogue)
+        {
+            try
+            {
+                Il2CppSystem.Collections.Generic.List<UnityEngine.Object> objectReferences;
+                Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> graphJsonBytes =
+                    SerializationUtility.SerializeValue<GraphSource>(
+                        dialogue.graphSource.Pack(dialogue),
+                        DataFormat.JSON,
+                        out objectReferences,
+                        null);
+
+                string debugPath = Path.Combine(GetDialogueFolderPath(), $"{SanitizeFileName(dialogueId)}.graph.dev.json");
+                File.WriteAllBytes(debugPath, graphJsonBytes);
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Warning($"Failed to write debug graph JSON for dialogue '{dialogueId}': {ex.Message}");
+            }
+        }
+#endif
 
         private static string SanitizeFileName(string dialogueId)
         {
