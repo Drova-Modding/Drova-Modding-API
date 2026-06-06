@@ -34,10 +34,9 @@ namespace Drova_Modding_API.Systems
 
             moddingAPISystemRoot.SetActive(true);
             SaveGameSystem.Instance.OnLoad(Savegame.Current);
-            NpcCreator.CacheAlignments();
-            ExternalNpcPlacementSystem.SpawnConfiguredNpcs();
 
 #if DEBUG
+            LocalizationEntriesEditorSystem.Initialize();
             NpcWizardSystem.Initialize();
             EditorUI.Init();
 #endif
@@ -63,6 +62,8 @@ namespace Drova_Modding_API.Systems
 
             SceneManager.MoveGameObjectToScene(actorSpawnRoot, scene);
             NpcCreator.SetSpawnRoot(actorSpawnRoot.transform);
+            NpcCreator.CacheAlignments();
+            ExternalNpcPlacementSystem.SpawnConfiguredNpcs();
         }
     }
 }

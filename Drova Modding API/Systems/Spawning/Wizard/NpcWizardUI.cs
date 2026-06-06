@@ -1,4 +1,5 @@
 using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Editor;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.Attributes;
 using MelonLoader;
@@ -13,6 +14,7 @@ namespace Drova_Modding_API.Systems.Spawning
         #region Fields
         private static NpcWizardUI? _instance;
         private const string InitialStatusMessage = "Use cheat command 'npc_wizard' to open this window.";
+        private const string LastLoadedDefinitionFileName = "wizard_last_loaded_definition.txt";
 
         private bool _visible;
         private bool _initialPlayerPositionApplied;
@@ -26,9 +28,11 @@ namespace Drova_Modding_API.Systems.Spawning
         private readonly NpcWizardState _state = new(
             NpcWizardDefinitionHelpers.CreateDefaultDefinitionAtPlayerPosition(),
             InitialStatusMessage);
+        private string _modFileName = "my_mod";
         private bool _gameplayInputBlockedByWizard;
         private object? _pendingRespawnRoutine;
         private ExternalNpcPlacementSystem.ExternalNpcDefinition? _pendingRespawnDefinition;
+        private string? _pendingDefinitionSaveModFileName;
         private bool _compactLayoutActiveForDialogueEditor;
         private bool _dialogueEditorEventsSubscribed;
         #endregion
@@ -72,9 +76,13 @@ namespace Drova_Modding_API.Systems.Spawning
         internal void Awake()
         {
             _instance = this;
+            _modFileName = ModCreationContext.GetCurrentModFileStemOrDefault(_modFileName);
             ExternalNpcModuleRegistry.EnsureDefaults(Definition);
-            TrySyncDefinitionPositionFromPlayer();
+            if (!TryRestoreLastLoadedDefinition())
+                TrySyncDefinitionPositionFromPlayer();
+
             SyncPositionInputs();
+            SyncModFileNameFromCurrentDefinition();
         }
 
         internal void OnDestroy()
@@ -141,7 +149,9 @@ namespace Drova_Modding_API.Systems.Spawning
                 _instance.TrySyncDefinitionPositionFromPlayer();
                 _instance.SyncPositionInputs();
                 _instance.RefreshDefinitionsCache();
-                _instance.Status = $"Placement folder: {ExternalNpcPlacementSystem.GetNpcPlacementFolderPath()}  |  Wizard file: {ExternalNpcPlacementSystem.GetWizardFilePath()}";
+                _instance.Status = _instance.BuildWizardStatusMessage();
+                if (!ModCreationContext.HasConfiguredModFileStem())
+                    _instance.Status = "Tip: set 'Mod File' and click 'Apply Shared' once to reuse it across custom tools.";
             }
         }
 
@@ -278,6 +288,7 @@ namespace Drova_Modding_API.Systems.Spawning
         private void DrawBaseFields()
         {
             GUILayout.Label("Base Definition");
+            DrawLoadedDefinitionIndicator();
             GUILayout.Label("Definition Id");
             Definition.Id = GUILayout.TextField(Definition.Id);
 
@@ -297,6 +308,28 @@ namespace Drova_Modding_API.Systems.Spawning
                 Definition.PositionY = y;
 
             Definition.Enabled = GUILayout.Toggle(Definition.Enabled, "Enabled for auto spawn on game start");
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Source File", GUILayout.Width(140f));
+            GUILayout.Label(ExternalNpcPlacementSystem.GetDefinitionSourceFileName(Definition.Id));
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label(BuildSharedModBadgeText());
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Mod File", GUILayout.Width(140f));
+            _modFileName = GUILayout.TextField(_modFileName);
+            if (GUILayout.Button("Apply Shared", GUILayout.Width(120f)))
+            {
+                ApplySharedModFileFromWizard();
+            }
+
+            if (GUILayout.Button("Save To Mod File", GUILayout.Width(150f)))
+            {
+                SaveDefinitionToModFile();
+            }
+
+            GUILayout.EndHorizontal();
         }
 
         [HideFromIl2Cpp]
@@ -408,6 +441,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 Definition = NpcWizardDefinitionHelpers.CreateDefaultDefinitionAtPlayerPosition();
                 MarkCurrentDefinitionAsUnloaded();
                 SyncPositionInputs();
+                SyncModFileNameFromCurrentDefinition();
                 Status = "Created a fresh definition template.";
             }
 
@@ -421,6 +455,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     MarkCurrentDefinitionAsLoaded();
                     ClearDialogueLoadedMarker();
                     SyncPositionInputs();
+                    SyncModFileNameFromCurrentDefinition();
                     Status = $"Loaded definition '{Definition.Id}'.";
                 }
                 else
@@ -602,6 +637,7 @@ namespace Drova_Modding_API.Systems.Spawning
         private void ClearPendingOverwrite()
         {
             _overwriteState.Clear();
+            _pendingDefinitionSaveModFileName = null;
         }
 
         [HideFromIl2Cpp]
@@ -610,13 +646,16 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!_overwriteState.TryConsume(out PendingOverwriteAction action))
                 return;
 
+            string? targetModFileName = _pendingDefinitionSaveModFileName;
+            _pendingDefinitionSaveModFileName = null;
+
             switch (action)
             {
                 case PendingOverwriteAction.SaveDefinition:
-                    SaveDefinitionInternal(spawnAfterSave: false);
+                    SaveDefinitionInternal(spawnAfterSave: false, targetModFileName);
                     break;
                 case PendingOverwriteAction.SaveDefinitionAndSpawn:
-                    SaveDefinitionInternal(spawnAfterSave: true);
+                    SaveDefinitionInternal(spawnAfterSave: true, targetModFileName);
                     break;
                 case PendingOverwriteAction.SaveDialogue:
                     if (TrySaveDialogueForCurrentDefinitionInternal(overwriteConfirmed: true))
@@ -626,7 +665,7 @@ namespace Drova_Modding_API.Systems.Spawning
         }
 
         [HideFromIl2Cpp]
-        private void TrySaveDefinitionWithOptionalConfirmation(bool spawnAfterSave)
+        private void TrySaveDefinitionWithOptionalConfirmation(bool spawnAfterSave, string? modFileName = null)
         {
             if (HasPendingOverwrite())
             {
@@ -636,21 +675,24 @@ namespace Drova_Modding_API.Systems.Spawning
 
             if (RequiresDefinitionOverwriteConfirmation())
             {
+                _pendingDefinitionSaveModFileName = modFileName;
                 QueueOverwriteConfirmation(
                     spawnAfterSave ? PendingOverwriteAction.SaveDefinitionAndSpawn : PendingOverwriteAction.SaveDefinition,
                     $"Definition '{Definition.Id}' already exists and is not currently loaded. Overwrite existing configuration?");
                 return;
             }
 
-            SaveDefinitionInternal(spawnAfterSave);
+            SaveDefinitionInternal(spawnAfterSave, modFileName);
         }
         #endregion
 
         #region Definition Save and Overwrite Checks
         [HideFromIl2Cpp]
-        private void SaveDefinitionInternal(bool spawnAfterSave)
+        private void SaveDefinitionInternal(bool spawnAfterSave, string? modFileName = null)
         {
-            bool saved = ExternalNpcPlacementSystem.UpsertDefinition(Definition);
+            bool saved = string.IsNullOrWhiteSpace(modFileName)
+                ? ExternalNpcPlacementSystem.UpsertDefinition(Definition)
+                : ExternalNpcPlacementSystem.UpsertDefinitionToModFile(Definition, modFileName, out _);
             if (!saved)
             {
                 Status = "Failed to save definition.";
@@ -658,9 +700,11 @@ namespace Drova_Modding_API.Systems.Spawning
             }
 
             MarkCurrentDefinitionAsLoaded();
+            SyncModFileNameFromCurrentDefinition();
+            string sourceFileName = ExternalNpcPlacementSystem.GetDefinitionSourceFileName(Definition.Id);
             if (!spawnAfterSave)
             {
-                Status = $"Saved definition '{Definition.Id}'.";
+                Status = $"Saved definition '{Definition.Id}' to '{sourceFileName}'.";
                 RefreshDefinitionsCache();
                 return;
             }
@@ -783,7 +827,10 @@ namespace Drova_Modding_API.Systems.Spawning
 
         [HideFromIl2Cpp]
         private void MarkCurrentDefinitionAsLoaded()
-            => _state.MarkCurrentDefinitionAsLoaded();
+        {
+            _state.MarkCurrentDefinitionAsLoaded();
+            PersistLastLoadedDefinitionId(Definition.Id);
+        }
 
         [HideFromIl2Cpp]
         private void MarkCurrentDefinitionAsUnloaded()
@@ -822,6 +869,105 @@ namespace Drova_Modding_API.Systems.Spawning
             => _state.SyncPositionInputs();
 
         [HideFromIl2Cpp]
+        private bool IsCurrentDefinitionLoaded()
+            => _state.IsDefinitionLoadedFromCurrentSession();
+
+        [HideFromIl2Cpp]
+        private string BuildWizardStatusMessage()
+        {
+            string loadedState = IsCurrentDefinitionLoaded()
+                ? $"Loaded NPC: {Definition.Id}"
+                : "Loaded NPC: none";
+
+            return $"{loadedState}  |  Placement folder: {ExternalNpcPlacementSystem.GetNpcPlacementFolderPath()}  |  Source file: {ExternalNpcPlacementSystem.GetDefinitionSourceFileName(Definition.Id)}";
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawLoadedDefinitionIndicator()
+        {
+            bool isLoaded = IsCurrentDefinitionLoaded();
+            Color previousColor = GUI.color;
+            GUI.color = isLoaded
+                ? new Color(0.55f, 1f, 0.55f, 1f)
+                : new Color(1f, 0.8f, 0.35f, 1f);
+
+            GUILayout.Label(isLoaded
+                ? $"Loaded NPC: {Definition.Id}"
+                : "Loaded NPC: none");
+
+            GUI.color = previousColor;
+        }
+
+        [HideFromIl2Cpp]
+        private bool TryRestoreLastLoadedDefinition()
+        {
+            if (!TryReadLastLoadedDefinitionId(out string definitionId))
+                return false;
+
+            if (!ExternalNpcPlacementSystem.TryGetDefinition(definitionId, out ExternalNpcPlacementSystem.ExternalNpcDefinition? found) || found == null)
+            {
+                Status = $"Last loaded NPC '{definitionId}' was not found. Showing a fresh template.";
+                return false;
+            }
+
+            Definition = found;
+            ExternalNpcModuleRegistry.EnsureDefaults(Definition);
+            MarkCurrentDefinitionAsLoaded();
+            ClearDialogueLoadedMarker();
+            _initialPlayerPositionApplied = true;
+            SyncModFileNameFromCurrentDefinition();
+            Status = $"Restored last loaded NPC '{Definition.Id}'.";
+            return true;
+        }
+
+        [HideFromIl2Cpp]
+        private static bool TryReadLastLoadedDefinitionId(out string definitionId)
+        {
+            definitionId = string.Empty;
+
+            string filePath = GetLastLoadedDefinitionFilePath();
+            if (!File.Exists(filePath))
+                return false;
+
+            try
+            {
+                string raw = File.ReadAllText(filePath).Trim();
+                if (string.IsNullOrWhiteSpace(raw))
+                    return false;
+
+                definitionId = raw;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Warning($"Failed to read last loaded NPC marker '{filePath}': {ex.Message}");
+                return false;
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private static void PersistLastLoadedDefinitionId(string definitionId)
+        {
+            if (string.IsNullOrWhiteSpace(definitionId))
+                return;
+
+            string filePath = GetLastLoadedDefinitionFilePath();
+            try
+            {
+                Directory.CreateDirectory(ExternalNpcPlacementSystem.GetNpcPlacementFolderPath());
+                File.WriteAllText(filePath, definitionId.Trim());
+            }
+            catch (Exception ex)
+            {
+                MelonLogger.Warning($"Failed to save last loaded NPC marker '{filePath}': {ex.Message}");
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private static string GetLastLoadedDefinitionFilePath()
+            => Path.Combine(ExternalNpcPlacementSystem.GetNpcPlacementFolderPath(), LastLoadedDefinitionFileName);
+
+        [HideFromIl2Cpp]
         private void TrySyncDefinitionPositionFromPlayer()
         {
             if (_initialPlayerPositionApplied)
@@ -844,7 +990,57 @@ namespace Drova_Modding_API.Systems.Spawning
             MarkCurrentDefinitionAsLoaded();
             ClearDialogueLoadedMarker();
             SyncPositionInputs();
+            SyncModFileNameFromCurrentDefinition();
             Status = $"Loaded definition '{Definition.Id}' from browser.";
+        }
+
+        [HideFromIl2Cpp]
+        private void SaveDefinitionToModFile()
+        {
+            if (!ValidateForSave())
+                return;
+
+            if (string.IsNullOrWhiteSpace(_modFileName))
+            {
+                Status = "Enter a mod file name first.";
+                return;
+            }
+
+            ApplySharedModFileFromWizard();
+
+            CancelPendingRespawn();
+            TrySaveDefinitionWithOptionalConfirmation(spawnAfterSave: false, _modFileName);
+        }
+
+        [HideFromIl2Cpp]
+        private void ApplySharedModFileFromWizard()
+        {
+            string sanitized = ModCreationContext.SanitizeFileStem(_modFileName);
+            _modFileName = sanitized;
+            if (string.IsNullOrWhiteSpace(sanitized))
+                return;
+
+            ModCreationContext.SetCurrentModFileStem(sanitized);
+        }
+
+        [HideFromIl2Cpp]
+        private void SyncModFileNameFromCurrentDefinition()
+        {
+            if (!IsCurrentDefinitionLoaded())
+                return;
+
+            string sourceStem = ExternalNpcPlacementSystem.GetDefinitionSourceFileStem(Definition.Id);
+            if (!string.IsNullOrWhiteSpace(sourceStem))
+                _modFileName = sourceStem;
+        }
+
+        [HideFromIl2Cpp]
+        private static string BuildSharedModBadgeText()
+        {
+            string modStem = ModCreationContext.GetCurrentModFileStem();
+            return string.IsNullOrWhiteSpace(modStem)
+                ? "Shared Mod: <not set>"
+                : $"Shared Mod: {modStem}";
         }
         #endregion
 

@@ -18,6 +18,7 @@ namespace Drova_Modding_API.Systems.Spawning
         private const string NpcFolderName = "NpcPlacement";
         private const string WizardFileName = "wizard_placements.json";
         private static readonly Dictionary<string, LazyActor> SpawnedLazyActorsByDefinitionId = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly Dictionary<string, string> DefinitionSourceFilesById = new(StringComparer.OrdinalIgnoreCase);
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -37,6 +38,28 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         public static string GetWizardFilePath()
             => Path.Combine(GetNpcPlacementFolderPath(), WizardFileName);
+
+        /// <summary>
+        /// Gets the file name that currently owns the specified definition id.
+        /// Returns the wizard file when the definition has not been associated with a custom file yet.
+        /// </summary>
+        public static string GetDefinitionSourceFileName(string? definitionId)
+        {
+            if (!string.IsNullOrWhiteSpace(definitionId)
+                && DefinitionSourceFilesById.TryGetValue(definitionId, out string filePath)
+                && !string.IsNullOrWhiteSpace(filePath))
+            {
+                return Path.GetFileName(filePath);
+            }
+
+            return WizardFileName;
+        }
+
+        /// <summary>
+        /// Gets the file name without extension that currently owns the specified definition id.
+        /// </summary>
+        public static string GetDefinitionSourceFileStem(string? definitionId)
+            => Path.GetFileNameWithoutExtension(GetDefinitionSourceFileName(definitionId));
 
         /// <summary>
         /// Scans all <c>*.json</c> files in the NPC placement folder and spawns every enabled
@@ -70,6 +93,8 @@ namespace Drova_Modding_API.Systems.Spawning
                 ExternalNpcConfigFile? config = ReadConfigInternal(files[f]);
                 if (config == null || config.Npcs.Count == 0)
                     continue;
+
+                RegisterDefinitionSourceFile(config, files[f]);
 
                 for (int i = 0; i < config.Npcs.Count; i++)
                 {
@@ -241,6 +266,8 @@ namespace Drova_Modding_API.Systems.Spawning
                 ExternalNpcConfigFile? config = ReadConfigInternal(files[f]);
                 if (config == null) continue;
 
+                RegisterDefinitionSourceFile(config, files[f]);
+
                 definition = config.Npcs.FirstOrDefault(n => string.Equals(n.Id, definitionId, StringComparison.OrdinalIgnoreCase));
                 if (definition != null)
                     return true;
@@ -258,11 +285,35 @@ namespace Drova_Modding_API.Systems.Spawning
             if (definition == null || string.IsNullOrWhiteSpace(definition.Id))
                 return false;
 
-            string wizardFile = GetWizardFilePath();
-            EnsureFolder(GetNpcPlacementFolderPath());
+            string targetFile = DefinitionSourceFilesById.TryGetValue(definition.Id, out string existingFilePath)
+                && !string.IsNullOrWhiteSpace(existingFilePath)
+                ? existingFilePath
+                : GetWizardFilePath();
 
-            ExternalNpcConfigFile config = ReadConfigInternal(wizardFile) ?? new ExternalNpcConfigFile();
-            config.Npcs ??= [];
+            return UpsertDefinitionToFile(definition, targetFile);
+        }
+
+        /// <summary>
+        /// Inserts or updates a definition inside a mod-specific placement file.
+        /// </summary>
+        public static bool UpsertDefinitionToModFile(ExternalNpcDefinition? definition, string modFileName, out string savedFileName)
+        {
+            savedFileName = string.Empty;
+            if (definition == null || string.IsNullOrWhiteSpace(definition.Id))
+                return false;
+
+            if (!TryBuildModFilePath(modFileName, out string filePath, out savedFileName))
+                return false;
+
+            return UpsertDefinitionToFile(definition, filePath);
+        }
+
+        private static bool UpsertDefinitionToFile(ExternalNpcDefinition definition, string filePath)
+        {
+            EnsureFolder(GetNpcPlacementFolderPath());
+            DefinitionSourceFilesById.TryGetValue(definition.Id, out string? previousFilePath);
+
+            ExternalNpcConfigFile config = ReadConfigInternal(filePath) ?? new ExternalNpcConfigFile();
 
             ExternalNpcModuleRegistry.EnsureDefaults(definition);
             int existingIndex = config.Npcs.FindIndex(n => string.Equals(n.Id, definition.Id, StringComparison.OrdinalIgnoreCase));
@@ -271,7 +322,19 @@ namespace Drova_Modding_API.Systems.Spawning
             else
                 config.Npcs.Add(definition);
 
-            return SaveConfigToFile(config, wizardFile);
+            bool saved = SaveConfigToFile(config, filePath);
+            if (saved)
+            {
+                if (!string.IsNullOrWhiteSpace(previousFilePath)
+                    && !string.Equals(previousFilePath, filePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    RemoveDefinitionFromFile(definition.Id, previousFilePath);
+                }
+
+                RegisterDefinitionSourceFile(definition.Id, filePath);
+            }
+
+            return saved;
         }
 
         /// <summary>
@@ -283,6 +346,7 @@ namespace Drova_Modding_API.Systems.Spawning
             EnsureFolder(folderPath);
 
             List<ExternalNpcDefinition> result = [];
+            DefinitionSourceFilesById.Clear();
 
             string[] files;
             try { files = Directory.GetFiles(folderPath, "*.json"); }
@@ -292,6 +356,8 @@ namespace Drova_Modding_API.Systems.Spawning
             {
                 ExternalNpcConfigFile? config = ReadConfigInternal(files[f]);
                 if (config == null) continue;
+
+                RegisterDefinitionSourceFile(config, files[f]);
 
                 for (int i = 0; i < config.Npcs.Count; i++)
                 {
@@ -324,7 +390,6 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             try
             {
-                config.Npcs ??= [];
                 for (int i = 0; i < config.Npcs.Count; i++)
                     ExternalNpcModuleRegistry.EnsureDefaults(config.Npcs[i]);
 
@@ -365,6 +430,65 @@ namespace Drova_Modding_API.Systems.Spawning
                 try { Directory.CreateDirectory(folderPath); }
                 catch (Exception ex) { MelonLogger.Error($"Failed to create NPC placement folder '{folderPath}': {ex.Message}"); }
             }
+        }
+
+        private static void RegisterDefinitionSourceFile(ExternalNpcConfigFile config, string filePath)
+        {
+            for (int i = 0; i < config.Npcs.Count; i++)
+            {
+                ExternalNpcDefinition definition = config.Npcs[i];
+                if (string.IsNullOrWhiteSpace(definition.Id))
+                    continue;
+
+                RegisterDefinitionSourceFile(definition.Id, filePath);
+            }
+        }
+
+        private static void RegisterDefinitionSourceFile(string definitionId, string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(definitionId) || string.IsNullOrWhiteSpace(filePath))
+                return;
+
+            DefinitionSourceFilesById[definitionId] = filePath;
+        }
+
+        private static void RemoveDefinitionFromFile(string definitionId, string filePath)
+        {
+            ExternalNpcConfigFile? config = ReadConfigInternal(filePath);
+            if (config == null)
+                return;
+
+            int removedCount = config.Npcs.RemoveAll(definition => string.Equals(definition.Id, definitionId, StringComparison.OrdinalIgnoreCase));
+            if (removedCount == 0)
+                return;
+
+            SaveConfigToFile(config, filePath);
+        }
+
+        private static bool TryBuildModFilePath(string rawModFileName, out string filePath, out string fileName)
+        {
+            filePath = string.Empty;
+            fileName = string.Empty;
+
+            string sanitized = SanitizeFileName(rawModFileName);
+            if (string.IsNullOrWhiteSpace(sanitized))
+                return false;
+
+            fileName = sanitized.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                ? sanitized
+                : $"{sanitized}.json";
+            filePath = Path.Combine(GetNpcPlacementFolderPath(), fileName);
+            return true;
+        }
+
+        private static string SanitizeFileName(string rawValue)
+        {
+            string sanitized = rawValue.Trim();
+            char[] invalidChars = Path.GetInvalidFileNameChars();
+            for (int i = 0; i < invalidChars.Length; i++)
+                sanitized = sanitized.Replace(invalidChars[i], '_');
+
+            return sanitized;
         }
 
         /// <summary>

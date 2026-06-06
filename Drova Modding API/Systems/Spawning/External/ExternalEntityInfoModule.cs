@@ -1,6 +1,8 @@
+using Il2Cpp;
+using Il2CppDrova;
 using System.Text.Json;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
+using Drova_Modding_API.Systems.Editor;
 
 namespace Drova_Modding_API.Systems.Spawning
 {
@@ -14,28 +16,87 @@ namespace Drova_Modding_API.Systems.Spawning
         public string Key => ModuleKey;
         public string DisplayName => "Entity Info";
 
-        public string CreateDefaultPayload() => JsonSerializer.Serialize(new EntityInfoModuleState());
+        public string CreateDefaultPayload() => JsonSerializer.Serialize(new EntityInfoModuleState(Guid.NewGuid().ToString()));
 
         public string DrawWizardUiAndSerialize(string payload)
         {
             EnsureUiState(payload);
 
-            GUILayout.Label("EntityInfo Asset GUID (optional)");
-            string updatedAssetGuid = GUILayout.TextField(_cachedState.AssetGuid);
-            if (string.Equals(updatedAssetGuid, _cachedState.AssetGuid, StringComparison.Ordinal))
+            GUILayout.Label("EntityInfo GUID (read-only)");
+            GUILayout.Label(_cachedState.Guid);
+
+            bool updatedUseLocalizedName = GUILayout.Toggle(_cachedState.UseLocalizedName, "Use localized display name");
+            if (updatedUseLocalizedName != _cachedState.UseLocalizedName)
+            {
+                _cachedState.UseLocalizedName = updatedUseLocalizedName;
+                return SerializeCachedState();
+            }
+
+            if (_cachedState.UseLocalizedName)
+            {
+                if (LocalizationEntriesEditorSystem.TryConsumeSelection(ModuleKey, out string selectedLocaPath, out string selectedLocaKey))
+                {
+                    _cachedState.LocaPath = selectedLocaPath;
+                    _cachedState.LocaKey = selectedLocaKey;
+                    return SerializeCachedState();
+                }
+
+                GUILayout.Label("Localized name path");
+                string updatedLocaPath = GUILayout.TextField(_cachedState.LocaPath);
+
+                GUILayout.Label("Localized name key");
+                string updatedLocaKey = GUILayout.TextField(_cachedState.LocaKey);
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Open Localization Editor", GUILayout.Width(200f)))
+                    LocalizationEntriesEditorSystem.Show();
+
+                if (GUILayout.Button("Pick Entry", GUILayout.Width(120f)))
+                    LocalizationEntriesEditorSystem.RequestSelection(ModuleKey);
+                GUILayout.EndHorizontal();
+
+                if (string.Equals(updatedLocaPath, _cachedState.LocaPath, StringComparison.Ordinal)
+                    && string.Equals(updatedLocaKey, _cachedState.LocaKey, StringComparison.Ordinal))
+                {
+                    return _serializedPayload;
+                }
+
+                _cachedState.LocaPath = updatedLocaPath;
+                _cachedState.LocaKey = updatedLocaKey;
+                return SerializeCachedState();
+            }
+
+            GUILayout.Label("Unity property name");
+            string updatedUnityPropertyName = GUILayout.TextField(_cachedState.UnityPropertyName);
+            if (string.Equals(updatedUnityPropertyName, _cachedState.UnityPropertyName, StringComparison.Ordinal))
                 return _serializedPayload;
 
-            _cachedState.AssetGuid = updatedAssetGuid;
-            _serializedPayload = JsonSerializer.Serialize(_cachedState);
-            _lastPayload = _serializedPayload;
-            return _serializedPayload;
+            _cachedState.UnityPropertyName = updatedUnityPropertyName;
+            return SerializeCachedState();
         }
 
         public void ApplyToCreator(NpcCreator creator, string? payload)
         {
             EntityInfoModuleState state = Parse(payload);
-            if (!string.IsNullOrWhiteSpace(state.AssetGuid))
-                creator.WithLazyEntityInfo(new AssetReference(state.AssetGuid));
+            EntityInfo entityInfo = EntityInfo.CreateUndefined();
+
+            if (!string.IsNullOrWhiteSpace(state.Guid))
+                entityInfo._guid = state.Guid;
+
+            if (state.UseLocalizedName)
+            {
+                if (!string.IsNullOrWhiteSpace(state.LocaPath) && !string.IsNullOrWhiteSpace(state.LocaKey)){
+                    entityInfo._locaName = new LocalizedString(state.LocaPath, state.LocaKey).Cast<IOptionalLoca>();
+                }
+                entityInfo._aliasNameModule = new AliasNameModule();
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(state.UnityPropertyName))
+                    entityInfo.name = state.UnityPropertyName;
+            }
+
+            creator.WithLazyEntityInfo(entityInfo);
         }
 
         private static EntityInfoModuleState Parse(string? payload)
@@ -64,9 +125,30 @@ namespace Drova_Modding_API.Systems.Spawning
             _lastPayload = normalizedPayload;
         }
 
+        private string SerializeCachedState()
+        {
+            _serializedPayload = JsonSerializer.Serialize(_cachedState);
+            _lastPayload = _serializedPayload;
+            return _serializedPayload;
+        }
+
         private sealed class EntityInfoModuleState
         {
-            public string AssetGuid { get; set; } = string.Empty;
+            /// <summary>
+            /// Stable identity GUID for the custom EntityInfo. Generated once on creation and never changed.
+            /// </summary>
+            public string Guid { get; init; } = string.Empty;
+            public bool UseLocalizedName { get; set; } = true;
+            public string LocaPath { get; set; } = string.Empty;
+            public string LocaKey { get; set; } = string.Empty;
+            public string UnityPropertyName { get; set; } = string.Empty;
+
+            public EntityInfoModuleState() { }
+
+            public EntityInfoModuleState(string guid)
+            {
+                Guid = guid;
+            }
         }
     }
 }

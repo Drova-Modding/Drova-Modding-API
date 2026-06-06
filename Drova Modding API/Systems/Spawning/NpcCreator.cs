@@ -79,24 +79,6 @@ namespace Drova_Modding_API.Systems.Spawning
         private static bool IsSpawnRootAlive()
             => _npcSpawnRoot != null;
 
-        private static bool _templatePrewarmed;
-
-        /// <summary>
-        /// Pre-loads the Human NPC template and caches alignment lookups so the first
-        /// <see cref="Create"/> call doesn't stall on Addressables I/O. Safe to call multiple
-        /// times — later invocations are no-ops. Call once during mod startup.
-        /// </summary>
-        public static void Prewarm()
-        {
-            CacheAlignments();
-
-            if (_templatePrewarmed) return;
-            // LoadAssetAsync keeps the GameObject template resident; later InstantiateAsync
-            // calls resolve from cache instead of hitting disk/AssetBundle.
-            AddressableAccess.NPCs.Human_Template.LoadAssetAsync();
-            _templatePrewarmed = true;
-        }
-
         private readonly string _name;
         private readonly Vector2 _spawnPosition;
         private readonly List<INpcModule> _modules = new();

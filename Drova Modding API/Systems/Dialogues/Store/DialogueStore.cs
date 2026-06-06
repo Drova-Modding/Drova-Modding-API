@@ -1,5 +1,9 @@
-﻿using Il2CppNodeCanvas.DialogueTrees;
+﻿using Il2CppDrova.GlobalVarSystem;
+using Il2CppDrova.Items;
+using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppDrova.Utilities;
+using Il2CppInterop.Runtime;
+using Il2CppTypeObj = Il2CppSystem.Type;
 #if DEBUG
 using Il2CppNodeCanvas.Framework.Internal;
 using Il2CppSirenix.Serialization;
@@ -143,7 +147,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
                 }
 
                 target._serializedBytes = bytes;
-                Dictionary<Type, UnityEngine.Object[]> candidateCache = [];
+                Dictionary<Il2CppTypeObj, UnityEngine.Object[]> candidateCache = [];
                 Il2CppSystem.Collections.Generic.List<UnityEngine.Object> restoredReferences =
                     BuildObjectReferenceList(saveData.ObjectReferences, out int resolvedReferences, candidateCache);
                 if (resolvedReferences > 0 || target._objectByteReferences == null || target._objectByteReferences.Count == 0)
@@ -191,7 +195,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
                     return false;
 
                 loaded._serializedBytes = bytes;
-                Dictionary<Type, UnityEngine.Object[]> candidateCache = [];
+                Dictionary<Il2CppTypeObj, UnityEngine.Object[]> candidateCache = [];
                 loaded._objectByteReferences = BuildObjectReferenceList(saveData.ObjectReferences, out int resolvedReferences, candidateCache);
                 if (resolvedReferences == 0 && TryGetLiveObjectReferences(dialogueId, out Il2CppSystem.Collections.Generic.List<UnityEngine.Object>? liveReferences))
                     loaded._objectByteReferences = liveReferences;
@@ -276,11 +280,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
                 }
 
                 Type objectType = unityObject.GetType();
+                string typeName = objectType.AssemblyQualifiedName ?? objectType.FullName ?? string.Empty;
+
                 serializedReferences.Add(new ObjectReferenceData
                 {
                     IsNull = false,
                     Name = unityObject.name,
-                    TypeName = objectType.AssemblyQualifiedName ?? objectType.FullName ?? string.Empty,
+                    TypeName = typeName,
                     HierarchyPath = GetHierarchyPath(unityObject),
                     StableId = TryGetStableObjectId(unityObject),
                     InstanceId = unityObject.GetInstanceID()
@@ -293,7 +299,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
         private static Il2CppSystem.Collections.Generic.List<UnityEngine.Object> BuildObjectReferenceList(
             List<ObjectReferenceData>? serializedReferences,
             out int resolvedReferences,
-            Dictionary<Type, UnityEngine.Object[]>? candidateCache = null)
+            Dictionary<Il2CppTypeObj, UnityEngine.Object[]>? candidateCache = null)
         {
             Il2CppSystem.Collections.Generic.List<UnityEngine.Object> references = new();
             resolvedReferences = 0;
@@ -323,16 +329,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
 
         private static UnityEngine.Object? ResolveObjectReference(
             ObjectReferenceData referenceData,
-            Dictionary<Type, UnityEngine.Object[]> candidateCache)
+            Dictionary<Il2CppTypeObj, UnityEngine.Object[]> candidateCache)
         {
             if (string.IsNullOrWhiteSpace(referenceData.TypeName))
                 return null;
 
-            Type objectType = Type.GetType(referenceData.TypeName, false);
+            Type? objectType = Type.GetType(referenceData.TypeName, false)
+                ?? Type.GetType(referenceData.TypeName.Split(',')[0].Trim(), false);
             if (objectType == null)
                 return null;
 
-            UnityEngine.Object[] candidates = GetCandidatesForType(objectType, candidateCache);
+            Il2CppTypeObj? il2CppType = Il2CppType.From(objectType, false);
+            if (il2CppType == null)
+                return null;
+
+            UnityEngine.Object[] candidates = GetCandidatesForType(il2CppType, candidateCache);
             if (candidates.Length == 0)
                 return null;
 
@@ -345,17 +356,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
                 if (candidate == null)
                     continue;
 
-                if (!objectType.IsAssignableFrom(candidate.GetType()))
+                if (!il2CppType.IsAssignableFrom(candidate.GetIl2CppType()))
                     continue;
 
                 if (referenceData.InstanceId != 0 && candidate.GetInstanceID() == referenceData.InstanceId)
                     byInstanceId = candidate;
-
-                if (byStableId == null
-                    && !string.IsNullOrWhiteSpace(referenceData.StableId)
+                if (!string.IsNullOrWhiteSpace(referenceData.StableId)
                     && string.Equals(TryGetStableObjectId(candidate), referenceData.StableId, StringComparison.Ordinal))
                 {
                     byStableId = candidate;
+                    break;
                 }
 
                 if (!string.Equals(candidate.name, referenceData.Name, StringComparison.Ordinal))
@@ -382,32 +392,24 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
         }
 
         private static UnityEngine.Object[] GetCandidatesForType(
-            Type objectType,
-            Dictionary<Type, UnityEngine.Object[]> candidateCache)
+            Il2CppTypeObj il2CppType,
+            Dictionary<Il2CppTypeObj, UnityEngine.Object[]> candidateCache)
         {
-            if (candidateCache.TryGetValue(objectType, out UnityEngine.Object[] cachedCandidates))
+            if (candidateCache.TryGetValue(il2CppType, out UnityEngine.Object[] cachedCandidates))
                 return cachedCandidates;
 
             UnityEngine.Object[] candidates;
             try
             {
-                Il2CppSystem.Type il2CppType = Il2CppSystem.Type.GetType(objectType.AssemblyQualifiedName)
-                    ?? Il2CppSystem.Type.GetType(objectType.FullName);
-                if (il2CppType == null)
-                {
-                    candidateCache[objectType] = [];
-                    return candidateCache[objectType];
-                }
-
                 candidates = Resources.FindObjectsOfTypeAll(il2CppType);
             }
             catch (Exception ex)
             {
-                MelonLogger.Warning($"DialogueStore: failed to enumerate objects of type '{objectType.FullName}': {ex.Message}");
+                MelonLogger.Warning($"DialogueStore: failed to enumerate objects of type '{il2CppType.FullName}': {ex.Message}");
                 candidates = [];
             }
 
-            candidateCache[objectType] = candidates;
+            candidateCache[il2CppType] = candidates;
             return candidates;
         }
 
@@ -435,6 +437,26 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
             if (guidObject != null)
             {
                 string guid = guidObject.GUID;
+                if (!string.IsNullOrWhiteSpace(guid))
+                    return guid;
+            }
+            Item item = unityObject.TryCast<Item>();
+            if (item != null)
+            {
+                string guid = item.Guid;
+                if (!string.IsNullOrWhiteSpace(guid))
+                    return guid;
+            }
+            AGVarBase varBase = unityObject.TryCast<AGVarBase>();
+            if (varBase != null)
+            {
+                string id = varBase.Id;
+                if (!string.IsNullOrWhiteSpace(id))
+                    return id;
+            }
+            GVarList list = unityObject.TryCast<GVarList>();
+            if (list != null) {
+                string guid = list.Guid;
                 if (!string.IsNullOrWhiteSpace(guid))
                     return guid;
             }

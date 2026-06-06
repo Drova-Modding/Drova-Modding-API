@@ -100,7 +100,7 @@ namespace Drova_Modding_API.Access
             string localizationFolder = Path.Combine(Utils.SavePath, "Localization");
             if (!Directory.Exists(localizationFolder))
             {
-                MelonLogger.Msg("Localization folder not found. Created one for convient reason");
+                MelonLogger.Msg("Localization folder not found. Created one for convent reason");
                 try { Directory.CreateDirectory(localizationFolder); }
                 catch (Exception e) { MelonLogger.Error(e.Message); }
                 return;
@@ -129,8 +129,17 @@ namespace Drova_Modding_API.Access
                 }
                 catch (Exception e)
                 {
-                    MelonLogger.Error("Failed to load localiazations for {0}, because {1}", folder, e.Message);
+                    MelonLogger.Error("Failed to load localizations for {0}, because {1}", folder, e.Message);
                 }
+            }
+
+            try
+            {
+                LocalizationDB.Instance.ReloadCurrentLanguage();
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("Failed to reload current localization language after copy: {0}", e.Message);
             }
         }
 

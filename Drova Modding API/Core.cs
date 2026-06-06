@@ -3,6 +3,7 @@ using Drova_Modding_API.Access;
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Register;
 using Drova_Modding_API.Systems;
+using Drova_Modding_API.Systems.GlobalVars;
 using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
@@ -61,6 +62,7 @@ namespace Drova_Modding_API
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
+                CustomGVarStore.LoadIntoDatabaseOnce();
                 // One-time pass: re-apply any user-saved dialogue bytes onto the live
                 // ScriptableObject instances that are now in memory.
                 DialogueStore.PatchAllSavedDialogues();

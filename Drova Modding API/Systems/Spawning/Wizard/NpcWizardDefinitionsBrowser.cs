@@ -43,6 +43,7 @@ internal sealed class NpcWizardDefinitionsBrowser
             GUILayout.BeginVertical("box");
             GUILayout.Label($"{definition.Name} ({definition.Id})");
             GUILayout.Label($"Pos: {definition.PositionX:0.##}, {definition.PositionY:0.##}  |  Enabled: {(definition.Enabled ? "yes" : "no")}  |  Spawned: {(isSpawned ? "yes" : "no")}");
+            GUILayout.Label($"Source: {ExternalNpcPlacementSystem.GetDefinitionSourceFileName(definition.Id)}");
 
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Load", GUILayout.Width(90f)))

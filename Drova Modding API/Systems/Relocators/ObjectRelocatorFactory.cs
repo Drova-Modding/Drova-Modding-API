@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
     /// </summary>
     public class ObjectRelocatorFactory
     {
-        private readonly static Dictionary<Type, object> _relocators = new(){
+        private static readonly Dictionary<Type, object> _relocators = new(){
             { typeof(Item), new ItemRelocator() },
             { typeof(DialogueTree), new DialogueTreeRelocator() },
             { typeof(EntityInfo), new EntityInfoRelocator() },
@@ -27,6 +27,7 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
         public static void RegisterRelocator<T>(IObjectRelocator<T> relocator)
         {
             _relocators[typeof(T)] = relocator;
+            
         }
         /// <summary>
         /// Gets the relocator for a specific type.

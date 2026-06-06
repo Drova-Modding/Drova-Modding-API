@@ -78,6 +78,8 @@ namespace Drova_Modding_API.Access
         {
             Player player = ReInput.players.GetPlayer(0);
             player.controllers.maps.SetMapsEnabled(state, 0);
+            player.controllers.maps.SetMapsEnabled(state, 2);
+            player.controllers.maps.SetMapsEnabled(state, 3);
         }
 
         /// <summary>
