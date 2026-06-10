@@ -36,7 +36,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 selectedIndex = 0;
             }
 
-            _spellDropdown = new GUIDropdownWithFilter(_items.Select(e => e.ReadableId).ToArray(), selectedIndex, 20);
+            _spellDropdown = new GUIDropdownWithFilter([.. _items.Select(e => e.ReadableId)], selectedIndex, 20);
         }
 
         public override void DrawNode(Vector2 position)
@@ -54,7 +54,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             GUI.color = Color.white;
             GUI.Label(new Rect(position.x + 10, position.y + 25, 80, 20), "Spell:");
-            if (_spellDropdown != null && _items.Length > 0 && _spellDropdown.Draw(new Rect(position.x + 90, position.y + 25, 310, 20)))
+            if (_spellDropdown != null && _spellDropdown.Draw(new Rect(position.x + 90, position.y + 25, 310, 20)))
             {
                 _node._spell = _items[_spellDropdown.SelectedIndex];
             }

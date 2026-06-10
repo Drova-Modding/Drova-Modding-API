@@ -27,13 +27,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_GiveItemNode>();
+            if (_castedNode == null) return;
             _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
 
             for (int i = 0; i < _castedNode.ItemStacks.Count; i++)
             {
                 DialogItemsExchange itemStack = _castedNode.ItemStacks[i];
+                if (itemStack == null) continue;
+
                 DialogItemsExchange.ExchangeDirection direction = itemStack.Exchange;
-                int selectedIndex = Array.FindIndex(_items, id => id.Guid == itemStack.Item.Guid);
+                int selectedIndex = -1;
+                if (itemStack.Item != null)
+                {
+                    selectedIndex = Array.FindIndex(_items, id => id.Guid == itemStack.Item.Guid);
+                }
+
                 if (selectedIndex == -1)
                 {
                     selectedIndex = 0;
@@ -46,7 +54,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
                 if (itemStack.Mode == DialogItems.ValueMode.GInt)
                 {
-                    _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT, itemStack.AmountVar.GetParent().name));
+                    string parentName = itemStack.AmountVar != null ? itemStack.AmountVar.GetParent().name : null;
+                    _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT, parentName, false, itemStack.AmountVar));
                 }
             }
         }
@@ -77,6 +86,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             for (int i = 0; i < _castedNode.ItemStacks.Count; i++)
             {
                 DialogItemsExchange itemStack = _castedNode.ItemStacks[i];
+                if (itemStack == null) continue;
+
+                if (i >= _itemDropdowns.Count)
+                {
+                    // If out of sync, we should probably re-init or handle it.
+                    // For now, let's just make sure we don't crash and try to fix it on the fly if possible.
+                    // But usually they should be in sync because of Init().
+                    continue;
+                }
+
                 GUIDropdownWithFilter itemDropdown = _itemDropdowns[i];
 
                 float yOffset = position.y + 30 + (i * itemHeight);
@@ -101,12 +120,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     GUI.Label(new Rect(position.x + 10, yOffset + 40, 100, 20), "Amount:");
                 }
 
-                if (_directionDropdowns[i].Draw(new Rect(position.x + 120, useContainerYOffset + 20, 200, 20)))
+                if (i < _directionDropdowns.Count && _directionDropdowns[i].Draw(new Rect(position.x + 120, useContainerYOffset + 20, 200, 20)))
                 {
                     itemStack.Exchange = (DialogItemsExchange.ExchangeDirection)_directionDropdowns[i].SelectedIndex;
                 }
 
-                if (_valueModeDropdowns[i].Draw(new Rect(position.x + 120, yOffset + 20, 200, 20)))
+                if (i < _valueModeDropdowns.Count && _valueModeDropdowns[i].Draw(new Rect(position.x + 120, yOffset + 20, 200, 20)))
                 {
                     itemStack.Mode = (DialogItems.ValueMode)_valueModeDropdowns[i].SelectedIndex;
                     if (itemStack.Mode == DialogItems.ValueMode.GInt)
@@ -169,7 +188,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 _valueModeDropdowns.RemoveAt(i);
                 _gvarSelectionEditors.Remove(i);
 
-                for (int j = i; j < _gvarSelectionEditors.Count; j++)
+                for (int j = i; j < _castedNode.ItemStacks.Count + 1; j++)
                 {
                     if (_gvarSelectionEditors.ContainsKey(j + 1))
                     {

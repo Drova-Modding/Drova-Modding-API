@@ -1,4 +1,3 @@
-#pragma warning disable 300
 using System.Globalization;
 using System.Text.Json;
 using Drova_Modding_API.Access;
@@ -50,6 +49,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
         private sealed class CustomGVarData
         {
             public string Id { get; set; } = string.Empty;
+            public string Name { get; set; } = string.Empty;
             public string Type { get; set; } = string.Empty;
             public string InitialValue { get; set; } = string.Empty;
         }
@@ -101,10 +101,6 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 }
 
                 SubDatabase_GVars database = ProviderAccess.GVarDatabase;
-                if (database == null)
-                {
-                    return;
-                }
 
                 for (int fileIndex = 0; fileIndex < files.Length; fileIndex++)
                 {
@@ -166,7 +162,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             list = null;
             message = string.Empty;
 
-            string trimmedName = listName?.Trim() ?? string.Empty;
+            string trimmedName = listName.Trim();
             if (string.IsNullOrWhiteSpace(trimmedName))
             {
                 message = "List name is required.";
@@ -174,11 +170,6 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
 
             SubDatabase_GVars database = ProviderAccess.GVarDatabase;
-            if (database == null)
-            {
-                message = "GVar database is not available.";
-                return false;
-            }
 
             if (database.GetGVarListByName(trimmedName) != null)
             {
@@ -219,7 +210,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             return true;
         }
 
-        public static bool TryCreateCustomVar(GVarList list, CustomGVarType type, string id, string initialValue, out AGVarBase? createdVar, out string message)
+        public static bool TryCreateCustomVar(GVarList list, CustomGVarType type, string id, string name, string initialValue, out AGVarBase? createdVar, out string message)
         {
             createdVar = null;
             message = string.Empty;
@@ -236,11 +227,17 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 return false;
             }
 
-            string trimmedId = id?.Trim() ?? string.Empty;
+            string trimmedId = id.Trim();
             if (string.IsNullOrWhiteSpace(trimmedId))
             {
                 message = "Variable id is required.";
                 return false;
+            }
+
+            string trimmedName = name.Trim();
+            if (string.IsNullOrWhiteSpace(trimmedName))
+            {
+                trimmedName = trimmedId;
             }
 
             if (list.GetGVarById(trimmedId) != null)
@@ -257,7 +254,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
 
             gvar._id = trimmedId;
-            gvar.Rename(trimmedId);
+            gvar.Rename(trimmedName);
 
             if (!TryParseAndApplyInitialValue(gvar, initialValue, out string parseError))
             {
@@ -320,11 +317,6 @@ namespace Drova_Modding_API.Systems.GlobalVars
             RemoveCustomVarsFromList(list);
 
             SubDatabase_GVars database = ProviderAccess.GVarDatabase;
-            if (database == null)
-            {
-                message = "GVar database is not available.";
-                return false;
-            }
 
             bool removed = database.AllGVars.Remove(list);
             if (!removed)
@@ -411,7 +403,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
 
         private static void ApplyVarDefinition(GVarList list, CustomGVarData varData)
         {
-            string id = varData.Id?.Trim() ?? string.Empty;
+            string id = varData.Id.Trim();
             if (string.IsNullOrWhiteSpace(id))
             {
                 return;
@@ -433,7 +425,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
 
             gvar._id = id;
-            gvar.Rename(id);
+            gvar.Rename(string.IsNullOrWhiteSpace(varData.Name) ? id : varData.Name);
             TryParseAndApplyInitialValue(gvar, varData.InitialValue, out _);
             MarkVarAsCustom(gvar);
         }
@@ -443,10 +435,6 @@ namespace Drova_Modding_API.Systems.GlobalVars
             try
             {
                 SubDatabase_GVars database = ProviderAccess.GVarDatabase;
-                if (database == null)
-                {
-                    return;
-                }
 
                 string folderPath = GetStoreFolderPath();
                 EnsureStoreFolder(folderPath);
@@ -471,7 +459,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                     CustomGVarListData listData = new()
                     {
                         Guid = list.Guid ?? list._guid ?? string.Empty,
-                        Name = list.name ?? string.Empty,
+                        Name = list.name,
                         IsQuestVarList = list.IsQuestVarList
                     };
 
@@ -517,6 +505,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 target.Add(new CustomGVarData
                 {
                     Id = gvar.Id ?? gvar.GetGVarId(),
+                    Name = gvar.name,
                     Type = type.ToString(),
                     InitialValue = GetInitialValueAsString(gvar)
                 });
@@ -592,7 +581,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             return string.Empty;
         }
 
-        private static bool TryParseAndApplyInitialValue(AGVarBase gvar, string rawValue, out string error)
+        private static bool TryParseAndApplyInitialValue(AGVarBase? gvar, string? rawValue, out string error)
         {
             error = string.Empty;
             if (gvar == null)
@@ -740,7 +729,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
         }
 
-        private static void MarkVarAsCustom(AGVarBase gvar)
+        private static void MarkVarAsCustom(AGVarBase? gvar)
         {
             if (gvar == null)
             {
@@ -868,4 +857,3 @@ namespace Drova_Modding_API.Systems.GlobalVars
 
     }
 }
-#pragma warning restore 300

@@ -1,4 +1,7 @@
-﻿using Il2CppNodeCanvas.DialogueTrees;
+﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
+using Il2CppNodeCanvas.DialogueTrees;
+using System;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 
@@ -11,15 +14,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         private SubDialogueTree _castedNode;
         private readonly GUIContent GUIContent = new("SubDialogueTree", "Execute a Sub Dialogue Tree. When that Dialogue Tree is finished, this node will continue either in Success or Failure if it has any connections. Useful for making reusable and self-contained Dialogue Trees.");
+        private DialogueTree[] _dialogueTrees;
+        private string[] _dialogueTreeNames;
+        private GUIDropdownWithFilter _dialogueTreeDropdown;
 
         public SubDialogueTreeEditor()
         {
-            NodeSizeInternal = new Vector2(850, 90);
+            NodeSizeInternal = new Vector2(850, 110);
         }
 
         public override void Init()
         {
             _castedNode ??= Node.TryCast<SubDialogueTree>();
+            _dialogueTrees = Resources.FindObjectsOfTypeAll<DialogueTree>();
+            _dialogueTreeNames = [.. _dialogueTrees.Select(e => e.name)];
+            _dialogueTreeDropdown = new GUIDropdownWithFilter(_dialogueTreeNames, Array.FindIndex(_dialogueTreeNames, (e) => e == _castedNode.subGraph?.name), 20);
         }
 
         public override void DrawNode(Vector2 position)
@@ -34,7 +43,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = 10;
             GUI.color = Color.green;
 
-            GUI.Box(new Rect(position.x, position.y, 850, 90), GUIContent);
+            GUI.Box(new Rect(position.x, position.y, 850, 110), GUIContent);
 
             GUI.color = Color.white;
 
@@ -46,7 +55,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             else
                 sb.Append("Full name: ").Append(_castedNode.subGraph.Key);
 
-            GUI.Label(new Rect(position.x, position.y + 25, 800, 50), sb.ToString());
+            GUI.Label(new Rect(position.x + 10, position.y + 25, 800, 25), sb.ToString());
+
+            if (_dialogueTreeDropdown.Draw(new Rect(position.x + 10, position.y + 55, 400, 20)))
+            {
+                _castedNode.subGraph = _dialogueTrees[_dialogueTreeDropdown.SelectedIndex];
+            }
 
             GUI.depth = previousDepth;
             GUI.color = previousColor;

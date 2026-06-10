@@ -24,11 +24,20 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode = Node.TryCast<DS_ReleaseActiveActors>();
             _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>();
-            _entityInfoNames = _entityInfos.Select(e => e.name).ToArray();
+            List<string> list = new();
+            foreach (EntityInfo e in _entityInfos)
+                list.Add(e.name);
+            _entityInfoNames = [.. list];
+            if(_castedNode._entityInfos != null) {
             for (int i = 0; i < _castedNode._entityInfos.Count; i++)
             {
                 EntityInfo entityInfo = _castedNode._entityInfos[i];
                 _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfoNames, Array.FindIndex(_entityInfos, (e) => e.GUID == entityInfo.GUID), 20));
+            }
+            }
+            else
+            {
+                _castedNode._entityInfos = new Il2CppSystem.Collections.Generic.List<EntityInfo>();
             }
         }
 

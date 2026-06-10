@@ -5,7 +5,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     internal class DS_GiveExpNodeEditor : DrawNodeEditor
     {
-        private DS_GiveExp _castedNode;
+        private DS_GiveExp? _castedNode;
 
         public DS_GiveExpNodeEditor()
         {

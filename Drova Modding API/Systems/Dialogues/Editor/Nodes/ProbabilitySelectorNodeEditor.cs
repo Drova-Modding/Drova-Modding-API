@@ -9,7 +9,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class ProbabilitySelectorNodeEditor : DrawNodeEditor
     {
-        private ProbabilitySelector _castedNode;
+        private ProbabilitySelector? _castedNode;
 
         public ProbabilitySelectorNodeEditor()
         {
@@ -19,6 +19,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<ProbabilitySelector>();
+            if(_castedNode.childOptions == null)
+            {
+                _castedNode.childOptions = new Il2CppSystem.Collections.Generic.List<ProbabilitySelector.Option>();
+            }
         }
 
         public override void DrawNode(Vector2 position)

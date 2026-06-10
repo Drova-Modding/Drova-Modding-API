@@ -13,6 +13,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
     internal partial class GlobalVarInspectorSystem
     {
         private string _newListName = string.Empty;
+        private string _newVarName = string.Empty;
         private string _newVarInitialValue = string.Empty;
         private string _customListModFileName = "my_mod";
         private string _sharedModFileName = "my_mod";
@@ -91,6 +92,49 @@ namespace Drova_Modding_API.Systems.GlobalVars
             GUILayout.BeginVertical();
             GUILayout.Label("Editor");
 
+            string requestedSelectionOwner = GetRequestedSelectionOwner();
+            if (!string.IsNullOrWhiteSpace(requestedSelectionOwner))
+            {
+                GUILayout.BeginVertical("box");
+                string requestedSelectionTypeName = GetRequestedSelectionTypeName();
+                GUILayout.Label($"Selection request active for: {requestedSelectionOwner}");
+                if (!string.IsNullOrWhiteSpace(requestedSelectionTypeName))
+                {
+                    GUILayout.Label($"Requested type: {requestedSelectionTypeName}");
+                }
+                if (_selectedVar == null)
+                {
+                    GUILayout.Label("Select a variable from the list first.");
+                }
+                else
+                {
+                    GUILayout.Label($"Currently selected: {_selectedVar.name} ({GetTypeName(_selectedVar)})");
+                    GUI.enabled = !string.IsNullOrWhiteSpace(requestedSelectionTypeName)
+                        && string.Equals(GetTypeName(_selectedVar), requestedSelectionTypeName, StringComparison.Ordinal);
+                    if (GUILayout.Button($"Use selected {GetTypeName(_selectedVar)} for '{requestedSelectionOwner}'"))
+                    {
+                        PublishSelection(requestedSelectionOwner, _selectedVar);
+                    }
+
+                    GUI.enabled = true;
+
+                    if (!string.IsNullOrWhiteSpace(requestedSelectionTypeName)
+                        && !string.Equals(GetTypeName(_selectedVar), requestedSelectionTypeName, StringComparison.Ordinal))
+                    {
+                        GUILayout.Label($"The current selection is not a {requestedSelectionTypeName}.");
+                    }
+                }
+
+                if (GUILayout.Button("Cancel selection request"))
+                {
+                    _requestedSelectionOwner = string.Empty;
+                    _statusMessage = "Selection request canceled.";
+                }
+
+                GUILayout.EndVertical();
+                GUILayout.Space(6f);
+            }
+
             if (_selectedVar == null)
             {
                 GUILayout.Label("Select a variable to edit.");
@@ -155,6 +199,8 @@ namespace Drova_Modding_API.Systems.GlobalVars
             {
                 DrawCustomListHeader();
                 DrawCustomVarSection();
+                GUILayout.Label("Name");
+                _newVarName = GUILayout.TextField(_newVarName);
                 GUILayout.Label("Initial value");
                 DrawInitialValueInputForType();
 
@@ -230,12 +276,14 @@ namespace Drova_Modding_API.Systems.GlobalVars
             {
                 bool currentValue = ParseBoolInitialValueForUi();
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Toggle(!currentValue, "false", "Button"))
+                string falseLabel = currentValue ? "false" : "[false]";
+                string trueLabel = currentValue ? "[true]" : "true";
+                if (GUILayout.Button(falseLabel))
                 {
                     _newVarInitialValue = "false";
                 }
 
-                if (GUILayout.Toggle(currentValue, "true", "Button"))
+                if (GUILayout.Button(trueLabel))
                 {
                     _newVarInitialValue = "true";
                 }
@@ -393,7 +441,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
 
             NormalizeInitialValueInputForType();
-            if (!CustomGVarStore.TryCreateCustomVar(_selectedList, _newVarType, Guid.NewGuid().ToString(), _newVarInitialValue, out AGVarBase? createdVar, out string message))
+            if (!CustomGVarStore.TryCreateCustomVar(_selectedList, _newVarType, Guid.NewGuid().ToString(), _newVarName, _newVarInitialValue, out AGVarBase? createdVar, out string message))
             {
                 _statusMessage = message;
                 return;
@@ -405,6 +453,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 return;
             }
 
+            _newVarName = string.Empty;
             _newVarInitialValue = string.Empty;
             RefreshSelectedListVars();
             _selectedVar = createdVar;

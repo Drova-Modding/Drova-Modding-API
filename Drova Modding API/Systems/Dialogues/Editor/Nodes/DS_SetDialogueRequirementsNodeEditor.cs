@@ -11,7 +11,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_SetDialogueRequirementsNodeEditor : DrawNodeEditor
     {
 
-        private DS_SetDialogueRequirementsNode _castedNode;
+        private DS_SetDialogueRequirementsNode? _castedNode;
         private GUIDropdown _styleDropdown;
         private GUIDropdown _tempoDropdown;
 

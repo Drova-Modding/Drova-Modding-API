@@ -352,27 +352,42 @@ namespace Drova_Modding_API.Systems.Spawning
                 bool expanded = GetModuleExpandedState(module.Key);
 
                 GUILayout.BeginVertical("box");
-                if (GUILayout.Button($"{(expanded ? "v" : ">")} {module.DisplayName} ({module.Key})", GUILayout.ExpandWidth(true)))
+                try
                 {
-                    expanded = !expanded;
-                    _moduleExpandedByKey[module.Key] = expanded;
-                }
+                    if (GUILayout.Button($"{(expanded ? "v" : ">")} {module.DisplayName} ({module.Key})", GUILayout.ExpandWidth(true)))
+                    {
+                        expanded = !expanded;
+                        _moduleExpandedByKey[module.Key] = expanded;
+                    }
 
-                if (!Definition.ModuleConfig.TryGetValue(module.Key, out string? payload))
+                    if (!Definition.ModuleConfig.TryGetValue(module.Key, out string? payload))
+                    {
+                        payload = module.CreateDefaultPayload();
+                        Definition.ModuleConfig[module.Key] = payload;
+                    }
+
+                    if (expanded)
+                    {
+                        payload ??= module.CreateDefaultPayload();
+
+                        try
+                        {
+                            Definition.ModuleConfig[module.Key] = module.DrawWizardUiAndSerialize(payload);
+                        }
+                        catch (Exception ex)
+                        {
+                            MelonLogger.Error($"Failed to draw NPC wizard module '{module.DisplayName}' ({module.Key}): {ex}");
+                            GUILayout.Label($"Module UI error: {ex.Message}");
+                        }
+
+                        if (string.Equals(module.Key, ExternalDialogueModule.ModuleKey, StringComparison.OrdinalIgnoreCase))
+                            DrawDialogueModuleActions();
+                    }
+                }
+                finally
                 {
-                    payload = module.CreateDefaultPayload();
-                    Definition.ModuleConfig[module.Key] = payload;
+                    GUILayout.EndVertical();
                 }
-
-                if (expanded)
-                {
-                    payload ??= module.CreateDefaultPayload();
-                    Definition.ModuleConfig[module.Key] = module.DrawWizardUiAndSerialize(payload);
-
-                    if (string.Equals(module.Key, ExternalDialogueModule.ModuleKey, StringComparison.OrdinalIgnoreCase))
-                        DrawDialogueModuleActions();
-                }
-                GUILayout.EndVertical();
             }
         }
         #endregion
@@ -387,28 +402,35 @@ namespace Drova_Modding_API.Systems.Spawning
                 GUILayout.Label("Dialogue actions require a spawned NPC.");
 
             GUILayout.BeginHorizontal();
-            GUI.enabled = isCurrentDefinitionSpawned && !HasPendingOverwrite();
+            bool previousEnabled = GUI.enabled;
 
-            if (GUILayout.Button("Edit Graph", GUILayout.Width(120f)))
+            try
             {
-                if (TryOpenDialogueEditorForCurrentDefinition())
-                    Status = "Opened dialogue editor for spawned NPC.";
-            }
+                GUI.enabled = isCurrentDefinitionSpawned && !HasPendingOverwrite();
 
-            if (GUILayout.Button("Save To Store", GUILayout.Width(120f)))
+                if (GUILayout.Button("Edit Graph", GUILayout.Width(120f)))
+                {
+                    if (TryOpenDialogueEditorForCurrentDefinition())
+                        Status = "Opened dialogue editor for spawned NPC.";
+                }
+
+                if (GUILayout.Button("Save To Store", GUILayout.Width(120f)))
+                {
+                    if (TrySaveDialogueForCurrentDefinition())
+                        Status = "Saved spawned NPC dialogue to dialogue store.";
+                }
+
+                if (GUILayout.Button("Load To Spawned", GUILayout.Width(130f)))
+                {
+                    if (TryLoadDialogueForCurrentDefinition())
+                        Status = "Loaded stored dialogue into spawned NPC.";
+                }
+            }
+            finally
             {
-                if (TrySaveDialogueForCurrentDefinition())
-                    Status = "Saved spawned NPC dialogue to dialogue store.";
+                GUI.enabled = previousEnabled;
+                GUILayout.EndHorizontal();
             }
-
-            if (GUILayout.Button("Load To Spawned", GUILayout.Width(130f)))
-            {
-                if (TryLoadDialogueForCurrentDefinition())
-                    Status = "Loaded stored dialogue into spawned NPC.";
-            }
-
-            GUI.enabled = true;
-            GUILayout.EndHorizontal();
         }
 
         [HideFromIl2Cpp]

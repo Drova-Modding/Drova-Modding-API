@@ -20,17 +20,24 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_MultipleChoiceNode>();
-            for (int i = 0; i < _castedNode.availableChoices.Count; i++)
+            if (_castedNode.availableChoices != null)
             {
-                DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
-                if (choice.condition != null)
+                for (int i = 0; i < _castedNode.availableChoices.Count; i++)
                 {
-                    DrawTaskEditor taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(choice.condition.GetIl2CppType());
-                    taskEditor.Task = choice.condition;
-                    taskEditor.GraphEditorManager = GraphEditorManager;
-                    taskEditor.Init();
-                    _choices.TryAdd(i, taskEditor);
+                    DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
+                    if (choice.condition != null)
+                    {
+                        DrawTaskEditor taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(choice.condition.GetIl2CppType());
+                        taskEditor.Task = choice.condition;
+                        taskEditor.GraphEditorManager = GraphEditorManager;
+                        taskEditor.Init();
+                        _choices.TryAdd(i, taskEditor);
+                    }
                 }
+            }
+            else
+            {
+                _castedNode.availableChoices = new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
             }
         }
 
@@ -41,7 +48,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return;
             }
             Color previousColor = GUI.color;
-            _castedNode.availableChoices ??= new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
 
             // Pre-calculate total height using cached DrawTask heights from the previous frame
             // Per choice: 20 (header) + 35 (loca) + 35 (statement) + 25 (end node) + 10 (gap) = 125 base
@@ -71,9 +77,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 int choiceBoxHeight = 125;
                 if (_taskHeights.TryGetValue(i, out float prevTaskHeight))
                     choiceBoxHeight += (int)prevTaskHeight + 10;
-                
 
-                GUI.Box(new Rect(position.x + 5, position.y + step, 340, choiceBoxHeight), new GUIContent($"Choice {i}:", _castedNode.GetLocalizedString(choice.statement)), EditorBoxStyles.Choice);
+
+                GUI.Box(new Rect(position.x + 5, position.y + step, 340, choiceBoxHeight),
+                    new GUIContent($"Choice {i}:", _castedNode.GetLocalizedString(choice.statement)),
+                    EditorBoxStyles.Choice);
                 step += 20; // space for "Choice i:" header label
                 if (choice.statement.useGlobalLoca)
                 {

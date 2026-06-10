@@ -8,10 +8,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_DefineActiveActorsNodeEditor : DrawNodeEditor
     {
 
-        private DS_DefineActiveActors _castedNode;
+        private DS_DefineActiveActors? _castedNode;
         private EntityInfo[] _entityInfos;
         private List<GUIDropdownWithFilter> _entityInfoDropdowns;
-        private const int _maxEntityInfos = 20;
+        private const int MaxEntityInfosCount = 20;
 
         public DS_DefineActiveActorsNodeEditor()
         {
@@ -22,14 +22,23 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode = Node.TryCast<DS_DefineActiveActors>();
             _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>()
-                                    .GroupBy(e => e.name)
-                                    .Select(g => g.First())
-                                    .ToArray();
+                .GroupBy(e => e.name)
+                .Select(g => g.First())
+                .ToArray();
             _entityInfoDropdowns = [];
-            for (int i = 0; i < _castedNode.entityInfos.Count; i++)
+            if (_castedNode.entityInfos != null)
             {
-                EntityInfo entityInfo = _castedNode.entityInfos[i];
-                _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.FindIndex(_entityInfos, (e) => e.GUID == entityInfo.GUID), _maxEntityInfos));
+                for (int i = 0; i < _castedNode.entityInfos.Count; i++)
+                {
+                    EntityInfo entityInfo = _castedNode.entityInfos[i];
+                    _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(),
+                        Array.FindIndex(_entityInfos, (e) => e.GUID == entityInfo.GUID),
+                        MaxEntityInfosCount));
+                }
+            }
+            else
+            {
+                _castedNode.entityInfos = new Il2CppSystem.Collections.Generic.List<EntityInfo>();
             }
         }
 

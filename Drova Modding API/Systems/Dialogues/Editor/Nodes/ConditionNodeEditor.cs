@@ -7,7 +7,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     internal class ConditionNodeEditor : DrawNodeEditor
     {
-        private ConditionNode _castedNode;
+        private ConditionNode? _castedNode;
         private GUICreateConditionTask _guiCreateConditionTask;
         private DrawTaskEditor _drawTaskEditor;
         private bool _changeCondition = false;
@@ -21,6 +21,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<ConditionNode>();
+            if (_castedNode == null) return;
             _guiCreateConditionTask = new GUICreateConditionTask();
             if (_castedNode._condition != null)
             {

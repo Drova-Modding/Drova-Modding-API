@@ -21,6 +21,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             CastedNode ??= Node.TryCast<DS_StatementNode>();
+            if(CastedNode.statement == null)
+            {
+                CastedNode.statement = new DS_Statement();
+            }
         }
 
         public override void DrawNode(Vector2 position)
@@ -30,8 +34,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             Color previousColor = GUI.color;
             Color previousBackgroundColor = GUI.backgroundColor;
 
-            string locaPath = CastedNode.statement.useGlobalLoca ? CastedNode.statement._globalPath : CastedNode.DLGTree.LocaPath;
-            string locaKey = CastedNode.statement._locaKey;
+            string locaPath = CastedNode.statement != null && CastedNode.statement.useGlobalLoca ? CastedNode.statement._globalPath : (CastedNode.DLGTree != null ? CastedNode.DLGTree.LocaPath : "");
+            string locaKey = CastedNode.statement != null ? CastedNode.statement._locaKey : "";
             if (_cachedNodeContent == null
                 || !string.Equals(_cachedLocaPath, locaPath, StringComparison.Ordinal)
                 || !string.Equals(_cachedLocaKey, locaKey, StringComparison.Ordinal))
@@ -44,6 +48,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
             GUI.Box(new(position.x, position.y, nodeSize.x, nodeSize.y + 75), _cachedNodeContent, EditorBoxStyles.StatementNode);
 
+            if (CastedNode.statement == null) return;
+
             CastedNode.statement.useGlobalLoca = GUI.Toggle(
                 new Rect(position.x + 5, position.y + 25, nodeSize.x - 10, 20),
                 CastedNode.statement.useGlobalLoca,
@@ -55,7 +61,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             else
             {
-                GUI.Label(new Rect(position.x + 5, position.y + 50, nodeSize.x - 10, 20), "LocaPath: " + CastedNode.DLGTree.LocaPath);
+                string treePath = CastedNode.DLGTree != null ? CastedNode.DLGTree.LocaPath : "";
+                GUI.Label(new Rect(position.x + 5, position.y + 50, nodeSize.x - 10, 20), "LocaPath: " + treePath);
             }
 
             CastedNode.statement._locaKey = GUI.TextField(new Rect(position.x + 5, position.y + 75, nodeSize.x - 10, 20), CastedNode.statement._locaKey);

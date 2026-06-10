@@ -8,7 +8,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     internal class DS_InteractAABaseNodeEditor : DrawNodeEditor
     {
-        private DS_InteractAABaseNode _castedNode;
+        private DS_InteractAABaseNode? _castedNode;
 
         private readonly GUIContent _hideDialogueWindowContent = new("Hide Dialogue Window");
         private readonly GUIContent _waitForFinishContent = new("Wait for finish");
@@ -25,12 +25,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode ??= Node.TryCast<DS_InteractAABaseNode>();
             _interactions = Resources.FindObjectsOfTypeAll<AA_ABase>().Where(e => e.name.StartsWith("AA_Interact_NPC") && !e.name.EndsWith("(Clone)")).ToImmutableList();
-            int selectionIndex = _interactions.FindIndex(AA_ABase => AA_ABase.name == _castedNode._interactPrefab.name);
+            int selectionIndex = _interactions.FindIndex(AA_ABase => AA_ABase.name == _castedNode._interactPrefab?.name);
             if (selectionIndex == -1)
             {
                 selectionIndex = 0;
             }
-            _interactableDropdown = new GUIDropdown(_interactions.Select(e => e.name).ToArray(), selectionIndex);
+            _interactableDropdown = new GUIDropdown([.. _interactions.Select(e => e.name)], selectionIndex);
         }
 
         public override void DrawNode(Vector2 position)

@@ -1,8 +1,12 @@
 using Il2Cpp;
 using Il2CppDrova;
+using Il2CppDrova.GlobalVarSystem;
+using MelonLoader;
 using System.Text.Json;
 using UnityEngine;
 using Drova_Modding_API.Systems.Editor;
+using Drova_Modding_API.Systems.GlobalVars;
+using Drova_Modding_API.Systems.Spawning.Modules;
 
 namespace Drova_Modding_API.Systems.Spawning
 {
@@ -22,14 +26,60 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             EnsureUiState(payload);
 
+            bool changed = false;
             GUILayout.Label("EntityInfo GUID (read-only)");
             GUILayout.Label(_cachedState.Guid);
+
+            bool updatedAlwaysKnown = GUILayout.Toggle(_cachedState.AlwaysKnown, "Always known");
+            if (updatedAlwaysKnown != _cachedState.AlwaysKnown)
+            {
+                _cachedState.AlwaysKnown = updatedAlwaysKnown;
+                changed = true;
+            }
+
+            if (!_cachedState.AlwaysKnown)
+            {
+                #if DEBUG
+                if (GlobalVarInspectorSystem.TryConsumeSelection(ModuleKey, _cachedState.KnownTypeName, out string selectedGvarListGuid, out string selectedGvarGuid))
+                {
+                    _cachedState.KnownByGBool = new GBoolReference
+                    {
+                        GVarListGuid = selectedGvarListGuid,
+                        GBoolGuid = selectedGvarGuid
+                    };
+                    changed = true;
+                }
+#endif
+
+                GUILayout.Label("Known when this GBool is true");
+                GUILayout.Label(GetKnownByGvarLabel());
+
+                GUILayout.BeginHorizontal();
+                try
+                {
+#if DEBUG
+                    if (GUILayout.Button("Pick from GVar Inspector", GUILayout.Width(220f)))
+                        GlobalVarInspectorSystem.RequestSelection(ModuleKey, _cachedState.KnownTypeName);
+#else
+                    GUI.enabled = false;
+                    GUILayout.Button("Pick from GVar Inspector", GUILayout.Width(220f));
+                    GUI.enabled = true;
+#endif
+                }
+                finally
+                {
+                    GUILayout.EndHorizontal();
+                }
+
+                if (_cachedState.KnownByGBool == null)
+                    GUILayout.Label("Select a GBool in the global var inspector, then click the selection button there.");
+            }
 
             bool updatedUseLocalizedName = GUILayout.Toggle(_cachedState.UseLocalizedName, "Use localized display name");
             if (updatedUseLocalizedName != _cachedState.UseLocalizedName)
             {
                 _cachedState.UseLocalizedName = updatedUseLocalizedName;
-                return SerializeCachedState();
+                changed = true;
             }
 
             if (_cachedState.UseLocalizedName)
@@ -38,7 +88,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 {
                     _cachedState.LocaPath = selectedLocaPath;
                     _cachedState.LocaKey = selectedLocaKey;
-                    return SerializeCachedState();
+                    changed = true;
                 }
 
                 GUILayout.Label("Localized name path");
@@ -48,31 +98,39 @@ namespace Drova_Modding_API.Systems.Spawning
                 string updatedLocaKey = GUILayout.TextField(_cachedState.LocaKey);
 
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Open Localization Editor", GUILayout.Width(200f)))
-                    LocalizationEntriesEditorSystem.Show();
-
-                if (GUILayout.Button("Pick Entry", GUILayout.Width(120f)))
-                    LocalizationEntriesEditorSystem.RequestSelection(ModuleKey);
-                GUILayout.EndHorizontal();
-
-                if (string.Equals(updatedLocaPath, _cachedState.LocaPath, StringComparison.Ordinal)
-                    && string.Equals(updatedLocaKey, _cachedState.LocaKey, StringComparison.Ordinal))
+                try
                 {
-                    return _serializedPayload;
+                    if (GUILayout.Button("Open Localization Editor", GUILayout.Width(200f)))
+                        LocalizationEntriesEditorSystem.Show();
+
+                    if (GUILayout.Button("Pick Entry", GUILayout.Width(120f)))
+                        LocalizationEntriesEditorSystem.RequestSelection(ModuleKey);
+                }
+                finally
+                {
+                    GUILayout.EndHorizontal();
                 }
 
-                _cachedState.LocaPath = updatedLocaPath;
-                _cachedState.LocaKey = updatedLocaKey;
-                return SerializeCachedState();
+                if (!string.Equals(updatedLocaPath, _cachedState.LocaPath, StringComparison.Ordinal)
+                    || !string.Equals(updatedLocaKey, _cachedState.LocaKey, StringComparison.Ordinal))
+                {
+                    _cachedState.LocaPath = updatedLocaPath;
+                    _cachedState.LocaKey = updatedLocaKey;
+                    changed = true;
+                }
+
+                return changed ? SerializeCachedState() : _serializedPayload;
             }
 
             GUILayout.Label("Unity property name");
             string updatedUnityPropertyName = GUILayout.TextField(_cachedState.UnityPropertyName);
-            if (string.Equals(updatedUnityPropertyName, _cachedState.UnityPropertyName, StringComparison.Ordinal))
-                return _serializedPayload;
+            if (!string.Equals(updatedUnityPropertyName, _cachedState.UnityPropertyName, StringComparison.Ordinal))
+            {
+                _cachedState.UnityPropertyName = updatedUnityPropertyName;
+                changed = true;
+            }
 
-            _cachedState.UnityPropertyName = updatedUnityPropertyName;
-            return SerializeCachedState();
+            return changed ? SerializeCachedState() : _serializedPayload;
         }
 
         public void ApplyToCreator(NpcCreator creator, string? payload)
@@ -82,6 +140,27 @@ namespace Drova_Modding_API.Systems.Spawning
 
             if (!string.IsNullOrWhiteSpace(state.Guid))
                 entityInfo._guid = state.Guid;
+
+            if (state.AlwaysKnown)
+            {
+                AlwaysAcquainted acquaintance = new();
+                entityInfo._acquaintance = acquaintance.Cast<IAcquaintance>();
+            }
+            else
+            {
+                GBool? knownByBool = state.KnownByGBool?.Resolve();
+                if (knownByBool != null)
+                {
+                    Acquaintance acquaintance = new(knownByBool);
+                    entityInfo._acquaintance = acquaintance.Cast<IAcquaintance>();
+                }
+                else
+                {
+                    MelonLogger.Warning($"{nameof(ExternalEntityInfoModule)} for entity '{state.Guid}' is configured to be GBool-gated, but the selected GBool could not be resolved. Falling back to always known.");
+                    AlwaysAcquainted acquaintance = new();
+                    entityInfo._acquaintance = acquaintance.Cast<IAcquaintance>();
+                }
+            }
 
             if (state.UseLocalizedName)
             {
@@ -97,6 +176,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
 
             creator.WithLazyEntityInfo(entityInfo);
+            creator.WithModule(new EntityInfoModule(entityInfo));
         }
 
         private static EntityInfoModuleState Parse(string? payload)
@@ -132,6 +212,26 @@ namespace Drova_Modding_API.Systems.Spawning
             return _serializedPayload;
         }
 
+        private string GetKnownByGvarLabel()
+        {
+            GBool? selectedBool = _cachedState.KnownByGBool?.Resolve();
+            if (selectedBool != null)
+            {
+                GVarList? parent = selectedBool.GetParent();
+                if (parent != null)
+                    return $"Selected GBool: {parent.name}/{selectedBool.name}";
+
+                return $"Selected GBool: {selectedBool.name}";
+            }
+
+            if (_cachedState.KnownByGBool != null)
+            {
+                return $"Selected GBool: {_cachedState.KnownByGBool.GVarListGuid}/{_cachedState.KnownByGBool.GBoolGuid}";
+            }
+
+            return "Selected GBool: <none>";
+        }
+
         private sealed class EntityInfoModuleState
         {
             /// <summary>
@@ -142,6 +242,9 @@ namespace Drova_Modding_API.Systems.Spawning
             public string LocaPath { get; set; } = string.Empty;
             public string LocaKey { get; set; } = string.Empty;
             public string UnityPropertyName { get; set; } = string.Empty;
+            public bool AlwaysKnown { get; set; } = true;
+            public string KnownTypeName { get; set; } = nameof(GBool);
+            public GBoolReference? KnownByGBool { get; set; }
 
             public EntityInfoModuleState() { }
 
@@ -150,6 +253,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 Guid = guid;
             }
         }
+
     }
 }
 

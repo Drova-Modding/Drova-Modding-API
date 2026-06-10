@@ -22,6 +22,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<MultipleConditionNode>();
+            if (_castedNode == null) return;
             for (int i = 0; i < _castedNode.Conditions.Count; i++)
             {
                 Il2CppNodeCanvas.Framework.ConditionTask condition = _castedNode.Conditions[i];

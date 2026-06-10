@@ -17,13 +17,19 @@ namespace Drova_Modding_API.Systems.GlobalVars
     [RegisterTypeInIl2Cpp]
     internal partial class GlobalVarInspectorSystem(IntPtr ptr) : MonoBehaviour(ptr)
     {
+        private readonly record struct PendingSelection(string TypeName, string GVarListGuid, string GVarGuid);
+
         private const float DefaultWindowWidth = 1560f;
         private const float DefaultWindowHeight = 900f;
         private const float CreateListWindowWidth = 360f;
         private const float CreateListWindowHeight = 180f;
         private const float MinScrollHeight = 220f;
         private const float RowHeight = 24f;
-        private static readonly string[] VarTypeOptions = new string[] { "GBool", "GInt", "GFloat", "GString" };
+        private static readonly Dictionary<string, PendingSelection> PendingSelectionsByOwner = new(StringComparer.Ordinal);
+
+        private static GlobalVarInspectorSystem? _instance;
+        private static string _requestedSelectionOwner = string.Empty;
+        private static string _requestedSelectionTypeName = string.Empty;
 
         private bool _isVisible;
         private bool _isCreateListWindowVisible;
@@ -38,11 +44,17 @@ namespace Drova_Modding_API.Systems.GlobalVars
 
         internal void Awake()
         {
+            _instance = this;
             RefreshData();
         }
 
         internal void OnDestroy()
         {
+            if (_instance == this)
+            {
+                _instance = null;
+            }
+
             SetGameplayInputBlocked(false);
         }
 
@@ -72,6 +84,84 @@ namespace Drova_Modding_API.Systems.GlobalVars
             {
                 CenterCreateListWindowOnScreen();
                 _createListWindowRect = GUI.ModalWindow(923452, _createListWindowRect, new Action<int>(DrawCreateListWindow), "Create custom GVar list");
+            }
+        }
+
+        internal static void RequestSelection(string ownerToken, string expectedTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(ownerToken) || string.IsNullOrWhiteSpace(expectedTypeName))
+            {
+                return;
+            }
+
+            _requestedSelectionOwner = ownerToken;
+            _requestedSelectionTypeName = expectedTypeName;
+            if (_instance == null)
+            {
+                return;
+            }
+
+            _instance.SetInspectorVisible(true);
+            _instance._statusMessage = $"Select a {expectedTypeName} in the inspector and click the publish button for '{ownerToken}'.";
+        }
+
+        internal static string GetRequestedSelectionOwner()
+            => _requestedSelectionOwner;
+
+        internal static string GetRequestedSelectionTypeName()
+            => _requestedSelectionTypeName;
+
+        internal static bool TryConsumeSelection(string ownerToken, string expectedTypeName, out string gvarListGuid, out string gvarGuid)
+        {
+            gvarListGuid = string.Empty;
+            gvarGuid = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(ownerToken) || string.IsNullOrWhiteSpace(expectedTypeName))
+            {
+                return false;
+            }
+
+            if (!PendingSelectionsByOwner.TryGetValue(ownerToken, out PendingSelection selection))
+            {
+                return false;
+            }
+
+            if (!string.Equals(selection.TypeName, expectedTypeName, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            PendingSelectionsByOwner.Remove(ownerToken);
+
+            gvarListGuid = selection.GVarListGuid;
+            gvarGuid = selection.GVarGuid;
+            return true;
+        }
+
+        internal static void PublishSelection(string ownerToken, AGVarBase selectedVar)
+        {
+            if (string.IsNullOrWhiteSpace(ownerToken) || selectedVar == null)
+            {
+                return;
+            }
+
+            GVarList? parent = selectedVar.GetParent();
+            if (parent == null)
+            {
+                return;
+            }
+
+            string typeName = GetTypeName(selectedVar);
+            PendingSelectionsByOwner[ownerToken] = new PendingSelection(typeName, parent.Guid, selectedVar.GetGVarId());
+            if (string.Equals(_requestedSelectionOwner, ownerToken, StringComparison.Ordinal))
+            {
+                _requestedSelectionOwner = string.Empty;
+                _requestedSelectionTypeName = string.Empty;
+            }
+
+            if (_instance != null)
+            {
+                _instance._statusMessage = $"Selected '{parent.name}/{selectedVar.name}' ({typeName}) for '{ownerToken}'.";
             }
         }
 
@@ -161,7 +251,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 return true;
             }
 
-            return value?.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
+            return value.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         [HideFromIl2Cpp]
@@ -229,7 +319,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             GFloat floatVar = gvar.TryCast<GFloat>();
             if (floatVar != null)
             {
-                return floatVar.GetValue().ToString();
+                return floatVar.GetValue().ToString(System.Globalization.CultureInfo.InvariantCulture);
             }
 
             GString stringVar = gvar.TryCast<GString>();
@@ -249,7 +339,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
         }
 
         [HideFromIl2Cpp]
-        private static string SafeId(AGVarBase gvar)
+        private static string SafeId(AGVarBase? gvar)
         {
             if (gvar == null)
             {

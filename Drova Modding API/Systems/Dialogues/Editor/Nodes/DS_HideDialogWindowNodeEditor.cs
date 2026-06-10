@@ -2,6 +2,9 @@
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
+    /// <summary>
+    /// Node editor for <see cref="Il2CppNodeCanvas.DialogueTrees.DS_HideDialogWindow"/>
+    /// </summary>
     internal class DS_HideDialogWindowNodeEditor : DrawNodeEditor
     {
         public DS_HideDialogWindowNodeEditor()

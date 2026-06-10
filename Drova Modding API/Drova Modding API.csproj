@@ -471,10 +471,12 @@
         <Compile Include="Systems\Audio\IAudioProvider.cs"/>
         <Compile Include="Systems\Audio\AudioLog.cs"/>
         <Compile Include="Systems\Audio\AudioManager.cs"/>
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_TeachStatsNodeEditor.cs" />
         <Compile Include="Systems\Dialogues\Store\DialogueStore.cs"/>
         <Compile Include="Systems\Editor\EditorManager.cs"/>
         <Compile Include="Systems\Editor\NpcMouseRaycast.cs"/>
         <Compile Include="Systems\GlobalVars\CustomGVarStore.cs"/>
+        <Compile Include="Systems\GlobalVars\GBoolReference.cs" />
         <Compile Include="Systems\ModdingUI\ModdingUI.cs"/>
         <Compile Include="Systems\Morphing\MorphManager.cs"/>
         <Compile Include="Systems\Region.cs"/>
@@ -515,6 +517,7 @@
         <Compile Include="Systems\Spawning\Modules\AlignmentModule.cs"/>
         <Compile Include="Systems\Spawning\Modules\CosmeticsPresetModule.cs"/>
         <Compile Include="Systems\Spawning\Modules\CustomStatsModule.cs"/>
+        <Compile Include="Systems\Spawning\Modules\EntityInfoModule.cs" />
         <Compile Include="Systems\Spawning\Modules\EquipPresetHelper.cs"/>
         <Compile Include="Systems\Spawning\Modules\EquipmentPresetModule.cs"/>
         <Compile Include="Systems\Spawning\LazyActorSaveData.cs"/>
@@ -610,6 +613,7 @@
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_ChangeStanceNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_CrimeNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_DebugNodeEditor.cs"/>
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_TeachTalentNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_DefineActiveActorsNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_DelayedTeach_StatementNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_GiveExpNodeEditor.cs"/>
@@ -623,6 +627,7 @@
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnAttributeNode_SingleNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnStatNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnTalentNodeEditor.cs"/>
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnTalentNode_SingleEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_MultipleChoiceNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_OpenTradeWindowNodeEditor.cs"/>
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_OverrideFixCamPosNodeEditor.cs"/>
