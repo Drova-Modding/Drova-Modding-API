@@ -1,5 +1,6 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppNodeCanvas.DialogueTrees;
+using Il2CppNodeCanvas.Framework;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
@@ -9,8 +10,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private DS_MultipleChoiceNode? _castedNode;
         private readonly Dictionary<int, DrawTaskEditor> _choices = [];
         private readonly Dictionary<int, float> _taskHeights = [];
+        private readonly GUICreateConditionTask _createConditionTask = new();
+        private int _choiceIndexRequestingCondition = -1;
 
-        protected bool TransparentOuterBox { get; set; } = false;
+        protected bool TransparentOuterBox { get; set; }
 
         public DS_MultipleChoiceNodeEditor()
         {
@@ -50,11 +53,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             Color previousColor = GUI.color;
 
             // Pre-calculate total height using cached DrawTask heights from the previous frame
-            // Per choice: 20 (header) + 35 (loca) + 35 (statement) + 25 (end node) + 10 (gap) = 125 base
+            // Per choice: 20 (header) + 35 (UID) + 35 (loca) + 35 (statement) + 25 (end node) + 25 (condition buttons) + 10 (gap) = 185 base
             int additionalHeight = 20; // top padding
             for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
-                additionalHeight += 125; // header(20) + locaPath row(35) + statement row(35) + end node row(25) + bottom gap(10)
+                additionalHeight += 185;
                 if (_taskHeights.TryGetValue(i, out float cachedHeight))
                     additionalHeight += (int)cachedHeight + 10;
             }
@@ -73,8 +76,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
 
                 // Calculate per-choice box height (base + optional task height from cache)
-                // 20 (header label) + 35 (loca) + 35 (statement) + 25 (end node) + 10 (padding) = 125 base
-                int choiceBoxHeight = 125;
+                int choiceBoxHeight = 185;
                 if (_taskHeights.TryGetValue(i, out float prevTaskHeight))
                     choiceBoxHeight += (int)prevTaskHeight + 10;
 
@@ -83,6 +85,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     new GUIContent($"Choice {i}:", _castedNode.GetLocalizedString(choice.statement)),
                     EditorBoxStyles.Choice);
                 step += 20; // space for "Choice i:" header label
+
+                GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "UID:");
+                choice.UID = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.UID);
+                step += 35;
+
                 if (choice.statement.useGlobalLoca)
                 {
                     GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "Globapath:");
@@ -99,6 +106,40 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "End Node:");
                 choice.isEndNode = GUI.Toggle(new Rect(position.x + 110, position.y + step, 100, 20), choice.isEndNode, "");
                 step += 25;
+
+                if (choice.condition == null)
+                {
+                    if (GUI.Button(new Rect(position.x + 5, position.y + step, 150, 20), "Add Condition"))
+                    {
+                        _choiceIndexRequestingCondition = i;
+                    }
+
+                    if (_choiceIndexRequestingCondition == i)
+                    {
+                        ConditionTask? newTask = _createConditionTask.Draw(new Vector2(position.x + 160, position.y + step));
+                        if (newTask != null)
+                        {
+                            choice.condition = newTask;
+                            DrawTaskEditor taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(newTask.GetIl2CppType());
+                            taskEditor.Task = newTask;
+                            taskEditor.GraphEditorManager = GraphEditorManager;
+                            taskEditor.Init();
+                            _choices[i] = taskEditor;
+                            _choiceIndexRequestingCondition = -1;
+                        }
+                    }
+                }
+                else
+                {
+                    if (GUI.Button(new Rect(position.x + 5, position.y + step, 150, 20), "Remove Condition"))
+                    {
+                        choice.condition = null;
+                        _choices.Remove(i);
+                        _taskHeights.Remove(i);
+                    }
+                }
+                step += 25;
+
                 if (_choices.TryGetValue(i, out DrawTaskEditor editor))
                 {
                     Rect size = editor.DrawTask(new Vector2(position.x + 5, position.y + step));
