@@ -72,14 +72,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// Call this once per frame, AFTER all nodes / controls have been drawn,
         /// so that open dropdowns are always painted on top of everything else.
         /// </summary>
-        public static void FlushOverlays()
+        public static void FlushOverlays(Rect visibleRect)
         {
             // Snapshot + clear BEFORE drawing in case an item click triggers
             // re-entrant Draw() calls that add new entries.
             (GUIDropdown dd, Rect rect)[] toFlush = [.. _pendingOverlays];
+            var orderedFlush = toFlush.OrderBy(t => -t.rect.y).ThenBy(t => -t.rect.x);
             _pendingOverlays.Clear();
-            foreach ((GUIDropdown dd, Rect rect) in toFlush)
+            foreach ((GUIDropdown dd, Rect rect) in orderedFlush)
             {
+                if(!visibleRect.Overlaps(rect)) continue;
                 if (dd.DrawOptions(rect))
                     dd._changedThisFlush = true;
             }
@@ -129,7 +131,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// Sets the selected index of the dropdown.
         /// </summary>
         /// <param name="index"></param>
-        public void SetSelectedIndex(int index)
+        public virtual void SetSelectedIndex(int index)
         {
             if (index >= 0 && index < _options.Length)
                 _selectedIndex = index;
@@ -216,12 +218,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             {
                 return false;
             }
-
-            int previousDepth = GUI.depth;
-
-            // Use a very low depth to ensure it's on top of everything
-            GUI.depth = -2000;
-
             // Draw a background box for the entire dropdown area to ensure full opacity
             GUI.Box(backgroundRect, "", _defaultStyle);
 
@@ -234,14 +230,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
                 {
                     if (i != _selectedIndex)
                     {
-                        _selectedIndex = i;
+                        SetSelectedIndex(i);
                         selectionChanged = true;
                     }
                     _showDropdown = false;
                     Event.current.Use();
                 }
             }
-            GUI.depth = previousDepth;
             return selectionChanged;
         }
 

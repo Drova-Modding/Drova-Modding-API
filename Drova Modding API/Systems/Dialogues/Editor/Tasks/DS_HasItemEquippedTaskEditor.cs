@@ -1,6 +1,5 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
-using Il2CppDrova;
 using Il2CppDrova.DialogueNew;
 using Il2CppDrova.GlobalVarSystem;
 using Il2CppDrova.Items;
@@ -10,36 +9,27 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 {
     /// <summary>
-    /// Task editor for <see cref="DS_HasItems"/>
+    /// Task editor for <see cref="DS_HasItemEquippedTask"/>
     /// </summary>
-    internal class DS_HasItemsTaskEditor : DrawTaskEditor
+    public class DS_HasItemEquippedTaskEditor : DrawTaskEditor
     {
-
-        private DS_HasItems? _castedTask;
-
-        private EntityInfo[] _entityInfos;
+        
+        private DS_HasItemEquippedTask? _castedTask;
         private Item[] _items;
-        private GUIDropdownWithFilter _entityInfoDropdown;
         private readonly List<GUIDropdownWithFilter> _itemDropdowns = [];
         private readonly List<GUIDropdown> _valueModeDropdowns = [];
         private readonly Dictionary<int, GUIGvarSelectionEditor> _gvarSelectionEditors = [];
-
+        
         // Cached height from previous frame so we can draw the background box first
         private float _lastHeight = 150f;
 
-        private readonly GUIContent _targetContent = new("Target Entity", "If empty, than the player is checked");
+
+        /// <inheritdoc/>
 
         public override void Init()
         {
-            _castedTask ??= Task.TryCast<DS_HasItems>();
-            _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>()
-                                    .GroupBy(e => e.name)
-                                    .Select(g => g.First())
-                                    .ToArray();
+            _castedTask ??= Task.TryCast<DS_HasItemEquippedTask>();
             _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
-
-            EntityInfo entityInfo = _castedTask.Target;
-            _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.IndexOf(_entityInfos, entityInfo), 20);
             for (int i = 0; i < _castedTask.Items.Count; i++)
             {
                 DialogItems item = _castedTask.Items[i];
@@ -53,9 +43,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             }
         }
 
+        /// <inheritdoc/>
         public override Rect DrawTask(Vector2 position)
         {
-            if (_castedTask == null)
+        if (_castedTask == null)
             {
                 return default;
             }
@@ -75,14 +66,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
             // Controls — start below the box title
             float y = position.y + rowStep;
-
-            // Target Entity
-            GUI.Label(new Rect(x + 5, y, 100, rowH), _targetContent);
-            if (_entityInfoDropdown.Draw(new Rect(x + 110, y, width - 115, rowH)))
-            {
-                _castedTask.Target = _entityInfos[_entityInfoDropdown.SelectedIndex];
-            }
-            y += rowStep + 5;
 
             for (int i = 0; i < _castedTask.Items.Count; i++)
             {

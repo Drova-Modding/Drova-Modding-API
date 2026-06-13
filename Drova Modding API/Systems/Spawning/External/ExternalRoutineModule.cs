@@ -1,6 +1,8 @@
 using Drova_Modding_API.Access;
+using Drova_Modding_API.Converters;
 using Drova_Modding_API.Systems.Spawning.Modules;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Spawning
@@ -23,6 +25,13 @@ namespace Drova_Modding_API.Systems.Spawning
         private string _manualPointYInput = "0";
         private bool _freecamActive;
         private static RoutinePointVisualizer? _visualizer;
+        private bool _changedFromUpdate;
+        
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            Converters = { new Vector2JsonConverter() }
+        };
+
 
         public string Key => ModuleKey;
         public string DisplayName => "Routine";
@@ -108,7 +117,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
             if (modeChanged)
             {
-                _serializedPayload = JsonSerializer.Serialize(_cachedState);
+                _serializedPayload = JsonSerializer.Serialize(_cachedState, JsonOptions);
                 _lastPayload = _serializedPayload;
             }
 
@@ -133,7 +142,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     _cachedState.Points.Add(new Vector2(x, y));
                     _manualPointXInput = "0";
                     _manualPointYInput = "0";
-                    _serializedPayload = JsonSerializer.Serialize(_cachedState);
+                    _serializedPayload = JsonSerializer.Serialize(_cachedState, JsonOptions);
                     _lastPayload = _serializedPayload;
                 }
                 else
@@ -183,8 +192,9 @@ namespace Drova_Modding_API.Systems.Spawning
                 return;
 
             _cachedState.Points.Add(worldPosition);
-            _serializedPayload = JsonSerializer.Serialize(_cachedState);
+            _serializedPayload = JsonSerializer.Serialize(_cachedState, JsonOptions);
             _lastPayload = _serializedPayload;
+            _changedFromUpdate = true;
         }
 
         private static bool TryGetMouseWorldPosition(out Vector2 worldPosition)
@@ -249,7 +259,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
             try
             {
-                return JsonSerializer.Deserialize<RoutineEditorState>(payload) ?? new RoutineEditorState();
+                return JsonSerializer.Deserialize<RoutineEditorState>(payload, JsonOptions) ?? new RoutineEditorState();
             }
             catch
             {
@@ -259,12 +269,17 @@ namespace Drova_Modding_API.Systems.Spawning
 
         private void EnsureUiState(string? payload)
         {
+            if (_changedFromUpdate)
+            {
+                _changedFromUpdate = false;
+                return;
+            }
             string normalizedPayload = payload ?? string.Empty;
             if (string.Equals(_lastPayload, normalizedPayload, StringComparison.Ordinal))
                 return;
 
             _cachedState = Parse(payload);
-            _serializedPayload = JsonSerializer.Serialize(_cachedState);
+            _serializedPayload = JsonSerializer.Serialize(_cachedState, JsonOptions);
             _lastPayload = normalizedPayload;
         }
 

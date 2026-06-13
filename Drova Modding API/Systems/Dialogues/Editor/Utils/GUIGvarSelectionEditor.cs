@@ -88,7 +88,31 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
         private void OnGvarListSelected()
         {
-            _currentSelectedGvarList = _subDatabaseGVars.AllGVars[_GvarListDropdown.SelectedIndex];
+            int selectedIndex = _GvarListDropdown.SelectedIndex;
+            if (selectedIndex < 0)
+            {
+                _currentSelectedGvarList = null;
+                _selecteableGvars = [];
+                _GvarValueDropdown = new GUIDropdownWithFilter([], -1, 10);
+                return;
+            }
+
+            string selectedOption = _GvarListDropdown.SelectedOption;
+            _currentSelectedGvarList = null;
+            foreach (GVarList gvarList in _subDatabaseGVars.AllGVars)
+            {
+                if ((gvarList?.name ?? "null") == selectedOption)
+                {
+                    _currentSelectedGvarList = gvarList;
+                    break;
+                }
+            }
+            if (_currentSelectedGvarList == null)
+            {
+                _selecteableGvars = [];
+                _GvarValueDropdown = new GUIDropdownWithFilter([], -1, 10);
+                return;
+            }
 
             if (_showOnlyList) return;
             _selecteableGvars = _gvarType switch
@@ -109,7 +133,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// </summary>
         /// <param name="listDropdown">list dropdown rect</param>
         /// <param name="gvarsDropdown">value dropdown rect</param>
-        /// <returns>Whether the gvar value was changed, if <see cref="_showOnlyList"/> is true, than wheter the list changed</returns>
+        /// <returns>Whether the gvar value was changed, if <see cref="_showOnlyList"/> is true, than whether the list changed</returns>
         public bool DrawGvarEditor(Rect listDropdown, Rect gvarsDropdown = default)
         {
             bool result = false;

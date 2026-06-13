@@ -80,6 +80,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             Il2CppNodeCanvas.Framework.ConditionTask conditionTask = _guiCreateConditionTask.Draw(new Vector2(position.x, position.y + rect.height));
             if (conditionTask != null)
             {
+                GraphEditorManager.DialogueTree.allTasks.Add(conditionTask);
                 _castedNode.Conditions.Add(conditionTask);
                 DrawTaskEditor editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(conditionTask.GetIl2CppType());
                 _drawTaskEditors.Add(editor);

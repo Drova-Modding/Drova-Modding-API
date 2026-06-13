@@ -257,7 +257,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             HandleActiveActionStrategy();
 
             // Flush all deferred dropdown overlays so they paint on top of every node
-            GUIDropdown.FlushOverlays();
+            GUIDropdown.FlushOverlays(visibleArea);
+            GUICreateConditionTask.FlushOverlays();
 
             // Draw the tooltip
             if (GUI.tooltip != "")
@@ -451,6 +452,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 ResolveOverlaps();
             }
             DrawActorParameterControls();
+            DrawDialogueSettings();
             if (GraphEditorSnapshots.Count > 0)
             {
                 GraphEditorSnapshot snapshot = GraphEditorSnapshots[^1];
@@ -471,6 +473,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 ? "Selected Node: none"
                 : $"Selected Node: {_selectedNode.Node.GetIl2CppType().Name}";
             GUI.Label(new(10, 105, 550, 25), selectedNodeLabel);
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawDialogueSettings()
+        {
+            if (DialogueTree == null) return;
+
+            GUI.Box(new Rect(380, 130, 360, 68), "Dialogue Settings");
+            GUI.Label(new Rect(390, 152, 90, 20), "LocaPath");
+            DialogueTree._locaPath = GUI.TextField(new Rect(460, 152, 270, 20), DialogueTree.LocaPath);
         }
 
         [HideFromIl2Cpp]

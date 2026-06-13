@@ -381,14 +381,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
                 if (string.Equals(candidatePath, referenceData.HierarchyPath, StringComparison.Ordinal))
                     return candidate;
             }
-
-            if (byInstanceId != null)
-                return byInstanceId;
-
+            
             if (byStableId != null)
                 return byStableId;
+            
+            if (fallbackByName != null)
+                return fallbackByName;
 
-            return fallbackByName;
+            return byInstanceId;
         }
 
         private static UnityEngine.Object[] GetCandidatesForType(

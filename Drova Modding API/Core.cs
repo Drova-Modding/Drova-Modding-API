@@ -7,6 +7,7 @@ using Drova_Modding_API.Systems.GlobalVars;
 using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.ModdingUI;
 using MelonLoader;
+using System.Text.Json;
 using UnityEngine.SceneManagement;
 
 #if DEBUG

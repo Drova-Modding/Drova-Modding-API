@@ -31,7 +31,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     if (choice.condition != null)
                     {
                         DrawTaskEditor taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(choice.condition.GetIl2CppType());
-                        taskEditor.Task = choice.condition;
+                        taskEditor!.Task = choice.condition;
                         taskEditor.GraphEditorManager = GraphEditorManager;
                         taskEditor.Init();
                         _choices.TryAdd(i, taskEditor);
@@ -53,11 +53,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             Color previousColor = GUI.color;
 
             // Pre-calculate total height using cached DrawTask heights from the previous frame
-            // Per choice: 20 (header) + 35 (UID) + 35 (loca) + 35 (statement) + 25 (end node) + 25 (condition buttons) + 10 (gap) = 185 base
+            // Per choice: 20 (header) + 35 (UID) + 25 (loca choice) + 35 (loca) + 35 (statement) + 25 (end node) + 25 (condition buttons) + 10 (gap) = 210 base
             int additionalHeight = 20; // top padding
             for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
-                additionalHeight += 185;
+                additionalHeight += 210;
                 if (_taskHeights.TryGetValue(i, out float cachedHeight))
                     additionalHeight += (int)cachedHeight + 10;
             }
@@ -76,7 +76,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
 
                 // Calculate per-choice box height (base + optional task height from cache)
-                int choiceBoxHeight = 185;
+                int choiceBoxHeight = 210;
                 if (_taskHeights.TryGetValue(i, out float prevTaskHeight))
                     choiceBoxHeight += (int)prevTaskHeight + 10;
 
@@ -89,6 +89,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "UID:");
                 choice.UID = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.UID);
                 step += 35;
+
+                GUI.Label(new Rect(position.x + 5, position.y + step, 150, 20), "Use Global Loca:");
+                choice.statement._useGlobalLoca = GUI.Toggle(new Rect(position.x + 160, position.y + step, 100, 20), choice.statement._useGlobalLoca, "");
+                step += 25;
 
                 if (choice.statement.useGlobalLoca)
                 {
@@ -111,7 +115,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 {
                     if (GUI.Button(new Rect(position.x + 5, position.y + step, 150, 20), "Add Condition"))
                     {
-                        _choiceIndexRequestingCondition = i;
+                        // Cancel if already requesting
+                        _choiceIndexRequestingCondition = _choiceIndexRequestingCondition == i
+                            ? -1
+                            : 
+                            i;
                     }
 
                     if (_choiceIndexRequestingCondition == i)
@@ -119,9 +127,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                         ConditionTask? newTask = _createConditionTask.Draw(new Vector2(position.x + 160, position.y + step));
                         if (newTask != null)
                         {
+                            GraphEditorManager.DialogueTree!.allTasks.Add(newTask);
                             choice.condition = newTask;
                             DrawTaskEditor taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(newTask.GetIl2CppType());
-                            taskEditor.Task = newTask;
+                            taskEditor!.Task = newTask;
                             taskEditor.GraphEditorManager = GraphEditorManager;
                             taskEditor.Init();
                             _choices[i] = taskEditor;
@@ -133,6 +142,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 {
                     if (GUI.Button(new Rect(position.x + 5, position.y + step, 150, 20), "Remove Condition"))
                     {
+                        GraphEditorManager.DialogueTree!.allTasks.Remove(choice.condition);
                         choice.condition = null;
                         _choices.Remove(i);
                         _taskHeights.Remove(i);
@@ -157,7 +167,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 if (GUI.Button(new Rect(position.x, position.y + step, 200, 20), "Add Choice"))
                 {
-                    _castedNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice(new DS_Statement()));
+                    DS_Statement statement = new()
+                    {
+                        _useGlobalLoca = true
+                    };
+                    _castedNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice(statement));
                 }
                 step += 25;
             }

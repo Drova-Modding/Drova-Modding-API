@@ -300,6 +300,8 @@ namespace Drova_Modding_API.Systems.Spawning
             PositionXInput = GUILayout.TextField(PositionXInput);
             GUILayout.Label("Position Y", GUILayout.Width(140f));
             PositionYInput = GUILayout.TextField(PositionYInput);
+            if (GUILayout.Button("Use Player Pos", GUILayout.Width(130f)))
+                ApplyPlayerPositionToDefinition();
             GUILayout.EndHorizontal();
 
             if (float.TryParse(PositionXInput, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float x))
@@ -1002,6 +1004,22 @@ namespace Drova_Modding_API.Systems.Spawning
             Definition.PositionX = playerPosition.x;
             Definition.PositionY = playerPosition.y;
             _initialPlayerPositionApplied = true;
+        }
+
+        [HideFromIl2Cpp]
+        private void ApplyPlayerPositionToDefinition()
+        {
+            if (!PlayerAccess.TryGetPlayer(out Actor player) || player == null)
+            {
+                Status = "Player actor is not available right now.";
+                return;
+            }
+
+            Vector3 playerPosition = player.transform.position;
+            Definition.PositionX = playerPosition.x;
+            Definition.PositionY = playerPosition.y;
+            SyncPositionInputs();
+            Status = $"Applied player position ({playerPosition.x:F2}, {playerPosition.y:F2}).";
         }
 
         [HideFromIl2Cpp]
