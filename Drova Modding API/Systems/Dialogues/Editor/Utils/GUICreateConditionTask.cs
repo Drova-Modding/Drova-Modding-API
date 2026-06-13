@@ -33,7 +33,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             {"DS_CheckBbIntegerConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckBbIntegerConditionTask") },
             {"DS_CheckForGlobalVariableCondition", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckForGlobalVariableCondition") },
             {"DS_CheckCrimeStrength", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckCrimeStrength") },
-            {"DS_CheckForInstigatorConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckForInstigatorConditionTask") }
+            {"DS_CheckForInstigatorConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckForInstigatorConditionTask") },
+            {"DS_CheckLootInventoryEmptyConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckLootInventoryEmptyConditionTask") },
+            {"DS_FactionCheckConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_FactionCheckConditionTask") },
+            {"DS_HasNextMPCNodeValidChoices", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasNextMPCNodeValidChoices") },
+            {"DS_HasPlayerActiveCrimes", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasPlayerActiveCrimes") },
+            {"DS_JudgeCanAtoneCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_JudgeCanAtoneCrimeConditionTask") },
+            {"DS_WitnessedCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_WitnessedCrimeConditionTask") },
+            {"DS_WitnessedOpenReactionCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_WitnessedOpenReactionCrimeConditionTask") },
+            {"DS_WitnessedSpecificCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_WitnessedSpecificCrimeConditionTask") }
         };
 
         private readonly string[] _tooltips =
@@ -55,7 +63,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             "Check then Reset a variable in global variables",
             "Check for a variable in global variables",
             "Checks fighting strength + 30 is greater than players fighting strength",
-            "Checks if EntityInfo is INSTIGATOR"
+            "Checks if EntityInfo is INSTIGATOR",
+            "Check before OpenLootWindow if inventory is not empty. If no EntityInfo is defined, the Owner of this graph is checked.",
+            "Check if owner is following Faction",
+            "Check if Multiple Choice node following after statement Node has valid choices",
+            "Check if player has active crimes",
+            "Check for all judgable crimes of player",
+            "Check if owner witnessed crime of player",
+            "Check if owner witnessed a specific crime of player",
+            "Check if owner witnessed a specific crime of player"
         ];
 
         /// <summary>

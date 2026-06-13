@@ -29,7 +29,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             {"DS_CheckBbIntegerConditionTask", typeof(DS_CheckBbIntegerConditionTaskEditor) },
             {"DS_CheckForGlobalVariableCondition", typeof(DS_CheckForGlobalVariableConditionTaskEditor) },
             {"DS_CheckCrimeStrength", typeof(DS_CheckCrimeStrengthTaskEditor) },
-            {"DS_CheckForInstigatorConditionTask", typeof(DS_CheckForInstigatorConditionTaskEditor) }
+            {"DS_CheckForInstigatorConditionTask", typeof(DS_CheckForInstigatorConditionTaskEditor) },
+            {"DS_CheckLootInventoryEmptyConditionTask", typeof(DS_CheckLootInventoryEmptyConditionTaskEditor) },
+            {"DS_FactionCheckConditionTask", typeof(DS_FactionCheckConditionTaskEditor) },
+            {"DS_HasNextMPCNodeValidChoices", typeof(DS_HasNextMPCNodeValidChoicesTaskEditor) },
+            {"DS_HasPlayerActiveCrimes", typeof(DS_HasPlayerActiveCrimesTaskEditor) },
+            {"DS_JudgeCanAtoneCrimeConditionTask", typeof(DS_JudgeCanAtoneCrimeConditionTaskEditor) },
+            {"DS_WitnessedCrimeConditionTask", typeof(DS_WitnessedCrimeConditionTaskEditor) },
+            {"DS_WitnessedOpenReactionCrimeConditionTask", typeof(DS_WitnessedOpenReactionCrimeConditionTaskEditor) },
+            {"DS_WitnessedSpecificCrimeConditionTask", typeof(DS_WitnessedSpecificCrimeConditionTaskEditor) }
         };
 
         /// <summary>
