@@ -508,6 +508,7 @@
         <Compile Include="Systems\Spawning\External\ExternalRoutineModule.cs" />
         <Compile Include="Systems\Spawning\External\RoutinePointVisualizer.cs" />
         <Compile Include="Systems\Spawning\External\ExternalTalentModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalTeacherModule.cs" />
         <Compile Include="Systems\Spawning\External\IExternalNpcModule.cs" />
         <Compile Include="Systems\Spawning\External\ReadableIdModuleSupport.cs" />
         <Compile Include="Systems\Spawning\INpcModule.cs" />
@@ -528,6 +529,7 @@
         <Compile Include="Systems\Spawning\Modules\HealthPresetModule.cs" />
         <Compile Include="Systems\Spawning\Modules\RoutineModule.cs" />
         <Compile Include="Systems\Spawning\Modules\TalentPresetModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\TeacherModule.cs" />
         <Compile Include="Systems\Spawning\NpcCreator.cs" />
         <Compile Include="Systems\Spawning\Templates\BanditCreator.cs" />
         <Compile Include="Systems\Talents\TalentContainerDatabase.cs" />

@@ -12,6 +12,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private readonly Dictionary<int, float> _taskHeights = [];
         private readonly GUICreateConditionTask _createConditionTask = new();
         private int _choiceIndexRequestingCondition = -1;
+        private int _choiceIndexRequestingDelete = -1;
 
         protected bool TransparentOuterBox { get; set; }
 
@@ -71,6 +72,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 GUI.Box(new Rect(position.x, position.y, 350, additionalHeight), "DS_MultipleChoiceNode", EditorBoxStyles.MultipleChoice);
             }
             int step = 20;
+            _choiceIndexRequestingDelete = -1;
             for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
                 DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
@@ -150,6 +152,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 }
                 step += 25;
 
+                if (GUI.Button(new Rect(position.x + 160, position.y + step - 25, 150, 20), "Delete Choice"))
+                {
+                    _choiceIndexRequestingDelete = i;
+                }
+
                 if (_choices.TryGetValue(i, out DrawTaskEditor editor))
                 {
                     Rect size = editor.DrawTask(new Vector2(position.x + 5, position.y + step));
@@ -160,6 +167,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 // Ensure value-type choices persist modified primitive fields like isEndNode.
                 _castedNode.availableChoices[i] = choice;
                 step += 10; // gap between choices
+            }
+
+            if (_choiceIndexRequestingDelete >= 0)
+            {
+                DeleteChoiceAtIndex(_choiceIndexRequestingDelete);
             }
 
             // Add choice button if there are less than 8 choices
@@ -180,6 +192,78 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _castedNode.tag = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), _castedNode.tag);
 
             GUI.color = previousColor;
+        }
+
+        private void DeleteChoiceAtIndex(int choiceIndex)
+        {
+            if (_castedNode == null)
+            {
+                return;
+            }
+
+            if (choiceIndex < 0 || choiceIndex >= _castedNode.availableChoices.Count)
+            {
+                return;
+            }
+
+            DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[choiceIndex];
+            if (choice.condition != null)
+            {
+                GraphEditorManager.DialogueTree!.allTasks.Remove(choice.condition);
+            }
+
+            _castedNode.availableChoices.RemoveAt(choiceIndex);
+            ReindexChoiceDataAfterDelete(choiceIndex);
+
+            if (_choiceIndexRequestingCondition == choiceIndex)
+            {
+                _choiceIndexRequestingCondition = -1;
+            }
+            else if (_choiceIndexRequestingCondition > choiceIndex)
+            {
+                _choiceIndexRequestingCondition--;
+            }
+        }
+
+        private void ReindexChoiceDataAfterDelete(int deletedIndex)
+        {
+            Dictionary<int, DrawTaskEditor> updatedChoices = [];
+            foreach (KeyValuePair<int, DrawTaskEditor> entry in _choices)
+            {
+                if (entry.Key < deletedIndex)
+                {
+                    updatedChoices[entry.Key] = entry.Value;
+                }
+                else if (entry.Key > deletedIndex)
+                {
+                    updatedChoices[entry.Key - 1] = entry.Value;
+                }
+            }
+
+            Dictionary<int, float> updatedTaskHeights = [];
+            foreach (KeyValuePair<int, float> entry in _taskHeights)
+            {
+                if (entry.Key < deletedIndex)
+                {
+                    updatedTaskHeights[entry.Key] = entry.Value;
+                }
+                else if (entry.Key > deletedIndex)
+                {
+                    updatedTaskHeights[entry.Key - 1] = entry.Value;
+                }
+            }
+
+            _choices.Clear();
+            foreach (KeyValuePair<int, DrawTaskEditor> entry in updatedChoices)
+            {
+                _choices[entry.Key] = entry.Value;
+            }
+
+            _taskHeights.Clear();
+            foreach (KeyValuePair<int, float> entry in updatedTaskHeights)
+            {
+                _taskHeights[entry.Key] = entry.Value;
+            }
         }
     }
 }

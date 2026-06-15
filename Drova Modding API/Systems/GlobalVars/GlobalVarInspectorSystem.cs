@@ -22,7 +22,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
         private const float DefaultWindowWidth = 1560f;
         private const float DefaultWindowHeight = 900f;
         private const float CreateListWindowWidth = 360f;
-        private const float CreateListWindowHeight = 180f;
+        private const float CreateListWindowHeight = 260f;
         private const float MinScrollHeight = 220f;
         private const float RowHeight = 24f;
         private static readonly Dictionary<string, PendingSelection> PendingSelectionsByOwner = new(StringComparer.Ordinal);

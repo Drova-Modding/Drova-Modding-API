@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
+    /// <summary>
+    /// Execute the first child node if a Condition is true, or the second one if that Condition is false. The Actor selected is used for the Condition check
+    /// </summary>
     internal class ConditionNodeEditor : DrawNodeEditor
     {
         private ConditionNode? _castedNode;

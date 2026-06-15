@@ -111,7 +111,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         private bool _isFirstDraw = true;
 
         // List of context menu options
-        private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate"), new("Modding_API/GraphEditor", "Connect")];
+        private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate"), new("Modding_API/GraphEditor", "Connect"), new("Modding_API/GraphEditor", "MainNode")];
 
         private readonly Dictionary<string, DrawNodeEditor> _drawNodeEditors = [];
 
@@ -1081,7 +1081,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
         private static bool ContextNeedsSelection(int index)
         {
-            return index == (int)GraphEditorAction.Delete || index == (int)GraphEditorAction.Duplicate || index == (int)GraphEditorAction.Connect;
+            return index == (int)GraphEditorAction.Delete || index == (int)GraphEditorAction.Duplicate || index == (int)GraphEditorAction.Connect || index == (int)GraphEditorAction.SelectPrimeNode;
         }
 
         [HideFromIl2Cpp]
@@ -1154,6 +1154,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                         ApplyActionContext(context);
                     }
                     break;
+                case (int)GraphEditorAction.SelectPrimeNode:
+                    if (_selectedNode == null) return;
+                    _dialogueTree!.primeNode = _selectedNode.Node;
+                    break;
             }
         }
 
@@ -1162,7 +1166,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             Create,
             Delete,
             Duplicate,
-            Connect
+            Connect,
+            SelectPrimeNode
         }
         #endregion ContextMenu
 

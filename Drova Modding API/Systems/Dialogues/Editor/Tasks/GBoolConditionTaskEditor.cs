@@ -2,6 +2,7 @@
 using Il2CppDrova.GlobalVarSystem;
 using Il2CppDrova.GlobalVarSystem.Graphs;
 using Il2CppDrova.QuestSystem.Graphs;
+using Il2CppNodeCanvas.Framework;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
@@ -23,14 +24,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 int comparerIndex = task.Comparison != null ? (int)task.Comparison.value : 0;
                 if (!allpParams.Contains(task.Comparison))
                 {
+                    task.Comparison ??= new BBParameter<GBool.Comparer>();
                     allpParams.Add(task.Comparison);
                 }
                 if (!allpParams.Contains(task.Value))
                 {
+                    task.Value ??= new BBParameter<bool>();
                     allpParams.Add(task.Value);
                 }
                 if(!allpParams.Contains(task.Variable))
                 {
+                    task.Variable ??= new BBParameter<GBool>();
                     allpParams.Add(task.Variable);
                 }
                 _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GBool.Comparer>(), comparerIndex));
@@ -87,7 +91,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     condition.Comparison.SetValue((GBool.Comparer)comparerDropdown.SelectedIndex);
                 }
                 rect.y += 20;
-                    condition.Value.value = GUI.Toggle(rect, condition.Value.value, "Compare value");
+                condition.Value.SetValue(GUI.Toggle(rect, condition.Value.value, "Compare value"));
 
                 rect.y += 30;
             }
@@ -99,6 +103,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 var service = new GraphGBoolCompService();
                 _castedTask.Conditions.Add(service);
                 var allpParams = GraphEditorManager.DialogueTree!.allParameters;
+                service.Value ??= new BBParameter<bool>();
+                service.Comparison ??= new BBParameter<GBool.Comparer>();
+                service.Variable ??= new BBParameter<GBool>();
                 allpParams.Add(service.Variable);
                 allpParams.Add(service.Comparison);
                 allpParams.Add(service.Value);

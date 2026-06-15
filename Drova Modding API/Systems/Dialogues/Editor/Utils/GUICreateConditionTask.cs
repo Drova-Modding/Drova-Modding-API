@@ -55,12 +55,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             "Check if the quest state is the same as value",
             "Check for open reaction type",
             "Check if player has items equipped",
-            "Check if Player has learned defined Attributes",
-            "Check if owner witnessed crime of player",
+            "Check if Player has learned defined talents",
+            "Check if player can atone crimes",
             "Check if Attribute, defined in following TeachStatsNode can be learned.",
             "Check if Talents, defined in following TeachTalentNode can be learned",
             "Check then Reset a variable in global variables",
             "Check then Reset a variable in global variables",
+            "Checks for a number on global variable",
             "Check for a variable in global variables",
             "Checks fighting strength + 30 is greater than players fighting strength",
             "Checks if EntityInfo is INSTIGATOR",
@@ -70,7 +71,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             "Check if player has active crimes",
             "Check for all judgable crimes of player",
             "Check if owner witnessed crime of player",
-            "Check if owner witnessed a specific crime of player",
+            "Check if owner a open crime of player",
             "Check if owner witnessed a specific crime of player"
         ];
 

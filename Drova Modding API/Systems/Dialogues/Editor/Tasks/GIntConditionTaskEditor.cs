@@ -2,6 +2,7 @@
 using Il2CppDrova.GlobalVarSystem;
 using Il2CppDrova.GlobalVarSystem.Graphs;
 using Il2CppDrova.QuestSystem.Graphs;
+using Il2CppNodeCanvas.Framework;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
@@ -25,18 +26,22 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 GraphGIntCompService task = _castedTask.Conditions[i];
                 if (!allpParams.Contains(task.Comparison))
                 {
+                    task.Comparison ??= new BBParameter<GInt.Comparer>();
                     allpParams.Add(task.Comparison);
                 }
                 if (!allpParams.Contains(task.Value))
                 {
+                    task.Value ??= new BBParameter<int>();
                     allpParams.Add(task.Value);
                 }
                 if (!allpParams.Contains(task.GIntValue))
                 {
+                    task.GIntValue ??= new BBParameter<GInt>();
                     allpParams.Add(task.GIntValue);
                 }
                 if (!allpParams.Contains(task.Variable))
                 {
+                    task.Variable ??= new BBParameter<GInt>();
                     allpParams.Add(task.Variable);
                 }
                 _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GInt.Comparer>(), (int)task.Comparison.value));
@@ -89,7 +94,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 string tempInputValue = GUI.TextField(new Rect(rect.x + 80, rect.y, 220 - 70, 20), condition.Value.value.ToString());
                 if (int.TryParse(tempInputValue, out int result))
                 {
-                    condition.Value.value = result;
+                    condition.Value.SetValue(result);
                 }
 
                 rect.y += 30;
@@ -103,7 +108,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             {
                 GraphGIntCompService service = new()
                 {
-                    Value = 0, Comparison = GInt.Comparer.Equals, GIntValue = default
+                    Value = new BBParameter<int>(), Comparison = new BBParameter<GInt.Comparer>(GInt.Comparer.Equals), GIntValue = new BBParameter<GInt>(), Variable = new BBParameter<GInt>()
                 };
                 var allpParams = GraphEditorManager.DialogueTree!.allParameters;
                 allpParams.Add(service.Comparison);

@@ -10,11 +10,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Whether the dropdown is currently shown.
         /// </summary>
-        protected bool _showDropdown = false;
+        protected bool _showDropdown;
         /// <summary>
         /// The index of the selected option.
         /// </summary>
-        protected int _selectedIndex = 0;
+        protected int _selectedIndex;
         /// <summary>
         /// The list of options for the dropdown.
         /// </summary>
@@ -31,12 +31,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// The message to show when no options are available.
         /// </summary>
-        public string NoOptionsMessage = "No options available";
+        public const string NoOptionsMessage = "No options available";
 
         /// <summary>
         /// The message to show when no option is selected.
         /// </summary>
-        public string EmptyOptionMessage = "No option selected";
+        public const string EmptyOptionMessage = "No option selected";
 
         /// <summary>
         /// The index of the selected option.
@@ -65,7 +65,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         private static readonly List<(GUIDropdown dd, Rect rect)> _pendingOverlays = [];
 
         // Set by FlushOverlays; consumed (and cleared) on the next Draw() call
-        private bool _changedThisFlush = false;
+        private bool _changedThisFlush;
 
         /// <summary>
         /// Draws all deferred dropdown overlays.

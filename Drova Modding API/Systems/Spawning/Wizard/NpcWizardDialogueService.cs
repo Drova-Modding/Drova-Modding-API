@@ -209,9 +209,15 @@ internal sealed class NpcWizardDialogueService
         endNode.actorName = playerParameter._keyName;
         endNode._actorParameterID = playerParameter.ID;
         endNode.availableChoices = new Il2CppSystem.Collections.Generic.List<DS_MultipleChoiceNode.Choice>();
+        DS_Statement statementEnd = new()
+        {
+            useGlobalLoca = true,
+            GlobalLocaPath = "Modding_API/NpcWizard",
+            locaKey = "StarterLine"
+        };
         endNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice
         {
-            statement = statement,
+            statement = statementEnd,
             isEndNode = true,
             UID = Il2CppSystem.Guid.NewGuid().ToString()
         });
