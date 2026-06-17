@@ -136,10 +136,12 @@ namespace Drova_Modding_API.Systems.Spawning
         public void ApplyToCreator(NpcCreator creator, string? payload)
         {
             EntityInfoModuleState state = Parse(payload);
-            EntityInfo entityInfo = EntityInfo.CreateUndefined();
 
-            if (!string.IsNullOrWhiteSpace(state.Guid))
-                entityInfo._guid = state.Guid;
+            // Reuse the pre-created instance from the registry when available so that
+            // any cross-references captured before this NPC was spawned remain valid.
+            EntityInfo entityInfo = !string.IsNullOrWhiteSpace(state.Guid)
+                ? ExternalEntityInfoRegistry.GetOrCreate(state.Guid)
+                : EntityInfo.CreateUndefined();
 
             if (state.AlwaysKnown)
             {

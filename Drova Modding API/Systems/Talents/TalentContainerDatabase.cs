@@ -1,4 +1,5 @@
 using Il2CppDrova.Talent;
+using Il2CppDrova.Talent.Graphs;
 using MelonLoader;
 using UnityEngine;
 
@@ -30,6 +31,32 @@ namespace Drova_Modding_API.Systems.Talents
 
             // Build flat cache for fast lookups
             _talentCache = talentsInDatabase.ToDictionary(tc => tc.name);
+        }
+
+        public static void AddTalent(TalentContainer talent)
+        {
+            if (_groupedDatabase == null)
+            {
+                InitializeDatabase();
+            }
+            if (_groupedDatabase!.ContainsKey(ExtractCategory(talent.name)))
+            {
+                _groupedDatabase[ExtractCategory(talent.name)].Add(talent);
+            }
+            else
+            {
+                _groupedDatabase[ExtractCategory(talent.name)] = new List<TalentContainer> { talent };
+            }
+            _talentCache!.Add(talent.name, talent);
+            var talentGraphs = Resources.FindObjectsOfTypeAll<TalentGraph>();
+            if (talentGraphs != null)
+            {
+                var graph = talentGraphs.First();
+                var node = graph.AddNode<TalentNode>();
+                node._talent = talent;
+                node.name = talent.GetTalentName();
+            }
+
         }
 
         /// <summary>

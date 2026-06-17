@@ -67,6 +67,8 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                 actor._teacherProvider = teacherProvider.TryCast<ITeacherConfigProvider>();
                 teacherProvider._teacherConfig = ScriptableObject.CreateInstance<TeacherConfig>();
                 teacherProvider._teacherConfig._maxAttributeLevel = _maxAttributeLevel;
+                teacherProvider._teacherConfig._stats = new Il2CppSystem.Collections.Generic.List<TeacherConfig.Stat>();
+                teacherProvider._teacherConfig._talents = new Il2CppSystem.Collections.Generic.List<TeachableTalent>();
                 for (int i = 0; i < this._teacherStats.Count; i++)
                 {
                     teacherProvider._teacherConfig._stats.Add(this._teacherStats.ElementAt(i));
@@ -87,6 +89,8 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
                 teacherProvider._teacherConfig = ScriptableObject.CreateInstance<TeacherConfig>();
                 teacherProvider._teacherConfig._maxAttributeLevel = _maxAttributeLevel;
+                teacherProvider._teacherConfig._stats = new Il2CppSystem.Collections.Generic.List<TeacherConfig.Stat>();
+                teacherProvider._teacherConfig._talents = new Il2CppSystem.Collections.Generic.List<TeachableTalent>();
                 for (int i = 0; i < this._teacherStats.Count; i++)
                 {
                     teacherProvider._teacherConfig._stats.Add(this._teacherStats.ElementAt(i));

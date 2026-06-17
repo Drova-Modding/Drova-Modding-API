@@ -150,7 +150,16 @@ namespace Drova_Modding_API.Systems.GlobalVars
 
                 if (_enumDropdown != null)
                 {
-                    _dropdownRect = GUILayoutUtility.GetRect(200f, 24f);
+                    // GetRect only returns the real laid-out rect during Repaint;
+                    // during Layout it returns a placeholder. DrawOptions (called at
+                    // the top of DrawWindow) reuses this rect from a prior event, so
+                    // storing the placeholder would render the option list at the
+                    // window corner instead of under the button. Keep the last valid one.
+                    Rect dropdownRect = GUILayoutUtility.GetRect(200f, 24f);
+                    if (Event.current.type != EventType.Layout)
+                    {
+                        _dropdownRect = dropdownRect;
+                    }
                     _enumDropdown.RenderSelectedOption(_dropdownRect);
                 }
                 else

@@ -6,6 +6,7 @@ using Drova_Modding_API.Systems;
 using Drova_Modding_API.Systems.GlobalVars;
 using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.ModdingUI;
+using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
 using System.Text.Json;
 using UnityEngine.SceneManagement;
@@ -64,6 +65,9 @@ namespace Drova_Modding_API
                 ModdingUI.RegisterLocalization();
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
                 CustomGVarStore.LoadIntoDatabaseOnce();
+                // Pre-create EntityInfo objects from external NPC definitions so that
+                // external mods can cross-reference them before any NPC is spawned.
+                ExternalEntityInfoRegistry.Initialize();
                 // One-time pass: re-apply any user-saved dialogue bytes onto the live
                 // ScriptableObject instances that are now in memory.
                 DialogueStore.PatchAllSavedDialogues();

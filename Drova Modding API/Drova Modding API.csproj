@@ -501,6 +501,7 @@
         <Compile Include="Systems\Spawning\External\ExternalCosmeticsModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalDialogueModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalEntityInfoModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalEntityInfoRegistry.cs" />
         <Compile Include="Systems\Spawning\External\ExternalEquipmentModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalHealthModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalNpcModuleRegistry.cs" />
