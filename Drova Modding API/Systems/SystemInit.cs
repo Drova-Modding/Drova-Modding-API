@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.Systems.Audio;
+﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
 using Drova_Modding_API.Systems.Routines;
 #if DEBUG
@@ -21,6 +22,7 @@ namespace Drova_Modding_API.Systems
 
         internal static void GameplayInit()
         {
+            PlayerAccess.StartWaitForPlayerCoroutine();
             TalentContainerDatabase.InitializeDatabase();
             GameObject moddingAPISystemRoot = new("ModdingAPI");
             moddingAPISystemRoot.SetActive(false);
@@ -40,6 +42,7 @@ namespace Drova_Modding_API.Systems
             NpcWizardSystem.Initialize();
             EditorUI.Init();
 #endif
+            TalentContainerDatabase.Init();
         }
 
         internal static void RegisterStores()

@@ -1,4 +1,8 @@
-﻿using Il2CppDrova;
+﻿using System;
+using System.Collections;
+using Il2CppDrova;
+using MelonLoader;
+using UnityEngine;
 
 namespace Drova_Modding_API.Access
 {
@@ -7,6 +11,11 @@ namespace Drova_Modding_API.Access
     /// </summary>
     public static class PlayerAccess
     {
+        /// <summary>
+        /// Event triggered when the player actor is found.
+        /// </summary>
+        public static event Action<Actor>? OnPlayerFound;
+
         /// <summary>
         /// Get the actor reference of the player. Can be null in menus.
         /// </summary>
@@ -31,6 +40,24 @@ namespace Drova_Modding_API.Access
         {
             player = GetPlayer();
             return player != null;
+        }
+
+        /// <summary>
+        /// Starts a MelonCoroutine to wait for the player actor until it is not null.
+        /// Once found, <see cref="OnPlayerFound"/> will be triggered.
+        /// </summary>
+        public static void StartWaitForPlayerCoroutine()
+        {
+            MelonCoroutines.Start(WaitForPlayer());
+        }
+
+        private static IEnumerator WaitForPlayer()
+        {
+            while (GetPlayer() == null)
+            {
+                yield return null;
+            }
+            OnPlayerFound?.Invoke(GetPlayer());
         }
 
         /// <summary>

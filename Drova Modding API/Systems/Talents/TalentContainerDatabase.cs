@@ -1,3 +1,5 @@
+using Drova_Modding_API.Access;
+using Il2CppDrova;
 using Il2CppDrova.Talent;
 using Il2CppDrova.Talent.Graphs;
 using Il2CppSystem.Linq;
@@ -14,6 +16,10 @@ namespace Drova_Modding_API.Systems.Talents
     {
         private static Dictionary<string, List<TalentContainer>>? _groupedDatabase;
         private static Dictionary<string, TalentContainer>? _talentCache;
+
+        private static List<TalentContainer> _talentContainersToAdd = new();
+
+        private static bool IsInitialized;
 
         /// <summary>
         /// Initializes the TalentContainer database from the database container.
@@ -52,28 +58,41 @@ namespace Drova_Modding_API.Systems.Talents
                 };
             }
             _talentCache!.TryAdd(talent.name, talent);
-            var talentGraphs = Resources.FindObjectsOfTypeAll<TalentGraph>();
-            if (talentGraphs != null)
-            {
-                /*var graph = talentGraphs.FirstOrDefault(graph => graph.name == "TalentGraph");
-                if (graph == null)
-                {
-                    MelonLogger.Error("TalentGraph not found in resources.");
-                    return;
-                }
+            _talentContainersToAdd.Add(talent);
+        }
 
+        public static void Init()
+        {
+            if (IsInitialized) return;
+            IsInitialized = true;
+            var graph = ProviderAccess.GetGameDatabase().TalentGraph;
+            InitializeTalentGraph(graph);
+            PlayerAccess.OnPlayerFound += PlayerAccessOnOnPlayerFound;
+        }
+        private static void PlayerAccessOnOnPlayerFound(Actor player)
+        {
+            InitializeTalentGraph(player.GetComponentInChildren<TalentGraphOwner>().graph.Cast<TalentGraph>());
+            PlayerAccess.OnPlayerFound -= PlayerAccessOnOnPlayerFound;
+        }
+        private static void InitializeTalentGraph(TalentGraph graph)
+        {
+
+            if (graph != null)
+            {
                 if (!graph.hasInitialized)
                 {
                     graph.SelfDeserialize();
                 }
-
-                var node = graph.AddNode<TalentNode>();
-                node._group = "Modded Talents";
-                node._talent = talent;
-                node.name = talent.GetTalentName();
-                node._talentFactory = graph.GetAllNodesOfType<TalentNode>().First()._talentFactory;*/
+                graph.DeserializeIfNotDoneYet(true);
+                foreach (var talent in _talentContainersToAdd)
+                {
+                    var node = graph.AddNode<TalentNode>();
+                    node._group = "Modded Talents";
+                    node._talent = talent;
+                    node.name = talent.GetTalentName();
+                    node._talentFactory = graph.GetAllNodesOfType<TalentNode>().First()._talentFactory;
+                }
             }
-
         }
 
         /// <summary>

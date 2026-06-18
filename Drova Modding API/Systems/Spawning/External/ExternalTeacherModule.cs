@@ -1,6 +1,7 @@
 using Drova_Modding_API.Systems.Spawning.Modules;
 using Drova_Modding_API.Systems.Talents;
 using Il2CppDrova.GUI.LearnGUI;
+using Il2CppDrova.Items;
 using Il2CppDrova.Talent;
 using MelonLoader;
 using System.Text.Json;
