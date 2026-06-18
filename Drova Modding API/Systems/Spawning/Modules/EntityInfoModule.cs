@@ -11,7 +11,12 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <inheritdoc />
         public void Apply(ModuleContext context)
         {
-            context.GetComponent<Actor>()._entityInfo = info;
+            var actor = context.GetComponent<Actor>();
+            actor._entityInfo = info;
+            if(EntityGameHandler.TryGet(out var entityGameHandler))
+            {
+                entityGameHandler.RegisterEntity(actor);
+            }
         }
     }
 }

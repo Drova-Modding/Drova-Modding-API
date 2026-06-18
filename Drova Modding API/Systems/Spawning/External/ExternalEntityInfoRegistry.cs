@@ -1,6 +1,7 @@
 using Il2CppDrova;
 using MelonLoader;
 using System.Text.Json;
+using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Spawning
 {
@@ -35,6 +36,15 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         public static void Initialize()
         {
+            // Previously registered instances are HideAndDontSave, so Unity will not unload
+            // them on its own. Destroy the still-living ones before dropping our references to
+            // avoid leaking a ScriptableObject per main-menu visit.
+            foreach (EntityInfo previous in ByGuid.Values)
+            {
+                if (previous != null)
+                    UnityEngine.Object.Destroy(previous);
+            }
+
             ByDefinitionId.Clear();
             ByGuid.Clear();
 
@@ -54,12 +64,12 @@ namespace Drova_Modding_API.Systems.Spawning
                     continue;
                 }
 
-                string? guid = TryExtractGuid(payload);
-                if (string.IsNullOrWhiteSpace(guid))
+                GuidOnlyPayload? parsed = TryParse(payload);
+                if (string.IsNullOrWhiteSpace(parsed?.Guid))
                     continue;
 
-                EntityInfo entityInfo = EntityInfo.CreateUndefined();
-                entityInfo._guid = guid;
+                string guid = parsed.Guid;
+                EntityInfo entityInfo = CreateBare(guid, parsed.UnityPropertyName);
 
                 ByDefinitionId[definition.Id] = entityInfo;
                 ByGuid[guid] = entityInfo;
@@ -108,23 +118,41 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         internal static EntityInfo GetOrCreate(string guid)
         {
-            if (ByGuid.TryGetValue(guid, out EntityInfo existing))
+            // A cached wrapper whose underlying ScriptableObject has been unloaded by Unity
+            // (e.g. Resources.UnloadUnusedAssets during a scene transition) compares == null.
+            // Treat that as a miss and recreate so callers never receive a destroyed instance.
+            if (ByGuid.TryGetValue(guid, out EntityInfo existing) && existing != null)
                 return existing;
 
-            EntityInfo entityInfo = EntityInfo.CreateUndefined();
-            entityInfo._guid = guid;
+            EntityInfo entityInfo = CreateBare(guid);
             ByGuid[guid] = entityInfo;
             return entityInfo;
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────
 
-        private static string? TryExtractGuid(string payload)
+        /// <summary>
+        /// Creates a minimal <see cref="EntityInfo"/> (GUID only) and marks it
+        /// <see cref="HideFlags.HideAndDontSave"/> so Unity does not unload it via
+        /// <c>Resources.UnloadUnusedAssets</c> during scene transitions. These instances are
+        /// referenced only by this registry's managed dictionaries until an NPC spawns, and a
+        /// managed reference alone does not keep a Unity asset alive.
+        /// </summary>
+        private static EntityInfo CreateBare(string guid, string? name = null)
+        {
+            EntityInfo entityInfo = EntityInfo.CreateUndefined();
+            entityInfo._guid = guid;
+            if (!string.IsNullOrWhiteSpace(name))
+                entityInfo.name = name;
+            entityInfo.hideFlags = HideFlags.HideAndDontSave;
+            return entityInfo;
+        }
+
+        private static GuidOnlyPayload? TryParse(string payload)
         {
             try
             {
-                GuidOnlyPayload? parsed = JsonSerializer.Deserialize<GuidOnlyPayload>(payload, JsonOptions);
-                return parsed?.Guid;
+                return JsonSerializer.Deserialize<GuidOnlyPayload>(payload, JsonOptions);
             }
             catch
             {
@@ -132,10 +160,11 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        /// <summary>Minimal DTO used only to extract the GUID from an entityInfo payload.</summary>
+        /// <summary>Minimal DTO used to extract the GUID and name from an entityInfo payload.</summary>
         private sealed class GuidOnlyPayload
         {
             public string? Guid { get; set; }
+            public string? UnityPropertyName { get; set; }
         }
     }
 }

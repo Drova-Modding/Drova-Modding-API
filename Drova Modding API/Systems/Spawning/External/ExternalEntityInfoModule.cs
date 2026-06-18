@@ -30,6 +30,14 @@ namespace Drova_Modding_API.Systems.Spawning
             GUILayout.Label("EntityInfo GUID (read-only)");
             GUILayout.Label(_cachedState.Guid);
 
+            GUILayout.Label("EntityInfo name (Unity ScriptableObject name)");
+            string updatedName = GUILayout.TextField(_cachedState.UnityPropertyName);
+            if (!string.Equals(updatedName, _cachedState.UnityPropertyName, StringComparison.Ordinal))
+            {
+                _cachedState.UnityPropertyName = updatedName;
+                changed = true;
+            }
+
             bool updatedAlwaysKnown = GUILayout.Toggle(_cachedState.AlwaysKnown, "Always known");
             if (updatedAlwaysKnown != _cachedState.AlwaysKnown)
             {
@@ -122,14 +130,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 return changed ? SerializeCachedState() : _serializedPayload;
             }
 
-            GUILayout.Label("Unity property name");
-            string updatedUnityPropertyName = GUILayout.TextField(_cachedState.UnityPropertyName);
-            if (!string.Equals(updatedUnityPropertyName, _cachedState.UnityPropertyName, StringComparison.Ordinal))
-            {
-                _cachedState.UnityPropertyName = updatedUnityPropertyName;
-                changed = true;
-            }
-
             return changed ? SerializeCachedState() : _serializedPayload;
         }
 
@@ -171,11 +171,11 @@ namespace Drova_Modding_API.Systems.Spawning
                 }
                 entityInfo._aliasNameModule = new AliasNameModule();
             }
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(state.UnityPropertyName))
-                    entityInfo.name = state.UnityPropertyName;
-            }
+
+            // The Unity object name is independent of the localized display name; apply it
+            // whenever one was configured so the ScriptableObject is identifiable in-game.
+            if (!string.IsNullOrWhiteSpace(state.UnityPropertyName))
+                entityInfo.name = state.UnityPropertyName;
 
             creator.WithLazyEntityInfo(entityInfo);
             creator.WithModule(new EntityInfoModule(entityInfo));

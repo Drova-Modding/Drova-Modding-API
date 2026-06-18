@@ -1,5 +1,6 @@
 using Il2CppDrova.Talent;
 using Il2CppDrova.Talent.Graphs;
+using Il2CppSystem.Linq;
 using MelonLoader;
 using UnityEngine;
 
@@ -23,7 +24,7 @@ namespace Drova_Modding_API.Systems.Talents
             if (_groupedDatabase != null && _talentCache != null) return;
 
             var talentsInDatabase = Resources.FindObjectsOfTypeAll<TalentContainer>();
-            
+
             // Build grouped dictionary by prefix
             _groupedDatabase = talentsInDatabase
                 .GroupBy(tc => ExtractCategory(tc.name))
@@ -45,16 +46,32 @@ namespace Drova_Modding_API.Systems.Talents
             }
             else
             {
-                _groupedDatabase[ExtractCategory(talent.name)] = new List<TalentContainer> { talent };
+                _groupedDatabase[ExtractCategory(talent.name)] = new List<TalentContainer>
+                {
+                    talent
+                };
             }
-            _talentCache!.Add(talent.name, talent);
+            _talentCache!.TryAdd(talent.name, talent);
             var talentGraphs = Resources.FindObjectsOfTypeAll<TalentGraph>();
             if (talentGraphs != null)
             {
-                var graph = talentGraphs.First();
+                /*var graph = talentGraphs.FirstOrDefault(graph => graph.name == "TalentGraph");
+                if (graph == null)
+                {
+                    MelonLogger.Error("TalentGraph not found in resources.");
+                    return;
+                }
+
+                if (!graph.hasInitialized)
+                {
+                    graph.SelfDeserialize();
+                }
+
                 var node = graph.AddNode<TalentNode>();
+                node._group = "Modded Talents";
                 node._talent = talent;
                 node.name = talent.GetTalentName();
+                node._talentFactory = graph.GetAllNodesOfType<TalentNode>().First()._talentFactory;*/
             }
 
         }
@@ -96,8 +113,8 @@ namespace Drova_Modding_API.Systems.Talents
                 MelonLogger.Warning("[TalentContainerDatabase] Database not initialized. Call InitializeDatabase() first.");
             }
 
-            return _groupedDatabase?.TryGetValue(category, out var talents) == true 
-                ? talents 
+            return _groupedDatabase?.TryGetValue(category, out var talents) == true
+                ? talents
                 : new List<TalentContainer>();
         }
 
@@ -121,4 +138,3 @@ namespace Drova_Modding_API.Systems.Talents
         }
     }
 }
-

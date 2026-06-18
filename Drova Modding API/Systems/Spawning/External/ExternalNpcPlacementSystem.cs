@@ -128,21 +128,21 @@ namespace Drova_Modding_API.Systems.Spawning
                 return false;
             }
 
-            IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            //IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
 
-            if (skipIfAlreadySpawned)
-            {
-                foreach (LazyActorSaveData saved in lazyActorStore.GetAll())
-                {
-                    if (string.Equals(saved.ExternalDefinitionId, definition.Id, StringComparison.OrdinalIgnoreCase))
-                        return false;
-                }
-            }
+            // if (skipIfAlreadySpawned)
+            // {
+            //     foreach (LazyActorSaveData saved in lazyActorStore.GetAll())
+            //     {
+            //         if (string.Equals(saved.ExternalDefinitionId, definition.Id, StringComparison.OrdinalIgnoreCase))
+            //             return false;
+            //     }
+            // }
 
             ExternalNpcModuleRegistry.EnsureDefaults(definition);
             NpcCreator creator = new(definition.Name, new Vector2(definition.PositionX, definition.PositionY));
             ExternalNpcModuleRegistry.ApplyModules(creator, definition);
-            LazyActor lazyActor = creator.CreateLazy(saveToLazyActorStore: true, externalDefinitionId: definition.Id);
+            LazyActor lazyActor = creator.CreateLazy(saveToLazyActorStore: false, externalDefinitionId: definition.Id);
             SpawnedLazyActorsByDefinitionId[definition.Id] = lazyActor;
             return true;
         }

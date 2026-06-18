@@ -1,6 +1,7 @@
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies;
+using static Drova_Modding_API.Systems.Dialogues.ActorParameterHelper;
 using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
 using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Drova_Modding_API.Systems.Dialogues.Store;
@@ -490,7 +491,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             if (DialogueTree == null) return;
 
-            GUI.Box(new Rect(10, 130, 360, 68), "Actor Parameters");
+            int count = DialogueTree.actorParameters?.Count ?? 0;
+            const float rowHeight = 22f;
+            // Header (name field) + one row per existing parameter, or a single "none" row.
+            float listRows = count > 0 ? count : 1;
+            float boxHeight = 46f + (listRows * rowHeight);
+
+            GUI.Box(new Rect(10, 130, 360, boxHeight), "Actor Parameters");
             GUI.Label(new Rect(20, 152, 90, 20), "Name");
             _newActorParameterName = GUI.TextField(new Rect(70, 152, 200, 20), _newActorParameterName);
             if (GUI.Button(new Rect(280, 152, 80, 20), "Add"))
@@ -498,13 +505,29 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 AddActorParameter(_newActorParameterName);
             }
 
-            if (DialogueTree.actorParameters != null && DialogueTree.actorParameters.Count > 0)
+            if (count == 0)
             {
-                GUI.Label(new Rect(20, 174, 330, 20), $"Default actor: {GetActorParameterName(DialogueTree.actorParameters[0])}");
+                GUI.Label(new Rect(20, 174, 330, 20), "No actor parameters");
+                return;
             }
-            else
+
+            // Defer deletion until after the draw loop so we don't mutate the
+            // list while iterating it.
+            int removeIndex = -1;
+            for (int i = 0; i < count; i++)
             {
-                GUI.Label(new Rect(20, 174, 330, 20), "Default actor: none");
+                float rowY = 174 + (i * rowHeight);
+                string label = (i == 0 ? "Default: " : string.Empty) + GetActorParameterName(DialogueTree.actorParameters[i]);
+                GUI.Label(new Rect(20, rowY, 300, 20), label);
+                if (GUI.Button(new Rect(326, rowY, 24, 20), "X"))
+                {
+                    removeIndex = i;
+                }
+            }
+
+            if (removeIndex >= 0)
+            {
+                RemoveActorParameter(removeIndex);
             }
         }
 
@@ -526,6 +549,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             });
 
             _newActorParameterName = string.Empty;
+            _nodeActorDropdowns.Clear();
+            InvalidateActorLayoutCache();
+        }
+
+        [HideFromIl2Cpp]
+        private void RemoveActorParameter(int index)
+        {
+            if (DialogueTree?.actorParameters == null) return;
+            if (index < 0 || index >= DialogueTree.actorParameters.Count) return;
+
+            DialogueTree.actorParameters.RemoveAt(index);
+
             _nodeActorDropdowns.Clear();
             InvalidateActorLayoutCache();
         }
@@ -1000,27 +1035,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             return actorNames.Length > 0;
         }
 
-        [HideFromIl2Cpp]
-        private static string GetActorParameterName(DialogueTree.ActorParameter actorParameter)
-        {
-            if (!string.IsNullOrWhiteSpace(actorParameter.name))
-            {
-                return actorParameter.name;
-            }
-
-            return actorParameter._keyName ?? string.Empty;
-        }
-
-        [HideFromIl2Cpp]
-        private static string GetActorParameterId(DialogueTree.ActorParameter actorParameter)
-        {
-            if (!string.IsNullOrWhiteSpace(actorParameter.ID))
-            {
-                return actorParameter.ID;
-            }
-
-            return actorParameter._id ?? string.Empty;
-        }
 
         private void HandleActiveActionStrategy()
         {

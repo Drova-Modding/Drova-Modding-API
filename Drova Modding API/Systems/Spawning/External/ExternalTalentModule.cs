@@ -97,7 +97,8 @@ namespace Drova_Modding_API.Systems.Spawning
 
             List<string> talentIds = groupedTalents
                 .SelectMany(entry => entry.Value)
-                .Select(talent => talent.name)
+                .Where(talent => talent != null)
+                .Select(TryGetName)
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
@@ -106,6 +107,21 @@ namespace Drova_Modding_API.Systems.Spawning
             _editorDataSource = new ReadableIdModuleSupport.EditorDataSource(
                 talentIds,
                 categorySelector: GetTalentCategory);
+        }
+
+        private static string? TryGetName(Il2CppDrova.Talent.TalentContainer talent)
+        {
+            // The cached containers come from Resources.FindObjectsOfTypeAll; some may be
+            // destroyed by the time the wizard draws, in which case get_name() raises a
+            // native NRE through Il2CppInterop. Skip those defensively.
+            try
+            {
+                return talent.name;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private static string GetTalentCategory(string talentId)

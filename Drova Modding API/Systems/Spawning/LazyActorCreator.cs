@@ -28,7 +28,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
         internal static void RestoreLazyActor(List<LazyActorSaveData> lazyActorSaveDatas)
         {
-            for (int i = 0; i < lazyActorSaveDatas.Count; i++)
+            /*for (int i = 0; i < lazyActorSaveDatas.Count; i++)
             {
                 LazyActorSaveData lazyActorSaveData = lazyActorSaveDatas[i];
                 GameObject gameObject = new(lazyActorSaveData.ActorName);
@@ -56,7 +56,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     // Restore addressable EntityInfo
                     MelonCoroutines.Start(LoadEntityInfo(lazyActor, new AssetReference(lazyActorSaveData.ActorEnitityInfoReferenceString), lazyActorSaveData.IsNpc));
                 }
-            }
+            }*/
         }
 
         /// <summary>

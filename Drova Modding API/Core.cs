@@ -8,6 +8,8 @@ using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.ModdingUI;
 using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
+using MelonLoader.NativeUtils;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using UnityEngine.SceneManagement;
 
@@ -27,6 +29,8 @@ namespace Drova_Modding_API
      */
     public class Core : MelonMod
     {
+
+        
         internal static string? AssemblyLocation;
         internal bool InMainMenu = false;
 #if DEBUG
@@ -51,6 +55,7 @@ namespace Drova_Modding_API
             {
                 InputActionRegister.Instance.DisableGameplayActions();
             };
+
         }
 
         /// <inheritdoc/>
@@ -60,6 +65,9 @@ namespace Drova_Modding_API
 
             if (sceneName == SceneNames.MainMenu)
             {
+                Application.add_logMessageReceivedThreaded(new Action<string, string, LogType>(Application_logMessageReceived));
+                Application.SetStackTraceLogType(LogType.Exception, StackTraceLogType.Full);
+                Application.SetStackTraceLogType(LogType.Error, StackTraceLogType.Full);
                 // Retrigger it to make sure that the close call is registered
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
@@ -99,6 +107,11 @@ namespace Drova_Modding_API
             // {
             //     _ttsFile.GenerateWorldDialogues();
             // }
+        }
+        
+        private void Application_logMessageReceived(string condition, string stackTrace, LogType type)
+        {
+            MelonLogger.Msg($"[{type}] {condition} - {stackTrace}");
         }
 
         /// <inheritdoc/>
