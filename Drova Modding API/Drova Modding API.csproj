@@ -444,6 +444,7 @@
         <Compile Include="Patches\ActorAddLoadingCompPatch.cs" />
         <Compile Include="Patches\ActorRoutineModulePatch.cs" />
         <Compile Include="Patches\ActorStartInitAsyncPatch.cs" />
+        <Compile Include="Patches\AGvarBoolPatch.cs" />
         <Compile Include="Patches\AreaNamePatch.cs" />
         <Compile Include="Patches\ASaveRootLoadStatePatch.cs" />
         <Compile Include="Patches\ASaveRootSaveStatePatch.cs" />
@@ -477,6 +478,7 @@
         <Compile Include="Systems\Editor\NpcMouseRaycast.cs" />
         <Compile Include="Systems\GlobalVars\CustomGVarStore.cs" />
         <Compile Include="Systems\GlobalVars\GBoolReference.cs" />
+        <Compile Include="Systems\GlobalVars\GvarBusSystem.cs" />
         <Compile Include="Systems\ModdingUI\ModdingUI.cs" />
         <Compile Include="Systems\Morphing\MorphManager.cs" />
         <Compile Include="Systems\Region.cs" />

@@ -40,6 +40,10 @@ namespace Drova_Modding_API.Systems.Talents
             _talentCache = talentsInDatabase.ToDictionary(tc => tc.name);
         }
 
+        /// <summary>
+        /// Adds a talent to the database and queues it for insertion into the talent graph.
+        /// </summary>
+        /// <param name="talent">The talent container to add.</param>
         public static void AddTalent(TalentContainer talent)
         {
             if (_groupedDatabase == null)
@@ -61,6 +65,9 @@ namespace Drova_Modding_API.Systems.Talents
             _talentContainersToAdd.Add(talent);
         }
 
+        /// <summary>
+        /// Initializes the talent graph and registers queued modded talents. Safe to call multiple times; only runs once.
+        /// </summary>
         public static void Init()
         {
             if (IsInitialized) return;
