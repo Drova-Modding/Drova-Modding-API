@@ -1,5 +1,6 @@
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Editor;
+using Drova_Modding_API.Systems.Spawning.Export;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.Attributes;
 using MelonLoader;
@@ -332,6 +333,20 @@ namespace Drova_Modding_API.Systems.Spawning
             }
 
             GUILayout.EndHorizontal();
+
+            if (GUILayout.Button("Export Mod As Zip", GUILayout.Width(280f)))
+            {
+                ExportModFileAsZip();
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private void ExportModFileAsZip()
+        {
+            if (ModBundleExporter.TryExportMod(_modFileName, out string zipPath, out string message))
+                Status = $"Exported mod -> {zipPath} ({message})";
+            else
+                Status = $"Export failed: {message}";
         }
 
         [HideFromIl2Cpp]

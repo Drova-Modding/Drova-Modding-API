@@ -370,6 +370,27 @@ namespace Drova_Modding_API.Systems.Spawning
         }
 
         /// <summary>
+        /// Reads all definitions from a single placement <c>*.json</c> file.
+        /// Returns an empty list when the file is missing or cannot be parsed.
+        /// </summary>
+        public static List<ExternalNpcDefinition> ReadDefinitionsFromFile(string filePath)
+        {
+            List<ExternalNpcDefinition> result = [];
+
+            ExternalNpcConfigFile? config = ReadConfigInternal(filePath);
+            if (config == null)
+                return result;
+
+            for (int i = 0; i < config.Npcs.Count; i++)
+            {
+                ExternalNpcModuleRegistry.EnsureDefaults(config.Npcs[i]);
+                result.Add(config.Npcs[i]);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Creates a default definition template with baseline module payloads.
         /// </summary>
         public static ExternalNpcDefinition CreateDefaultDefinition()

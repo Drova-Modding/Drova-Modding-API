@@ -89,7 +89,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 _cachedState.UseLocalizedName = updatedUseLocalizedName;
                 changed = true;
             }
-
+# if DEBUG
             if (_cachedState.UseLocalizedName)
             {
                 if (LocalizationEntriesEditorSystem.TryConsumeSelection(ModuleKey, out string selectedLocaPath, out string selectedLocaKey))
@@ -129,6 +129,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
                 return changed ? SerializeCachedState() : _serializedPayload;
             }
+#endif
 
             return changed ? SerializeCachedState() : _serializedPayload;
         }

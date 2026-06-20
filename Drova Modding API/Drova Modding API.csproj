@@ -502,6 +502,7 @@
         <Compile Include="Systems\Spawning\External\ExternalAlignmentContainerModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalCosmeticsModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalDialogueModule.cs" />
+        <Compile Include="Systems\Spawning\Export\ModBundleExporter.cs" />
         <Compile Include="Systems\Spawning\External\ExternalEntityInfoModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalEntityInfoRegistry.cs" />
         <Compile Include="Systems\Spawning\External\ExternalEquipmentModule.cs" />
@@ -753,8 +754,15 @@
         <Copy SourceFiles="$(AddressablesTxt)" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug' And Exists('$(AddressablesTxt)')"/>
         <Copy SourceFiles="$(NVorbisDll)" DestinationFolder="$(StagingDir)\UserLibs"/>
 
+        <!--
+            Only package the API's own localization, which always lives one level deeper under a
+            per-language "Modding_API" subfolder (e.g. en\Modding_API\*.loc). Other mods drop loose
+            <mod>_<lang>.loc files directly under the language folder; excluding the one-level-deep
+            files keeps them out of the build while the broad ** include preserves %(RecursiveDir).
+        -->
         <ItemGroup>
-            <LocalizationFiles Include="$(GameLocalizationDir)\**\*.*"/>
+            <LocalizationFiles Include="$(GameLocalizationDir)\**\*.*"
+                               Exclude="$(GameLocalizationDir)\*\*.*"/>
         </ItemGroup>
         <Copy SourceFiles="@(LocalizationFiles)" DestinationFiles="@(LocalizationFiles->'$(StagingDir)\Mods\Modding_API\Localization\%(RecursiveDir)%(Filename)%(Extension)')"/>
 

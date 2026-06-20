@@ -54,6 +54,13 @@ namespace Drova_Modding_API.Systems.GlobalVars
             public string InitialValue { get; set; } = string.Empty;
         }
 
+        /// <summary>
+        /// Gets the absolute path of the folder that holds custom global variable list files.
+        /// Each mod stores its lists in a <c>&lt;modName&gt;.json</c> file here.
+        /// </summary>
+        public static string GetGlobalVarsFolderPath()
+            => Path.Combine(Utils.SavePath, FolderName);
+
         public static bool IsCustomList(GVarList? list)
         {
             if (list == null)
