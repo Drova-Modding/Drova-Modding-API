@@ -30,11 +30,12 @@ namespace Drova_Modding_API.Access
                 value = default;
                 return false;
             }
+            var configFile = provider.GameplayConfig.ConfigFile;
             try
             {
                 if (typeof(T) == typeof(float))
                 {
-                    if (provider.GameplayConfig.ConfigFile.TryGetString(key, out string stringifiedValue))
+                    if (configFile.TryGetString(key, out string stringifiedValue))
                     {
                         value = (T)Convert.ChangeType(float.Parse(stringifiedValue), typeof(T));
                         return true;
@@ -42,7 +43,7 @@ namespace Drova_Modding_API.Access
                 }
                 else if (typeof(T) == typeof(int))
                 {
-                    if (provider.GameplayConfig.ConfigFile.TryGetInt(key, out int configValue))
+                    if (configFile.TryGetInt(key, out int configValue))
                     {
                         value = (T)Convert.ChangeType(configValue, typeof(T));
                         return true;
@@ -50,7 +51,7 @@ namespace Drova_Modding_API.Access
                 }
                 else if (typeof(T) == typeof(bool))
                 {
-                    if (provider.GameplayConfig.ConfigFile.TryGetBool(key, out bool configValue))
+                    if (configFile.TryGetBool(key, out bool configValue))
                     {
                         value = (T)Convert.ChangeType(configValue, typeof(T));
                         return true;
@@ -58,7 +59,7 @@ namespace Drova_Modding_API.Access
                 }
                 else if (typeof(T) == typeof(string))
                 {
-                    if (ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.TryGetString(key, out string stringifiedValue))
+                    if (configFile.TryGetString(key, out string stringifiedValue))
                     {
                         value = (T)Convert.ChangeType(stringifiedValue, typeof(T));
                         return true;
@@ -66,7 +67,7 @@ namespace Drova_Modding_API.Access
                 }
                 else if (typeof(T).IsEnum)
                 {
-                    if (provider.GameplayConfig.ConfigFile.TryGetString(key, out string stringifiedValue))
+                    if (configFile.TryGetString(key, out string stringifiedValue))
                     {
                         if (Enum.TryParse(typeof(T), stringifiedValue, out object result))
                         {

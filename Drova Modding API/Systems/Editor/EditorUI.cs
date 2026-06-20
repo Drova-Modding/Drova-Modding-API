@@ -1,4 +1,5 @@
 ﻿#if DEBUG
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Dialogues.Editor;
 using Il2CppDrova;
 using Il2CppDrova.GUI.Cheat;
@@ -14,6 +15,7 @@ namespace Drova_Modding_API.Systems.Editor
     internal class EditorUI(IntPtr ptr) : MonoBehaviour(ptr)
     {
         private TextMeshProUGUI _npcDisplay;
+        private TextMeshProUGUI _playerPositionDisplay;
         private Button _npcEditButton;
         private Actor _currentSelectedActor;
         private GraphEditorManager _graphEditorManager;
@@ -30,7 +32,7 @@ namespace Drova_Modding_API.Systems.Editor
 
             GameObject gameObject = new("DebugUI");
             gameObject.transform.parent = cheatCanvas.transform;
-            gameObject.transform.position = new Vector3(50, 500, 0);
+            gameObject.transform.position = new Vector3(50, 600, 0);
             gameObject.AddComponent<EditorUI>();
             gameObject.AddComponent<NpcMouseRaycast>();
             gameObject.AddComponent<GraphicRaycaster>();
@@ -49,6 +51,12 @@ namespace Drova_Modding_API.Systems.Editor
             _npcDisplay = npcDisplay.AddComponent<TextMeshProUGUI>();
             RectTransform npcDisplayRectTransform = _npcDisplay.GetComponent<RectTransform>() ?? npcDisplay.AddComponent<RectTransform>();
             SetRectTransform(npcDisplayRectTransform, new Vector2(750, 50));
+            
+            GameObject playerPositionDisplay = new("PlayerPositionDisplay");
+            playerPositionDisplay.transform.parent = gameObject.transform;
+            _playerPositionDisplay = playerPositionDisplay.AddComponent<TextMeshProUGUI>();
+            RectTransform playerPositionDisplayRectTransform = _playerPositionDisplay.GetComponent<RectTransform>() ?? playerPositionDisplay.AddComponent<RectTransform>();
+            SetRectTransform(playerPositionDisplayRectTransform, new Vector2(750, 50));
 
             GameObject graphEditor = new("GraphEditor");
             graphEditor.transform.parent = gameObject.transform;
@@ -57,6 +65,37 @@ namespace Drova_Modding_API.Systems.Editor
             npcDisplay.SetActive(false);
             graphEditor.SetActive(false);
             EditorManager.OnNpcSelected += OnNpcSelected;
+            OptionMenuAccess.Instance.OnOptionMenuOpen += OnOptionMenuOpen;
+            OptionMenuAccess.Instance.OnOptionMenuClose += OnOptionMenuClose;
+        }
+        
+        private void OnOptionMenuOpen()
+        {
+            _npcDisplay.gameObject.SetActive(false);
+            _playerPositionDisplay.gameObject.SetActive(false);
+        }
+        
+        private void OnOptionMenuClose()
+        {
+            _npcDisplay.gameObject.SetActive(true);
+            _playerPositionDisplay.gameObject.SetActive(true);
+        }
+
+        internal void Update()
+        {
+            if (_playerPositionDisplay == null)
+            {
+                return;
+            }
+
+            if (PlayerAccess.TryGetPlayer(out Actor player) && player != null)
+            {
+                Vector3 position = player.transform.position;
+                _playerPositionDisplay.text = $"Player Position (2D): X={position.x:F2}, Y={position.y:F2}";
+                return;
+            }
+
+            _playerPositionDisplay.text = "Player Position (2D): unavailable";
         }
 
         internal void OnDestroy()

@@ -14,10 +14,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         private readonly GUIDropdownWithFilter _GvarListDropdown;
         private readonly bool _showOnlyList;
 
-        private GVarList _currentSelectedGvarList;
+        private GVarList? _currentSelectedGvarList;
         private List<AGVarBase> _selecteableGvars;
-        private AGVarBase _currentSelectedGvar;
-        private GUIDropdownWithFilter _GvarValueDropdown;
+        private AGVarBase? _currentSelectedGvar;
+        private GUIDropdownWithFilter? _GvarValueDropdown;
 
         /// <summary>
         /// The list dropdown.
@@ -56,7 +56,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <param name="nameOfList">Name of the list</param>
         /// <param name="showOnlyList">Whether only the list should be shown</param>
         /// <param name="selected">The selected gvar</param>
-        public GUIGvarSelectionEditor(GvarType gvarType, string nameOfList = null, bool showOnlyList = false, AGVarBase selected = null)
+        public GUIGvarSelectionEditor(GvarType gvarType, string? nameOfList = null, bool showOnlyList = false, AGVarBase? selected = null)
         {
             _currentSelectedGvar = selected;
             _gvarType = gvarType;
@@ -68,7 +68,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             if (nameOfList != null)
             {
                 selectedIndex = gvarLists.ToList().IndexOf(nameOfList);
-                _currentSelectedGvarList = _subDatabaseGVars.AllGVars[selectedIndex];
+                if (selectedIndex != -1)
+                {
+                    _currentSelectedGvarList = _subDatabaseGVars.AllGVars[selectedIndex];
+                }
             }
             _GvarListDropdown = new GUIDropdownWithFilter(gvarLists, selectedIndex, 20);
 
@@ -76,7 +79,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
             OnGvarListSelected();
 
-            if (selected != null)
+            if (selected != null && _GvarValueDropdown != null)
             {
                 int selectionIndex = _selecteableGvars.FindIndex(gvar => SafeId(gvar) == SafeId(selected));
                 _GvarValueDropdown.SetSelectedIndex(selectionIndex);
@@ -85,16 +88,40 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
         private void OnGvarListSelected()
         {
-            _currentSelectedGvarList = _subDatabaseGVars.AllGVars[_GvarListDropdown.SelectedIndex];
+            int selectedIndex = _GvarListDropdown.SelectedIndex;
+            if (selectedIndex < 0)
+            {
+                _currentSelectedGvarList = null;
+                _selecteableGvars = [];
+                _GvarValueDropdown = new GUIDropdownWithFilter([], -1, 10);
+                return;
+            }
+
+            string selectedOption = _GvarListDropdown.SelectedOption;
+            _currentSelectedGvarList = null;
+            foreach (GVarList gvarList in _subDatabaseGVars.AllGVars)
+            {
+                if ((gvarList?.name ?? "null") == selectedOption)
+                {
+                    _currentSelectedGvarList = gvarList;
+                    break;
+                }
+            }
+            if (_currentSelectedGvarList == null)
+            {
+                _selecteableGvars = [];
+                _GvarValueDropdown = new GUIDropdownWithFilter([], -1, 10);
+                return;
+            }
 
             if (_showOnlyList) return;
             _selecteableGvars = _gvarType switch
             {
-                GvarType.INT => [.. _currentSelectedGvarList.GetVarsOfType<GInt>().ToArray().ToList().OfType<AGVarBase>()],
-                GvarType.FLOAT => [.. _currentSelectedGvarList.GetVarsOfType<GFloat>().ToArray().ToList().OfType<AGVarBase>()],
-                GvarType.STRING => [.. _currentSelectedGvarList.GetVarsOfType<GString>().ToArray().ToList().OfType<AGVarBase>()],
-                GvarType.BOOL => [.. _currentSelectedGvarList.GetVarsOfType<GBool>().ToArray().ToList().OfType<AGVarBase>()],
-                GvarType.QUEST => _currentSelectedGvarList.IsQuestVarList ? [_currentSelectedGvarList._questState] : [],
+                GvarType.INT => [.. _currentSelectedGvarList!.GetVarsOfType<GInt>().ToArray().ToList().OfType<AGVarBase>()],
+                GvarType.FLOAT => [.. _currentSelectedGvarList!.GetVarsOfType<GFloat>().ToArray().ToList().OfType<AGVarBase>()],
+                GvarType.STRING => [.. _currentSelectedGvarList!.GetVarsOfType<GString>().ToArray().ToList().OfType<AGVarBase>()],
+                GvarType.BOOL => [.. _currentSelectedGvarList!.GetVarsOfType<GBool>().ToArray().ToList().OfType<AGVarBase>()],
+                GvarType.QUEST => _currentSelectedGvarList!.IsQuestVarList ? [_currentSelectedGvarList._questState] : [],
                 _ => [],
             };
             _GvarValueDropdown = new GUIDropdownWithFilter([.. _selecteableGvars.Select(e => e.name)], -1, 10);
@@ -106,7 +133,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// </summary>
         /// <param name="listDropdown">list dropdown rect</param>
         /// <param name="gvarsDropdown">value dropdown rect</param>
-        /// <returns>Whether the gvar value was changed, if <see cref="_showOnlyList"/> is true, than wheter the list changed</returns>
+        /// <returns>Whether the gvar value was changed, if <see cref="_showOnlyList"/> is true, than whether the list changed</returns>
         public bool DrawGvarEditor(Rect listDropdown, Rect gvarsDropdown = default)
         {
             bool result = false;
@@ -126,7 +153,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             return result;
         }
 
-        private static string SafeId(AGVarBase gvar)
+        private static string SafeId(AGVarBase? gvar)
         {
             if (gvar == null) return "null";
             var intVar = gvar.TryCast<GInt>();

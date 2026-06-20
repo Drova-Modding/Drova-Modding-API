@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.Systems.Audio;
+﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
 using Drova_Modding_API.Systems.Routines;
 #if DEBUG
@@ -17,6 +18,8 @@ namespace Drova_Modding_API.Systems
 {
     internal static class SystemInit
     {
+        private const string ActorSpawnRootName = "ModdingAPI_Actors";
+
         internal static void GameplayInit()
         {
             TalentContainerDatabase.InitializeDatabase();
@@ -31,12 +34,20 @@ namespace Drova_Modding_API.Systems
             moddingAPISystemRoot.AddComponent<DialogueAudioDistanceManager>();
 
             moddingAPISystemRoot.SetActive(true);
-            SaveGameSystem.Instance.OnLoad(Savegame.Current);
-            NpcCreator.CacheAlignments();
 
 #if DEBUG
+            LocalizationEntriesEditorSystem.Initialize();
+            NpcWizardSystem.Initialize();
             EditorUI.Init();
 #endif
+            TalentContainerDatabase.Init();
+            PlayerAccess.StartWaitForPlayerCoroutine();
+            SaveGameSystem.AfterSaveGameLoaded -= OnSaveGameSystemOnAfterSaveGameLoaded;
+            SaveGameSystem.AfterSaveGameLoaded += OnSaveGameSystemOnAfterSaveGameLoaded;
+        }
+        private static void OnSaveGameSystemOnAfterSaveGameLoaded(Savegame _)
+        {
+            PlayerAccess.StartWaitForPlayerCoroutine();
         }
 
         internal static void RegisterStores()
@@ -49,6 +60,18 @@ namespace Drova_Modding_API.Systems
             GameObject moddingAPIAiLogicSystemRoot = new("ModdingAPI_AILogic");
             SceneManager.MoveGameObjectToScene(moddingAPIAiLogicSystemRoot, scene);
             RoutineSystem.RoutineRoot = moddingAPIAiLogicSystemRoot;
+        }
+
+        internal static void ActorInit(Scene scene)
+        {
+            GameObject actorSpawnRoot = GameObject.Find(ActorSpawnRootName);
+            if (actorSpawnRoot == null)
+                actorSpawnRoot = new GameObject(ActorSpawnRootName);
+
+            SceneManager.MoveGameObjectToScene(actorSpawnRoot, scene);
+            NpcCreator.SetSpawnRoot(actorSpawnRoot.transform);
+            NpcCreator.CacheAlignments();
+            ExternalNpcPlacementSystem.SpawnConfiguredNpcs();
         }
     }
 }

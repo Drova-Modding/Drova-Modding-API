@@ -8,7 +8,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_OpenTradeWindowNodeEditor : DrawNodeEditor
     {
-        private DS_OpenTradeWindowNode _castedNode;
+        private DS_OpenTradeWindowNode? _castedNode;
 
         public DS_OpenTradeWindowNodeEditor()
         {

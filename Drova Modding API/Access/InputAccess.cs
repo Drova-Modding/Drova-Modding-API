@@ -5,7 +5,7 @@ namespace Drova_Modding_API.Access
     /// <summary>
     /// This class is used to access inputs. It works with both controller and keyboard inputs.
     /// </summary>
-    public class InputAccess
+    public static class InputAccess
     {
         /// <summary>
         /// Gets the current device in use
@@ -74,14 +74,16 @@ namespace Drova_Modding_API.Access
         /// Toggles the gameplay action maps on or off
         /// </summary>
         /// <param name="state">true or false for on and off</param>
-        public static void ToggleGampeplayActionMaps(bool state)
+        public static void ToggleGameplayActionMaps(bool state)
         {
             Player player = ReInput.players.GetPlayer(0);
             player.controllers.maps.SetMapsEnabled(state, 0);
+            player.controllers.maps.SetMapsEnabled(state, 2);
+            player.controllers.maps.SetMapsEnabled(state, 3);
         }
 
         /// <summary>
-        /// Start rebinding the input action with the given name. The action will be rebound with the next input clicked.
+        /// Start rebinding the input action with the given name. The action will be rebounded with the next input clicked.
         /// </summary>
         /// <param name="actionName"></param>
         /// <param name="pole"></param>
@@ -89,10 +91,10 @@ namespace Drova_Modding_API.Access
         /// <param name="onInputMappedFinishedCallback"></param>
         public static void RebindKeyboardInputAction(string actionName, Pole? pole = null, AxisRange axisRange = AxisRange.Full, Il2CppSystem.Action<InputMapper.InputMappedEventData> onInputMappedFinishedCallback = null)
         {
-            InputMapper _inputMapper = new();
-            _inputMapper.add_InputMappedEvent(onInputMappedFinishedCallback);
-            _inputMapper.add_InputMappedEvent(new System.Action<InputMapper.InputMappedEventData>(SaveRemapping));
-            _inputMapper.options = new InputMapper.Options
+            InputMapper inputMapper = new();
+            inputMapper.add_InputMappedEvent(onInputMappedFinishedCallback);
+            inputMapper.add_InputMappedEvent(new System.Action<InputMapper.InputMappedEventData>(SaveRemapping));
+            inputMapper.options = new InputMapper.Options
             {
                 checkForConflicts = false,
                 allowKeyboardKeysWithModifiers = false,
@@ -113,7 +115,7 @@ namespace Drova_Modding_API.Access
                 actionRange = axisRange
             };
 
-            _inputMapper.Start(context);
+            inputMapper.Start(context);
         }
 
         /// <summary>

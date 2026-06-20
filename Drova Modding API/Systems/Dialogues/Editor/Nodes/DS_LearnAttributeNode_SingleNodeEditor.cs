@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_LearnAttributeNode_SingleNodeEditor : DrawNodeEditor
     {
-        private DS_LearnAttributeNode_Single _castedNode;
+        private DS_LearnAttributeNode_Single? _castedNode;
         private GUIDropdown _attributeDropdown;
         private GenericStatDesc[] _genericStatDecs;
 
@@ -23,7 +23,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode ??= Node.TryCast<DS_LearnAttributeNode_Single>();
             _genericStatDecs = Resources.FindObjectsOfTypeAll<GenericStatDesc>();
-            _attributeDropdown = new GUIDropdown(_genericStatDecs.Select(s => s.name).ToArray(), Array.FindIndex(_genericStatDecs, (s) => s.Guid == _castedNode._stat.Guid));
+            _attributeDropdown = new GUIDropdown(_genericStatDecs.Select(s => s.name).ToArray(), Array.FindIndex(_genericStatDecs, (s) => s.Guid == _castedNode._stat?.Guid));
         }
 
         public override void DrawNode(Vector2 position)

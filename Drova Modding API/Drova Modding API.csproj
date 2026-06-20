@@ -1,709 +1,774 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>annotations</Nullable>
-		<RootNamespace>Drova_Modding_API</RootNamespace>
-		<LangVersion>12</LangVersion>
-		<IsPackable>false</IsPackable>
-		<AssemblyVersion>1.0.0.0</AssemblyVersion>
-		<FileVersion>1.0.0.0</FileVersion>
-		<NeutralLanguage>en-US</NeutralLanguage>
-		<AssemblyName>Drova_Modding_API</AssemblyName>
-	</PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>annotations</Nullable>
+        <RootNamespace>Drova_Modding_API</RootNamespace>
+        <LangVersion>12</LangVersion>
+        <IsPackable>false</IsPackable>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <FileVersion>1.0.0.0</FileVersion>
+        <NeutralLanguage>en-US</NeutralLanguage>
+        <AssemblyName>Drova_Modding_API</AssemblyName>
+    </PropertyGroup>
 
-	<ItemGroup>
-		<Reference Include="Assembly-CSharp-firstpass">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
-		</Reference>
-		<Reference Include="Assembly-CSharp">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppAstarPathfindingProject">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppAstarPathfindingProject.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppAutoValidation">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppAutoValidation.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2Cppcom.rlabrecque.steamworks.net">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2Cppcom.rlabrecque.steamworks.net.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppCrann">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppCrann.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppCritterSystem">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppCritterSystem.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppDrawing">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppDrawing.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppDrova">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppDrova.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppDrova.Workspace">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppDrova.Workspace.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppFileHandling">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppFileHandling.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppGalaxyCSharp">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppGalaxyCSharp.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppGilzoide.UpdateManager">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppGilzoide.UpdateManager.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2Cppinc8877.OdinLZ4Extension">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2Cppinc8877.OdinLZ4Extension.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppJust2D">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppJust2D.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppJust2D.Localization">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppJust2D.Localization.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppK4os.Compression.LZ4.Unity">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppK4os.Compression.LZ4.Unity.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppMemoryPack.Core">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppMemoryPack.Core.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppMimeMapping">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppMimeMapping.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppMono.Security">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppMono.Security.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2Cppmscorlib">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppNewtonsoft.Json">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppNewtonsoft.Json.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppNintendoSDK">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppNintendoSDK.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppOpenWorld.Runtime">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppOpenWorld.Runtime.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppPackageTools">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppPackageTools.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppParadoxAutoValidFoo">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppParadoxAutoValidFoo.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppParadoxNotion">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppParadoxNotion.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppPathfinding.Ionic.Zip.Reduced">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppPathfinding.Ionic.Zip.Reduced.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppRewired_Core">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppRewired_Core.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppRewired_Windows">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppRewired_Windows.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppRewired_Windows_Functions">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppRewired_Windows_Functions.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSirenix.OdinInspector.Attributes">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.OdinInspector.Attributes.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSirenix.OdinInspector.Modules.Unity.Addressables">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.OdinInspector.Modules.Unity.Addressables.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSirenix.Serialization.Config">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.Serialization.Config.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSirenix.Serialization">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.Serialization.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSirenix.Utilities">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.Utilities.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Collections.Immutable">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Collections.Immutable.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Configuration">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Configuration.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Core">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Core.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Data">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Data.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Drawing">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Drawing.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.IO.Compression">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.IO.Compression.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Net.Http">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Net.Http.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Numerics">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Numerics.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Runtime.CompilerServices.Unsafe">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Runtime.CompilerServices.Unsafe.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Runtime.Serialization">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Runtime.Serialization.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Xml">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Xml.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppSystem.Xml.Linq">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Xml.Linq.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppUniTask.Addressables">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppUniTask.Addressables.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppUniTask">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppUniTask.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2Cpp__Generated">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2Cpp__Generated.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.2D.Tilemap.Extras">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.2D.Tilemap.Extras.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.Addressables">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Addressables.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.Burst">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Burst.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.Burst.Unsafe">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Burst.Unsafe.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.Collections">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Collections.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.Collections.LowLevel.ILSupport">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.InputSystem">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.InputSystem.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.InputSystem.ForUI">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.InputSystem.ForUI.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.Mathematics">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Mathematics.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.Profiling.Core">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Profiling.Core.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.RenderPipeline.Universal.ShaderLibrary">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.RenderPipelines.Core.Runtime">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.RenderPipelines.Universal.Runtime">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.ResourceManager">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.ResourceManager.dll</HintPath>
-		</Reference>
-		<Reference Include="Unity.TextMeshPro">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.TextMeshPro.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AccessibilityModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AccessibilityModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AIModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AIModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AndroidJNIModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AndroidJNIModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AnimationModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AnimationModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.ARModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ARModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AssetBundleModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AssetBundleModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.AudioModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AudioModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.ClothModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ClothModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.ContentLoadModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ContentLoadModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.CoreModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.CrashReportingModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.CrashReportingModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.DirectorModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.DirectorModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.DSPGraphModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.DSPGraphModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.GameCenterModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.GameCenterModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.GIModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.GIModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.GridModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.GridModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.HotReloadModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.HotReloadModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.ImageConversionModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ImageConversionModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.IMGUIModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.InputLegacyModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.InputLegacyModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.InputModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.InputModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.JSONSerializeModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.JSONSerializeModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.LocalizationModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.LocalizationModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.ParticleSystemModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ParticleSystemModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.Physics2DModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.Physics2DModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.PhysicsModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.PhysicsModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.ProfilerModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ProfilerModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.PropertiesModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.PropertiesModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.ScreenCaptureModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ScreenCaptureModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.SharedInternalsModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SharedInternalsModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.SpriteMaskModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SpriteMaskModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.SpriteShapeModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SpriteShapeModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.StreamingModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.StreamingModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.SubstanceModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SubstanceModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.SubsystemsModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SubsystemsModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.TerrainModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TerrainModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.TerrainPhysicsModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TerrainPhysicsModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.TextCoreFontEngineModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.TextCoreTextEngineModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.TextRenderingModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TextRenderingModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.TilemapModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TilemapModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.TLSModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TLSModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UI">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UIElementsModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UIElementsModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UIModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UmbraModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UmbraModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityAnalyticsCommonModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityAnalyticsModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityAnalyticsModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityConnectModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityConnectModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityCurlModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityCurlModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityTestProtocolModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityTestProtocolModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityWebRequestAudioModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityWebRequestModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityWebRequestTextureModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.UnityWebRequestWWWModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.VFXModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VFXModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.VideoModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VideoModule.dll</HintPath>
-		</Reference>
-		<Reference Include="UnityEngine.WindModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.WindModule.dll</HintPath>
-		</Reference>
-		<Reference Include="MelonLoader">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\MelonLoader.dll</HintPath>
-		</Reference>
-		<Reference Include="0Harmony">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\0Harmony.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppInterop.Runtime">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
-		</Reference>
-		<Reference Include="Il2CppInterop.Common">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\Il2CppInterop.Common.dll</HintPath>
-		</Reference>
+    <ItemGroup>
+        <Reference Include="Assembly-CSharp-firstpass">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Assembly-CSharp-firstpass.dll</HintPath>
+        </Reference>
+        <Reference Include="Assembly-CSharp">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Assembly-CSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppAstarPathfindingProject">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppAstarPathfindingProject.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppAutoValidation">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppAutoValidation.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2Cppcom.rlabrecque.steamworks.net">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2Cppcom.rlabrecque.steamworks.net.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppCrann">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppCrann.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppCritterSystem">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppCritterSystem.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppDrawing">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppDrawing.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppDrova">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppDrova.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppDrova.Workspace">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppDrova.Workspace.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppFileHandling">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppFileHandling.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppGalaxyCSharp">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppGalaxyCSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppGilzoide.UpdateManager">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppGilzoide.UpdateManager.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2Cppinc8877.OdinLZ4Extension">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2Cppinc8877.OdinLZ4Extension.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppJust2D">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppJust2D.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppJust2D.Localization">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppJust2D.Localization.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppK4os.Compression.LZ4.Unity">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppK4os.Compression.LZ4.Unity.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppMemoryPack.Core">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppMemoryPack.Core.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppMimeMapping">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppMimeMapping.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppMono.Security">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppMono.Security.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2Cppmscorlib">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppNewtonsoft.Json">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppNewtonsoft.Json.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppOpenWorld.Runtime">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppOpenWorld.Runtime.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppPackageTools">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppPackageTools.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppParadoxAutoValidFoo">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppParadoxAutoValidFoo.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppParadoxNotion">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppParadoxNotion.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppPathfinding.Ionic.Zip.Reduced">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppPathfinding.Ionic.Zip.Reduced.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppRewired_Core">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppRewired_Core.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppRewired_Windows">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppRewired_Windows.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppRewired_Windows_Functions">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppRewired_Windows_Functions.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSirenix.OdinInspector.Attributes">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.OdinInspector.Attributes.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSirenix.OdinInspector.Modules.Unity.Addressables">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.OdinInspector.Modules.Unity.Addressables.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSirenix.Serialization.Config">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.Serialization.Config.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSirenix.Serialization">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.Serialization.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSirenix.Utilities">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSirenix.Utilities.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Collections.Immutable">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Collections.Immutable.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Configuration">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Configuration.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Core">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Core.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Data">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Data.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Drawing">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Drawing.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.IO.Compression">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.IO.Compression.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Net.Http">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Net.Http.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Numerics">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Numerics.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Runtime.CompilerServices.Unsafe">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Runtime.CompilerServices.Unsafe.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Runtime.Serialization">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Runtime.Serialization.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Xml">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Xml.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppSystem.Xml.Linq">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppSystem.Xml.Linq.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppUniTask.Addressables">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppUniTask.Addressables.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppUniTask">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2CppUniTask.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2Cpp__Generated">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Il2Cpp__Generated.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.2D.Tilemap.Extras">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.2D.Tilemap.Extras.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.Addressables">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Addressables.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.Burst">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Burst.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.Burst.Unsafe">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Burst.Unsafe.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.Collections">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Collections.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.Collections.LowLevel.ILSupport">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.InputSystem">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.InputSystem.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.InputSystem.ForUI">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.InputSystem.ForUI.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.Mathematics">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Mathematics.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.Profiling.Core">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.Profiling.Core.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.RenderPipeline.Universal.ShaderLibrary">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.RenderPipeline.Universal.ShaderLibrary.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.RenderPipelines.Core.Runtime">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.RenderPipelines.Core.Runtime.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.RenderPipelines.Universal.Runtime">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.RenderPipelines.Universal.Runtime.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.ResourceManager">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.ResourceManager.dll</HintPath>
+        </Reference>
+        <Reference Include="Unity.TextMeshPro">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\Unity.TextMeshPro.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AccessibilityModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AccessibilityModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AIModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AIModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AnimationModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AnimationModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ARModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ARModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AssetBundleModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AssetBundleModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.AudioModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.AudioModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ClothModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ClothModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ContentLoadModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ContentLoadModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.CrashReportingModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.CrashReportingModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.DirectorModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.DirectorModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.DSPGraphModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.DSPGraphModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.GameCenterModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.GameCenterModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.GIModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.GIModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.GridModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.GridModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.HotReloadModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.HotReloadModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ImageConversionModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ImageConversionModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.IMGUIModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.InputLegacyModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.InputLegacyModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.InputModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.InputModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.JSONSerializeModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.JSONSerializeModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.LocalizationModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.LocalizationModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ParticleSystemModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ParticleSystemModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.Physics2DModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.Physics2DModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.PhysicsModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.PhysicsModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ProfilerModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ProfilerModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.PropertiesModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.PropertiesModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.ScreenCaptureModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.ScreenCaptureModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.SharedInternalsModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SharedInternalsModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.SpriteMaskModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SpriteMaskModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.SpriteShapeModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SpriteShapeModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.StreamingModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.StreamingModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.SubstanceModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SubstanceModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.SubsystemsModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.SubsystemsModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TerrainModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TerrainModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TerrainPhysicsModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TextCoreFontEngineModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TextCoreTextEngineModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TextRenderingModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TextRenderingModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TilemapModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TilemapModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TLSModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.TLSModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UIElementsModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UIElementsModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UIModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UmbraModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UmbraModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityAnalyticsCommonModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityAnalyticsModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityConnectModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityConnectModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityCurlModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityCurlModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityTestProtocolModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityTestProtocolModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestTextureModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.VFXModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VFXModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.VideoModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.VideoModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.WindModule">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\Il2CppAssemblies\UnityEngine.WindModule.dll</HintPath>
+        </Reference>
+        <Reference Include="MelonLoader">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\MelonLoader.dll</HintPath>
+        </Reference>
+        <Reference Include="0Harmony">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppInterop.Runtime">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\Il2CppInterop.Runtime.dll</HintPath>
+        </Reference>
+        <Reference Include="Il2CppInterop.Common">
+            <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\MelonLoader\net6\Il2CppInterop.Common.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 
-	</ItemGroup>
+    <PropertyGroup>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+        <PackageReadmeFile>README.MD</PackageReadmeFile>
+        <RepositoryUrl>https://github.com/Drova-Modding/Drova-Modding-API</RepositoryUrl>
+    </PropertyGroup>
 
-	<PropertyGroup>
-		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-		<GenerateDocumentationFile>True</GenerateDocumentationFile>
-		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-		<PackageReadmeFile>README.MD</PackageReadmeFile>
-		<RepositoryUrl>https://github.com/Drova-Modding/Drova-Modding-API</RepositoryUrl>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-		<CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-	</PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    </PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<Compile Include="Access\AddressableAccess.cs" />
-		<Compile Include="Access\CheatMenuAccess.cs" />
-		<Compile Include="Access\ConfigAccessor.cs" />
-		<Compile Include="Access\InputAccess.cs" />
-		<Compile Include="Access\LocalizationAccess.cs" />
-		<Compile Include="Access\PlayerAccess.cs" />
-		<Compile Include="Access\ProviderAccess.cs" />
-		<Compile Include="Core.cs" />
-		<Compile Include="Access\OptionMenuAccess.cs" />
-		<Compile Include="Extensions\GUIExtensions.cs" />
-		<Compile Include="GlobalFields\InputActionFields.cs" />
-		<Compile Include="GlobalFields\ItemReadableIds.cs" />
-		<Compile Include="Extensions\ActorExtension.cs" />
-		<Compile Include="Generation\AddressableGeneration.cs" />
-		<Compile Include="GlobalFields\SceneNames.cs" />
-		<Compile Include="GlobalFields\TalentReadableIds.cs" />
-		<Compile Include="GlobalFields\StatReadableIds.cs" />
-		<Compile Include="Patches\ActorAddLoadingCompPatch.cs" />
-		<Compile Include="Patches\ActorRoutineModulePatch.cs" />
-		<Compile Include="Patches\ActorStartInitAsyncPatch.cs" />
-		<Compile Include="Patches\AreaNamePatch.cs" />
-		<Compile Include="Patches\ASaveRootLoadStatePatch.cs" />
-		<Compile Include="Patches\ASaveRootSaveStatePatch.cs" />
-		<Compile Include="Patches\DialogueTreePatch.cs" />
-		<Compile Include="Patches\DSDialogueUGUIPatch.cs" />
-		<Compile Include="Patches\DSStatementPatch.cs" />
-		<Compile Include="Patches\DS_MultipleChoiceNodePatch.cs" />
-		<Compile Include="Patches\DS_StatementNodePatch.cs" />
-		<Compile Include="Patches\GUIWindowOptions.cs" />
-		<Compile Include="Patches\GUIWindowPatch.cs" />
-		<Compile Include="Patches\LazyActorPatch.cs" />
-		<Compile Include="Patches\SaveableHealthPatch.cs" />
-		<Compile Include="Patches\SaveableStatusEffectHandlerPatch.cs" />
-		<Compile Include="Patches\SaveBBParametersToSavegameIndexPatch.cs" />
-		<Compile Include="Patches\SaveGameHandlerPatch.cs" />
-		<Compile Include="Patches\SetSaveGameRouteIndexPatch.cs" />
-		<Compile Include="Register\InputActionRegister.cs" />
-		<Compile Include="Systems\AreaNameSystem.cs" />
-		<Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
-		<Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
-		<Compile Include="Systems\Audio\DialogueAudioDistanceManager.cs" />
-		<Compile Include="Systems\Audio\FileAudioProvider.cs" />
-		<Compile Include="Systems\Audio\IAudioConnector.cs" />
-		<Compile Include="Systems\Audio\IAudioHandler.cs" />
-		<Compile Include="Systems\Audio\IAudioProvider.cs" />
-		<Compile Include="Systems\Audio\AudioLog.cs" />
-		<Compile Include="Systems\Audio\AudioManager.cs" />
-		<Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
-		<Compile Include="Systems\Editor\EditorManager.cs" />
-		<Compile Include="Systems\Editor\NpcMouseRaycast.cs" />
-		<Compile Include="Systems\ModdingUI\ModdingUI.cs" />
-		<Compile Include="Systems\Morphing\MorphManager.cs" />
-		<Compile Include="Systems\Region.cs" />
-		<Compile Include="Systems\Relocators\DialogueTreeRelocator.cs" />
-		<Compile Include="Systems\Relocators\EntityInfoRelocator.cs" />
-		<Compile Include="Systems\Relocators\GVarBoolRelocator.cs" />
-		<Compile Include="Systems\Relocators\GVarIntRelocator.cs" />
-		<Compile Include="Systems\Relocators\GVarListRelocator.cs" />
-		<Compile Include="Systems\Relocators\GVarQuestStateRelocator.cs" />
-		<Compile Include="Systems\Relocators\IObjectRelocator.cs" />
-		<Compile Include="Systems\Relocators\ItemRelocator.cs" />
-		<Compile Include="Systems\Relocators\ObjectRelocatorFactory.cs" />
-		<Compile Include="Systems\Relocators\RelocatorSaveData.cs" />
-		<Compile Include="Systems\Routines\RoutineSystem.cs" />
-		<Compile Include="Systems\SaveGame\NoSaveGuidRegistry.cs" />
-		<Compile Include="Systems\SaveGame\Store\IStorable.cs" />
-		<Compile Include="Systems\SaveGame\Store\IStore.cs" />
-		<Compile Include="Systems\SaveGame\Store\LazyActorStore.cs" />
-		<Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
-		<Compile Include="Systems\Dialogues\DialogGraph.cs" />
-		<Compile Include="Systems\Spawning\INpcModule.cs" />
-		<Compile Include="Systems\Spawning\LazyActorPreInitRegistry.cs" />
-		<Compile Include="Systems\Spawning\ModuleContext.cs" />
-		<Compile Include="Systems\Spawning\Modules\AlignmentModule.cs" />
-		<Compile Include="Systems\Spawning\Modules\CosmeticsPresetModule.cs" />
-		<Compile Include="Systems\Spawning\Modules\CustomStatsModule.cs" />
-		<Compile Include="Systems\Spawning\Modules\EquipPresetHelper.cs" />
-		<Compile Include="Systems\Spawning\Modules\EquipmentPresetModule.cs" />
-		<Compile Include="Systems\Spawning\LazyActorSaveData.cs" />
-		<Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
-		<Compile Include="Systems\Spawning\ActorWorldLocator.cs" />
-		<Compile Include="Systems\Spawning\LazyActorCreator.cs" />
-		<Compile Include="Systems\Spawning\Modules\FlowPresetModule.cs" />
-		<Compile Include="Systems\Spawning\Modules\HealthPresetModule.cs" />
-		<Compile Include="Systems\Spawning\Modules\RoutineModule.cs" />
-		<Compile Include="Systems\Spawning\Modules\TalentPresetModule.cs" />
-		<Compile Include="Systems\Spawning\NpcCreator.cs" />
-		<Compile Include="Systems\Spawning\Templates\BanditCreator.cs" />
-		<Compile Include="Systems\Talents\TalentContainerDatabase.cs" />
-		<Compile Include="Systems\SystemInit.cs" />
-		<Compile Include="Systems\WorldEvents\EncounterEvent.cs" />
-		<Compile Include="Systems\WorldEvents\IWorldEvent.cs" />
-		<Compile Include="Systems\WorldEvents\PersistentEncounterEvent.cs" />
-		<Compile Include="Systems\WorldEvents\RegionalEventRegistry.cs" />
-		<Compile Include="Systems\WorldEvents\Regional\ARegionalEvent.cs" />
-		<Compile Include="Systems\WorldEvents\TimedEvent.cs" />
-		<Compile Include="Systems\WorldEvents\WorldEventPicker.cs" />
-		<Compile Include="Systems\WorldEvents\WorldEventSystemManager.cs" />
-		<Compile Include="Systems\WorldEvents\WorldRegionCoordinator.cs" />
-		<Compile Include="UI\Builder\OptionUIBuilder.cs" />
-		<Compile Include="UI\DropdownHandler.cs" />
-		<Compile Include="UI\GUI_ConfigOption_Slider_Float.cs" />
-		<Compile Include="UI\GUI_Options_Controls_KeyFieldElement_Custom.cs" />
-		<Compile Include="Utils.cs" />
-	</ItemGroup>
-	<ItemGroup Condition="'$(Configuration)'=='Debug'">
-		<Compile Include="Systems\Editor\EditorUI.cs" />
-		<Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.cs" />
-		<Compile Include="Systems\Audio\Dialogue\DynamicInstancesToGuid.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Dynamic\BaldoDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Dynamic\BrawlDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Dynamic\RestWorldDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Dynamic\SleepDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\AfterCombatPlayerDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\ArenaViewerDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\ArenaFightsDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\BanditDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\BanditMineHauerDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\BertineSpiderDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\CombatDialogues.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\CraftingReactionDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\EsterManipulationDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\FrogDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateArenaDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateBrutusMine.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateConorDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateDeepMineEntryDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateMineDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateMineStorageDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonFireFestivalLukan.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonHolyHain.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonNorthDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateNementonSouthDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampDruidDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampSeanDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GateRuinCampUpperTownIveraDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\GreatTuskDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\LaudineDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\PlayerOustideSoftCircleDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\ReadOutDialogRoutinePoint.cs" />
-		<Compile Include="Systems\Audio\Dialogue\ReadOutDialogueHitBehaviour.cs" />
-		<Compile Include="Systems\Audio\Dialogue\CreateTTSDialogueFile.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\CrimeDialogues.cs" />
-		<Compile Include="Systems\Audio\Dialogue\DialogueNameAndFactions.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\IGenericDialogueHandler.cs" />
-		<Compile Include="Systems\Audio\Dialogue\DialogueUtils.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\MusicReactionDialogue.cs" />
-		<Compile Include="Systems\Audio\Dialogue\Generic\RedTowerDialogue.cs" />
-		<Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
-		<Compile Include="Systems\Dialogues\EntityInfoPicturesToPngUtils.cs" />
-		<Compile Include="Systems\Dialogues\Editor\DrawNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\DrawTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Factories\DrawTaskEditorFactory.cs" />
-		<Compile Include="Systems\Dialogues\Editor\GraphEditorManager.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Factories\DrawNodeEditorFactory.cs" />
-		<Compile Include="Systems\Dialogues\Editor\GraphEditorSnapshot.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\ConditionNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\CS_CutsceneActionNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_CanTeachAnythingNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_ChangeStanceNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_CrimeNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_DebugNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_DefineActiveActorsNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_DelayedTeach_StatementNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_GiveExpNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_GiveItemNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_HealActorNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_HideDialogWindowNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_HubJumpNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_HubNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_InteractAABaseNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_KatsaSilverMineNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnAttributeNode_SingleNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnStatNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnTalentNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_MultipleChoiceNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_OpenTradeWindowNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_OverrideFixCamPosNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_OverrideLookAtSpeakerNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_PlaySfxNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_PreloadClothNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_ReleaseActiveActorsNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_RestartNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetAcquaintanceNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetDialogueRequirementsNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetGBoolNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetTextSpeedNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_UnEquipNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\FinishNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\MultipleConditionNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_RevisitMultipleChoiceNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetFactionNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetFirstChapterNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_StatementNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\SubDialogueTreeEditor.cs" />
+    <ItemGroup>
+        <Compile Include="Access\AddressableAccess.cs"/>
+        <Compile Include="Access\CheatMenuAccess.cs"/>
+        <Compile Include="Access\ConfigAccessor.cs"/>
+        <Compile Include="Access\InputAccess.cs"/>
+        <Compile Include="Access\LocalizationAccess.cs"/>
+        <Compile Include="Access\PlayerAccess.cs"/>
+        <Compile Include="Access\ProviderAccess.cs"/>
+        <Compile Include="Converters\Vector2JsonConverter.cs" />
+        <Compile Include="Core.cs" />
+        <Compile Include="Access\OptionMenuAccess.cs" />
+        <Compile Include="Extensions\GUIExtensions.cs" />
+        <Compile Include="GlobalFields\InputActionFields.cs" />
+        <Compile Include="GlobalFields\ItemReadableIds.cs" />
+        <Compile Include="Extensions\ActorExtension.cs" />
+        <Compile Include="Generation\AddressableGeneration.cs" />
+        <Compile Include="GlobalFields\SceneNames.cs" />
+        <Compile Include="GlobalFields\TalentReadableIds.cs" />
+        <Compile Include="GlobalFields\StatReadableIds.cs" />
+        <Compile Include="Patches\ActorAddLoadingCompPatch.cs" />
+        <Compile Include="Patches\ActorRoutineModulePatch.cs" />
+        <Compile Include="Patches\ActorStartInitAsyncPatch.cs" />
+        <Compile Include="Patches\AGvarBoolPatch.cs" />
+        <Compile Include="Patches\AreaNamePatch.cs" />
+        <Compile Include="Patches\ASaveRootLoadStatePatch.cs" />
+        <Compile Include="Patches\ASaveRootSaveStatePatch.cs" />
+        <Compile Include="Patches\CheatGameHandlerPatch.cs" />
+        <Compile Include="Patches\DialogueTreePatch.cs" />
+        <Compile Include="Patches\DSDialogueUGUIPatch.cs" />
+        <Compile Include="Patches\DSStatementPatch.cs" />
+        <Compile Include="Patches\DS_MultipleChoiceNodePatch.cs" />
+        <Compile Include="Patches\DS_StatementNodePatch.cs" />
+        <Compile Include="Patches\GUIWindowOptions.cs" />
+        <Compile Include="Patches\GUIWindowPatch.cs" />
+        <Compile Include="Patches\LazyActorPatch.cs" />
+        <Compile Include="Patches\SaveableHealthPatch.cs" />
+        <Compile Include="Patches\SaveableStatusEffectHandlerPatch.cs" />
+        <Compile Include="Patches\SaveBBParametersToSavegameIndexPatch.cs" />
+        <Compile Include="Patches\SaveGameHandlerPatch.cs" />
+        <Compile Include="Patches\SetSaveGameRouteIndexPatch.cs" />
+        <Compile Include="Register\InputActionRegister.cs" />
+        <Compile Include="Systems\AreaNameSystem.cs" />
+        <Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
+        <Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
+        <Compile Include="Systems\Audio\DialogueAudioDistanceManager.cs" />
+        <Compile Include="Systems\Audio\FileAudioProvider.cs" />
+        <Compile Include="Systems\Audio\IAudioConnector.cs" />
+        <Compile Include="Systems\Audio\IAudioHandler.cs" />
+        <Compile Include="Systems\Audio\IAudioProvider.cs" />
+        <Compile Include="Systems\Audio\AudioLog.cs" />
+        <Compile Include="Systems\Audio\AudioManager.cs" />
+        <Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
+        <Compile Include="Systems\Editor\EditorManager.cs" />
+        <Compile Include="Systems\Editor\NpcMouseRaycast.cs" />
+        <Compile Include="Systems\GlobalVars\CustomGVarStore.cs" />
+        <Compile Include="Systems\GlobalVars\GBoolReference.cs" />
+        <Compile Include="Systems\GlobalVars\GvarBusSystem.cs" />
+        <Compile Include="Systems\ModdingUI\ModdingUI.cs" />
+        <Compile Include="Systems\Morphing\MorphManager.cs" />
+        <Compile Include="Systems\Region.cs" />
+        <Compile Include="Systems\Relocators\DialogueTreeRelocator.cs" />
+        <Compile Include="Systems\Relocators\EntityInfoRelocator.cs" />
+        <Compile Include="Systems\Relocators\GVarBoolRelocator.cs" />
+        <Compile Include="Systems\Relocators\GVarIntRelocator.cs" />
+        <Compile Include="Systems\Relocators\GVarListRelocator.cs" />
+        <Compile Include="Systems\Relocators\GVarQuestStateRelocator.cs" />
+        <Compile Include="Systems\Relocators\IObjectRelocator.cs" />
+        <Compile Include="Systems\Relocators\ItemRelocator.cs" />
+        <Compile Include="Systems\Relocators\ObjectRelocatorFactory.cs" />
+        <Compile Include="Systems\Relocators\RelocatorSaveData.cs" />
+        <Compile Include="Systems\Routines\RoutineSystem.cs" />
+        <Compile Include="Systems\SaveGame\NoSaveGuidRegistry.cs" />
+        <Compile Include="Systems\SaveGame\Store\IStorable.cs" />
+        <Compile Include="Systems\SaveGame\Store\IStore.cs" />
+        <Compile Include="Systems\SaveGame\Store\LazyActorStore.cs" />
+        <Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
+        <Compile Include="Systems\Dialogues\DialogGraph.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalAlignmentContainerModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalCosmeticsModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalDialogueModule.cs" />
+        <Compile Include="Systems\Spawning\Export\ModBundleExporter.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalEntityInfoModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalEntityInfoRegistry.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalEquipmentModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalHealthModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalNpcModuleRegistry.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalNpcPlacementSystem.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalRoutineModule.cs" />
+        <Compile Include="Systems\Spawning\External\RoutinePointVisualizer.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalTalentModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalTeacherModule.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalTraderModule.cs" />
+        <Compile Include="Systems\Spawning\External\IExternalNpcModule.cs" />
+        <Compile Include="Systems\Spawning\External\ReadableIdModuleSupport.cs" />
+        <Compile Include="Systems\Spawning\INpcModule.cs" />
+        <Compile Include="Systems\Spawning\LazyActorPreInitRegistry.cs" />
+        <Compile Include="Systems\Spawning\ModuleContext.cs" />
+        <Compile Include="Systems\Spawning\Modules\DialogueModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\AlignmentModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\CosmeticsPresetModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\CustomStatsModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\EntityInfoModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\EquipPresetHelper.cs" />
+        <Compile Include="Systems\Spawning\Modules\EquipmentPresetModule.cs" />
+        <Compile Include="Systems\Spawning\LazyActorSaveData.cs" />
+        <Compile Include="Systems\SaveGame\SaveGameSystem.cs" />
+        <Compile Include="Systems\Spawning\ActorWorldLocator.cs" />
+        <Compile Include="Systems\Spawning\LazyActorCreator.cs" />
+        <Compile Include="Systems\Spawning\Modules\FlowPresetModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\HealthPresetModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\RoutineModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\TalentPresetModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\TeacherModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\TraderModule.cs" />
+        <Compile Include="Systems\Spawning\NpcCreator.cs" />
+        <Compile Include="Systems\Spawning\Templates\BanditCreator.cs" />
+        <Compile Include="Systems\Talents\TalentContainerDatabase.cs" />
+        <Compile Include="Systems\SystemInit.cs" />
+        <Compile Include="Systems\WorldEvents\EncounterEvent.cs" />
+        <Compile Include="Systems\WorldEvents\IWorldEvent.cs" />
+        <Compile Include="Systems\WorldEvents\PersistentEncounterEvent.cs" />
+        <Compile Include="Systems\WorldEvents\RegionalEventRegistry.cs" />
+        <Compile Include="Systems\WorldEvents\Regional\ARegionalEvent.cs" />
+        <Compile Include="Systems\WorldEvents\TimedEvent.cs" />
+        <Compile Include="Systems\WorldEvents\WorldEventPicker.cs" />
+        <Compile Include="Systems\WorldEvents\WorldEventSystemManager.cs" />
+        <Compile Include="Systems\WorldEvents\WorldRegionCoordinator.cs" />
+        <Compile Include="UI\Builder\OptionUIBuilder.cs" />
+        <Compile Include="UI\DropdownHandler.cs" />
+        <Compile Include="UI\GUI_ConfigOption_Slider_Float.cs" />
+        <Compile Include="UI\GUI_Options_Controls_KeyFieldElement_Custom.cs" />
+        <Compile Include="Utils.cs" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(Configuration)'=='Debug'">
+        <Compile Include="Systems\Editor\EditorUI.cs" />
+        <Compile Include="Systems\Editor\LocalizationEntriesEditorSystem.cs" />
+        <Compile Include="Systems\Editor\ModCreationContext.cs" />
+        <Compile Include="Systems\ModdingUI\MainMenuModdingUI.cs" />
+        <Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.cs" />
+        <Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.ReadView.cs" />
+        <Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.WriteView.cs" />
+        <Compile Include="Systems\Audio\Dialogue\DynamicInstancesToGuid.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Dynamic\BaldoDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Dynamic\BrawlDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Dynamic\RestWorldDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Dynamic\SleepDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\AfterCombatPlayerDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\ArenaViewerDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\ArenaFightsDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\BanditDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\BanditMineHauerDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\BertineSpiderDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\CombatDialogues.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\CraftingReactionDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\EsterManipulationDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\FrogDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateArenaDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateBrutusMine.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateConorDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateDeepMineEntryDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateMineDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateMineStorageDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateNementonFireFestivalLukan.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateNementonHolyHain.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateNementonNorthDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateNementonSouthDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampDruidDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateRuincampSeanDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GateRuinCampUpperTownIveraDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\GreatTuskDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\LaudineDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\PlayerOustideSoftCircleDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\ReadOutDialogRoutinePoint.cs" />
+        <Compile Include="Systems\Audio\Dialogue\ReadOutDialogueHitBehaviour.cs" />
+        <Compile Include="Systems\Audio\Dialogue\CreateTTSDialogueFile.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\CrimeDialogues.cs" />
+        <Compile Include="Systems\Audio\Dialogue\DialogueNameAndFactions.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\IGenericDialogueHandler.cs" />
+        <Compile Include="Systems\Audio\Dialogue\DialogueUtils.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\MusicReactionDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Generic\RedTowerDialogue.cs" />
+        <Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
+        <Compile Include="Systems\Dialogues\EntityInfoPicturesToPngUtils.cs" />
+        <Compile Include="Systems\Dialogues\Editor\DrawNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\DrawTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Factories\DrawTaskEditorFactory.cs" />
+        <Compile Include="Systems\Dialogues\Editor\GraphEditorManager.cs" />
+        <Compile Include="Systems\Dialogues\Editor\ActionStrategies\CreateNodeActionStrategy.cs" />
+        <Compile Include="Systems\Dialogues\Editor\ActionStrategies\DeleteNodeActionStrategy.cs" />
+        <Compile Include="Systems\Dialogues\Editor\ActionStrategies\DuplicateNodeActionStrategy.cs" />
+        <Compile Include="Systems\Dialogues\Editor\ActionStrategies\GraphEditorActionContext.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Factories\DrawNodeEditorFactory.cs" />
+        <Compile Include="Systems\Dialogues\Editor\GraphEditorSnapshot.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\ConditionNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\CS_CutsceneActionNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_CanTeachAnythingNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_ChangeStanceNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_CrimeNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_DebugNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_TeachTalentNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_DefineActiveActorsNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_DelayedTeach_StatementNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_GiveExpNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_GiveItemNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_HealActorNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_HideDialogWindowNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_HubJumpNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_HubNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_InteractAABaseNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_KatsaSilverMineNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnAttributeNode_SingleNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnStatNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnTalentNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_LearnTalentNode_SingleEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_MultipleChoiceNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_OpenTradeWindowNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_OverrideFixCamPosNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_OverrideLookAtSpeakerNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_PlaySfxNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_PreloadClothNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_ReleaseActiveActorsNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_RestartNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetAcquaintanceNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetDialogueRequirementsNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetGBoolNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetTextSpeedNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_UnEquipNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\FinishNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\MultipleConditionNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_RevisitMultipleChoiceNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetFactionNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetFirstChapterNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_StatementNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\SubDialogueTreeEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_EquipNodeEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetSpellToActiveAbiSlotNodeEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_UseItemNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckGVarListConditionTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasAttributeTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasItemsTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\GBoolConditionTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\GIntConditionTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\NullTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Utils\EditorBoxStyles.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Utils\GUICreateConditionTask.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Utils\GUIDropdown.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Utils\GUIDropdownWithFilter.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Utils\GUIGvarSelectionEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Utils\GvarContainerInt.cs" />
-		<Compile Include="Systems\Dialogues\Editor\ActionStrategies\ConnectActionStrategy.cs" />
-		<Compile Include="Systems\Dialogues\Editor\ActionStrategies\IActionStrategy.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetGIntNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Nodes\ProbabilitySelectorNodeEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\ConditionListTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\DS_IsUniqueConditionTaskEditor.cs" />
-		<Compile Include="Systems\Dialogues\Editor\Tasks\GQuestStateConditionTaskEditor.cs" />
-	</ItemGroup>
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_TeachStatsNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CanAtoneCrimeConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CanLearnAttributeConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CanLearnTalentConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckAndResetGBoolConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckAndResetGlobalBBVarTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckBbIntegerConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckCrimeStrengthTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckForGlobalVariableConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckForInstigatorConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckLootInventoryEmptyConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_FactionCheckConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasItemEquippedTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasNextMPCNodeValidChoicesTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasOpenReactionTypeTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasPlayerActiveCrimesTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasTalentsTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_JudgeCanAtoneCrimeConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_WitnessedCrimeConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_WitnessedOpenReactionCrimeConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_WitnessedSpecificCrimeConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_CheckGVarListConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasAttributeTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_HasItemsTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\GBoolConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\GIntConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\NullTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Utils\EditorBoxStyles.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Utils\GUICreateConditionTask.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Utils\GUIDropdown.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Utils\GUIDropdownWithFilter.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Utils\GUIGvarSelectionEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Utils\GvarContainerInt.cs" />
+        <Compile Include="Systems\Dialogues\Editor\ActionStrategies\ConnectActionStrategy.cs" />
+        <Compile Include="Systems\Dialogues\Editor\ActionStrategies\IActionStrategy.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetGIntNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\ProbabilitySelectorNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\ConditionListTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\DS_IsUniqueConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\GQuestStateConditionTaskEditor.cs" />
+        <Compile Include="Systems\Spawning\Wizard\NpcWizardWindowLayout.cs" />
+        <Compile Include="Systems\Spawning\Wizard\DialogueEditorLifecycleWatcher.cs" />
+        <Compile Include="Systems\Spawning\Wizard\NpcWizardDefinitionHelpers.cs" />
+        <Compile Include="Systems\Spawning\Wizard\NpcWizardDefinitionsBrowser.cs" />
+        <Compile Include="Systems\Spawning\Wizard\NpcWizardDialogueService.cs" />
+        <Compile Include="Systems\Spawning\Wizard\NpcWizardOverwriteState.cs" />
+        <Compile Include="Systems\Spawning\Wizard\NpcWizardState.cs" />
+        <Compile Include="Systems\Spawning\Wizard\NpcWizardSystem.cs" />
+        <Compile Include="Systems\Spawning\Wizard\NpcWizardUI.cs" />
+    </ItemGroup>
 
-	<ItemGroup>
-		<None Include="..\README.MD">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-	</ItemGroup>
+    <ItemGroup>
+        <None Include="..\README.MD">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="NVorbis" Version="0.10.5" />
-	</ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="NVorbis" Version="0.10.5" />
+    </ItemGroup>
 
-	<ItemGroup>
-	  <Content Include="..\.gitignore">
-	    <Link>.gitignore</Link>
-	  </Content>
-	  <Content Include="..\Agents.md">
-	    <Link>Agents.md</Link>
-	  </Content>
-	</ItemGroup>
+    <ItemGroup>
+        <Content Include="..\.gitignore">
+            <Link>.gitignore</Link>
+        </Content>
+    </ItemGroup>
 
-	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
-		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;" />
-		<Exec Command="COPY &quot;$(TargetDir)$(TargetName).xml&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;" />
-		<Exec Command="COPY &quot;$(UserProfile)\.nuget\packages\nvorbis\0.10.5\lib\netstandard2.0\NVorbis.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;" />
-	</Target>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;"/>
+        <Exec Command="COPY &quot;$(TargetDir)$(TargetName).xml&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;"/>
+        <Exec Command="COPY &quot;$(UserProfile)\.nuget\packages\nvorbis\0.10.5\lib\netstandard2.0\NVorbis.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;"/>
+    </Target>
 
-	<Target Name="PackageMod" AfterTargets="PostBuild">
-		<PropertyGroup>
-			<DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
-			<StagingDir>$(DistDir)\staging\$(Configuration)</StagingDir>
-			<ZipName Condition="'$(Configuration)'=='Debug'">Modding_API_Dev.zip</ZipName>
-			<ZipName Condition="'$(Configuration)'=='Release'">Modding_API.zip</ZipName>
-			<ZipPath>$(DistDir)\$(ZipName)</ZipPath>
-			<GameDir>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin</GameDir>
-			<GameLocalizationDir>$(GameDir)\Mods\Modding_API\Localization</GameLocalizationDir>
-			<NVorbisDll>$(GameDir)\UserLibs\NVorbis.dll</NVorbisDll>
-			<AddressablesTxt>$(GameDir)\Mods\addressables.txt</AddressablesTxt>
-		</PropertyGroup>
+    <Target Name="PackageMod" AfterTargets="PostBuild">
+        <PropertyGroup>
+            <DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
+            <StagingDir>$(DistDir)\staging\$(Configuration)</StagingDir>
+            <ZipName Condition="'$(Configuration)'=='Debug'">Modding_API_Dev.zip</ZipName>
+            <ZipName Condition="'$(Configuration)'=='Release'">Modding_API.zip</ZipName>
+            <ZipPath>$(DistDir)\$(ZipName)</ZipPath>
+            <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin</GameDir>
+            <GameLocalizationDir>$(GameDir)\Mods\Modding_API\Localization</GameLocalizationDir>
+            <NVorbisDll>$(GameDir)\UserLibs\NVorbis.dll</NVorbisDll>
+            <AddressablesTxt>$(GameDir)\Mods\addressables.txt</AddressablesTxt>
+        </PropertyGroup>
 
-		<RemoveDir Directories="$(StagingDir)" />
-		<MakeDir Directories="$(DistDir);$(StagingDir)\Mods;$(StagingDir)\UserLibs" />
+        <RemoveDir Directories="$(StagingDir)"/>
+        <MakeDir Directories="$(DistDir);$(StagingDir)\Mods;$(StagingDir)\UserLibs"/>
 
-		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(StagingDir)\Mods" />
-		<Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug'" />
-		<Copy SourceFiles="$(AddressablesTxt)" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug' And Exists('$(AddressablesTxt)')" />
-		<Copy SourceFiles="$(NVorbisDll)" DestinationFolder="$(StagingDir)\UserLibs" />
+        <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(StagingDir)\Mods"/>
+        <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug'"/>
+        <Copy SourceFiles="$(AddressablesTxt)" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug' And Exists('$(AddressablesTxt)')"/>
+        <Copy SourceFiles="$(NVorbisDll)" DestinationFolder="$(StagingDir)\UserLibs"/>
 
-		<ItemGroup>
-			<LocalizationFiles Include="$(GameLocalizationDir)\**\*.*" />
-		</ItemGroup>
-		<Copy SourceFiles="@(LocalizationFiles)" DestinationFiles="@(LocalizationFiles->'$(StagingDir)\Mods\Modding_API\Localization\%(RecursiveDir)%(Filename)%(Extension)')" />
+        <!--
+            Only package the API's own localization, which always lives one level deeper under a
+            per-language "Modding_API" subfolder (e.g. en\Modding_API\*.loc). Other mods drop loose
+            <mod>_<lang>.loc files directly under the language folder; excluding the one-level-deep
+            files keeps them out of the build while the broad ** include preserves %(RecursiveDir).
+        -->
+        <ItemGroup>
+            <LocalizationFiles Include="$(GameLocalizationDir)\**\*.*"
+                               Exclude="$(GameLocalizationDir)\*\*.*"/>
+        </ItemGroup>
+        <Copy SourceFiles="@(LocalizationFiles)" DestinationFiles="@(LocalizationFiles->'$(StagingDir)\Mods\Modding_API\Localization\%(RecursiveDir)%(Filename)%(Extension)')"/>
 
-		<Delete Files="$(ZipPath)" />
-		<Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(StagingDir)\*' -DestinationPath '$(ZipPath)' -Force&quot;" />
+        <Delete Files="$(ZipPath)"/>
+        <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(StagingDir)\*' -DestinationPath '$(ZipPath)' -Force&quot;"/>
 
-		<Message Importance="high" Text="Packaged $(Configuration) build -&gt; $(ZipPath)" />
-	</Target>
+        <Message Importance="high" Text="Packaged $(Configuration) build -&gt; $(ZipPath)"/>
+    </Target>
 </Project>

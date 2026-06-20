@@ -37,7 +37,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 selectedIndex = 0;
             }
 
-            _itemDropdown = new GUIDropdownWithFilter(_items.Select(e => e.ReadableId).ToArray(), selectedIndex, 20);
+            _itemDropdown = new GUIDropdownWithFilter([.. _items.Select(e => e.ReadableId)], selectedIndex, 20);
         }
 
         public override void DrawNode(Vector2 position)

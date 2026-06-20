@@ -14,13 +14,10 @@ internal static class DS_MultipleChoiceNodePatch
             __4__this = __instance
         };
         __instance.status = Il2CppNodeCanvas.Framework.Status.Running;
-        Action callback = new(() =>
-        {
-            __c__DisplayClass26_._OnOptionSelected_b__0();
-        });
+        Action callback = __c__DisplayClass26_._OnOptionSelected_b__0;
         string localizedString = __instance.GetLocalizedString(__instance.availableChoices[index].statement);
         IStatement statement = __instance.availableChoices[index].statement.BlackboardReplace(__instance.graphBlackboard, localizedString);
-        __instance.DLGTree.rootGraph.TryCast<DialogueTree>().RequestSubtitles(new SubtitlesRequestInfo(__instance.finalActor, statement, callback));
+        __instance.DLGTree.rootGraph.Cast<DialogueTree>().RequestSubtitles(new SubtitlesRequestInfo(__instance.finalActor, statement, callback));
         return false;
     }
 }

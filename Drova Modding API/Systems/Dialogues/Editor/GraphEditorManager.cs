@@ -1,6 +1,7 @@
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies;
+using static Drova_Modding_API.Systems.Dialogues.ActorParameterHelper;
 using Drova_Modding_API.Systems.Dialogues.Editor.Factories;
 using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Drova_Modding_API.Systems.Dialogues.Store;
@@ -24,12 +25,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// List of snapshots of the graph editor state
         /// </summary>
-        protected List<GraphEditorSnapshot> GraphEditorSnapshots = [];
+        protected readonly List<GraphEditorSnapshot> GraphEditorSnapshots = [];
 
-        private DialogueTree _dialogueTree;
-        private bool _isActive = false;
-        private readonly DialogueStore _dialogueStore = new();
+        private DialogueTree? _dialogueTree;
+        private bool _isActive;
         private IActionStrategy? _activeAction;
+        private string? _activeActionHint;
 
         /// <summary>
         /// The dialogue tree that is being edited
@@ -45,8 +46,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 if (value == null)
                 {
                     _dialogueTree = value;
+                    _nodeActorDropdowns.Clear();
+                    InvalidateActorLayoutCache();
                     return;
                 }
+
+                _nodeActorDropdowns.Clear();
+                InvalidateActorLayoutCache();
+
                 if (value.IsLazyLoading || value.allNodes.Count == 0)
                 {
                     value.SelfDeserialize();
@@ -56,14 +63,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 _dialogueTree = value;
                 if (_isActive) return;
                 EditorManager.AllowNpcSelection = false;
-                InputAccess.ToggleGampeplayActionMaps(false);
+                InputAccess.ToggleGameplayActionMaps(false);
                 Time.timeScale = 0;
                 _isActive = true;
             }
         }
 
         // Currently selected node
-        private DrawNodeEditor? _selectedNode = null;
+        private DrawNodeEditor? _selectedNode;
 
         // Offset between the mouse position and node position
         private Vector2 _dragOffset;
@@ -81,10 +88,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         public DrawTaskEditorFactory DrawTaskEditorFactory { get; set; }
 
         // Track whether the context menu is open
-        private bool _showContextMenu = false;
+        private bool _showContextMenu;
 
         // Track whether the sub-context menu is open
-        private bool _showSubContextMenu = false;
+        private bool _showSubContextMenu;
 
         // Position where the right-click occurred
         private Vector2 _contextMenuPosition;
@@ -98,25 +105,64 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         // Start point for panning drag
         private Vector2 _dragStart;
         // Is panning in progress?
-        private bool _isDragging = false;
+        private bool _isDragging;
         // Is a node being dragged?
-        private bool _isDraggingNode = false;
+        private bool _isDraggingNode;
 
         private bool _isFirstDraw = true;
 
         // List of context menu options
-        private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate"), new("Modding_API/GraphEditor", "Connect")];
+        private readonly LocalizedString[] _contextMenuOptions = [new("Modding_API/GraphEditor", "Create"), new("Modding_API/GraphEditor", "Delete"), new("Modding_API/GraphEditor", "Duplicate"), new("Modding_API/GraphEditor", "Connect"), new("Modding_API/GraphEditor", "MainNode")];
 
-        private readonly Dictionary<string, DrawNodeEditor> drawNodeEditors = [];
+        private readonly Dictionary<string, DrawNodeEditor> _drawNodeEditors = [];
 
         // Editors whose AABB overlaps another editor this frame
         private readonly HashSet<DrawNodeEditor> _overlappingEditors = [];
+
+        // Keep one dropdown per node UID for actor parameter selection.
+        private readonly Dictionary<string, GUIDropdown> _nodeActorDropdowns = [];
+
+        private string _newActorParameterName = string.Empty;
+        private int _actorNamesLayoutCacheKey;
+        private float _cachedActorDropdownWidth = -1f;
 
         /// <summary>
         /// List of node editors
         /// </summary>
         [HideFromIl2Cpp]
-        public Dictionary<string, DrawNodeEditor> DrawNodeEditors => drawNodeEditors;
+        public Dictionary<string, DrawNodeEditor> DrawNodeEditors => _drawNodeEditors;
+
+        [HideFromIl2Cpp]
+        private GraphEditorActionContext CreateActionContext(Vector2 pointerPosition)
+        {
+            return new GraphEditorActionContext(this, _selectedNode, pointerPosition, _activeActionHint);
+        }
+
+        [HideFromIl2Cpp]
+        private void ApplyActionContext(GraphEditorActionContext context)
+        {
+            _activeActionHint = context.HintText;
+        }
+
+        /// <summary>
+        /// Sets the selected node editor and updates selection visuals.
+        /// </summary>
+        /// <param name="editor">Editor to select, or null to clear selection.</param>
+        [HideFromIl2Cpp]
+        public void SetSelectedNode(DrawNodeEditor? editor)
+        {
+            if (_selectedNode != null)
+            {
+                _selectedNode.IsSelected = false;
+            }
+
+            _selectedNode = editor;
+
+            if (_selectedNode != null)
+            {
+                _selectedNode.IsSelected = true;
+            }
+        }
 
         internal void Awake()
         {
@@ -134,10 +180,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             // Detect right-click (mouse button 1)
             if (Input.GetMouseButtonDown(1))
             {
+                Vector2 guiMousePosition = Input.mousePosition;
+                guiMousePosition.y = Screen.height - guiMousePosition.y;
+
+                DrawNodeEditor? nodeUnderCursor = FindNodeAt((guiMousePosition - _panOffset) / _scaleFactor);
+                SetSelectedNode(nodeUnderCursor);
+
                 _showContextMenu = true;
-                _contextMenuPosition = Input.mousePosition;
-                // Convert to GUI coordinates (flip the Y-axis)
-                _contextMenuPosition.y = Screen.height - _contextMenuPosition.y;
+                _contextMenuPosition = guiMousePosition;
                 // Ensure the menu doesn't go off the screen
                 _contextMenuPosition.x = Mathf.Clamp(_contextMenuPosition.x, 0, Screen.width - 10) + 10;
                 EndActiveAction();
@@ -170,9 +220,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
 
             if (_isFirstDraw)
             {
-                for (int i = 0; i < drawNodeEditors.Count; i++)
+                for (int i = 0; i < _drawNodeEditors.Count; i++)
                 {
-                    drawNodeEditors.Values.ElementAt(i).Init();
+                    _drawNodeEditors.Values.ElementAt(i).Init();
                 }
                 _isFirstDraw = false;
             }
@@ -208,15 +258,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             HandleActiveActionStrategy();
 
             // Flush all deferred dropdown overlays so they paint on top of every node
-            GUIDropdown.FlushOverlays();
+            GUIDropdown.FlushOverlays(visibleArea);
+            GUICreateConditionTask.FlushOverlays();
 
             // Draw the tooltip
             if (GUI.tooltip != "")
             {
-                GUIStyle style = new(GUI.skin.label);
-                style.normal.textColor = Color.white;
-                style.fontSize = 12;
-                style.alignment = TextAnchor.MiddleCenter;
+                GUIStyle style = new(GUI.skin.label)
+                {
+                    normal =
+                    {
+                        textColor = Color.white
+                    },
+                    fontSize = 12,
+                    alignment = TextAnchor.MiddleCenter
+                };
 
                 float width = style.CalcSize(new GUIContent(GUI.tooltip)).x;
                 float height = style.CalcHeight(new GUIContent(GUI.tooltip), width);
@@ -230,6 +286,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             if (_showContextMenu) DrawContextMenu();
             if (_showSubContextMenu) DrawSubContextMenu();
 
+            DrawActiveActionHint();
             DrawControls();
         }
 
@@ -237,7 +294,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             if (_activeAction != null)
             {
-                _activeAction.OnCancel(this, _selectedNode);
+                GraphEditorActionContext context = CreateActionContext(Vector2.zero);
+                _activeAction.OnCancel(context);
+                ApplyActionContext(context);
                 _activeAction = null;
             }
         }
@@ -263,6 +322,22 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         }
 
         [HideFromIl2Cpp]
+        private DrawNodeEditor? FindNodeAt(Vector2 graphMousePosition)
+        {
+            foreach (DrawNodeEditor editor in _drawNodeEditors.Values)
+            {
+                if (editor == null) continue;
+                Rect nodeRect = new(editor.Position, editor.NodeSize);
+                if (nodeRect.Contains(graphMousePosition))
+                {
+                    return editor;
+                }
+            }
+
+            return null;
+        }
+
+        [HideFromIl2Cpp]
         private void BuildNodeEditorsFromFirstInit(DialogueTree value)
         {
             Vector2 lastPosition = new(100, 0);
@@ -270,7 +345,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 Il2CppNodeCanvas.Framework.Node node = value.allNodes[i];
                 if (node == null) continue;
-                if (!drawNodeEditors.ContainsKey(node.UID))
+                if (!_drawNodeEditors.ContainsKey(node.UID))
                 {
                     DrawNodeEditor editor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(node.GetIl2CppType());
                     if (editor == null)
@@ -279,7 +354,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                         continue;
                     }
                     editor.Node = node.Cast<DTNode>();
-                    drawNodeEditors.TryAdd(node.UID, editor);
+                    _drawNodeEditors.TryAdd(node.UID, editor);
                     Vector2 newPosition = new(lastPosition.x, lastPosition.y + editor.NodeSize.y);
                     editor.Position = newPosition;
                     editor.GraphEditorManager = this;
@@ -288,7 +363,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     int highestHeight = CreateOutConnections(editor, newPosition, connections);
                     lastPosition = new Vector2(newPosition.x, newPosition.y + highestHeight + 100);
                 }
-                else if (drawNodeEditors.TryGetValue(node.UID, out DrawNodeEditor editor))
+                else if (_drawNodeEditors.TryGetValue(node.UID, out DrawNodeEditor editor))
                 {
                     Vector2 newPosition = new(lastPosition.x, lastPosition.y + editor.NodeSize.y);
                     int highestHeight = CreateOutConnections(editor, newPosition, node.outConnections);
@@ -308,7 +383,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 if (connection == null) continue;
                 if (connection.targetNode == null) continue;
                 Il2CppNodeCanvas.Framework.Node targetNode = connection.targetNode;
-                if (drawNodeEditors.TryGetValue(targetNode.UID, out DrawNodeEditor targetConnection))
+                if (_drawNodeEditors.TryGetValue(targetNode.UID, out DrawNodeEditor targetConnection))
                 {
                     editor.ConnectedWith.Add(targetConnection);
                 }
@@ -322,7 +397,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     }
                     connectedEditor.Node = targetNode.Cast<DTNode>();
                     connectedEditor.GraphEditorManager = this;
-                    drawNodeEditors.TryAdd(targetNode.UID, connectedEditor);
+                    _drawNodeEditors.TryAdd(targetNode.UID, connectedEditor);
                     connectedEditor.Position = connectionPosition;
                     connectionPosition = new Vector2(connectionPosition.x + connectedEditor.NodeSize.x + 100, connectionPosition.y);
                     editor.ConnectedWith.Add(connectedEditor);
@@ -341,8 +416,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <param name="node">The node to go into</param>
         public void GoIntoSubGraph(SubDialogueTree node)
         {
-            GraphEditorSnapshots.Add(new GraphEditorSnapshot(DialogueTree, _scaleFactor, _panOffset));
-            drawNodeEditors.Clear();
+            GraphEditorSnapshots.Add(new GraphEditorSnapshot(DialogueTree!, _scaleFactor, _panOffset));
+            _drawNodeEditors.Clear();
             _selectedNode = null;
             _isDraggingNode = false;
             _scaleFactor = 1;
@@ -363,19 +438,28 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             }
             if (GUI.Button(new(Screen.width - 110, 70, 100, 60), "Save Graph"))
             {
-                DialogueTree.Serialize(null);
-                this._dialogueStore.SaveDialogue(DialogueTree);
+                DialogueTree!.Serialize(null);
+                string dialogueId = string.IsNullOrWhiteSpace(DialogueTree.Key) ? DialogueTree.name : DialogueTree.Key;
+                bool saved = DialogueStore.SaveDialogue(dialogueId, DialogueTree);
+                if (saved)
+                {
+                    // Patch the live in-memory instance so vanilla NPCs referencing
+                    // this DialogueTree pick up the changes immediately.
+                    DialogueStore.TryPatchInMemoryDialogue(dialogueId);
+                }
             }
             if (GUI.Button(new(Screen.width - 160, 130, 150, 60), "Resolve Overlaps"))
             {
                 ResolveOverlaps();
             }
+            DrawActorParameterControls();
+            DrawDialogueSettings();
             if (GraphEditorSnapshots.Count > 0)
             {
                 GraphEditorSnapshot snapshot = GraphEditorSnapshots[^1];
                 if (GUI.Button(new(10, 10, 550, 60), $"Go back to {snapshot.DialogueTree.name}"))
                 {
-                    drawNodeEditors.Clear();
+                    _drawNodeEditors.Clear();
                     _selectedNode = null;
                     _isDraggingNode = false;
                     _isFirstDraw = true;
@@ -385,7 +469,100 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     GraphEditorSnapshots.RemoveAt(GraphEditorSnapshots.Count - 1);
                 }
             }
-            GUI.Label(new(10, 80, 550, 25), $"Current Editor: {DialogueTree.name}");
+            GUI.Label(new(10, 80, 550, 25), $"Current Editor: {DialogueTree!.name}");
+            string selectedNodeLabel = _selectedNode == null
+                ? "Selected Node: none"
+                : $"Selected Node: {_selectedNode.Node.GetIl2CppType().Name}";
+            GUI.Label(new(10, 105, 550, 25), selectedNodeLabel);
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawDialogueSettings()
+        {
+            if (DialogueTree == null) return;
+
+            GUI.Box(new Rect(380, 130, 360, 68), "Dialogue Settings");
+            GUI.Label(new Rect(390, 152, 90, 20), "LocaPath");
+            DialogueTree._locaPath = GUI.TextField(new Rect(460, 152, 270, 20), DialogueTree.LocaPath);
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawActorParameterControls()
+        {
+            if (DialogueTree == null) return;
+
+            int count = DialogueTree.actorParameters?.Count ?? 0;
+            const float rowHeight = 22f;
+            // Header (name field) + one row per existing parameter, or a single "none" row.
+            float listRows = count > 0 ? count : 1;
+            float boxHeight = 46f + (listRows * rowHeight);
+
+            GUI.Box(new Rect(10, 130, 360, boxHeight), "Actor Parameters");
+            GUI.Label(new Rect(20, 152, 90, 20), "Name");
+            _newActorParameterName = GUI.TextField(new Rect(70, 152, 200, 20), _newActorParameterName);
+            if (GUI.Button(new Rect(280, 152, 80, 20), "Add"))
+            {
+                AddActorParameter(_newActorParameterName);
+            }
+
+            if (count == 0)
+            {
+                GUI.Label(new Rect(20, 174, 330, 20), "No actor parameters");
+                return;
+            }
+
+            // Defer deletion until after the draw loop so we don't mutate the
+            // list while iterating it.
+            int removeIndex = -1;
+            for (int i = 0; i < count; i++)
+            {
+                float rowY = 174 + (i * rowHeight);
+                string label = (i == 0 ? "Default: " : string.Empty) + GetActorParameterName(DialogueTree.actorParameters[i]);
+                GUI.Label(new Rect(20, rowY, 300, 20), label);
+                if (GUI.Button(new Rect(326, rowY, 24, 20), "X"))
+                {
+                    removeIndex = i;
+                }
+            }
+
+            if (removeIndex >= 0)
+            {
+                RemoveActorParameter(removeIndex);
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private void AddActorParameter(string actorName)
+        {
+            if (DialogueTree == null) return;
+
+            string trimmedName = actorName?.Trim() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(trimmedName)) return;
+
+            DialogueTree.actorParameters ??= new Il2CppSystem.Collections.Generic.List<DialogueTree.ActorParameter>();
+            DialogueTree.actorParameters.Add(new DialogueTree.ActorParameter
+            {
+                _keyName = trimmedName,
+                Actor = null,
+                ActorGuid = string.Empty,
+                _id = Il2CppSystem.Guid.NewGuid().ToString()
+            });
+
+            _newActorParameterName = string.Empty;
+            _nodeActorDropdowns.Clear();
+            InvalidateActorLayoutCache();
+        }
+
+        [HideFromIl2Cpp]
+        private void RemoveActorParameter(int index)
+        {
+            if (DialogueTree?.actorParameters == null) return;
+            if (index < 0 || index >= DialogueTree.actorParameters.Count) return;
+
+            DialogueTree.actorParameters.RemoveAt(index);
+
+            _nodeActorDropdowns.Clear();
+            InvalidateActorLayoutCache();
         }
 
         [HideFromIl2Cpp]
@@ -397,17 +574,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             _isDraggingNode = false;
             _showContextMenu = false;
             _showSubContextMenu = false;
-            drawNodeEditors.Clear();
+            _drawNodeEditors.Clear();
             EditorManager.AllowNpcSelection = true;
             EditorManager.InEditor = false;
             _scaleFactor = 1;
             _panOffset = new(200, -200);
             _isFirstDraw = true;
+            _nodeActorDropdowns.Clear();
+            InvalidateActorLayoutCache();
             EditorManager.ResetLastInvoked();
+            _activeActionHint = null;
             // Restore the previous timescale if the game is paused which is the case when the graph is opened
             if (Time.timeScale == 0)
                 Time.timeScale = 1;
-            InputAccess.ToggleGampeplayActionMaps(true);
+            InputAccess.ToggleGameplayActionMaps(true);
+            gameObject.SetActive(false);
         }
 
         [HideFromIl2Cpp]
@@ -450,7 +631,29 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         void HandleMouseClick()
         {
             Event e = Event.current;
+
+            // Ignore graph interactions while clicking inside an open context menu.
+            // Without this guard, the menu click can deselect the node before the action executes.
+            if ((_showContextMenu || _showSubContextMenu) && IsPointInRect(e.mousePosition, _rect))
+            {
+                return;
+            }
+
             Vector2 adjustedMousePosition = (e.mousePosition - _panOffset) / _scaleFactor;
+
+            if (_activeAction != null && e.type == EventType.MouseDown && e.button == 0)
+            {
+                GraphEditorActionContext context = CreateActionContext(adjustedMousePosition);
+                _activeAction.OnEnd(context);
+                ApplyActionContext(context);
+                _activeAction = null;
+                e.Use();
+                return;
+            }
+
+            // While an active action is running, block all normal node interaction
+            // so the source node is not accidentally dragged or deselected.
+            if (_activeAction != null) return;
 
             // On mouse down, check if we clicked on a node
             if (e.type == EventType.MouseDown && e.button == 0)
@@ -458,7 +661,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 bool isDoubleClick = e.clickCount == 2;
                 bool nodeHit = false;
 
-                foreach (KeyValuePair<string, DrawNodeEditor> element in drawNodeEditors)
+                foreach (KeyValuePair<string, DrawNodeEditor> element in _drawNodeEditors)
                 {
                     DrawNodeEditor editor = element.Value;
                     Rect nodeRect = new(editor.Position, editor.NodeSize);
@@ -557,7 +760,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         private void DetectOverlaps()
         {
             _overlappingEditors.Clear();
-            List<DrawNodeEditor> values = [.. drawNodeEditors.Values];
+            List<DrawNodeEditor> values = [.. _drawNodeEditors.Values];
             for (int i = 0; i < values.Count; i++)
             {
                 DrawNodeEditor a = values[i];
@@ -612,7 +815,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             const int maxIterations = 50;
             const float padding = 20f;
-            List<DrawNodeEditor> values = [.. drawNodeEditors.Values];
+            List<DrawNodeEditor> values = [.. _drawNodeEditors.Values];
 
             for (int iter = 0; iter < maxIterations; iter++)
             {
@@ -660,10 +863,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         private void DrawNodesInArea(Rect visibleArea)
         {
-            for (int i = 0; i < drawNodeEditors.Values.Count; i++)
+            HashSet<string> activeUids = [];
+            for (int i = 0; i < _drawNodeEditors.Values.Count; i++)
             {
-                DrawNodeEditor element = drawNodeEditors.Values.ElementAt(i);
+                DrawNodeEditor element = _drawNodeEditors.Values.ElementAt(i);
                 if (element == null) continue;
+                activeUids.Add(element.Node.UID);
 
                 Rect nodeRect = new(
                     element.Position.x,
@@ -675,9 +880,161 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 if (visibleArea.Overlaps(nodeRect))
                 {
                     element.DrawNode(element.Position);
+                    DrawNodeActorSelector(element);
                 }
             }
+
+            // Remove stale dropdowns when nodes were deleted.
+            List<string> staleUids = [];
+            foreach (string uid in _nodeActorDropdowns.Keys)
+            {
+                if (!activeUids.Contains(uid))
+                    staleUids.Add(uid);
+            }
+            for (int i = 0; i < staleUids.Count; i++)
+            {
+                _nodeActorDropdowns.Remove(staleUids[i]);
+            }
         }
+
+        [HideFromIl2Cpp]
+        private void DrawNodeActorSelector(DrawNodeEditor editor)
+        {
+            if (DialogueTree == null || editor.Node == null) return;
+
+            DTNode node = editor.Node;
+            // Multiple choice is always player-driven and should not expose actor selection.
+            if (node is DS_MultipleChoiceNode || !node.requireActorSelection) return;
+            if (!TryGetActorOptions(out string[] actorNames, out string[] actorIds)) return;
+
+            EnsureDefaultActorBinding(node, actorNames, actorIds);
+
+            string currentActorId = node._actorParameterID ?? string.Empty;
+            int selectedIndex = Array.IndexOf(actorIds, currentActorId);
+            if (selectedIndex < 0) selectedIndex = 0;
+
+            if (!_nodeActorDropdowns.TryGetValue(editor.Node.UID, out GUIDropdown actorDropdown)
+                || actorDropdown.OptionsCount != actorNames.Length)
+            {
+                actorDropdown = new GUIDropdown(actorNames, selectedIndex);
+                _nodeActorDropdowns[editor.Node.UID] = actorDropdown;
+            }
+            else
+            {
+                actorDropdown.SetSelectedIndex(selectedIndex);
+            }
+
+            // Render actor selector outside of the node header and size it to long actor names.
+            float dropdownWidth = GetCachedActorDropdownWidth(actorNames);
+            float panelWidth = dropdownWidth + 50f;
+            float panelX = editor.Position.x + editor.NodeSize.x + 8f;
+            float panelY = editor.Position.y;
+            Rect panelRect = new(panelX, panelY, panelWidth, 22f);
+            GUI.Box(panelRect, GUIContent.none);
+            GUI.Label(new Rect(panelX + 4f, panelY + 2f, 40f, 18f), "Actor");
+            Rect dropdownRect = new(panelX + 46f, panelY + 2f, dropdownWidth, 18f);
+
+            if (actorDropdown.Draw(dropdownRect))
+            {
+                int newIndex = actorDropdown.SelectedIndex;
+                node._actorParameterID = actorIds[newIndex];
+                node.actorName = actorNames[newIndex];
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private float GetCachedActorDropdownWidth(string[] actorNames)
+        {
+            int layoutKey = ComputeActorNamesLayoutKey(actorNames);
+            if (layoutKey == _actorNamesLayoutCacheKey && _cachedActorDropdownWidth > 0f)
+            {
+                return _cachedActorDropdownWidth;
+            }
+
+            float widestActorText = 0f;
+            GUIStyle buttonStyle = GUI.skin.button;
+            for (int i = 0; i < actorNames.Length; i++)
+            {
+                float candidateWidth = buttonStyle.CalcSize(new GUIContent(actorNames[i])).x;
+                if (candidateWidth > widestActorText)
+                {
+                    widestActorText = candidateWidth;
+                }
+            }
+
+            _cachedActorDropdownWidth = Mathf.Clamp(widestActorText + 28f, 170f, 420f);
+            _actorNamesLayoutCacheKey = layoutKey;
+            return _cachedActorDropdownWidth;
+        }
+
+        [HideFromIl2Cpp]
+        private static int ComputeActorNamesLayoutKey(string[] actorNames)
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = (hash * 31) + actorNames.Length;
+                for (int i = 0; i < actorNames.Length; i++)
+                {
+                    hash = (hash * 31) + actorNames[i].GetHashCode();
+                }
+
+                return hash;
+            }
+        }
+
+        [HideFromIl2Cpp]
+        private void InvalidateActorLayoutCache()
+        {
+            _actorNamesLayoutCacheKey = 0;
+            _cachedActorDropdownWidth = -1f;
+        }
+
+        [HideFromIl2Cpp]
+        internal void ApplyDefaultActorParameter(DTNode node)
+        {
+            if (DialogueTree == null || node == null) return;
+            if (node is DS_MultipleChoiceNode || !node.requireActorSelection) return;
+            if (!TryGetActorOptions(out string[] actorNames, out string[] actorIds)) return;
+
+            EnsureDefaultActorBinding(node, actorNames, actorIds);
+        }
+
+        [HideFromIl2Cpp]
+        private static void EnsureDefaultActorBinding(DTNode node, string[] actorNames, string[] actorIds)
+        {
+            string currentId = node._actorParameterID ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(currentId) && Array.IndexOf(actorIds, currentId) >= 0)
+            {
+                return;
+            }
+
+            node.actorName = actorNames[0];
+            node._actorParameterID = actorIds[0];
+        }
+
+        [HideFromIl2Cpp]
+        private bool TryGetActorOptions(out string[] actorNames, out string[] actorIds)
+        {
+            actorNames = [];
+            actorIds = [];
+            if (DialogueTree?.actorParameters == null || DialogueTree.actorParameters.Count == 0)
+            {
+                return false;
+            }
+
+            actorNames = new string[DialogueTree.actorParameters.Count];
+            actorIds = new string[DialogueTree.actorParameters.Count];
+            for (int i = 0; i < DialogueTree.actorParameters.Count; i++)
+            {
+                DialogueTree.ActorParameter actorParameter = DialogueTree.actorParameters[i];
+                actorNames[i] = GetActorParameterName(actorParameter);
+                actorIds[i] = GetActorParameterId(actorParameter);
+            }
+
+            return actorNames.Length > 0;
+        }
+
 
         private void HandleActiveActionStrategy()
         {
@@ -685,8 +1042,25 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 Event e = Event.current;
                 Vector2 adjustedMousePosition = (e.mousePosition - _panOffset) / _scaleFactor;
-                _activeAction.OnGui(this, _selectedNode, adjustedMousePosition);
+                GraphEditorActionContext context = CreateActionContext(adjustedMousePosition);
+                _activeAction.OnGui(context);
+                ApplyActionContext(context);
             }
+        }
+
+        [HideFromIl2Cpp]
+        private void DrawActiveActionHint()
+        {
+            if (string.IsNullOrWhiteSpace(_activeActionHint)) return;
+
+            Rect hintRect = new(10, Screen.height - 40, Screen.width - 20, 30);
+            Color previousColor = GUI.color;
+            GUI.color = new Color(0f, 0f, 0f, 0.75f);
+            GUI.Box(hintRect, GUIContent.none);
+
+            GUI.color = Color.white;
+            GUI.Label(new Rect(hintRect.x + 8, hintRect.y + 6, hintRect.width - 16, 20), _activeActionHint);
+            GUI.color = previousColor;
         }
 
         #endregion Drawing
@@ -699,22 +1073,29 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             float menuWidth = 120;
 
             DrawContextMenu(_contextMenuOptions.Length, menuWidth);
+            bool hasSelection = _selectedNode != null;
 
             for (int i = 0; i < _contextMenuOptions.Length; i++)
             {
-                if (ContextNeedsSelection(i) && _selectedNode == null) continue;
+                bool needsSelection = ContextNeedsSelection(i);
+                bool isEnabled = !needsSelection || hasSelection;
+                bool previousEnabled = GUI.enabled;
+                GUI.enabled = isEnabled;
+
                 if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), _contextMenuOptions[i].GetLocalizedString(null)))
                 {
                     EndActiveAction();
                     HandleContextMenuSelection(i);
                     _showContextMenu = false;
                 }
+
+                GUI.enabled = previousEnabled;
             }
         }
 
         private static bool ContextNeedsSelection(int index)
         {
-            return index == (int)GraphEditorAction.Delete || index == (int)GraphEditorAction.Duplicate || index == (int)GraphEditorAction.Connect;
+            return index == (int)GraphEditorAction.Delete || index == (int)GraphEditorAction.Duplicate || index == (int)GraphEditorAction.Connect || index == (int)GraphEditorAction.SelectPrimeNode;
         }
 
         [HideFromIl2Cpp]
@@ -731,16 +1112,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         void DrawSubContextMenu()
         {
             float menuWidth = 200;
-            string[] _subContextMenuOptions = DrawNodeEditorFactory.GetNodeNames();
+            string[] subContextMenuOptions = DrawNodeEditorFactory.GetNodeNames();
 
-            DrawContextMenu(_subContextMenuOptions.Length, menuWidth);
+            DrawContextMenu(subContextMenuOptions.Length, menuWidth);
 
             // Display each option as a button
-            for (int i = 0; i < _subContextMenuOptions.Length; i++)
+            for (int i = 0; i < subContextMenuOptions.Length; i++)
             {
-                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), _subContextMenuOptions[i]))
+                if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), subContextMenuOptions[i]))
                 {
-                    HandleSubContextMenuSelection(_subContextMenuOptions[i]);
+                    HandleSubContextMenuSelection(subContextMenuOptions[i]);
                     _showSubContextMenu = false; // Close the menu after selection
                 }
             }
@@ -749,11 +1130,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         void HandleSubContextMenuSelection(string option)
         {
-            DrawNodeEditor drawNodeEditor = DrawNodeEditorFactory.GetDrawNodeEditorByName(option);
-            if (drawNodeEditor != null)
-            {
-
-            }
+            IActionStrategy action = new CreateNodeActionStrategy(option);
+            GraphEditorActionContext context = CreateActionContext((_contextMenuPosition - _panOffset) / _scaleFactor);
+            action.OnStart(context);
+            ApplyActionContext(context);
         }
 
         [HideFromIl2Cpp]
@@ -765,13 +1145,32 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     _showSubContextMenu = true;
                     break;
                 case (int)GraphEditorAction.Delete:
-                    MelonLogger.Msg("Delete selected");
+                {
+                    GraphEditorActionContext context = CreateActionContext((_contextMenuPosition - _panOffset) / _scaleFactor);
+                    new DeleteNodeActionStrategy().OnStart(context);
+                    ApplyActionContext(context);
                     break;
+                }
                 case (int)GraphEditorAction.Duplicate:
-                    MelonLogger.Msg("Duplicate selected");
+                {
+                    GraphEditorActionContext context = CreateActionContext((_contextMenuPosition - _panOffset) / _scaleFactor);
+                    new DuplicateNodeActionStrategy().OnStart(context);
+                    ApplyActionContext(context);
                     break;
+                }
                 case (int)GraphEditorAction.Connect:
-                    MelonLogger.Msg("Connect selected");
+                    if (_selectedNode == null) return;
+                    _activeAction = new ConnectActionStrategy();
+                    _isDraggingNode = false;
+                    {
+                        GraphEditorActionContext context = CreateActionContext((_contextMenuPosition - _panOffset) / _scaleFactor);
+                        _activeAction.OnStart(context);
+                        ApplyActionContext(context);
+                    }
+                    break;
+                case (int)GraphEditorAction.SelectPrimeNode:
+                    if (_selectedNode == null) return;
+                    _dialogueTree!.primeNode = _selectedNode.Node;
                     break;
             }
         }
@@ -781,7 +1180,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             Create,
             Delete,
             Duplicate,
-            Connect
+            Connect,
+            SelectPrimeNode
         }
         #endregion ContextMenu
 
@@ -790,9 +1190,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         private void DrawConnectionsInArea(Rect visibleArea)
         {
-            int previuosDepth = GUI.depth;
+            int previousDepth = GUI.depth;
             GUI.depth = 50;
-            foreach (KeyValuePair<string, DrawNodeEditor> element in drawNodeEditors)
+            foreach (KeyValuePair<string, DrawNodeEditor> element in _drawNodeEditors)
             {
                 DrawNodeEditor editor = element.Value;
                 if (editor == null || editor.ConnectedWith.Count == 0) continue;
@@ -818,7 +1218,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                     }
                 }
             }
-            GUI.depth = previuosDepth;
+            GUI.depth = previousDepth;
         }
 
         /// <summary>
@@ -850,6 +1250,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             return nodeCenter + (direction * scale);
         }
 
+        [HideFromIl2Cpp]
+        internal Vector2 GraphToScreen(Vector2 graphPosition)
+        {
+            return (graphPosition * _scaleFactor) + _panOffset;
+        }
+
+        [HideFromIl2Cpp]
+        internal Vector2 ScreenToGraph(Vector2 screenPosition)
+        {
+            return (screenPosition - _panOffset) / _scaleFactor;
+        }
+
         /// <summary>
         /// Draws a line between two points in the GUI.
         /// </summary>
@@ -879,6 +1291,30 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             GUI.matrix = Matrix4x4.TRS((midPoint * _scaleFactor) + _panOffset, Quaternion.identity, new Vector3(1 * _scaleFactor, 1 * _scaleFactor, 1));
             GUI.color = Color.yellow;
             GUI.Box(new Rect(-10, -10, 20, 20), index.ToString());
+
+            GUI.matrix = matrixBackup;
+            GUI.color = previousColor;
+        }
+
+        [HideFromIl2Cpp]
+        internal static void DrawLineScreenSpace(Vector2 pointA, Vector2 pointB, Color color, float thickness = 2f)
+        {
+            Color previousColor = GUI.color;
+            Matrix4x4 matrixBackup = GUI.matrix;
+            GUI.color = color;
+
+            Vector2 delta = pointB - pointA;
+            float length = delta.magnitude;
+            if (length < 0.001f)
+            {
+                GUI.matrix = matrixBackup;
+                GUI.color = previousColor;
+                return;
+            }
+
+            float angle = Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg;
+            GUI.matrix = Matrix4x4.TRS(pointA, Quaternion.Euler(0f, 0f, angle), Vector3.one);
+            GUI.DrawTexture(new Rect(0f, -thickness * 0.5f, length, thickness), Texture2D.whiteTexture, ScaleMode.StretchToFill, true);
 
             GUI.matrix = matrixBackup;
             GUI.color = previousColor;

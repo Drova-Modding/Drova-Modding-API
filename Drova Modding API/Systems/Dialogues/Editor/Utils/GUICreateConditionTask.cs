@@ -5,11 +5,15 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 {
     /// <summary>
-    /// Class that helps creating a condition task
+    /// Class that helps create a condition task
     /// </summary>
     public class GUICreateConditionTask
     {
-        private readonly Dictionary<string, Il2CppSystem.Type> nameToTaskMap = new()
+        private static readonly List<(GUICreateConditionTask task, Vector2 position)> PendingOverlays = [];
+
+        private ConditionTask? _selectedTaskThisFlush;
+
+        private readonly Dictionary<string, Il2CppSystem.Type> _nameToTaskMap = new()
         {
             {"DS_CheckGVarListConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckGVarListConditionTask") },
             {"GBoolConditionTask", Il2CppSystem.Type.GetType("Drova.QuestSystem.Graphs.GBoolConditionTask") },
@@ -17,10 +21,30 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             {"DS_HasItems", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasItems") },
             {"DS_HasAttribute", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasAttribute") },
             {"ConditionList", Il2CppSystem.Type.GetType("NodeCanvas.Framework.ConditionList") },
-            {"GQuestStateConditionTask", Il2CppSystem.Type.GetType("Drova.QuestSystem.Graphs.GQuestStateConditionTask") }
+            {"GQuestStateConditionTask", Il2CppSystem.Type.GetType("Drova.QuestSystem.Graphs.GQuestStateConditionTask") },
+            {"DS_HasOpenReactionType", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasOpenReactionType") },
+            {"DS_HasItemEquippedTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasItemEquippedTask") },
+            {"DS_HasTalents", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasTalents") },
+            {"DS_CanAtoneCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CanAtoneCrimeConditionTask") },
+            {"DS_CanLearnAttributeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CanLearnAttributeConditionTask") },
+            {"DS_CanLearnTalentConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CanLearnTalentConditionTask") },
+            {"DS_CheckAndResetGBoolConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckAndResetGBoolConditionTask") },
+            {"DS_CheckAndResetGlobalBBVarTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckAndResetGlobalBBVarTask") },
+            {"DS_CheckBbIntegerConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckBbIntegerConditionTask") },
+            {"DS_CheckForGlobalVariableCondition", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckForGlobalVariableCondition") },
+            {"DS_CheckCrimeStrength", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckCrimeStrength") },
+            {"DS_CheckForInstigatorConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckForInstigatorConditionTask") },
+            {"DS_CheckLootInventoryEmptyConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_CheckLootInventoryEmptyConditionTask") },
+            {"DS_FactionCheckConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_FactionCheckConditionTask") },
+            {"DS_HasNextMPCNodeValidChoices", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasNextMPCNodeValidChoices") },
+            {"DS_HasPlayerActiveCrimes", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_HasPlayerActiveCrimes") },
+            {"DS_JudgeCanAtoneCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_JudgeCanAtoneCrimeConditionTask") },
+            {"DS_WitnessedCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_WitnessedCrimeConditionTask") },
+            {"DS_WitnessedOpenReactionCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_WitnessedOpenReactionCrimeConditionTask") },
+            {"DS_WitnessedSpecificCrimeConditionTask", Il2CppSystem.Type.GetType("Drova.DialogueNew.DS_WitnessedSpecificCrimeConditionTask") }
         };
 
-        private readonly string[] tooltips =
+        private readonly string[] _tooltips =
         [
             "Check if any bool in the list is value",
             "Check if all bools are value",
@@ -28,13 +52,47 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             "Check if the target or player has the items",
             "Check if the player has the attributes",
             "Collection of Condition Tasks",
-            "Check if the quest state is the same as value"
+            "Check if the quest state is the same as value",
+            "Check for open reaction type",
+            "Check if player has items equipped",
+            "Check if Player has learned defined talents",
+            "Check if player can atone crimes",
+            "Check if Attribute, defined in following TeachStatsNode can be learned.",
+            "Check if Talents, defined in following TeachTalentNode can be learned",
+            "Check then Reset a variable in global variables",
+            "Check then Reset a variable in global variables",
+            "Checks for a number on global variable",
+            "Check for a variable in global variables",
+            "Checks fighting strength + 30 is greater than players fighting strength",
+            "Checks if EntityInfo is INSTIGATOR",
+            "Check before OpenLootWindow if inventory is not empty. If no EntityInfo is defined, the Owner of this graph is checked.",
+            "Check if owner is following Faction",
+            "Check if Multiple Choice node following after statement Node has valid choices",
+            "Check if player has active crimes",
+            "Check for all judgable crimes of player",
+            "Check if owner witnessed crime of player",
+            "Check if owner a open crime of player",
+            "Check if owner witnessed a specific crime of player"
         ];
 
         /// <summary>
         /// Size of the selection
         /// </summary>
-        public Vector2Int Size => new(220, 20 + (nameToTaskMap.Count * 20));
+        public Vector2Int Size => new(220, 20 + (_nameToTaskMap.Count * 20));
+
+        /// <summary>
+        /// Draws all deferred condition task creation overlays.
+        /// </summary>
+        public static void FlushOverlays()
+        {
+            (GUICreateConditionTask task, Vector2 position)[] toFlush = [.. PendingOverlays];
+            PendingOverlays.Clear();
+
+            foreach ((GUICreateConditionTask task, Vector2 position) in toFlush)
+            {
+                task._selectedTaskThisFlush = task.DrawOverlay(position);
+            }
+        }
 
         /// <summary>
         /// Draw the condition task selection
@@ -42,14 +100,24 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <param name="position">position of the selection</param>
         public ConditionTask? Draw(Vector2 position)
         {
+            ConditionTask? selectedTask = _selectedTaskThisFlush;
+            _selectedTaskThisFlush = null;
+
+            PendingOverlays.Add((this, position));
+
+            return selectedTask;
+        }
+
+        private ConditionTask? DrawOverlay(Vector2 position)
+        {
             Rect rect = new(position.x, position.y, 220, 20);
             GUI.Label(rect, "Select a condition task");
             rect.y += 20;
 
-            for (int i = 0; i < nameToTaskMap.Count; i++)
+            for (int i = 0; i < _nameToTaskMap.Count; i++)
             {
-                KeyValuePair<string, Il2CppSystem.Type> item = nameToTaskMap.ElementAt(i);
-                GUIContent content = new(item.Key, tooltips[i]);
+                KeyValuePair<string, Il2CppSystem.Type> item = _nameToTaskMap.ElementAt(i);
+                GUIContent content = new(item.Key, _tooltips[i]);
                 if (GUI.Button(rect, content))
                 {
                     return CreateConditionTask(item.Key);
@@ -68,8 +136,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         {
             try
             {
-                if (nameToTaskMap.TryGetValue(name, out Il2CppSystem.Type type))
+                if (_nameToTaskMap.TryGetValue(name, out Il2CppSystem.Type type))
                 {
+                    
                     return Il2CppSystem.Activator.CreateInstance(type).TryCast<ConditionTask>();
                 }
                 else

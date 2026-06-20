@@ -1,4 +1,8 @@
+using Drova_Modding_API.Access;
+using Il2CppDrova;
 using Il2CppDrova.Talent;
+using Il2CppDrova.Talent.Graphs;
+using Il2CppSystem.Linq;
 using MelonLoader;
 using UnityEngine;
 
@@ -13,6 +17,10 @@ namespace Drova_Modding_API.Systems.Talents
         private static Dictionary<string, List<TalentContainer>>? _groupedDatabase;
         private static Dictionary<string, TalentContainer>? _talentCache;
 
+        private static readonly List<TalentContainer> TalentList = [];
+
+        private static bool _isInitialized;
+
         /// <summary>
         /// Initializes the TalentContainer database from the database container.
         /// Call this once when entering the MainMenu.
@@ -22,7 +30,7 @@ namespace Drova_Modding_API.Systems.Talents
             if (_groupedDatabase != null && _talentCache != null) return;
 
             var talentsInDatabase = Resources.FindObjectsOfTypeAll<TalentContainer>();
-            
+
             // Build grouped dictionary by prefix
             _groupedDatabase = talentsInDatabase
                 .GroupBy(tc => ExtractCategory(tc.name))
@@ -30,6 +38,68 @@ namespace Drova_Modding_API.Systems.Talents
 
             // Build flat cache for fast lookups
             _talentCache = talentsInDatabase.ToDictionary(tc => tc.name);
+        }
+
+        /// <summary>
+        /// Adds a talent to the database and queues it for insertion into the talent graph.
+        /// </summary>
+        /// <param name="talent">The talent container to add.</param>
+        public static void AddTalent(TalentContainer talent)
+        {
+            if (_groupedDatabase == null)
+            {
+                InitializeDatabase();
+            }
+            if (_groupedDatabase!.ContainsKey(ExtractCategory(talent.name)))
+            {
+                _groupedDatabase[ExtractCategory(talent.name)].Add(talent);
+            }
+            else
+            {
+                _groupedDatabase[ExtractCategory(talent.name)] = new List<TalentContainer>
+                {
+                    talent
+                };
+            }
+            _talentCache!.TryAdd(talent.name, talent);
+            TalentList.Add(talent);
+        }
+
+        /// <summary>
+        /// Initializes the talent graph and registers queued modded talents. Safe to call multiple times; only runs once.
+        /// </summary>
+        public static void Init()
+        {
+            if (_isInitialized) return;
+            _isInitialized = true;
+            var graph = ProviderAccess.GetGameDatabase().TalentGraph;
+            InitializeTalentGraph(graph);
+            PlayerAccess.OnPlayerFound += PlayerAccessOnOnPlayerFound;
+        }
+        private static void PlayerAccessOnOnPlayerFound(Actor player)
+        {
+            InitializeTalentGraph(player.GetComponentInChildren<TalentGraphOwner>().graph.Cast<TalentGraph>());
+        }
+        private static void InitializeTalentGraph(TalentGraph graph)
+        {
+            if (graph != null)
+            {
+                if (!graph.hasInitialized)
+                {
+                    graph.SelfDeserialize();
+                }
+                graph.DeserializeIfNotDoneYet(true);
+                
+                foreach (var talent in TalentList)
+                {
+                    if(graph.GetTalentFromGUID(talent.GUID) != null) continue;
+                    var node = graph.AddNode<TalentNode>();
+                    node._group = "Modded Talents";
+                    node._talent = talent;
+                    node.name = talent.GetTalentName();
+                    node._talentFactory = graph.GetAllNodesOfType<TalentNode>().First()._talentFactory;
+                }
+            }
         }
 
         /// <summary>
@@ -69,8 +139,8 @@ namespace Drova_Modding_API.Systems.Talents
                 MelonLogger.Warning("[TalentContainerDatabase] Database not initialized. Call InitializeDatabase() first.");
             }
 
-            return _groupedDatabase?.TryGetValue(category, out var talents) == true 
-                ? talents 
+            return _groupedDatabase?.TryGetValue(category, out var talents) == true
+                ? talents
                 : new List<TalentContainer>();
         }
 
@@ -94,4 +164,3 @@ namespace Drova_Modding_API.Systems.Talents
         }
     }
 }
-

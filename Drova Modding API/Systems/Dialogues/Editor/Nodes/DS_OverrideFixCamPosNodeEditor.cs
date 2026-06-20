@@ -9,7 +9,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_OverrideFixCamPosNodeEditor : DrawNodeEditor
     {
 
-        private DS_OverrideFixCamPos _castedNode;
+        private DS_OverrideFixCamPos? _castedNode;
 
         public DS_OverrideFixCamPosNodeEditor()
         {

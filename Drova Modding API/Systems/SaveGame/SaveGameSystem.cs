@@ -61,6 +61,7 @@ namespace Drova_Modding_API.Systems.SaveGame
         internal static void TriggerAfterSaveGameLoaded(Savegame saveGame)
         {
             AfterSaveGameLoaded?.Invoke(saveGame);
+            Instance.OnLoad(saveGame);
         }
 
         internal void OnLoad(Savegame saveGame)

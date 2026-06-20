@@ -21,8 +21,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_SetGBoolNode>();
-            _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.BOOL, _castedNode.Variable.GetValue().GetParent().name, false, _castedNode.Variable.GetValue());
+            if (_castedNode == null) return;
 
+            var variable = _castedNode.Variable != null && !_castedNode.Variable.isNoneOrNull ? _castedNode.Variable.GetValue() : null;
+            if (variable == null)
+            {
+                _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.BOOL);
+            }
+            else
+            {
+                _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.BOOL, variable.GetParent().name, false, variable);
+            }
         }
 
         public override void DrawNode(Vector2 position)
@@ -47,9 +56,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 _castedNode.Variable = _gvarSelectionEditor.CurrentSelectedGvar.TryCast<GBool>();
             }
 
-            _castedNode.Value = GUI.Toggle(new Rect(position.x + 10, position.y + 60, 200, 20), _castedNode.Value.value, "Value to set");
+            bool val = _castedNode.Value != null && _castedNode.Value.value;
+            _castedNode.Value = GUI.Toggle(new Rect(position.x + 10, position.y + 60, 200, 20), val, "Value to set");
 
-           
+
 
             GUI.color = previousColor;
             GUI.depth = previousDepth;

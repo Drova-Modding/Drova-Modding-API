@@ -16,13 +16,25 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
     {
         private string _filter = filter;
 
-        private readonly int _maxItems = maxItems;
-
         private string[] _filteredOptions = options.Take(maxItems).ToArray();
 
         private void OnFilter()
         {
-            _filteredOptions = _options.Where(option => option.Contains(_filter)).Take(_maxItems).ToArray();
+            _filteredOptions = _options.Where(option => option.Contains(_filter)).Take(maxItems).ToArray();
+        }
+
+        /// <inheritdoc/>
+        public override void SetSelectedIndex(int index)
+        {
+            if (string.IsNullOrWhiteSpace(_filter))
+            {
+                base.SetSelectedIndex(index);
+            }
+            else
+            {
+                int originalIndex = Array.IndexOf(_options, _filteredOptions[index]);
+                base.SetSelectedIndex(originalIndex);
+            }
         }
 
         /// <inheritdoc/>
@@ -35,7 +47,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
             // Draw background for filter and options area
             // Area includes filter (dropdownRect.height) + options (dropdownRect.height * count)
-            Rect totalRect = new Rect(dropdownRect.x, dropdownRect.y + dropdownRect.height, dropdownRect.width, dropdownRect.height * (1 + _filteredOptions.Length));
+            Rect totalRect = new(dropdownRect.x, dropdownRect.y + dropdownRect.height, dropdownRect.width, dropdownRect.height * (1 + _filteredOptions.Length));
             
             // Close dropdown if clicked outside the dropdown area (main button or filter/options area)
             if (Event.current.type == EventType.MouseDown && !totalRect.Contains(Event.current.mousePosition) && !dropdownRect.Contains(Event.current.mousePosition))
@@ -59,12 +71,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         private void RenderFilter(Rect dropdownRect)
         {
             Rect filterRect = new(dropdownRect.x, dropdownRect.y + dropdownRect.height, dropdownRect.width, dropdownRect.height);
-            string previous_filter = _filter;
+            string previousFilter = _filter;
             GUI.Label(filterRect, "Filter:");
             filterRect.x += 40;
             filterRect.width -= 40;
             _filter = GUI.TextField(filterRect, _filter);
-            if (_filter != previous_filter)
+            if (_filter != previousFilter)
             {
                 OnFilter();
             }

@@ -21,6 +21,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_SetTextSpeedNode>();
+            if (_castedNode == null) return;
             _tempoDropdown = new GUIDropdown(Enum.GetNames<Tempo>(), (int)_castedNode.TextSpeed);
         }
 

@@ -10,7 +10,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_OverrideLookAtSpeakerNodeEditor : DrawNodeEditor
     {
-        private DS_OverrideLookAtSpeaker _castedNode;
+        private DS_OverrideLookAtSpeaker? _castedNode;
+        private GUIDropdown _styleDropdown;
+        private GUIDropdown _tempoDropdown;
         private readonly Dictionary<string, string> _speakersNameToGuid = [];
         private readonly List<LookDirectionEditor> _lookDirectionEditors = [];
 
@@ -22,11 +24,25 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_OverrideLookAtSpeaker>();
-            GraphEditorManager.DialogueTree.actorParameters.ForEach(new Action<DialogueTree.ActorParameter>(actor => _speakersNameToGuid.TryAdd(actor.name, actor.ID)));
-            for (int i = 0; i < _castedNode._lookDirectionOverrides._lookDirections.Count; i++)
+            if (_castedNode._availableOptions == null)
             {
-                LookDirectionsOverrides.ActorLookParam lookDirection = _castedNode._lookDirectionOverrides._lookDirections[i];
-                _lookDirectionEditors.Add(new LookDirectionEditor(lookDirection, _speakersNameToGuid));
+                _castedNode._availableOptions = new DialogueRunTimeOptions();
+            }
+            _styleDropdown = new GUIDropdown(Enum.GetNames<Style>(), (int)_castedNode._availableOptions.Style);
+            _tempoDropdown = new GUIDropdown(Enum.GetNames<Tempo>(), (int)_castedNode._availableOptions.TextSpeed);
+
+            GraphEditorManager.DialogueTree.actorParameters.ForEach(new Action<DialogueTree.ActorParameter>(actor => _speakersNameToGuid.TryAdd(actor.name, actor.ID)));
+            if (_castedNode._lookDirectionOverrides != null)
+            {
+                for (int i = 0; i < _castedNode._lookDirectionOverrides._lookDirections.Count; i++)
+                {
+                    LookDirectionsOverrides.ActorLookParam lookDirection = _castedNode._lookDirectionOverrides._lookDirections[i];
+                    _lookDirectionEditors.Add(new LookDirectionEditor(lookDirection, _speakersNameToGuid));
+                }
+            }
+            else
+            {
+                _castedNode._lookDirectionOverrides = new LookDirectionsOverrides();
             }
         }
 
@@ -40,17 +56,46 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             int previousDepth = GUI.depth;
 
             GUI.color = Color.green;
-            NodeSizeInternal = new Vector2(220, (_lookDirectionEditors.Count * 20) + 20);
+            int lookDirectionHeight = _lookDirectionEditors.Count * 20;
+            int optionsHeight = 160;
+            NodeSizeInternal = new Vector2(320, lookDirectionHeight + optionsHeight + 40);
 
-            GUI.Box(new(position.x, position.y + 20, 220, NodeSizeInternal.y), "DS_OverrideLookAtSpeaker");
+            GUI.Box(new(position.x, position.y + 20, NodeSizeInternal.x, NodeSizeInternal.y), "DS_OverrideLookAtSpeaker");
 
             GUI.color = Color.white;
             GUI.depth = 10;
 
+            float currentY = position.y + 40;
+
+            _castedNode._availableOptions.WaitForInput = GUI.Toggle(new Rect(position.x + 5, currentY, 250, 20), _castedNode._availableOptions.WaitForInput, "Wait For Input");
+            currentY += 20;
+            _castedNode._availableOptions.OverrideWaitForInput = GUI.Toggle(new Rect(position.x + 5, currentY, 250, 20), _castedNode._availableOptions.OverrideWaitForInput, "Override Wait For Input");
+            currentY += 20;
+            _castedNode._availableOptions.OverrideLookAtSpeaker = GUI.Toggle(new Rect(position.x + 5, currentY, 250, 20), _castedNode._availableOptions.OverrideLookAtSpeaker, "Override Look At Speaker");
+            currentY += 20;
+            _castedNode._availableOptions.OverrideSetAndLockCam = GUI.Toggle(new Rect(position.x + 5, currentY, 250, 20), _castedNode._availableOptions.OverrideSetAndLockCam, "Override Set And Lock Cam");
+            currentY += 20;
+            _castedNode._availableOptions.PlayerToNormaleState = GUI.Toggle(new Rect(position.x + 5, currentY, 250, 20), _castedNode._availableOptions.PlayerToNormaleState, "Player To Normal State");
+            currentY += 20;
+
+            GUI.Label(new Rect(position.x + 10, currentY, 85, 20), "Style:");
+            if (_styleDropdown.Draw(new Rect(position.x + 100, currentY, 200, 20)))
+            {
+                _castedNode._availableOptions.Style = (Style)_styleDropdown.SelectedIndex;
+            }
+            currentY += 20;
+
+            GUI.Label(new Rect(position.x + 10, currentY, 85, 20), "Tempo:");
+            if (_tempoDropdown.Draw(new Rect(position.x + 100, currentY, 200, 20)))
+            {
+                _castedNode._availableOptions.TextSpeed = (Tempo)_tempoDropdown.SelectedIndex;
+            }
+            currentY += 30;
+
             for (int i = 0; i < _lookDirectionEditors.Count; i++)
             {
                 LookDirectionEditor lookDirectionEditor = _lookDirectionEditors[i];
-                lookDirectionEditor.DrawLookDirectionEditor(new Vector2(position.x, position.y + (20 * (i + 1))));
+                lookDirectionEditor.DrawLookDirectionEditor(new Vector2(position.x, currentY + (20 * i)));
             }
 
             GUI.color = previousColor;

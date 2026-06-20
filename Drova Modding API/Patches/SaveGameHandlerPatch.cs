@@ -1,9 +1,7 @@
 ﻿using Drova_Modding_API.Systems.SaveGame;
 using HarmonyLib;
-using Il2Cpp;
 using Il2CppDrova;
 using Il2CppDrova.Saveables;
-using UnityEngine.SceneManagement;
 
 [HarmonyPatch(typeof(SavegameGameHandler), nameof(SavegameGameHandler.LoadSavegameFromSavegame), [typeof(SavegameIdentifier), typeof(bool), typeof(Savegame)])]
 internal static class SaveGameHandlerPatch
@@ -15,22 +13,7 @@ internal static class SaveGameHandlerPatch
 
     private static void Postfix(SavegameIdentifier id, bool sceneLoad, ref Savegame savegame, SavegameGameHandler __instance)
     {
-        if (!sceneLoad)
-        {
-            string loadedSceneName = "";
-            if (savegame.Data.GetActiveSceneName(ref loadedSceneName))
-            {
-                Scene loadedScene = SceneManager.GetSceneByName(loadedSceneName);
-                if (!loadedScene.IsValid() || !loadedScene.isLoaded)
-                {
-                    sceneLoad = true;
-                }
-            }
-        }
-        if (sceneLoad)
-        {
-            SaveGameSystem.TriggerAfterSaveGameLoaded(__instance._currentSavegame);
-        }
+        SaveGameSystem.TriggerAfterSaveGameLoaded(savegame);
     }
 }
 

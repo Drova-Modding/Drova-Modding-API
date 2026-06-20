@@ -9,9 +9,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_HubNodeEditor : DS_MultipleChoiceNodeEditor
     {
-        private DS_HubNode _castedNode;
+        private DS_HubNode? _castedNode;
 
-        private GUIDropdown _hubRatingDropdown;
+        private GUIDropdown? _hubRatingDropdown;
 
         // Outer height from the previous frame so the opaque wrapper can be drawn
         // BEFORE the inner content without occluding it.

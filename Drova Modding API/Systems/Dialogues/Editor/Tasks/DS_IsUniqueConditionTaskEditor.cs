@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Il2Cpp;
+using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 {
@@ -8,12 +9,38 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     public class DS_IsUniqueConditionTaskEditor : DrawTaskEditor
     {
 
+        private DS_IsUniqueConditionTask? _task;
+
+        /// <inheritdoc/>
+        public override void Init()
+        {
+            _task = this.Task.TryCast<DS_IsUniqueConditionTask>();
+        }
+
         /// <inheritdoc/>
         public override Rect DrawTask(Vector2 position)
         {
-            GUI.Box(new Rect(position.x, position.y, 200, 20), "DS_IsUniqueConditionTask");
+            if (_task == null)
+            {
+                return default;
+            }
 
-            return new Rect(position.x, position.y, 200, 20);
+            const float width = 340f;
+            const float rowH = 22f;
+            const float rowStep = 27f;
+
+            GUI.color = Color.blue;
+            Rect drawRect = new(position.x, position.y, width, rowStep * 2 + 5);
+            GUI.Box(drawRect, "DS_IsUniqueConditionTask");
+            GUI.color = Color.white;
+
+            float x = position.x + 5;
+            float y = position.y + rowStep;
+
+            GUI.Label(new Rect(x, y, 100, rowH), "Choice UID:");
+            _task.choiceUID = GUI.TextField(new Rect(x + 105, y, width - 115, rowH), _task.choiceUID);
+
+            return drawRect;
         }
     }
 }

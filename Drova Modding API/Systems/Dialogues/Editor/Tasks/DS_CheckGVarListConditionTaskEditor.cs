@@ -15,7 +15,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         public override void Init()
         {
             _castedTask ??= Task.TryCast<DS_CheckGVarListConditionTask>();
-            _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.NONE, _castedTask.Target.name, true);
+            _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.NONE, _castedTask.Target?.name, true);
         }
 
         public override Rect DrawTask(Vector2 position)

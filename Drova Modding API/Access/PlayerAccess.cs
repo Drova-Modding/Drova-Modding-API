@@ -1,19 +1,32 @@
-﻿using Il2CppDrova;
+﻿using System;
+using System.Collections;
+using Il2CppDrova;
+using Il2CppDrova.LoadingScreenHandles;
+using MelonLoader;
+using UnityEngine;
 
 namespace Drova_Modding_API.Access
 {
     /// <summary>
     /// Access to the player actor and its properties.
     /// </summary>
-    public class PlayerAccess
+    public static class PlayerAccess
     {
+        /// <summary>
+        /// Event triggered when the player actor is found and initialized. Fires every load.
+        /// </summary>
+        public static event Action<Actor>? OnPlayerFound;
+
+        private static object? _waitForPlayerCoroutine;
+
         /// <summary>
         /// Get the actor reference of the player. Can be null in menus.
         /// </summary>
         /// <returns></returns>
-        public static Actor GetPlayer()
+        public static Actor? GetPlayer()
         {
             EntityGameHandler entityGameHandler = ProviderAccess.GetEntityGameHandler();
+           
             if (entityGameHandler != null)
             {
                 return entityGameHandler.PlayerActor;
@@ -31,6 +44,35 @@ namespace Drova_Modding_API.Access
         {
             player = GetPlayer();
             return player != null;
+        }
+
+        /// <summary>
+        /// Starts a MelonCoroutine to wait for the player actor until it is not null.
+        /// Once found, <see cref="OnPlayerFound"/> will be triggered.
+        /// </summary>
+        public static void StartWaitForPlayerCoroutine()
+        {
+            if (_waitForPlayerCoroutine != null)
+            {
+                MelonCoroutines.Stop(_waitForPlayerCoroutine);
+            }
+            _waitForPlayerCoroutine = MelonCoroutines.Start(WaitForPlayer());
+        }
+
+        private static IEnumerator WaitForPlayer()
+        {
+            while (!LoadingScreenHandler.Instance.IsWorldReady() || SceneGameHandler.IsLoadingScreenActive) {
+                yield return new WaitForSeconds(1);
+            }
+            while (GetPlayer() == null)
+            {
+                yield return null;
+            }
+            while (!GetPlayer()!._isInitialized)
+            {
+                yield return null;
+            }
+            OnPlayerFound?.Invoke(GetPlayer());
         }
 
         /// <summary>

@@ -5,9 +5,12 @@ using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
+    /// <summary>
+    /// Execute the first child node if a Condition is true, or the second one if that Condition is false. The Actor selected is used for the Condition check
+    /// </summary>
     internal class ConditionNodeEditor : DrawNodeEditor
     {
-        private ConditionNode _castedNode;
+        private ConditionNode? _castedNode;
         private GUICreateConditionTask _guiCreateConditionTask;
         private DrawTaskEditor _drawTaskEditor;
         private bool _changeCondition = false;
@@ -21,6 +24,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<ConditionNode>();
+            if (_castedNode == null) return;
             _guiCreateConditionTask = new GUICreateConditionTask();
             if (_castedNode._condition != null)
             {
@@ -79,6 +83,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 Il2CppNodeCanvas.Framework.ConditionTask conditionTask = _guiCreateConditionTask.Draw(new Vector2(position.x, position.y + 20));
                 if (conditionTask != null)
                 {
+                    GraphEditorManager.DialogueTree.allTasks.Add(conditionTask);
                     _changeCondition = false;
                     _castedNode._condition = conditionTask;
                     _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(conditionTask.GetIl2CppType());

@@ -11,7 +11,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_PreloadClothNodeEditor : DrawNodeEditor
     {
-        private DS_PreloadCloth _castedNode;
+        private DS_PreloadCloth? _castedNode;
         private GUIDropdown _clothModeDropdown;
         private Item[] _clothItems;
         private string[] _clothItemNames;
@@ -25,15 +25,20 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_PreloadCloth>();
-            _clothItems = Resources.FindObjectsOfTypeAll<Item>()
-                                    .Where(i => i.TryGetItemBehaviour(out ItemBhvr_EquipEffect_Cloth _))
-                                    .ToArray();
+            _clothItems = [.. Resources.FindObjectsOfTypeAll<Item>().Where(i => i.TryGetItemBehaviour(out ItemBhvr_EquipEffect_Cloth _))];
             _clothModeDropdown = new GUIDropdown(Enum.GetNames<DS_PreloadCloth.Mode>(), (int)_castedNode.PreloadMode);
-            _clothItemNames = _clothItems.Select(e => e.name).ToArray();
-            for (int i = 0; i < _castedNode.ClothItems.Count; i++)
+            _clothItemNames = [.. _clothItems.Select(e => e.name)];
+            if (_castedNode.ClothItems != null)
             {
-                Item clothItem = _castedNode.ClothItems[i];
-                _clothItemDropdowns.Add(new GUIDropdownWithFilter(_clothItemNames, Array.FindIndex(_clothItems, (e) => e.Guid == clothItem.Guid), 20));
+                for (int i = 0; i < _castedNode.ClothItems.Count; i++)
+                {
+                    Item clothItem = _castedNode.ClothItems[i];
+                    _clothItemDropdowns.Add(new GUIDropdownWithFilter(_clothItemNames, Array.FindIndex(_clothItems, (e) => e.Guid == clothItem.Guid), 20));
+                }
+            }
+            else
+            {
+                _castedNode.ClothItems = new Il2CppSystem.Collections.Generic.List<Item>();
             }
         }
 
@@ -57,7 +62,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             for (int i = 0; i < _castedNode.ClothItems.Count; i++)
             {
-                Item clothItem = _castedNode.ClothItems[i];
                 GUIDropdownWithFilter clothItemDropdown = _clothItemDropdowns[i];
                 if (GUI.Button(new Rect(position.x + 220, position.y + 80 + (20 * i), 20, 20), "X"))
                 {

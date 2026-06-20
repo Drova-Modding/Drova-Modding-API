@@ -23,11 +23,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode = Node.TryCast<DS_SetAcquaintance>();
             _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>()
-                                    .GroupBy(e => e.name)
-                                    .Select(g => g.First())
-                                    .ToArray();
-            EntityInfo entityInfo = _castedNode.entity;
-            _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.FindIndex(_entityInfos, e => e.GUID == entityInfo.GUID), 20);
+                .GroupBy(e => e.name)
+                .Select(g => g.First())
+                .ToArray();
+            if (_castedNode.entity)
+            {
+                EntityInfo entityInfo = _castedNode.entity;
+                _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.FindIndex(_entityInfos, e => e.GUID == entityInfo.GUID), 20);
+            }
+            else
+            {
+                _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), -1, 20);
+            }
         }
 
         public override void DrawNode(Vector2 position)

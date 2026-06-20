@@ -11,7 +11,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     /// </summary>
     internal class DS_HasAttributeTaskEditor : DrawTaskEditor
     {
-        private DS_HasAttribute _castedTask;
+        private DS_HasAttribute? _castedTask;
         private GenericStatDesc[] _allStats;
         private readonly List<GUIDropdownWithFilter> _attributeDropdowns = [];
         private readonly List<GUIDropdown> _attributeComparers = [];

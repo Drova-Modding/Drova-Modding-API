@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-
-namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
+﻿namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 {
     /// <summary>
     /// Interface for action strategies
@@ -10,32 +8,25 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
         /// <summary>
         /// On start of the action
         /// </summary>
-        /// <param name="editorManager">editorManager</param>
-        /// <param name="selection">Current selected editor</param>
-        /// <param name="clickPosition">Position of the click</param>
-        void OnStart(GraphEditorManager editorManager, DrawNodeEditor selection, Vector2 clickPosition);
+        /// <param name="context">Action context</param>
+        void OnStart(GraphEditorActionContext context);
 
         /// <summary>
-        /// On end of the action with left click
+        /// On the end of the action with the left click
         /// </summary>
-        /// <param name="editorManager">editorManager</param>
-        /// <param name="selection">Current selected editor</param>
-        /// <param name="clickPosition">Position of the click</param>
-        void OnEnd(GraphEditorManager editorManager, DrawNodeEditor selection, Vector2 clickPosition);
+        /// <param name="context">Action context</param>
+        void OnEnd(GraphEditorActionContext context);
 
         /// <summary>
-        /// When the users cancels the action, with right click or escape
+        /// When the users cancel the action, with a right click or escape
         /// </summary>
-        /// <param name="editorManager"></param>
-        /// <param name="selection"></param>
-        void OnCancel(GraphEditorManager editorManager, DrawNodeEditor selection);
+        /// <param name="context">Action context</param>
+        void OnCancel(GraphEditorActionContext context);
 
         /// <summary>
         /// On GUI event
         /// </summary>
-        /// <param name="editorManager">editorManager</param>
-        /// <param name="selection">Current selected editor</param>
-        /// <param name="mousePosition">Position of the mouse</param>
-        void OnGui(GraphEditorManager editorManager, DrawNodeEditor selection, Vector2 mousePosition);
+        /// <param name="context">Action context</param>
+        void OnGui(GraphEditorActionContext context);
     }
 }

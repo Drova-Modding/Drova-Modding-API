@@ -22,8 +22,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_PlaySfx>();
+            if (_castedNode == null) return;
             _audioContainers = Resources.FindObjectsOfTypeAll<AudioContainer>();
-            _sfxDropdown = new GUIDropdownWithFilter(_audioContainers.Select(s => s.name).ToArray(), Array.FindIndex(_audioContainers, (s) => s._containerName == _castedNode._sfx._containerName), 20);
+            int selectedIndex = -1;
+            if (_castedNode._sfx != null)
+            {
+                selectedIndex = Array.FindIndex(_audioContainers, (s) => s._containerName == _castedNode._sfx._containerName);
+            }
+            _sfxDropdown = new GUIDropdownWithFilter(_audioContainers.Select(s => s.name).ToArray(), selectedIndex, 20);
         }
 
         public override void DrawNode(Vector2 position)
@@ -39,7 +45,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
             GUI.depth = 10;
             GUI.Label(new Rect(position.x + 10, position.y + 20, 85, 20), "SFX:");
-            if (_sfxDropdown.Draw(new Rect(position.x + 100, position.y + 20, 200, 20)))
+            if (_sfxDropdown != null && _sfxDropdown.Draw(new Rect(position.x + 100, position.y + 20, 200, 20)))
             {
                 _castedNode._sfx = _audioContainers[_sfxDropdown.SelectedIndex];
             }

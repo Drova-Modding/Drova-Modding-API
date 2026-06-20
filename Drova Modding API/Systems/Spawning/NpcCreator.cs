@@ -18,6 +18,8 @@ namespace Drova_Modding_API.Systems.Spawning
     public class NpcCreator
     {
         private const string EnemyAlignmentName = "Alignment_Wild_Human";
+        private static Transform? _npcSpawnRoot;
+        private static readonly List<Transform> PendingSpawnedObjects = [];
 
         // Cached once at first use — FindObjectsOfTypeAll is expensive.
         private static AlignmentContainer? _cachedEnemyAlignment;
@@ -40,23 +42,42 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private static bool _templatePrewarmed;
-
-        /// <summary>
-        /// Pre-loads the Human NPC template and caches alignment lookups so the first
-        /// <see cref="Create"/> call doesn't stall on Addressables I/O. Safe to call multiple
-        /// times — later invocations are no-ops. Call once during mod startup.
-        /// </summary>
-        public static void Prewarm()
+        internal static void SetSpawnRoot(Transform? root)
         {
-            CacheAlignments();
+            _npcSpawnRoot = root;
+            if (!IsSpawnRootAlive())
+                return;
 
-            if (_templatePrewarmed) return;
-            // LoadAssetAsync keeps the GameObject template resident; later InstantiateAsync
-            // calls resolve from cache instead of hitting disk/AssetBundle.
-            AddressableAccess.NPCs.Human_Template.LoadAssetAsync();
-            _templatePrewarmed = true;
+            for (int i = PendingSpawnedObjects.Count - 1; i >= 0; i--)
+            {
+                Transform pending = PendingSpawnedObjects[i];
+                if (pending == null)
+                {
+                    PendingSpawnedObjects.RemoveAt(i);
+                    continue;
+                }
+
+                pending.SetParent(_npcSpawnRoot, true);
+                PendingSpawnedObjects.RemoveAt(i);
+            }
         }
+
+        internal static void TrackSpawnedObject(Transform spawnedTransform)
+        {
+            if (spawnedTransform == null)
+                return;
+
+            if (IsSpawnRootAlive())
+            {
+                spawnedTransform.SetParent(_npcSpawnRoot, true);
+                return;
+            }
+
+            PendingSpawnedObjects.Add(spawnedTransform);
+        }
+
+        private static bool IsSpawnRootAlive()
+            => _npcSpawnRoot != null;
 
         private readonly string _name;
         private readonly Vector2 _spawnPosition;
@@ -209,6 +230,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
             GameObject npc = operation.Result;
             npc.name = _name;
+            TrackSpawnedObject(npc.transform);
             ApplyModules(npc);
             return npc;
         }
@@ -217,10 +239,12 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Creates a lazy NPC and applies modules every time the runtime actor is loaded.
         /// </summary>
         /// <param name="saveToLazyActorStore">If true, writes lazy actor metadata to the save store for restore.</param>
+        /// <param name="externalDefinitionId">Optional external definition id used to deduplicate JSON-driven NPC placements.</param>
         /// <returns>The configured lazy actor handle.</returns>
-        public LazyActor CreateLazy(bool saveToLazyActorStore = false)
+        public LazyActor CreateLazy(bool saveToLazyActorStore = false, string? externalDefinitionId = null)
         {
             LazyActor lazyActor = LazyActorCreator.CreateLazyActor(_name, _lazyActorReference, _spawnPosition, _lazyEntityInfoReference, _customLazyEntityInfo, true);
+            TrackSpawnedObject(lazyActor.transform);
 
             // Register a pre-init callback so module logic runs before Actor.StartInitAsync.
             // We cannot use ActorSpawnEvent because SpawnArgs is a non-blittable struct and
@@ -247,6 +271,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     entityInfoGuid,
                     true
                 );
+                customEntityInfoData.ExternalDefinitionId = externalDefinitionId;
                 lazyActorStore.Add(customEntityInfoData);
             }
             // Handle addressable EntityInfo reference
@@ -259,6 +284,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     lazyActor._guidstring,
                     true
                 );
+                addressableEntityInfoData.ExternalDefinitionId = externalDefinitionId;
                 lazyActorStore.Add(addressableEntityInfoData);
             }
             else

@@ -22,12 +22,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_HealActor>();
+            if (_castedNode == null) return;
             _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>()
                                     .GroupBy(e => e.name)
                                     .Select(g => g.First())
                                     .ToArray();
-            EntityInfo entityInfo = _castedNode._entityInfo;
-            _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), Array.FindIndex(_entityInfos, e => e.GUID == entityInfo.GUID), 20);
+            int selectedIndex = -1;
+            if (_castedNode._entityInfo != null)
+            {
+                selectedIndex = Array.FindIndex(_entityInfos, e => e.GUID == _castedNode._entityInfo.GUID);
+            }
+            _entityInfoDropdown = new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), selectedIndex, 20);
         }
 
         public override void DrawNode(Vector2 position)

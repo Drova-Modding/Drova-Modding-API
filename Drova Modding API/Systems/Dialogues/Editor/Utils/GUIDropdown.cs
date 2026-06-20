@@ -10,11 +10,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Whether the dropdown is currently shown.
         /// </summary>
-        protected bool _showDropdown = false;
+        protected bool _showDropdown;
         /// <summary>
         /// The index of the selected option.
         /// </summary>
-        protected int _selectedIndex = 0;
+        protected int _selectedIndex;
         /// <summary>
         /// The list of options for the dropdown.
         /// </summary>
@@ -31,12 +31,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// The message to show when no options are available.
         /// </summary>
-        public string NoOptionsMessage = "No options available";
+        public const string NoOptionsMessage = "No options available";
 
         /// <summary>
         /// The message to show when no option is selected.
         /// </summary>
-        public string EmptyOptionMessage = "No option selected";
+        public const string EmptyOptionMessage = "No option selected";
 
         /// <summary>
         /// The index of the selected option.
@@ -65,21 +65,23 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         private static readonly List<(GUIDropdown dd, Rect rect)> _pendingOverlays = [];
 
         // Set by FlushOverlays; consumed (and cleared) on the next Draw() call
-        private bool _changedThisFlush = false;
+        private bool _changedThisFlush;
 
         /// <summary>
         /// Draws all deferred dropdown overlays.
         /// Call this once per frame, AFTER all nodes / controls have been drawn,
         /// so that open dropdowns are always painted on top of everything else.
         /// </summary>
-        public static void FlushOverlays()
+        public static void FlushOverlays(Rect visibleRect)
         {
             // Snapshot + clear BEFORE drawing in case an item click triggers
             // re-entrant Draw() calls that add new entries.
             (GUIDropdown dd, Rect rect)[] toFlush = [.. _pendingOverlays];
+            var orderedFlush = toFlush.OrderBy(t => -t.rect.y).ThenBy(t => -t.rect.x);
             _pendingOverlays.Clear();
-            foreach ((GUIDropdown dd, Rect rect) in toFlush)
+            foreach ((GUIDropdown dd, Rect rect) in orderedFlush)
             {
+                if(!visibleRect.Overlaps(rect)) continue;
                 if (dd.DrawOptions(rect))
                     dd._changedThisFlush = true;
             }
@@ -129,7 +131,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// Sets the selected index of the dropdown.
         /// </summary>
         /// <param name="index"></param>
-        public void SetSelectedIndex(int index)
+        public virtual void SetSelectedIndex(int index)
         {
             if (index >= 0 && index < _options.Length)
                 _selectedIndex = index;
@@ -216,12 +218,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             {
                 return false;
             }
-
-            int previousDepth = GUI.depth;
-
-            // Use a very low depth to ensure it's on top of everything
-            GUI.depth = -2000;
-
             // Draw a background box for the entire dropdown area to ensure full opacity
             GUI.Box(backgroundRect, "", _defaultStyle);
 
@@ -234,14 +230,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
                 {
                     if (i != _selectedIndex)
                     {
-                        _selectedIndex = i;
+                        SetSelectedIndex(i);
                         selectionChanged = true;
                     }
                     _showDropdown = false;
                     Event.current.Use();
                 }
             }
-            GUI.depth = previousDepth;
             return selectionChanged;
         }
 

@@ -3,9 +3,14 @@ using Drova_Modding_API.Access;
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Register;
 using Drova_Modding_API.Systems;
-
+using Drova_Modding_API.Systems.GlobalVars;
+using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.ModdingUI;
+using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
+using MelonLoader.NativeUtils;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 using UnityEngine.SceneManagement;
 
 #if DEBUG
@@ -17,6 +22,7 @@ using UnityEngine.InputSystem;
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
+
 namespace Drova_Modding_API
 {
     /**
@@ -24,9 +30,12 @@ namespace Drova_Modding_API
      */
     public class Core : MelonMod
     {
+
+
         internal static string? AssemblyLocation;
-        internal bool InMainMenu = false;
+        internal bool InMainMenu;
 #if DEBUG
+        private bool _registeredLogCallback;
         private readonly InputAction _consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
 #endif
 
@@ -48,6 +57,7 @@ namespace Drova_Modding_API
             {
                 InputActionRegister.Instance.DisableGameplayActions();
             };
+
         }
 
         /// <inheritdoc/>
@@ -57,12 +67,28 @@ namespace Drova_Modding_API
 
             if (sceneName == SceneNames.MainMenu)
             {
+
                 // Retrigger it to make sure that the close call is registered
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
+                CustomGVarStore.LoadIntoDatabaseOnce();
+                // Pre-create EntityInfo objects from external NPC definitions so that
+                // external mods can cross-reference them before any NPC is spawned.
+                ExternalEntityInfoRegistry.Initialize();
+                // One-time pass: re-apply any user-saved dialogue bytes onto the live
+                // ScriptableObject instances that are now in memory.
+                DialogueStore.PatchAllSavedDialogues();
 #if DEBUG
-                ProviderAccess.GetCheatGameHandler().EnableCheatMode(true);
+                if (!_registeredLogCallback)
+                {
+                    Application.add_logMessageReceivedThreaded(new Action<string, string, LogType>(Application_logMessageReceived));
+                    Application.SetStackTraceLogType(LogType.Exception, StackTraceLogType.Full);
+                    Application.SetStackTraceLogType(LogType.Error, StackTraceLogType.Full);
+                    _registeredLogCallback = true;
+                }
+                ProviderAccess.GetCheatGameHandler()?.EnableCheatMode(true);
+                MainMenuModdingUI.Init();
                 //_ttsFile.CreateDialogueFile();
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
@@ -80,6 +106,10 @@ namespace Drova_Modding_API
             {
                 SystemInit.AiLogicInit(SceneManager.GetSceneByName(sceneName));
             }
+            if (sceneName == SceneNames.Actor)
+            {
+                SystemInit.ActorInit(SceneManager.GetSceneByName(sceneName));
+            }
             // if (sceneName == SceneNames.AILogic)
             // {
             //     _ttsFile.GenerateWorldDialogues();
@@ -96,19 +126,25 @@ namespace Drova_Modding_API
             UnityEngine.Object.DontDestroyOnLoad(gameObject);
             ModdingUI.RegisterModdingUI();
         }
-
+        
+#if DEBUG
         /// <inheritdoc/>
         public override void OnUpdate()
         {
             base.OnUpdate();
-#if DEBUG
+
             if (_consoleAction.WasReleasedThisFrame())
             {
                 var cheatHandler = ProviderAccess.GetCheatGameHandler();
                 if (cheatHandler == null) return;
                 cheatHandler.EnableCheatMode(!cheatHandler.IsCheatModeEnabled);
             }
-#endif
         }
+        
+        private static void Application_logMessageReceived(string condition, string stackTrace, LogType type)
+        {
+            MelonLogger.Msg($"[{type}] {condition} - {stackTrace}");
+        }
+#endif
     }
 }

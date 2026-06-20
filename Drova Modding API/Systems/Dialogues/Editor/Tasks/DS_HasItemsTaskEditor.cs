@@ -115,7 +115,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 {
                     if (gvarEditor.DrawGvarEditor(new Rect(x + 110, y, width - 115, rowH), new Rect(x + 110, y + rowStep, width - 115, rowH)))
                     {
-                        item.AmountVar = gvarEditor.CurrentSelectedGvar.TryCast<GInt>();
+                        item.AmountVar = gvarEditor.CurrentSelectedGvar!.TryCast<GInt>();
                     }
                     y += rowStep * 2;
                 }
@@ -141,9 +141,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             if (GUI.Button(new Rect(x + 5, y, 100, rowH), "Add Item"))
             {
                 _castedTask.Items.Add(new DialogItems());
-                _itemDropdowns.Add(new GUIDropdownWithFilter(_items.Select(e => e.ReadableId).ToArray(), 0, 20));
+                _itemDropdowns.Add(new GUIDropdownWithFilter([.. _items.Select(e => e.ReadableId)], 0, 20));
                 _valueModeDropdowns.Add(new GUIDropdown(Enum.GetNames<DialogItems.ValueMode>(), 0));
-                _gvarSelectionEditors.TryAdd(_castedTask.Items.Count - 1, new GUIGvarSelectionEditor(GvarType.INT, null, false));
+                _gvarSelectionEditors.TryAdd(_castedTask.Items.Count - 1, new GUIGvarSelectionEditor(GvarType.INT));
             }
             y += rowStep + 5;
 

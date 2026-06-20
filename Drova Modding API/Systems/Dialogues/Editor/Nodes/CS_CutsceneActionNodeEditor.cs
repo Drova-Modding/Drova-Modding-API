@@ -27,14 +27,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _cutsceneDatas = Resources.FindObjectsOfTypeAll<CS_CutsceneData>();
 
             string[] cutsceneNames = _cutsceneDatas.Select(e => e.name).ToArray();
-            int cutsceneIndex = Array.FindIndex(_cutsceneDatas, cutscene => cutscene.name == _castedNode.cutscene.name);
+            int cutsceneIndex = Array.FindIndex(_cutsceneDatas, cutscene => cutscene.name == _castedNode.cutscene?.name);
             _cutsceneDropdown = new GUIDropdownWithFilter(cutsceneNames, cutsceneIndex, 20);
 
-            if (_castedNode.cutsceneActionID >= 0)
+            if (_castedNode.cutsceneActionID >= 0 && _castedNode.cutscene != null)
             {
                 _cutsceneActions = _castedNode.cutscene.GetCutsceneActions().ToArray();
                 int cutsceneActionIndex = Array.FindIndex(_cutsceneActions, action => action.ID == _castedNode.cutsceneActionID);
-                _actionIdDropdown = new GUIDropdownWithFilter(_cutsceneActions.Select((act) => act.Name).ToArray(), cutsceneActionIndex, 20);
+                _actionIdDropdown = new GUIDropdownWithFilter([.. _cutsceneActions.Select((act) => act.Name)], cutsceneActionIndex, 20);
+            }
+            else
+            {
+                _actionIdDropdown = new GUIDropdownWithFilter([.. _cutsceneActions.Select((act) => act.Name)], -1, 20);
+
             }
         }
 

@@ -9,7 +9,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_HubJumpNodeEditor : DrawNodeEditor
     {
 
-        private DS_HubJumpNode _castedNode;
+        private DS_HubJumpNode? _castedNode;
 
         public DS_HubJumpNodeEditor()
         {

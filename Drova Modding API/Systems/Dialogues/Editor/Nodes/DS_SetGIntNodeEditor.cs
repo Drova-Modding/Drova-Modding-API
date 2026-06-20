@@ -12,7 +12,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_SetGIntNodeEditor : DrawNodeEditor
     {
 
-        private DS_SetGIntNode _castedNode;
+        private DS_SetGIntNode? _castedNode;
         private GUIDropdown _operatorDropdown;
         private GUIGvarSelectionEditor _gvarSelectionEditor;
         private GUIGvarSelectionEditor _valueSelectionEditor;
@@ -25,13 +25,45 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_SetGIntNode>();
-            if (_castedNode._useGInt)
-            {
-                _valueSelectionEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.GIntValue.GetParent().name, false, _castedNode.GIntValue);
-            }
-            _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.Variable.GetValue().GetParent().name, false, _castedNode.Variable.GetValue());
-            _operatorDropdown = new GUIDropdown(Enum.GetNames<GInt.Operator>(), (int)_castedNode.Operation.GetValue());
+            if (_castedNode == null) return;
 
+            InitGvarSelectionEditor();
+            InitValueSelectionEditor();
+
+            var operation = _castedNode.Operation != null ? _castedNode.Operation.GetValue() : GInt.Operator.Set;
+            _operatorDropdown = new GUIDropdown(Enum.GetNames<GInt.Operator>(), (int)operation);
+        }
+
+        private void InitGvarSelectionEditor()
+        {
+            var variable = _castedNode?.Variable?.GetValue();
+            if (variable != null)
+            {
+                _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.INT, variable.GetParent().name, false, variable);
+            }
+            else
+            {
+                _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.INT);
+            }
+        }
+
+        private void InitValueSelectionEditor()
+        {
+            if (_castedNode == null || !_castedNode._useGInt)
+            {
+                _valueSelectionEditor = null;
+                return;
+            }
+
+            var gintValue = _castedNode.GIntValue;
+            if (gintValue != null)
+            {
+                _valueSelectionEditor = new GUIGvarSelectionEditor(GvarType.INT, gintValue.GetParent().name, false, gintValue);
+            }
+            else
+            {
+                _valueSelectionEditor = new GUIGvarSelectionEditor(GvarType.INT);
+            }
         }
 
         public override void DrawNode(Vector2 position)
@@ -49,7 +81,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = previousColor;
             GUI.depth = previousDepth;
 
+            bool previousUseGInt = _castedNode._useGInt;
             _castedNode._useGInt = GUI.Toggle(new Rect(position.x + 10, position.y + 100, 200, 20), _castedNode._useGInt, "Use GInt");
+
+            if (previousUseGInt != _castedNode._useGInt)
+            {
+                InitValueSelectionEditor();
+            }
 
             if (_operatorDropdown.Draw(new Rect(position.x, position.y + 80, 200, 20)))
             {
@@ -58,7 +96,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.Label(new Rect(position.x + 10, position.y + 60, 200, 20), "Value to set");
             if (_castedNode._useGInt)
             {
-                if (_valueSelectionEditor.DrawGvarEditor(new Rect(position.x, position.y + 60, 220, 20), new Rect(position.x, position.y + 80, 220, 20)))
+                if (_valueSelectionEditor == null)
+                {
+                    InitValueSelectionEditor();
+                }
+
+                if (_valueSelectionEditor != null && _valueSelectionEditor.DrawGvarEditor(new Rect(position.x, position.y + 60, 220, 20), new Rect(position.x, position.y + 80, 220, 20)))
                 {
                     _castedNode.GIntValue = _valueSelectionEditor.CurrentSelectedGvar.TryCast<GInt>();
                 }
@@ -66,7 +109,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             else
             {
-                string tempValue = GUI.TextField(new Rect(position.x + 10, position.y + 60, 200, 20), _castedNode.Value.GetValue().ToString());
+                int currentValue = 0;
+                if (_castedNode.Value != null)
+                {
+                    currentValue = _castedNode.Value.GetValue();
+                }
+                string tempValue = GUI.TextField(new Rect(position.x + 10, position.y + 60, 200, 20), currentValue.ToString());
                 if (int.TryParse(tempValue, out int result))
                 {
                     _castedNode.Value = result;

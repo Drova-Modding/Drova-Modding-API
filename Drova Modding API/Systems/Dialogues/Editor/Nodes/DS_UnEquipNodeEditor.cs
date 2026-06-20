@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_UnEquipNodeEditor : DrawNodeEditor
     {
-        private DS_UnEquipNode _castedNode;
+        private DS_UnEquipNode? _castedNode;
         private EquipmentSlotType[] equipmentSlotTypes;
         private readonly List<GUIDropdown> _equipmentSlotDropdowns = [];
 
@@ -46,7 +46,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
             for (int i = 0; i < _castedNode._slotTypes.Count; i++)
             {
-                EquipmentSlotType slotType = _castedNode._slotTypes[i];
                 GUIDropdown equipmentSlotDropdown = _equipmentSlotDropdowns[i];
                 if (GUI.Button(new Rect(position.x + 220, position.y + 40 + (20 * i), 20, 20), "X"))
                 {
