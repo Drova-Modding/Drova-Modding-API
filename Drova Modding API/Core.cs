@@ -22,6 +22,7 @@ using UnityEngine.InputSystem;
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
+
 namespace Drova_Modding_API
 {
     /**
@@ -30,10 +31,11 @@ namespace Drova_Modding_API
     public class Core : MelonMod
     {
 
-        
+
         internal static string? AssemblyLocation;
-        internal bool InMainMenu = false;
+        internal bool InMainMenu;
 #if DEBUG
+        private bool _registeredLogCallback;
         private readonly InputAction _consoleAction = new("Console", InputActionType.Button, "<Keyboard>/backquote");
 #endif
 
@@ -65,9 +67,7 @@ namespace Drova_Modding_API
 
             if (sceneName == SceneNames.MainMenu)
             {
-                Application.add_logMessageReceivedThreaded(new Action<string, string, LogType>(Application_logMessageReceived));
-                Application.SetStackTraceLogType(LogType.Exception, StackTraceLogType.Full);
-                Application.SetStackTraceLogType(LogType.Error, StackTraceLogType.Full);
+
                 // Retrigger it to make sure that the close call is registered
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
@@ -80,6 +80,13 @@ namespace Drova_Modding_API
                 // ScriptableObject instances that are now in memory.
                 DialogueStore.PatchAllSavedDialogues();
 #if DEBUG
+                if (!_registeredLogCallback)
+                {
+                    Application.add_logMessageReceivedThreaded(new Action<string, string, LogType>(Application_logMessageReceived));
+                    Application.SetStackTraceLogType(LogType.Exception, StackTraceLogType.Full);
+                    Application.SetStackTraceLogType(LogType.Error, StackTraceLogType.Full);
+                    _registeredLogCallback = true;
+                }
                 ProviderAccess.GetCheatGameHandler()?.EnableCheatMode(true);
                 MainMenuModdingUI.Init();
                 //_ttsFile.CreateDialogueFile();
@@ -108,11 +115,6 @@ namespace Drova_Modding_API
             //     _ttsFile.GenerateWorldDialogues();
             // }
         }
-        
-        private void Application_logMessageReceived(string condition, string stackTrace, LogType type)
-        {
-            MelonLogger.Msg($"[{type}] {condition} - {stackTrace}");
-        }
 
         /// <inheritdoc/>
         public override void OnLateInitializeMelon()
@@ -124,19 +126,25 @@ namespace Drova_Modding_API
             UnityEngine.Object.DontDestroyOnLoad(gameObject);
             ModdingUI.RegisterModdingUI();
         }
-
+        
+#if DEBUG
         /// <inheritdoc/>
         public override void OnUpdate()
         {
             base.OnUpdate();
-#if DEBUG
+
             if (_consoleAction.WasReleasedThisFrame())
             {
                 var cheatHandler = ProviderAccess.GetCheatGameHandler();
                 if (cheatHandler == null) return;
                 cheatHandler.EnableCheatMode(!cheatHandler.IsCheatModeEnabled);
             }
-#endif
         }
+        
+        private static void Application_logMessageReceived(string condition, string stackTrace, LogType type)
+        {
+            MelonLogger.Msg($"[{type}] {condition} - {stackTrace}");
+        }
+#endif
     }
 }

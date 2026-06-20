@@ -32,7 +32,7 @@ namespace Drova_Modding_API.Systems.Editor
 
             GameObject gameObject = new("DebugUI");
             gameObject.transform.parent = cheatCanvas.transform;
-            gameObject.transform.position = new Vector3(50, 500, 0);
+            gameObject.transform.position = new Vector3(50, 600, 0);
             gameObject.AddComponent<EditorUI>();
             gameObject.AddComponent<NpcMouseRaycast>();
             gameObject.AddComponent<GraphicRaycaster>();
@@ -51,7 +51,7 @@ namespace Drova_Modding_API.Systems.Editor
             _npcDisplay = npcDisplay.AddComponent<TextMeshProUGUI>();
             RectTransform npcDisplayRectTransform = _npcDisplay.GetComponent<RectTransform>() ?? npcDisplay.AddComponent<RectTransform>();
             SetRectTransform(npcDisplayRectTransform, new Vector2(750, 50));
-
+            
             GameObject playerPositionDisplay = new("PlayerPositionDisplay");
             playerPositionDisplay.transform.parent = gameObject.transform;
             _playerPositionDisplay = playerPositionDisplay.AddComponent<TextMeshProUGUI>();
@@ -65,8 +65,22 @@ namespace Drova_Modding_API.Systems.Editor
             npcDisplay.SetActive(false);
             graphEditor.SetActive(false);
             EditorManager.OnNpcSelected += OnNpcSelected;
+            OptionMenuAccess.Instance.OnOptionMenuOpen += OnOptionMenuOpen;
+            OptionMenuAccess.Instance.OnOptionMenuClose += OnOptionMenuClose;
         }
         
+        private void OnOptionMenuOpen()
+        {
+            _npcDisplay.gameObject.SetActive(false);
+            _playerPositionDisplay.gameObject.SetActive(false);
+        }
+        
+        private void OnOptionMenuClose()
+        {
+            _npcDisplay.gameObject.SetActive(true);
+            _playerPositionDisplay.gameObject.SetActive(true);
+        }
+
         internal void Update()
         {
             if (_playerPositionDisplay == null)

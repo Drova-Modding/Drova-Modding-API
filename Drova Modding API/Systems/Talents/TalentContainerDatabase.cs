@@ -17,9 +17,9 @@ namespace Drova_Modding_API.Systems.Talents
         private static Dictionary<string, List<TalentContainer>>? _groupedDatabase;
         private static Dictionary<string, TalentContainer>? _talentCache;
 
-        private static List<TalentContainer> _talentContainersToAdd = new();
+        private static readonly List<TalentContainer> TalentList = [];
 
-        private static bool IsInitialized;
+        private static bool _isInitialized;
 
         /// <summary>
         /// Initializes the TalentContainer database from the database container.
@@ -62,7 +62,7 @@ namespace Drova_Modding_API.Systems.Talents
                 };
             }
             _talentCache!.TryAdd(talent.name, talent);
-            _talentContainersToAdd.Add(talent);
+            TalentList.Add(talent);
         }
 
         /// <summary>
@@ -70,8 +70,8 @@ namespace Drova_Modding_API.Systems.Talents
         /// </summary>
         public static void Init()
         {
-            if (IsInitialized) return;
-            IsInitialized = true;
+            if (_isInitialized) return;
+            _isInitialized = true;
             var graph = ProviderAccess.GetGameDatabase().TalentGraph;
             InitializeTalentGraph(graph);
             PlayerAccess.OnPlayerFound += PlayerAccessOnOnPlayerFound;
@@ -79,11 +79,9 @@ namespace Drova_Modding_API.Systems.Talents
         private static void PlayerAccessOnOnPlayerFound(Actor player)
         {
             InitializeTalentGraph(player.GetComponentInChildren<TalentGraphOwner>().graph.Cast<TalentGraph>());
-            PlayerAccess.OnPlayerFound -= PlayerAccessOnOnPlayerFound;
         }
         private static void InitializeTalentGraph(TalentGraph graph)
         {
-
             if (graph != null)
             {
                 if (!graph.hasInitialized)
@@ -91,8 +89,10 @@ namespace Drova_Modding_API.Systems.Talents
                     graph.SelfDeserialize();
                 }
                 graph.DeserializeIfNotDoneYet(true);
-                foreach (var talent in _talentContainersToAdd)
+                
+                foreach (var talent in TalentList)
                 {
+                    if(graph.GetTalentFromGUID(talent.GUID) != null) continue;
                     var node = graph.AddNode<TalentNode>();
                     node._group = "Modded Talents";
                     node._talent = talent;

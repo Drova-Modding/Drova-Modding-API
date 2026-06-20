@@ -22,7 +22,6 @@ namespace Drova_Modding_API.Systems
 
         internal static void GameplayInit()
         {
-            PlayerAccess.StartWaitForPlayerCoroutine();
             TalentContainerDatabase.InitializeDatabase();
             GameObject moddingAPISystemRoot = new("ModdingAPI");
             moddingAPISystemRoot.SetActive(false);
@@ -35,7 +34,6 @@ namespace Drova_Modding_API.Systems
             moddingAPISystemRoot.AddComponent<DialogueAudioDistanceManager>();
 
             moddingAPISystemRoot.SetActive(true);
-            SaveGameSystem.Instance.OnLoad(Savegame.Current);
 
 #if DEBUG
             LocalizationEntriesEditorSystem.Initialize();
@@ -43,6 +41,13 @@ namespace Drova_Modding_API.Systems
             EditorUI.Init();
 #endif
             TalentContainerDatabase.Init();
+            PlayerAccess.StartWaitForPlayerCoroutine();
+            SaveGameSystem.AfterSaveGameLoaded -= OnSaveGameSystemOnAfterSaveGameLoaded;
+            SaveGameSystem.AfterSaveGameLoaded += OnSaveGameSystemOnAfterSaveGameLoaded;
+        }
+        private static void OnSaveGameSystemOnAfterSaveGameLoaded(Savegame _)
+        {
+            PlayerAccess.StartWaitForPlayerCoroutine();
         }
 
         internal static void RegisterStores()
