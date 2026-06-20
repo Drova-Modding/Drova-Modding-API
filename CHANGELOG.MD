@@ -1,4 +1,26 @@
 # Changelog
+## [0.5.0 - 2026-06-20]
+
+### Added
+- NPC Wizard: a UI to create NPCs without writing code, with definition browsing, overwrite handling, and one-click export of your NPC as a zip mod.
+- External NPC system: place fully configured NPCs in the world via JSON, with modules for routines, dialogue, equipment, cosmetics, health, talents, alignment, friendliness, and entity info.
+- Custom global variables: `CustomGVarStore` lets mods create, delete, and persist their own global variables.
+- `GvarBusSystem`: get notified when global boolean variables change.
+- Localization editor (`LocalizationEntriesEditorSystem`) and mod packaging, so localized strings get bundled with your mod.
+- Lots of new dialogue condition tasks: faction checks, crime/atone checks, talent and attribute learn checks, item/equipment checks, instigator and witness checks, and more.
+- New dialogue node editors for teaching stats and talents, plus many smaller node editor improvements.
+- Main menu fast get in for starting with noclip and godmode.
+
+### Changed
+- Global variable inspector reworked into separate read and write views and made easier to use.
+- Dialogue editor: better node creation/deletion/duplication, actor parameter controls, and dropdown caching.
+- `DialogueStore` now supports stable object references, base64 serialization, and in-memory dialogue patching.
+- Cleaner player initialization and event handling using coroutines.
+
+### Fixed
+- Fixed dropdown rendering in the global variable inspector.
+- Various spawning, entity consistency, and cleanup fixes for custom NPCs.
+
 ## [0.4.3 - 2026-05-32]
 
 ### Added
