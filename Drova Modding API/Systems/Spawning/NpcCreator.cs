@@ -76,6 +76,24 @@ namespace Drova_Modding_API.Systems.Spawning
             PendingSpawnedObjects.Add(spawnedTransform);
         }
 
+        internal static bool IsTrackedSpawn(Transform? actorTransform)
+        {
+            if (actorTransform == null)
+                return false;
+
+            if (IsSpawnRootAlive())
+                return actorTransform.IsChildOf(_npcSpawnRoot);
+
+            for (int i = 0; i < PendingSpawnedObjects.Count; i++)
+            {
+                Transform pending = PendingSpawnedObjects[i];
+                if (pending != null && actorTransform.IsChildOf(pending))
+                    return true;
+            }
+
+            return false;
+        }
+
         private static bool IsSpawnRootAlive()
             => _npcSpawnRoot != null;
 

@@ -1,4 +1,6 @@
+using Drova_Modding_API.Systems.Spawning;
 using HarmonyLib;
+using Il2CppCysharp.Threading.Tasks;
 using Il2CppDrova;
 using MelonLoader;
 
@@ -26,7 +28,10 @@ internal static class ActorAddLoadingCompPatch
                 LogSuppressedWarning(__instance);
             }
 
-            //compLoading.LoadingFunction.Invoke().Forget();
+            if (!NpcCreator.IsTrackedSpawn(__instance.transform))
+            {
+                compLoading.LoadingFunction.Invoke().Forget();
+            }
             return false;
         }
 
@@ -51,4 +56,3 @@ internal static class ActorAddLoadingCompPatch
         MelonLogger.Msg($"[AddLoadingComp] Suppressed warning for '{actor.name}': {message}");
     }
 }
-
