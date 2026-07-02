@@ -1,4 +1,14 @@
 # Changelog
+## [0.5.1 - 2026-07-02]
+
+### Added
+- Added Documentation for the core Systems under `docs/systems/` (dialogues, addressables, cheat menu, routines).
+- Added Assetbundle Loading as a new default for Audios
+- Improved Performance of loading Audios for AssetBundles and the IsInCave check
+
+### Fixed
+- Fixed a bug where loading process of the ActorAddLoadingCompPatch would not filter for our self created actors, which could cause issues with game actors initialization.
+
 ## [0.5.0 - 2026-06-20]
 
 ### Added

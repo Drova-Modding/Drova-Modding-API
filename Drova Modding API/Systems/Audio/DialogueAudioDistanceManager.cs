@@ -18,7 +18,7 @@ namespace Drova_Modding_API.Systems.Audio
         /// <summary>
         /// Grace time in frames for the playback to start
         /// </summary>
-        private const int START_PLAYBACK_GRACE_FRAMES = 30;
+        private const int START_PLAYBACK_GRACE_FRAMES = 120;
         private const float DEFAULT_MIN_DISTANCE = 100f;
         private const float DEFAULT_MAX_DISTANCE = 425f;
         private const float DEFAULT_VOLUME_LERP_SPEED = 5f;
@@ -41,8 +41,9 @@ namespace Drova_Modding_API.Systems.Audio
         public float MaxDistance = DEFAULT_MAX_DISTANCE;
 
         private static DialogueAudioDistanceManager? _instance;
-
+        
         /// <summary>The singleton instance of the manager.</summary>
+        [HideFromIl2Cpp]
         public static DialogueAudioDistanceManager? Instance => _instance;
 
         // Each entry pairs an AudioSource with the Transform of the speaking actor.
@@ -60,7 +61,8 @@ namespace Drova_Modding_API.Systems.Audio
             _instance = this;
             ApplyConfiguredSettings();
         }
-
+        
+        [HideFromIl2Cpp]
         private void ApplyConfiguredSettings()
         {
             MinDistance = GetConfiguredFloat(ModdingUIOptions.DialogueAudioMinDistanceOptionKey, MinDistance);
@@ -71,7 +73,8 @@ namespace Drova_Modding_API.Systems.Audio
             MaxDistance = Mathf.Max(MinDistance + 1f, MaxDistance);
             VolumeLerpSpeed = Mathf.Max(0.01f, VolumeLerpSpeed);
         }
-
+        
+        [HideFromIl2Cpp]
         private static float GetConfiguredFloat(string key, float fallback)
         {
             if (ConfigAccessor.TryGetConfigValue(key, out int configuredInt))

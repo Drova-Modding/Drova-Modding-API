@@ -23,6 +23,11 @@ namespace Drova_Modding_API.Systems
         /// </summary>
         internal readonly List<Region> Regions = [];
 
+        /// <summary>
+        /// Cached result of <see cref="IsInCave"/>. Recomputed whenever the current Regions change.
+        /// </summary>
+        private bool _isInCave;
+
 
         /**
          * The event that is called when the player enters or leaves a region.
@@ -63,6 +68,7 @@ namespace Drova_Modding_API.Systems
         {
             Region region = RegionExtensions.GetRegionByName(areaName);
             Regions.Add(region);
+            _isInCave = Regions.IsARegionInCave();
             OnRegionChanged?.Invoke(region, true);
         }
 
@@ -76,6 +82,7 @@ namespace Drova_Modding_API.Systems
             Region region = RegionExtensions.GetRegionByName(areaName);
             if (Regions.Remove(region))
             {
+                _isInCave = Regions.IsARegionInCave();
                 OnRegionChanged?.Invoke(region, false);
             }
         }
@@ -89,9 +96,9 @@ namespace Drova_Modding_API.Systems
         {
 #if DEBUG
             MelonLogger.Msg("Checking if player is in a cave. Current Regions: " + string.Join(", ", Regions.Select(r => r.ToString())));
-            MelonLogger.Msg("Is player in cave? " + Regions.IsARegionInCave());
+            MelonLogger.Msg("Is player in cave? " + _isInCave);
 #endif
-            return Regions.IsARegionInCave();
+            return _isInCave;
         }
     }
 }
