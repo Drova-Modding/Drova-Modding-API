@@ -1,4 +1,5 @@
-﻿using Drova_Modding_API.Systems.Audio;
+﻿using Drova_Modding_API.Systems;
+using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
 using HarmonyLib;
 using Il2CppDrova.DialogueNew;
@@ -15,7 +16,17 @@ internal static class DialogueTreePatch
 #endif
         DialogueTree dialogueTree = __instance.TryCast<DialogueTree>();
         if (dialogueTree == null) return;
-        AudioManager._dialogueAudioConnector.OnDialogueTreeLoaded(dialogueTree);
+        if (MainThreadDispatcher.IsMainThread)
+        {
+            AudioManager._dialogueAudioConnector.OnDialogueTreeLoaded(dialogueTree);
+        }
+        else
+        {
+            // DS_DialogueTreeController.StartGraphAsync deserializes graphs on a UniTask
+            // thread-pool thread. Unity APIs in the audio pipeline (AssetBundle/AudioClip)
+            // fail there with a native "Graphics device is null" error.
+            MainThreadDispatcher.Enqueue(() => AudioManager._dialogueAudioConnector.OnDialogueTreeLoaded(dialogueTree));
+        }
     }
 }
 

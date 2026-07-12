@@ -68,23 +68,32 @@ namespace Drova_Modding_API.Systems.Audio
 
         private static async Task<AudioClip> LoadOggAudioAsync(string path)
         {
-            return await Task.Run(() =>
+            // Only the NVorbis decoding (pure C#) may run on the thread pool. AudioClip.Create
+            // and SetData are main-thread-only Unity APIs, calling them from a worker thread
+            // fails natively with "Graphics device is null" in the IL2CPP player.
+            (float[] samples, int channels, int sampleRate)? decoded = await Task.Run(() =>
             {
                 if (!File.Exists(path))
                 {
                     AudioLog.Msg($"Audio not found for {path.Split("/")[^1]}");
-                    return null;
+                    return ((float[], int, int)?)null;
                 }
                 using VorbisReader vorbis = new(path);
                 int sampleRate = vorbis.SampleRate;
                 int channels = vorbis.Channels;
                 float[] samples = new float[vorbis.TotalSamples * channels];
                 vorbis.ReadSamples(samples, 0, samples.Length);
+                return (samples, channels, sampleRate);
+            }).ConfigureAwait(false);
 
+            if (decoded == null) return null;
+            var (samples, channels, sampleRate) = decoded.Value;
+            return await MainThreadDispatcher.RunOnMainThread(() =>
+            {
                 AudioClip audioClip = AudioClip.Create("Audio", samples.Length / channels, channels, sampleRate, false);
                 audioClip.SetData(samples, 0);
                 return audioClip;
-            });
+            }).ConfigureAwait(false);
         }
     }
 }

@@ -1,4 +1,9 @@
 # Changelog
+## [0.5.2 - 2026-07-12]
+
+### Fixed
+- Fixed a bug where some dialogues would be run from a separate thread and not on the main thread, which could cause issues with Unity API calls. Now all dialogue tasks are executed on the main thread.
+
 ## [0.5.1 - 2026-07-02]
 
 ### Added
