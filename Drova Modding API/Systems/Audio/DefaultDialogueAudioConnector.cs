@@ -44,11 +44,13 @@ namespace Drova_Modding_API.Systems.Audio
                     }
                 }
             }
-            Task.WaitAll([.. taskToStatement.Keys]);
+            // Pump the dispatcher while waiting: clip creation may itself be queued for the
+            // main thread, so a plain Task.WaitAll here would deadlock.
+            MainThreadDispatcher.WaitForTasks([.. taskToStatement.Keys]);
             for (int i = 0; i < taskToStatement.Count; i++)
             {
                 Task<AudioClip> task = taskToStatement.Keys.ElementAt(i);
-                if (task.IsCompleted)
+                if (task.IsCompletedSuccessfully)
                 {
                     taskToStatement[task].statement.audio = task.Result;
                 }
@@ -57,11 +59,11 @@ namespace Drova_Modding_API.Systems.Audio
                     AudioLog.Error($"Failed to load audio for statement {taskToStatement[task].statement.locaKey}");
                 }
             }
-            Task.WaitAll([.. taskToChoice.Keys]);
+            MainThreadDispatcher.WaitForTasks([.. taskToChoice.Keys]);
             for (int i = 0; i < taskToChoice.Count; i++)
             {
                 Task<AudioClip> task = taskToChoice.Keys.ElementAt(i);
-                if (task.IsCompleted)
+                if (task.IsCompletedSuccessfully)
                 {
                     taskToChoice[task].statement.audio = task.Result;
                 }
@@ -77,8 +79,8 @@ namespace Drova_Modding_API.Systems.Audio
         {
             AudioLog.Msg($"Loading generic Audio for " + statementNode.DLGTree.name);
             Task<AudioClip> task = AudioProvider.GetAudioClip(statementNode.DLGTree.name, statementNode.statement.useGlobalLoca ? statementNode.statement.GlobalLocaPath : statementNode.DLGTree.LocaPath, statementNode.statement.locaKey, statementNode.finalActor.name, null);
-            task.Wait();
-            if (task.IsCompleted)
+            MainThreadDispatcher.WaitForTasks(task);
+            if (task.IsCompletedSuccessfully)
             {
                 statementNode.statement.audio = task.Result;
             }

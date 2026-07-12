@@ -540,6 +540,7 @@
         <Compile Include="Systems\Spawning\NpcCreator.cs" />
         <Compile Include="Systems\Spawning\Templates\BanditCreator.cs" />
         <Compile Include="Systems\Talents\TalentContainerDatabase.cs" />
+        <Compile Include="Systems\MainThreadDispatcher.cs" />
         <Compile Include="Systems\SystemInit.cs" />
         <Compile Include="Systems\WorldEvents\EncounterEvent.cs" />
         <Compile Include="Systems\WorldEvents\IWorldEvent.cs" />

@@ -8,17 +8,13 @@ using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.ModdingUI;
 using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
-using MelonLoader.NativeUtils;
-using System.Runtime.InteropServices;
-using System.Text.Json;
 using UnityEngine.SceneManagement;
 
 #if DEBUG
-using Drova_Modding_API.Systems.Spawning.Templates;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.5.1", "Drova Modding", null)]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.5.2", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
@@ -29,8 +25,6 @@ namespace Drova_Modding_API
      */
     public class Core : MelonMod
     {
-
-
         internal static string? AssemblyLocation;
         internal bool InMainMenu;
 #if DEBUG
@@ -42,6 +36,7 @@ namespace Drova_Modding_API
         public override void OnInitializeMelon()
         {
             base.OnInitializeMelon();
+            MainThreadDispatcher.Initialize();
 #if DEBUG
             _consoleAction.Enable();
 #endif
@@ -126,20 +121,22 @@ namespace Drova_Modding_API
             ModdingUI.RegisterModdingUI();
         }
         
-#if DEBUG
         /// <inheritdoc/>
         public override void OnUpdate()
         {
             base.OnUpdate();
-
+            MainThreadDispatcher.Drain();
+#if DEBUG
             if (_consoleAction.WasReleasedThisFrame())
             {
                 var cheatHandler = ProviderAccess.GetCheatGameHandler();
                 if (cheatHandler == null) return;
                 cheatHandler.EnableCheatMode(!cheatHandler.IsCheatModeEnabled);
             }
+#endif
         }
-        
+
+#if DEBUG
         private static void Application_logMessageReceived(string condition, string stackTrace, LogType type)
         {
             MelonLogger.Msg($"[{type}] {condition} - {stackTrace}");
