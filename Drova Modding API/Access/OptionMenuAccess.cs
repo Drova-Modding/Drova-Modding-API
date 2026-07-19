@@ -132,6 +132,7 @@ namespace Drova_Modding_API.Access
                 Transform layoutGroup = scrollbar.transform.GetChild(0);
                 if (!layoutGroup) MelonLogger.Error("Failed to get LayoutGroup");
                 layoutGroup?.DestroyAllChildren();
+                ClearClonedPanelRowState(panel);
 
                 GUI_ButtonNavigationAnimation navigation = root.GetComponent<GUI_ButtonNavigationAnimation>();
                 if (!navigation) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimation");
@@ -156,6 +157,26 @@ namespace Drova_Modding_API.Access
         private static GameObject? GetScrollBar(GameObject panel)
         {
             return panel.transform.GetChild(1)?.gameObject;
+        }
+
+        /// <summary>
+        /// The cloned panel keeps serialized references to the template rows that were just destroyed
+        /// via DestroyAllChildren. <c>GUI_OptionPanel_Generic.InitRows</c> dereferences them on tab
+        /// activation and throws, which aborts the panel init and can persist wrong values for custom
+        /// option controls.
+        /// </summary>
+        private static void ClearClonedPanelRowState(GameObject panel)
+        {
+            Il2CppDrova.GUI_OptionPanel_Generic? generic = panel.GetComponent<Il2CppDrova.GUI_OptionPanel_Generic>();
+            if (!generic) return;
+            generic._rows?.Clear();
+            generic._insaneOptions?.Clear();
+            generic._nonInsaneOptions?.Clear();
+            generic._pcOptions?.Clear();
+            generic._platformOptions?.Clear();
+            generic._controllerOptions?.Clear();
+            generic._pcControllerOptions?.Clear();
+            generic._noSwitchControllerOptions?.Clear();
         }
 
         /**

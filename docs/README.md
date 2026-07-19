@@ -48,6 +48,7 @@ from your `MelonMod` subclass.
 | [Game Access](./systems/game-access.md)   | Reach the game's managers/handlers (`ProviderAccess`) and the player actor (`PlayerAccess`). |
 | [Input](./systems/input.md)               | Register input actions, read button/axis state, and rebind keys.                             |
 | [Addressables](./systems/addressables.md) | Load game assets (creatures, items, UI prefabs, entity infos) by reference.                  |
+| [Difficulty](./systems/difficulty.md)     | Read the savegame's game mode (Classic, Insane, …) and insane/permadeath checks.             |
 
 ### NPCs & spawning
 
