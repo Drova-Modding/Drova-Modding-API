@@ -1,4 +1,13 @@
 # Changelog
+
+## [0.5.4 - 2026-07-22]
+### Added
+- Introduced new Systems for modders including, GameEvents, QuestStateReader, SceneStreamAcces, and TeleporterAccess.
+- Added Hookutils for easier modding of harmony patches.
+
+### Fixed
+- Savegame system heard on the wrong hooks.
+
 ## [0.5.3 - 2026-07-19]
 
 ### Added
