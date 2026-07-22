@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.SaveGame;
+using Drova_Modding_API.Systems.SaveGame;
 using HarmonyLib;
 using Il2CppDrova;
 using Il2CppDrova.Saveables;
@@ -17,38 +17,23 @@ internal static class SaveGameHandlerPatch
     }
 }
 
-internal class SaveGameHandlerSavePatch
+/// <summary>
+/// Fires <see cref="SaveGameSystem.BeforeSaveGameSaving"/> for EVERY save. The patch target is
+/// <c>SavegameGameHandler.SaveCurrentAs</c>, the private funnel that all public entry points
+/// (<c>SaveCurrent()</c>, <c>SaveCurrent(SaveOptions)</c>, <c>SaveCurrentAt(...)</c>) and the
+/// AUTOSAVE flow into, right before the savegame is serialized to disk.
+///
+/// The previous approach patched three public entry points instead, which had two field-verified
+/// bugs: the autosave path (<c>SaveCurrentAt(id, options, ignoreRestriction)</c>) was not
+/// covered, so registered stores were silently stale after an autosave-only session; and
+/// <c>SaveCurrent()</c> chains into <c>SaveCurrent(SaveOptions)</c>, so manual saves fired the
+/// event twice.
+/// </summary>
+[HarmonyPatch(typeof(SavegameGameHandler), nameof(SavegameGameHandler.SaveCurrentAs), [typeof(SavegameIdentifier), typeof(SaveOptions), typeof(bool)])]
+internal static class SaveGameHandlerSaveFunnelPatch
 {
-    [HarmonyPatch(typeof(SavegameGameHandler), nameof(SavegameGameHandler.SaveCurrent), [])]
-    private static class SaveGameHandlerSavePatch_Save
+    private static void Prefix(SavegameGameHandler __instance)
     {
-        private static void Prefix(SavegameGameHandler __instance)
-        {
-            SaveGameSystem.TriggerBeforeSaveGameSaving(__instance.CurrentSavegame);
-        }
-    }
-}
-
-internal class SaveGameHandlerSavePatch2
-{
-    [HarmonyPatch(typeof(SavegameGameHandler), nameof(SavegameGameHandler.SaveCurrent), [typeof(SaveOptions)])]
-    private static class SaveGameHandlerSavePatch_Save
-    {
-        private static void Prefix(SavegameGameHandler __instance)
-        {
-            SaveGameSystem.TriggerBeforeSaveGameSaving(__instance.CurrentSavegame);
-        }
-    }
-}
-
-internal class SaveGameHandlerSavePatch3
-{
-    [HarmonyPatch(typeof(SavegameGameHandler), nameof(SavegameGameHandler.SaveCurrentAt), [typeof(SavegameIdentifier)])]
-    private static class SaveGameHandlerSavePatch_Save
-    {
-        private static void Prefix(SavegameGameHandler __instance)
-        {
-            SaveGameSystem.TriggerBeforeSaveGameSaving(__instance.CurrentSavegame);
-        }
+        SaveGameSystem.TriggerBeforeSaveGameSaving(__instance.CurrentSavegame);
     }
 }

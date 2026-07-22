@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Register;
@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.5.3", "Drova Modding", null)]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.5.4", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
@@ -26,6 +26,9 @@ namespace Drova_Modding_API
     public class Core : MelonMod
     {
         internal static string? AssemblyLocation;
+        /// <summary>The API melon's Harmony instance, for lazily applied hooks
+        /// (<see cref="Access.TeleporterAccess"/>, <see cref="Access.WindowContentAccess"/>).</summary>
+        internal static HarmonyLib.Harmony SharedHarmony = null!;
         internal bool InMainMenu;
 #if DEBUG
         private bool _registeredLogCallback;
@@ -36,11 +39,13 @@ namespace Drova_Modding_API
         public override void OnInitializeMelon()
         {
             base.OnInitializeMelon();
+            SharedHarmony = HarmonyInstance;
             MainThreadDispatcher.Initialize();
 #if DEBUG
             _consoleAction.Enable();
 #endif
             SystemInit.RegisterStores();
+            GameEvents.Initialize(HarmonyInstance);
             LoggerInstance.Msg("Initialized Modding API.");
             OptionMenuAccess.Instance.OnOptionMenuClose += () =>
             {
@@ -58,6 +63,10 @@ namespace Drova_Modding_API
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
             base.OnSceneWasLoaded(buildIndex, sceneName);
+
+            // Streamed chunk scenes load continuously while the player travels; this must stay
+            // cheap for scenes nobody registered for (one dictionary lookup).
+            SceneStreamAccess.NotifySceneLoaded(sceneName);
 
             if (sceneName == SceneNames.MainMenu)
             {
@@ -108,6 +117,13 @@ namespace Drova_Modding_API
             // {
             //     _ttsFile.GenerateWorldDialogues();
             // }
+        }
+
+        /// <inheritdoc/>
+        public override void OnSceneWasUnloaded(int buildIndex, string sceneName)
+        {
+            base.OnSceneWasUnloaded(buildIndex, sceneName);
+            SceneStreamAccess.NotifySceneUnloaded(sceneName);
         }
 
         /// <inheritdoc/>

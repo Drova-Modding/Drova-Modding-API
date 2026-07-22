@@ -427,10 +427,17 @@
         <Compile Include="Access\CheatMenuAccess.cs"/>
         <Compile Include="Access\ConfigAccessor.cs"/>
         <Compile Include="Access\DifficultyAccess.cs"/>
+        <Compile Include="Access\GameEvents.cs"/>
         <Compile Include="Access\InputAccess.cs"/>
         <Compile Include="Access\LocalizationAccess.cs"/>
         <Compile Include="Access\PlayerAccess.cs"/>
         <Compile Include="Access\ProviderAccess.cs"/>
+        <Compile Include="Access\QuestStateReader.cs"/>
+        <Compile Include="Access\SceneStreamAccess.cs"/>
+        <Compile Include="Access\TeleporterAccess.cs"/>
+        <Compile Include="Access\WindowContentAccess.cs"/>
+        <Compile Include="Hooking.cs"/>
+        <Compile Include="Systems\Rendering\SpriteOverlay.cs"/>
         <Compile Include="Converters\Vector2JsonConverter.cs" />
         <Compile Include="Core.cs" />
         <Compile Include="Access\OptionMenuAccess.cs" />
@@ -559,6 +566,7 @@
         <Compile Include="Utils.cs" />
     </ItemGroup>
     <ItemGroup Condition="'$(Configuration)'=='Debug'">
+        <Compile Include="Systems\Debugging\NearbyDumper.cs" />
         <Compile Include="Systems\Editor\EditorUI.cs" />
         <Compile Include="Systems\Editor\LocalizationEntriesEditorSystem.cs" />
         <Compile Include="Systems\Editor\ModCreationContext.cs" />
