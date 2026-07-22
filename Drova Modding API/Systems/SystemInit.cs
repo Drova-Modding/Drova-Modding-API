@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
 using Drova_Modding_API.Systems.Routines;
@@ -41,6 +41,10 @@ namespace Drova_Modding_API.Systems
             EditorUI.Init();
 #endif
             TalentContainerDatabase.Init();
+#if DEBUG
+            // Modder diagnostics only - not part of the release surface.
+            Debugging.NearbyDumper.Register();
+#endif
             PlayerAccess.StartWaitForPlayerCoroutine();
             SaveGameSystem.AfterSaveGameLoaded -= OnSaveGameSystemOnAfterSaveGameLoaded;
             SaveGameSystem.AfterSaveGameLoaded += OnSaveGameSystemOnAfterSaveGameLoaded;
