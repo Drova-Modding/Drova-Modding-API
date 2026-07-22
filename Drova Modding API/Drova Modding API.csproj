@@ -426,6 +426,7 @@
         <Compile Include="Access\AddressableAccess.cs"/>
         <Compile Include="Access\CheatMenuAccess.cs"/>
         <Compile Include="Access\ConfigAccessor.cs"/>
+        <Compile Include="Access\DifficultyAccess.cs"/>
         <Compile Include="Access\InputAccess.cs"/>
         <Compile Include="Access\LocalizationAccess.cs"/>
         <Compile Include="Access\PlayerAccess.cs"/>

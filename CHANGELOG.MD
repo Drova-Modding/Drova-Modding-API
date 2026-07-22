@@ -1,4 +1,12 @@
 # Changelog
+## [0.5.3 - 2026-07-19]
+
+### Added
+- `DifficultyAccess`: read the savegame's game mode (Classic, Insane, …), with insane-family and permadeath checks. See `docs/systems/difficulty.md`.
+
+### Fixed
+- Fixed a NullReferenceException in `GUI_OptionPanel_Generic.InitRows` when activating a custom option panel: the panel clone created by `OptionMenuAccess.AddPanel` kept serialized references to the destroyed template rows (`_rows`, `_insaneOptions`, …). The stale lists are now cleared, which also prevents custom switches from persisting wrong values after the aborted init.
+
 ## [0.5.2 - 2026-07-12]
 
 ### Fixed
