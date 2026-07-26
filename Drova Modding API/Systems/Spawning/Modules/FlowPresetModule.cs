@@ -95,16 +95,15 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
             foreach (var itemRef in _flows)
             {
-                var handle = itemRef.LoadAssetAsync();
-                handle.WaitForCompletion();
+                var flowItem = Addressables.LoadAssetAsync<Item>(itemRef).WaitForCompletion();
 
-                if (handle.Result == null)
+                if (flowItem == null)
                 {
                     MelonLogger.Warning($"Could not load flow from addressable reference '{itemRef.AssetGUID}'.");
                     continue;
                 }
 
-                pendingFlows.Add(handle.Result);
+                pendingFlows.Add(flowItem);
             }
 
             var slots = equipPreset._spellEquipPreset._slots;

@@ -62,10 +62,9 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
             foreach (var cosmeticRef in _cosmetics)
             {
-                var handle = cosmeticRef.LoadAssetAsync();
-                handle.WaitForCompletion();
-                if (handle.Result != null)
-                    inventory._cosmeticPreset._cosmeticItems.Add(handle.Result);
+                var item = Addressables.LoadAssetAsync<Item>(cosmeticRef).WaitForCompletion();
+                if (item != null)
+                    inventory._cosmeticPreset._cosmeticItems.Add(item);
             }
         }
     }

@@ -59,10 +59,9 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
             foreach (var itemRef in _items)
             {
-                var handle = itemRef.LoadAssetAsync();
-                handle.WaitForCompletion();
-                if (handle.Result != null)
-                    equipPreset._equipment.Add(handle.Result);
+                var loadedItem = Addressables.LoadAssetAsync<Item>(itemRef).WaitForCompletion();
+                if (loadedItem != null)
+                    equipPreset._equipment.Add(loadedItem);
             }
         }
     }

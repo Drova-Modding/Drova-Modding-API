@@ -63,7 +63,9 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Creates a generic lazy actor and supports either an entity-info reference or a preloaded entity-info instance.
         /// </summary>
         /// <param name="actorName">Name for the spawned lazy actor game object.</param>
-        /// <param name="actorReference">Addressable actor prefab reference.</param>
+        /// <param name="actorReference">Addressable actor prefab reference. Only its GUID is used: every lazy actor gets
+        /// its own <see cref="AssetReferenceGameObject"/> copy, because <c>LazyActor</c> loads through the reference
+        /// instance and a shared one would fail with "AssetReference that has already been loaded" on the second actor.</param>
         /// <param name="position">World position to spawn at.</param>
         /// <param name="entityInfoReference">Optional entity-info addressable reference.</param>
         /// <param name="customEntityInfo">Optional preloaded entity info. Takes precedence over <paramref name="entityInfoReference"/>.</param>
@@ -82,7 +84,7 @@ namespace Drova_Modding_API.Systems.Spawning
             gameObject.SetActive(false);
 
             LazyActor lazyActor = gameObject.AddComponent<LazyActor>();
-            lazyActor._actorReference = actorReference;
+            lazyActor._actorReference = new AssetReferenceGameObject(actorReference.AssetGUID);
             lazyActor.transform.position = position;
             lazyActor._spawnPos = position;
 

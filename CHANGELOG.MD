@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Fixed
+- Spawning more than one lazy actor flooded the log with "Attempting to load AssetReference that has already been loaded" followed by "Attempting to use an invalid operation handle" in `LazyActor.LoadActor`. `AssetReference.LoadAssetAsync` stores its handle on the reference instance, so the shared statics from `AddressableAccess` (e.g. `NPCs.Human_Template`, used by every `NpcCreator`) could only be loaded once. `LazyActorCreator` now copies the reference per actor, and the equipment, cosmetics, and flow preset modules load through `Addressables.LoadAssetAsync` instead of the reference instance.
+
 ## [0.5.4 - 2026-07-22]
 ### Added
 - Introduced new Systems for modders including, GameEvents, QuestStateReader, SceneStreamAcces, and TeleporterAccess.
