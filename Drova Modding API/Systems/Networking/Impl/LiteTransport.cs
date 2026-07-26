@@ -331,6 +331,17 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 UnsyncedEvents = false,
                 AutoRecycle = false,
                 ChannelsCount = ChannelCount,
+
+                // How often queued sends are actually flushed. The default is 15 ms, and that delay is
+                // added to every message this transport carries. Measured end to end through a relay,
+                // where a round trip crosses four such queues, it accounted for most of a 50 ms round trip
+                // between two peers running on the same machine.
+                //
+                // For a game sending player state every frame that wait buys nothing: the packet is
+                // complete and held back for a timer. One millisecond spends a little more CPU on smaller,
+                // more frequent flushes, which is the right trade for traffic made of small messages that
+                // are worthless as soon as the next one supersedes them.
+                UpdateTime = 1,
             };
         }
 
