@@ -76,6 +76,12 @@ from your `MelonMod` subclass.
 | [Global Variables](./systems/global-vars.md) | React to gvar changes and register custom global variables.                 |
 | [Talents](./systems/talents.md)              | Register custom talents into the talent graph.                              |
 
+### Multiplayer
+
+| Page                                    | Summary                                                                                     |
+|-----------------------------------------|-----------------------------------------------------------------------------------------------|
+| [Networking](./systems/networking.md)   | Optional coop transport: sessions, typed messages, raw channels. Needs a coop-enabled build. |
+
 ## Contributing to the docs
 
 These pages live in `/docs` as plain Markdown — no build step. Edit a file, open a PR.

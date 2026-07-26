@@ -10,6 +10,10 @@ using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
 using UnityEngine.SceneManagement;
 
+#if NETCOOP
+using Drova_Modding_API.Systems.Networking.Impl;
+#endif
+
 #if DEBUG
 using UnityEngine.InputSystem;
 #endif
@@ -41,6 +45,9 @@ namespace Drova_Modding_API
             base.OnInitializeMelon();
             SharedHarmony = HarmonyInstance;
             MainThreadDispatcher.Initialize();
+#if NETCOOP
+            NetworkSystem.Initialize();
+#endif
 #if DEBUG
             _consoleAction.Enable();
 #endif
@@ -142,6 +149,9 @@ namespace Drova_Modding_API
         {
             base.OnUpdate();
             MainThreadDispatcher.Drain();
+#if NETCOOP
+            NetworkSystem.Poll();
+#endif
 #if DEBUG
             if (_consoleAction.WasReleasedThisFrame())
             {
@@ -151,6 +161,15 @@ namespace Drova_Modding_API
             }
 #endif
         }
+
+#if NETCOOP
+        /// <inheritdoc/>
+        public override void OnDeinitializeMelon()
+        {
+            base.OnDeinitializeMelon();
+            NetworkSystem.Shutdown();
+        }
+#endif
 
 #if DEBUG
         private static void Application_logMessageReceived(string condition, string stackTrace, LogType type)

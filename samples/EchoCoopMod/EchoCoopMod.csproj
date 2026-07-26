@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>annotations</Nullable>
+        <LangVersion>12</LangVersion>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>EchoCoopMod</RootNamespace>
+        <AssemblyName>EchoCoopMod</AssemblyName>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin</GameDir>
+    </PropertyGroup>
+
+    <!--
+        The whole point of the sample: two references, neither of them LiteNetLib. A consumer mod
+        compiles against the API's public networking surface only, so the same mod DLL works on a
+        coop-enabled and a plain API build.
+    -->
+    <ItemGroup>
+        <Reference Include="MelonLoader">
+            <HintPath>$(GameDir)\MelonLoader\net6\MelonLoader.dll</HintPath>
+        </Reference>
+        <Reference Include="Drova_Modding_API">
+            <HintPath>$(GameDir)\Mods\Drova_Modding_API.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+</Project>

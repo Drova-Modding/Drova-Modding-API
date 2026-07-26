@@ -31,7 +31,8 @@ Jump straight to a system:
 [Routines](./docs/systems/routines.md) ·
 [Global Variables](./docs/systems/global-vars.md) ·
 [Talents](./docs/systems/talents.md) ·
-[Cheat Menu](./docs/systems/cheat-menu.md)
+[Cheat Menu](./docs/systems/cheat-menu.md) ·
+[Networking](./docs/systems/networking.md)
 
 ## Installation (developers)
 
@@ -73,6 +74,8 @@ public class MyMod : MelonMod { }
 - Spoken dialogue audio from loose files or AssetBundles.
 - A world-event system with regional coordination, and area/region tracking.
 - Routines, custom talents, custom global variables, and a runtime gvar inspector (F6).
+- An optional coop [networking transport](./docs/systems/networking.md) for mods that want to talk
+  between two games (off by default, see below).
 
 See the [docs](./docs/README.md) for how to use each of these.
 
@@ -85,6 +88,21 @@ dotnet build "Drova Modding API.sln" -c Debug
 `Debug` builds include the dev tooling (dialogue editor, F6 global var inspector, NPC wizard);
 `Release` builds strip it. See [Getting Started](./docs/getting-started.md#developer-key-bindings)
 for the dev key bindings.
+
+### Coop build
+
+The networking transport is **not** in a default build — no implementation, no LiteNetLib
+dependency. Opt in by building a `Coop` configuration (`DebugCoop` / `ReleaseCoop`, selectable from
+the configuration dropdown in Rider and Visual Studio):
+
+```sh
+dotnet build "Drova Modding API.sln" -c ReleaseCoop
+```
+
+This adds `LiteNetLib.dll` to `UserLibs` next to the mod DLL. Mods keep compiling against the same
+public surface either way and detect support at runtime via `NetworkAccess.IsSupported`; a
+buildable example is in [`samples/EchoCoopMod`](./samples/EchoCoopMod). Full details, including how
+to switch it on inside Rider, are in the [networking docs](./docs/systems/networking.md).
 
 ## Follow the project
 
