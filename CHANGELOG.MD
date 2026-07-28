@@ -1,7 +1,11 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- Networking: a typed message carrying a NaN or an infinity in any float or double is no longer delivered to its handler. Nothing for a mod to opt into — the reader marks the packet and the dispatcher drops it, counted and summarized every few seconds rather than logged per packet, because anyone who can send one can send thousands. There is a real failure behind this: a non-finite value assigned to a transform is read back as the input to the next frame's interpolation, so a single hostile packet leaves an object broken for the rest of the session, and no care on the receiving mod's part repairs it afterwards. Expecting every mod to validate every float it reads is how that ships. Finite values are untouched, so honest traffic costs nothing.
+
 ### Fixed
+- Networking: a typed packet shorter than its own two-byte message id read past the end of the buffer. The receive path's handler caught it, but each one produced a logged stack trace, so anyone who knew the port could fill the log. Short packets are now ignored.
 - Spawning more than one lazy actor flooded the log with "Attempting to load AssetReference that has already been loaded" followed by "Attempting to use an invalid operation handle" in `LazyActor.LoadActor`. `AssetReference.LoadAssetAsync` stores its handle on the reference instance, so the shared statics from `AddressableAccess` (e.g. `NPCs.Human_Template`, used by every `NpcCreator`) could only be loaded once. `LazyActorCreator` now copies the reference per actor, and the equipment, cosmetics, and flow preset modules load through `Addressables.LoadAssetAsync` instead of the reference instance.
 
 ## [0.5.4 - 2026-07-22]

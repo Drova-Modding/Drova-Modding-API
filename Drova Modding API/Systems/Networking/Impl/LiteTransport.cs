@@ -40,6 +40,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private string? _connectKey;
         private long _undecryptable;
         private long _lastDropLogMs;
+        private long _lastRefusedLogMs;
 
         internal NetRole Role { get; private set; } = NetRole.None;
 
@@ -128,6 +129,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         {
             _manager?.PollEvents();
             FlushUndecryptableLog();
+            FlushRefusedLog();
         }
 
         internal void Stop()
@@ -538,6 +540,27 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                     if (left != null) NetworkEvents.RaisePeerDisconnected(left, DisconnectReason.RemoteClose);
                     break;
             }
+        }
+
+        /// <summary>
+        /// Summarizes messages the dispatcher refused for carrying a NaN or an infinity.
+        ///
+        /// Worth saying out loud rather than dropping in silence: a mod whose messages stop arriving with
+        /// no explanation is a bug hunt in the wrong repository, and the honest answer - somebody is
+        /// sending numbers no game can use - is only visible here.
+        /// </summary>
+        private void FlushRefusedLog()
+        {
+            long now = Environment.TickCount64;
+            if (now - _lastRefusedLogMs < DropLogIntervalMs) return;
+
+            long refused = Dispatcher.TakeRefused();
+            if (refused == 0) return;
+
+            _lastRefusedLogMs = now;
+
+            MelonLogger.Warning("[Networking] dropped " + refused + " messages carrying a NaN or an infinity; " +
+                "a peer is sending numbers no game can use, whether through a bug or on purpose.");
         }
 
         private void FlushUndecryptableLog()

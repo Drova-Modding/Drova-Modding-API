@@ -12,9 +12,21 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     {
         private NetDataReader _packet = null!;
 
+        /// <summary>
+        /// Whether this packet carried a number no game can use - a NaN or an infinity - and is therefore
+        /// not to be handed to anybody.
+        ///
+        /// A flag rather than an exception, because this path is reachable by any peer: throwing turns one
+        /// hostile packet into one logged stack trace, and a stream of them into a way of filling somebody
+        /// else's disk. The message is still decoded to the end so the reader stays in step with the
+        /// packet; <see cref="MessageChannel{T}"/> is what declines to deliver it.
+        /// </summary>
+        internal bool Poisoned { get; private set; }
+
         internal void Bind(NetDataReader packet)
         {
             _packet = packet;
+            Poisoned = false;
         }
 
         public byte GetByte()
@@ -59,12 +71,33 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         public float GetFloat()
         {
-            return _packet.GetFloat();
+            float value = _packet.GetFloat();
+
+            // NaN and the infinities are never legitimate game state, and letting one through is not a
+            // cosmetic problem: a NaN position assigned to a transform is read back as the input to the
+            // next frame's interpolation, so every frame after it is NaN too and the object never
+            // recovers. Zero is substituted only so the rest of the message decodes; nothing acts on it,
+            // because the message is dropped before it reaches a handler.
+            if (!float.IsFinite(value))
+            {
+                Poisoned = true;
+                return 0f;
+            }
+
+            return value;
         }
 
         public double GetDouble()
         {
-            return _packet.GetDouble();
+            double value = _packet.GetDouble();
+
+            if (!double.IsFinite(value))
+            {
+                Poisoned = true;
+                return 0d;
+            }
+
+            return value;
         }
 
         public bool GetBool()

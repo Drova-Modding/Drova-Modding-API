@@ -17,6 +17,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private static readonly RawHandler?[] _raw = new RawHandler[LiteTransport.ChannelCount];
         private static readonly LiteWriter _writer = new();
         private static readonly LiteReader _reader = new();
+        private static long _refused;
 
         internal static void RegisterWithId<T>(ushort id, Action<INetPeer, T> handler) where T : struct, INetMessage
         {
@@ -63,10 +64,35 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal static void OnTypedReceived(INetPeer peer, NetDataReader packet)
         {
+            // A typed packet too short to hold its own id is not a message. Without this the read runs off
+            // the end of the buffer, and the receive path's catch turns every one of them into a logged
+            // stack trace - a flood anyone with the port can start.
+            if (packet.AvailableBytes < sizeof(ushort)) return;
+
             _reader.Bind(packet);
             ushort id = _reader.GetUShort();
             MessageChannel? channel = id < MaxMessageTypes ? _typed[id] : null;
             channel?.Handle(peer, _reader);
+        }
+
+        /// <summary>
+        /// Records a message refused for carrying a number no game can use. Counted rather than logged per
+        /// event: whoever can send one can send thousands.
+        /// </summary>
+        internal static void CountRefused()
+        {
+            _refused++;
+        }
+
+        /// <summary>
+        /// Takes the refusal tally and clears it, so the transport can summarize it on its own schedule.
+        /// </summary>
+        internal static long TakeRefused()
+        {
+            long refused = _refused;
+            _refused = 0;
+
+            return refused;
         }
 
         internal static void RegisterRawChannel(byte channel, RawHandler handler)

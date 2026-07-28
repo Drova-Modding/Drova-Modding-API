@@ -29,6 +29,18 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         {
             T message = default;
             message.Read(reader);
+
+            // Decoded first, then refused. A message that carried a NaN or an infinity is not delivered at
+            // all: a mod cannot be expected to check every float it reads, and the one that forgets does
+            // not merely get a wrong number - it gets an object that never recovers, because a NaN written
+            // into a transform becomes the input to the next frame's arithmetic. Dropping is safe in a way
+            // repairing is not, since substituting a value hands the handler a state no sender described.
+            if (reader.Poisoned)
+            {
+                Dispatcher.CountRefused();
+                return;
+            }
+
             _handler(peer, message);
         }
     }
