@@ -1,3 +1,4 @@
+using Il2CppInterop.Runtime.Attributes;
 using UnityEngine;
 using MelonLoader;
 
@@ -33,6 +34,7 @@ namespace Drova_Modding_API.Systems.Spawning
             _markerTexture.Apply();
         }
 
+        [HideFromIl2Cpp]
         public void SetPoints(List<Vector2>? points, bool visible)
         {
             _points = points ?? EmptyPoints;

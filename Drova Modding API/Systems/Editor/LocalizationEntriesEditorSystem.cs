@@ -630,8 +630,15 @@ namespace Drova_Modding_API.Systems.Editor
             if (string.IsNullOrWhiteSpace(_selectedFilePath))
                 return null;
 
-            return _files.FirstOrDefault(file =>
-                string.Equals(file.AbsolutePath, _selectedFilePath, StringComparison.OrdinalIgnoreCase));
+            // A capturing lambda here would be emitted as an instance method on this
+            // injected MonoBehaviour and rejected by Il2CppInterop registration.
+            for (int i = 0; i < _files.Count; i++)
+            {
+                if (string.Equals(_files[i].AbsolutePath, _selectedFilePath, StringComparison.OrdinalIgnoreCase))
+                    return _files[i];
+            }
+
+            return null;
         }
 
         [HideFromIl2Cpp]

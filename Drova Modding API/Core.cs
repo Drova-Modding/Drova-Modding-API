@@ -120,6 +120,8 @@ namespace Drova_Modding_API
             {
                 SystemInit.ActorInit(SceneManager.GetSceneByName(sceneName));
             }
+
+            CheatMenuAccess.NotifySceneLoaded();
             // if (sceneName == SceneNames.AILogic)
             // {
             //     _ttsFile.GenerateWorldDialogues();

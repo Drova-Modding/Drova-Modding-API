@@ -41,8 +41,8 @@ namespace Drova_Modding_API.Systems.Spawning
         #region State Proxies
         private ExternalNpcPlacementSystem.ExternalNpcDefinition Definition
         {
-            get => _state.Definition;
-            set => _state.Definition = value;
+            [HideFromIl2Cpp] get => _state.Definition;
+            [HideFromIl2Cpp] set => _state.Definition = value;
         }
 
         private string Status
