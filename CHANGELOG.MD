@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- `DamageAccess`: deal damage to an actor, or heal one, through the game's own health calculation, plus accessors for the four damage types the game keeps on two different handlers (physical, magical, pure, healing). See `docs/systems/damage.md`. The reason this is worth an API rather than three lines in each mod is that the obvious three lines are wrong in two ways that only show up later. Writing `Health._curHealth` or calling `SetHealth` skips the calculation, and the damage blockers live inside it — including the one that turns a killing blow into something other than death, so a raw write that reaches zero latches `_isDead`, which nothing ever clears, and the actor is permanently dead with every revive path unused. The second is that naming a source does not merely attribute the blow: the game runs that entity's offensive stats over the value, so passing an attacker whose gear is already reflected in the figure counts their weapon twice. `DamageAccess` takes the source as an optional parameter and documents which case is which.
+
 ### Changed
 - Networking: a typed message carrying a NaN or an infinity in any float or double is no longer delivered to its handler. Nothing for a mod to opt into — the reader marks the packet and the dispatcher drops it, counted and summarized every few seconds rather than logged per packet, because anyone who can send one can send thousands. There is a real failure behind this: a non-finite value assigned to a transform is read back as the input to the next frame's interpolation, so a single hostile packet leaves an object broken for the rest of the session, and no care on the receiving mod's part repairs it afterwards. Expecting every mod to validate every float it reads is how that ships. Finite values are untouched, so honest traffic costs nothing.
 

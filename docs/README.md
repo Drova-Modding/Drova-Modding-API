@@ -49,6 +49,7 @@ from your `MelonMod` subclass.
 | [Input](./systems/input.md)               | Register input actions, read button/axis state, and rebind keys.                             |
 | [Addressables](./systems/addressables.md) | Load game assets (creatures, items, UI prefabs, entity infos) by reference.                  |
 | [Difficulty](./systems/difficulty.md)     | Read the savegame's game mode (Classic, Insane, …) and insane/permadeath checks.             |
+| [Damage](./systems/damage.md)             | Damage or heal an actor through the game's own health calculation.                           |
 
 ### NPCs & spawning
 
