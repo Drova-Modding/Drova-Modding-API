@@ -19,6 +19,7 @@ Jump straight to a system:
 [Options Menu](./docs/systems/options-menu.md) ·
 [Localization](./docs/systems/localization.md) ·
 [Game Access](./docs/systems/game-access.md) ·
+[Damage](./docs/systems/damage.md) ·
 [Input](./docs/systems/input.md) ·
 [Addressables](./docs/systems/addressables.md) ·
 [Spawning NPCs](./docs/systems/spawning.md) ·
