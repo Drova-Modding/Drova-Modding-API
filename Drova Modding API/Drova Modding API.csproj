@@ -444,9 +444,19 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Access\ActorSpawnAccess.cs"/>
         <Compile Include="Access\AddressableAccess.cs"/>
         <Compile Include="Access\CheatMenuAccess.cs"/>
         <Compile Include="Access\ConfigAccessor.cs"/>
+        <!--
+            Unconditional, unlike the networking files further down. The co-op contract has no transport
+            dependency, so every build of this API exposes it and a mod compiles against one surface
+            whether or not a co-op flavor exists.
+        -->
+        <Compile Include="Access\CoopAccess.cs"/>
+        <Compile Include="Systems\Coop\CoopTypes.cs"/>
+        <Compile Include="Systems\Coop\CoopRandom.cs"/>
+        <Compile Include="Systems\Coop\NullCoopProvider.cs"/>
         <Compile Include="Access\DamageAccess.cs"/>
         <Compile Include="Access\DifficultyAccess.cs"/>
         <Compile Include="Access\GameEvents.cs"/>
@@ -455,6 +465,7 @@
         <Compile Include="Access\PlayerAccess.cs"/>
         <Compile Include="Access\ProviderAccess.cs"/>
         <Compile Include="Access\QuestStateReader.cs"/>
+        <Compile Include="Access\RegionAccess.cs"/>
         <Compile Include="Access\SceneStreamAccess.cs"/>
         <Compile Include="Access\TeleporterAccess.cs"/>
         <Compile Include="Access\WindowContentAccess.cs"/>

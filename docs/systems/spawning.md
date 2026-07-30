@@ -7,6 +7,8 @@ do the heavy lifting:
 - `NpcCreator` — the general builder: name + position, then `With…` calls, then `Create()` or
   `CreateLazy()`.
 - `BanditCreator` — ready-made bandit factories with difficulty-scaled gear and talents.
+- `Access.ActorSpawnAccess`, spawn a creature straight from an addressable prefab, and (the part
+  every mod gets wrong) **remove one again**.
 
 For NPCs, you want to **persist across save/load**, use **lazy actors** (`CreateLazy(...)` or
 `LazyActorCreator`). For purely transient spawns, `Create()` is fine.
@@ -79,6 +81,43 @@ var bear = LazyActorCreator.CreateLazyActorCreature(new LazyActorCreator.LazyAct
 
 Or the lower-level `CreateLazyActor(name, actorRef, position, entityInfoRef, customEntityInfo,
 noSave, isNpc)` when you want full control.
+
+### Spawn a creature from a prefab I already hold
+
+```csharp
+using Drova_Modding_API.Access;
+
+if (ActorSpawnAccess.TrySpawn(prefab, new Vector2(10, 20), out Actor actor))
+{
+    // actor is alive, parented under the API's spawn root, and awake.
+}
+```
+
+This does what the game's own spawner does. It parents to the spawn root, then nudges the actor so
+its AI wakes up. It is synchronous, so it stalls the frame while the asset loads if it is not
+already resident, so spawn a group together and take one hitch. It is deliberately **not saved**.
+
+### Remove something I spawned
+
+Two different things, and which one you want is a real choice:
+
+```csharp
+// "This was never really here." Silent: no XP, no loot, no quest counter, no death heard.
+ActorSpawnAccess.TryDespawn(lazyActor);
+
+// "This died." Loot drops, XP is awarded, the corpse appears, listeners hear a death.
+ActorSpawnAccess.TryKill(actor);
+
+// The case a mod cleaning up a group actually has: kill the bodies that materialised,
+// drop the handles that never did.
+ActorSpawnAccess.TryKillOrDespawn(lazyActor);
+```
+
+Prefer `TryKill` whenever a player might have seen the creature. A body that vanishes mid-fight
+reads as a bug, while a body that dies reads as the fight ending.
+
+> **Never `Object.Destroy` a `LazyActor`.** See the notes at the bottom of this page. It is wrong in
+> a way that reports success.
 
 ### Make an NPC a trader
 
@@ -195,6 +234,42 @@ One `Create…BanditLazy(name, position, difficulty = Normal, saveToLazyActorSto
 loadout (dagger, sword, axe, sword+shield, spear, spear+shield, bow, spear+slingshot,
 sword+slingshot, random). `BanditDifficulty` is `Easy | Normal | Hard`.
 
+### `ActorSpawnAccess` (static)
+
+| Member                                                                 | Description                                                                                                      |
+|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| `bool TrySpawn(GameObject? prefab, Vector2 position, out Actor actor)` | Spawns from an addressable prefab the way the game does. `false` when the prefab is missing or carries no actor. |
+| `bool TryDespawn(LazyActor? lazyActor)`                                | Removes the handle and the body it created, silently. `false` when there was nothing to remove.                  |
+| `bool TryKill(Actor? actor)`                                           | Kills through the game's own death path. `false` when there was nothing to kill.                                 |
+| `bool TryKillOrDespawn(LazyActor? lazyActor)`                          | Kills the body if it exists, otherwise removes the handle.                                                       |
+
+Null and already-destroyed inputs are accepted everywhere and answered with `false`.
+
+Telling other machines what you spawned:
+
+| Member                                                                                       | Description                                                                                 |
+|----------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `event Action<Actor, string>? OnActorSpawned`                                                 | An actor was spawned through this API, with the addressable it came from.                    |
+| `event Action<LazyActor, string>? OnLazyActorSpawned`                                         | A lazy handle was created through this API, with the actor asset behind it.                  |
+| `bool IsRuntimeCreated(string? guid)`                                                         | Whether this creature's guid was invented in this process rather than read out of a scene.   |
+| `bool TryGetSpawnAsset(Actor?, out string)` / `TryGetLazySpawnAsset(LazyActor?, out string)`  | What a spawned actor or handle was made from.                                                |
+| `void RecordSpawn(Actor?, string)` / `RecordLazySpawn(LazyActor?, string)`                    | Register a spawn you performed yourself, so the above can answer for it.                     |
+
+**`IsRuntimeCreated` is the one every shared-world mod needs and no amount of looking at the creature
+will tell you.** A creature authored into a scene carries a guid both machines read out of the same
+asset, so naming it to somebody else works. A creature this API created gets its guid from
+`Guid.NewGuid`, and its handle is registered in exactly the same `EntityGameHandler` table the game's
+own handles live in, so the obvious test, *"is there a lazy actor for this guid"*, answers yes for
+both. A co-op mod that trusts it sends an identity nobody else can resolve, and the failure is silent:
+the far side holds the binding forever, waiting for a body that will never exist.
+
+`OnLazyActorSpawned` carries the **handle**, not a body, because a lazy actor is a promise. The
+streaming system builds the creature when a player comes near and destroys it again when they leave,
+over and over, so there is no single spawn moment to announce. Watch `LazyActor.Actor` for the body.
+The asset id names the base prefab only: equipment, cosmetics, talents and the name a creator applied
+on top of it are not in the asset and do not travel with it, so a second machine building from that id
+gets the same kind of creature, not the same creature.
+
 ### `INpcModule`
 
 | Member                                | Description                                                       |
@@ -219,3 +294,17 @@ sword+slingshot, random). `BanditDifficulty` is `Easy | Normal | Hard`.
   a warning and is skipped).
 - `WithCosmetic`/`WithItem` reuse a single shared preset module across calls — call them as many
   times as you like.
+- **Destroying a `LazyActor` does not remove the creature**, and it does not look like a bug.
+  `Object.Destroy(lazyActor)` destroys the component and nothing else: the creature it spawned is a
+  child transform registered separately as an entity, and the component's own `OnDestroy` unregisters
+  the handle, nulls its reference to the body, and destroys none of it. A mod cleaning up after a
+  timed event this way leaves live, hostile actors standing in the world for the rest of the session
+  and reports success. Use `ActorSpawnAccess.TryDespawn` / `TryKill` instead.
+- **Despawning also gives the addressable back.** `TryDespawn` goes through `LazyActor.Unload`,
+  which releases the asset. Destroying the object instead keeps the bundle resident for the rest of
+  the session. Leaving the handle behind is worse still, because the streaming system brings the
+  creature back the next time the player walks past.
+- **`ActorSpawnAccess.TrySpawn` output is not saved, deliberately.** A spawned actor generates a
+  fresh guid, which keys a new dynamic save object, so a mod that spawns without excluding it writes
+  creatures into the player's save file that stay there forever. The API's own spawn root, which
+  `TrySpawn` parents to, is already excluded.

@@ -202,6 +202,13 @@ namespace Drova_Modding_API.Systems.Spawning
             }
 
             ProviderAccess.GetEntityGameHandler().RegisterLazyActor(lazyActor);
+
+            // After the registration, and here rather than in the two callers, because this is the one point
+            // both the fresh-create and the restore-from-save paths pass through. What it records is that
+            // this creature's guid was invented in this process - see ActorSpawnAccess.IsRuntimeCreated for
+            // why anything sharing a world has to be able to ask that, and why the game's own table cannot
+            // answer it.
+            ActorSpawnAccess.RecordLazySpawn(lazyActor, lazyActor._actorReference?.AssetGUID ?? string.Empty);
         }
 
         /**

@@ -57,6 +57,11 @@ namespace Drova_Modding_API.Systems
                 return;
             }
             _instance = this;
+
+            // A new system is built on every gameplay load, so the API rebinds here rather than at
+            // subscribe time. Otherwise a mod that subscribed in a previous session holds a handler on a
+            // destroyed object.
+            Access.RegionAccess.Attach(this);
         }
 
         /// <summary>

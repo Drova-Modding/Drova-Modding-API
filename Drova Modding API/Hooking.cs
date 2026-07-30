@@ -94,11 +94,64 @@ namespace Drova_Modding_API
                 }
                 return target;
             }
+            catch (AmbiguousMatchException)
+            {
+                return FindDeclaredTarget(targetType, targetMethod);
+            }
+            catch (Exception e) when (e.InnerException is AmbiguousMatchException)
+            {
+                // Harmony wraps it. Unwrapped here rather than matched on the message, which is localized.
+                return FindDeclaredTarget(targetType, targetMethod);
+            }
             catch (Exception e)
             {
                 MelonLogger.Error("[Hooking] resolving " + Label(targetType, targetMethod) + " threw: " + e);
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Resolves a name that matched more than once, by looking only at what the named type declares.
+        ///
+        /// **Almost always an inherited overload rather than a real choice.** A name-only lookup walks base
+        /// types, so a static <c>Foo(A, B, int)</c> on a derived type and the instance <c>Foo(B)</c> on its
+        /// base that calls it are two matches for "Foo" - and the caller who named the derived type meant the
+        /// one it declares. Narrowing to that is the tie-break; the interop assemblies are full of these
+        /// pairs and the alternative is a hook that cannot be applied by name at all.
+        ///
+        /// Still refused when the type itself declares several. Which overload is meant is then genuinely the
+        /// caller's decision, and guessing it would apply a hook to the wrong method and report success -
+        /// pass a resolved <see cref="MethodBase"/> instead, from
+        /// <see cref="AccessTools.Method(Type, string, Type[], Type[])"/>.
+        /// </summary>
+        private static MethodInfo? FindDeclaredTarget(Type targetType, string targetMethod)
+        {
+            const BindingFlags Declared = BindingFlags.Public | BindingFlags.NonPublic
+                | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+
+            MethodInfo[] declared = targetType.GetMethods(Declared);
+
+            MethodInfo? found = null;
+            int matches = 0;
+
+            for (int i = 0; i < declared.Length; i++)
+            {
+                if (declared[i].Name != targetMethod) continue;
+
+                found = declared[i];
+                matches++;
+            }
+
+            if (matches == 1)
+            {
+                return found;
+            }
+
+            MelonLogger.Error("[Hooking] " + Label(targetType, targetMethod) + " matches " + matches +
+                " methods declared on that type and cannot be resolved by name; pass a resolved MethodBase " +
+                "(AccessTools.Method with parameter types). Hook disabled.");
+
+            return null;
         }
 
         private static bool Apply(HarmonyLib.Harmony harmony, MethodBase target, Type patchType, string patchMethod, bool asPrefix, string label)

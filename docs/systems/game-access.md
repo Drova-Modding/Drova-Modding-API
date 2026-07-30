@@ -63,6 +63,21 @@ ActorEquipSlot slingAmmo = PlayerAccess.GetSlingshotSlot();
 PlayerAttributeStats stats = PlayerAccess.GetPlayerAttributeStats();
 ```
 
+### Read a character level
+
+```csharp
+if (PlayerAccess.TryGetLevel(out int level))
+{
+    // Scale something by the player's level.
+}
+
+// Or for a specific actor. "Which player" is a question the static one cannot ask,
+// and in a co-op session there is more than one:
+PlayerAccess.TryGetLevel(someActor, out int otherLevel);
+```
+
+A `Try` pair rather than a plain number on purpose. See the notes.
+
 ### Reach a game handler
 
 `ProviderAccess` exposes handlers either as `Get…()` methods (returning the handler or `null`)
@@ -125,6 +140,8 @@ if (ProviderAccess.TryGetGameManager(out GameManager gm))
 | `ActorEquipSlot GetPrimarySlot()` / `GetSecondarySlot()` | Primary / secondary weapon slot.                                                                                     |
 | `ActorEquipSlot GetBowSlot()` / `GetSlingshotSlot()`     | Bow / slingshot ammo slot.                                                                                           |
 | `PlayerAttributeStats GetPlayerAttributeStats()`         | The player's attribute stat container.                                                                               |
+| `bool TryGetLevel(out int level)`                        | The local player's character level. `false` in menus, during a load, and for the first frames of a world.            |
+| `bool TryGetLevel(Actor? actor, out int level)`          | Any actor's level. `false` when the actor is null or its stats haven't loaded.                                       |
 
 ### `ProviderAccess` (static) — selected members
 
@@ -162,4 +179,10 @@ if (ProviderAccess.TryGetGameManager(out GameManager gm))
   loads; the event fires only after `Actor._isInitialized`.
 - **Returned objects are live game types** (`Il2CppDrova.*`). Use `TryCast<T>()`/`Cast<T>()` for
   casts and expect IL2CPP semantics (see [Core Concepts](../concepts.md)).
+- **Read the level with `TryGetLevel`, not through `GetPlayerAttributeStats`.** The level lives on
+  the base `AttributeStats`, so that accessor's cast is not needed to reach it, and the cast is what
+  makes the obvious version dangerous. It misses for a frame or two after a world loads, and a mod
+  that answers a failed read with a default of `1` gets no error, it gets a *plausible* level:
+  anything scaled by it silently collapses to its weakest form and nothing says so. The `Try` pair
+  makes "not ready yet" a case you have to handle.
 - `GetDrovaResourceProvider` and `TryGetGameManager` cache their result after the first hit.

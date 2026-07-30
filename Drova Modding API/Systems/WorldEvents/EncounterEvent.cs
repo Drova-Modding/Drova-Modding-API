@@ -67,6 +67,15 @@ namespace Drova_Modding_API.Systems.WorldEvents
                         // TODO: Rewrite when il2cpp is on Version 2, than we can finally use EVENTS WOHOOOOOOOO
                         GameObject spawned = encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity).WaitForCompletion();
                         _spawnedEncounters.Add(spawned);
+
+                        // Announced with the asset it came from. A creature put into the world at runtime
+                        // carries no identity anything else can resolve, so without this it exists for
+                        // whoever spawned it and for nobody else - which in a shared session is one player
+                        // fighting a camp their friend is standing in the middle of and cannot see.
+                        if (spawned != null)
+                        {
+                            Access.ActorSpawnAccess.RecordSpawn(spawned.GetComponent<Actor>(), encounter.Key.AssetGUID);
+                        }
                         OnEncounterSpawned(spawned, encounter.Key, randomPosition.Value);
                     }
                     else

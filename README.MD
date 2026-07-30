@@ -33,6 +33,7 @@ Jump straight to a system:
 [Global Variables](./docs/systems/global-vars.md) ·
 [Talents](./docs/systems/talents.md) ·
 [Cheat Menu](./docs/systems/cheat-menu.md) ·
+[Co-op](./docs/systems/coop.md) ·
 [Networking](./docs/systems/networking.md)
 
 ## Installation (developers)
@@ -75,6 +76,8 @@ public class MyMod : MelonMod { }
 - Spoken dialogue audio from loose files or AssetBundles.
 - A world-event system with regional coordination, and area/region tracking.
 - Routines, custom talents, custom global variables, and a runtime gvar inspector (F6).
+- [Co-op](./docs/systems/coop.md): ask whether somebody else is in the world and whether this
+  machine should be the one acting on it. One line, and no effect in single-player.
 - An optional coop [networking transport](./docs/systems/networking.md) for mods that want to talk
   between two games (off by default, see below).
 
