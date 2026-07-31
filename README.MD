@@ -48,7 +48,7 @@ Full setup, including the `.csproj` reference and your first mod, is in
 ## Usage
 
 Put `Drova_Modding_API.dll` (from [Releases](https://github.com/Drova-Modding/Drova-Modding-API/releases),
-or build it yourself) into your Drova install's `Mods` folder. Then declare the dependency in your
+or build it yourself) into your Drova installs `Mods` folder. Then declare the dependency in your
 mod and reference the DLL:
 
 ```csharp
@@ -66,7 +66,7 @@ public class MyMod : MelonMod { }
 ## Features
 
 - Add your own panel (sliders, switches, dropdowns, buttons, key rebinds) to the options menu, with persistent settings.
-- Ship localization files for your mod and inject new languages.
+- Ship localisation files for your mod and inject new languages.
 - Easy access to the game's managers, databases, and the player.
 - Load game assets (creatures, items, entity infos, UI prefabs) via ready-made addressable references.
 - Spawn NPCs and bandits from a modular trait system; persist them as lazy actors across save/load.
@@ -134,4 +134,4 @@ open a PR. Questions and ideas are welcome on the
 
 ## License
 
-This project is provided as-is for modding purposes. See [LICENSE](./LICENSE) for details.
+This project is provided as-is for modding purposes. See [LICENCE](./LICENSE) for details.
