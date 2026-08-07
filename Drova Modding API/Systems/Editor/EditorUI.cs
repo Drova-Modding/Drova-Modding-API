@@ -71,14 +71,24 @@ namespace Drova_Modding_API.Systems.Editor
         
         private void OnOptionMenuOpen()
         {
-            _npcDisplay.gameObject.SetActive(false);
-            _playerPositionDisplay.gameObject.SetActive(false);
+            SetDisplaysActive(false);
         }
-        
+
         private void OnOptionMenuClose()
         {
-            _npcDisplay.gameObject.SetActive(true);
-            _playerPositionDisplay.gameObject.SetActive(true);
+            SetDisplaysActive(true);
+        }
+
+        /// <summary>
+        /// Guards against the option menu events firing on an instance whose GameObject was already
+        /// destroyed by a scene reload, which would throw when dereferencing the displays.
+        /// </summary>
+        [HideFromIl2Cpp]
+        private void SetDisplaysActive(bool active)
+        {
+            if (!this) return;
+            if (_npcDisplay) _npcDisplay.gameObject.SetActive(active);
+            if (_playerPositionDisplay) _playerPositionDisplay.gameObject.SetActive(active);
         }
 
         internal void Update()
@@ -101,6 +111,8 @@ namespace Drova_Modding_API.Systems.Editor
         internal void OnDestroy()
         {
             EditorManager.OnNpcSelected -= OnNpcSelected;
+            OptionMenuAccess.Instance.OnOptionMenuOpen -= OnOptionMenuOpen;
+            OptionMenuAccess.Instance.OnOptionMenuClose -= OnOptionMenuClose;
             _npcEditButton?.onClick.RemoveAllListeners();
         }
 

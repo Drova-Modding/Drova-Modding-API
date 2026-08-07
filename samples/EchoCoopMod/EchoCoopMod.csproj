@@ -13,8 +13,7 @@
 
     <!--
         The whole point of the sample: two references, neither of them LiteNetLib. A consumer mod
-        compiles against the API's public networking surface only, so the same mod DLL works on a
-        coop-enabled and a plain API build.
+        compiles against the API's public networking surface only and never sees the transport.
     -->
     <ItemGroup>
         <Reference Include="MelonLoader">

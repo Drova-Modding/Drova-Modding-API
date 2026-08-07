@@ -4,9 +4,8 @@ The smallest mod that uses the API's [networking transport](../../docs/systems/n
 client sends an `EchoMessage` once connected, the host sends the same sequence back, both log it.
 
 It exists to prove the packaging contract: this project references **`Drova_Modding_API.dll` and
-`MelonLoader.dll` only**. There is no LiteNetLib reference anywhere in it, and the resulting DLL
-runs unchanged against a plain or a coop-enabled API build — `NetworkAccess.IsSupported` is what
-tells the two apart at runtime.
+`MelonLoader.dll` only**. There is no LiteNetLib reference anywhere in it — the transport lives
+behind the API's public surface and the mod never sees it.
 
 ## Build
 
@@ -23,8 +22,7 @@ dotnet build samples/EchoCoopMod/EchoCoopMod.csproj -c Release -p:GameDir="D:\Ga
 
 ## Run
 
-1. Build the API **with coop support** (`-p:Coop=true`) and install it, including
-   `UserLibs/LiteNetLib.dll`.
+1. Install the API, including `UserLibs/LiteNetLib.dll`.
 2. Drop `EchoCoopMod.dll` into the game's `Mods` folder.
 3. Start the game once so MelonLoader writes `UserData/MelonPreferences.cfg`, then set the
    `EchoCoopSample` category:

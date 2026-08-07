@@ -7,10 +7,10 @@ world state, which are the things that go wrong when two games do them independe
 Entry point: `Drova_Modding_API.Access.CoopAccess` (static). Supporting types live in
 `Drova_Modding_API.Systems.Coop`.
 
-> **This is not the [networking transport](./networking.md).** Networking is sockets and packets and
-> only exists in a coop-enabled build. `CoopAccess` is a contract, always compiled in, with no
-> transport dependency. On a machine with no co-op mod at all it answers "single player, you decide
-> everything", and a mod written against it behaves exactly as it always did.
+> **This is not the [networking transport](./networking.md).** Networking is sockets and packets.
+> `CoopAccess` is a contract with no transport dependency: on a machine with no co-op mod at all it
+> answers "single player, you decide everything", and a mod written against it behaves exactly as it
+> always did.
 
 ## Quick example
 

@@ -8,17 +8,15 @@ using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.ModdingUI;
 using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
+using Drova_Modding_API.Systems.Networking.Impl;
 using UnityEngine.SceneManagement;
 
-#if NETCOOP
-using Drova_Modding_API.Systems.Networking.Impl;
-#endif
-
 #if DEBUG
+using Drova_Modding_API.Systems.Networking.Diagnostics;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.5.4", "Drova Modding", null)]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.6.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 0, true)]
 [assembly: MelonPriority(-1)]
@@ -45,9 +43,7 @@ namespace Drova_Modding_API
             base.OnInitializeMelon();
             SharedHarmony = HarmonyInstance;
             MainThreadDispatcher.Initialize();
-#if NETCOOP
             NetworkSystem.Initialize();
-#endif
 #if DEBUG
             _consoleAction.Enable();
 #endif
@@ -144,6 +140,9 @@ namespace Drova_Modding_API
             gameObject.AddComponent<InputActionRegister>();
             UnityEngine.Object.DontDestroyOnLoad(gameObject);
             ModdingUI.RegisterModdingUI();
+#if DEBUG
+            NetworkStatsView.Initialize();
+#endif
         }
         
         /// <inheritdoc/>
@@ -151,9 +150,7 @@ namespace Drova_Modding_API
         {
             base.OnUpdate();
             MainThreadDispatcher.Drain();
-#if NETCOOP
             NetworkSystem.Poll();
-#endif
 #if DEBUG
             if (_consoleAction.WasReleasedThisFrame())
             {
@@ -164,14 +161,12 @@ namespace Drova_Modding_API
 #endif
         }
 
-#if NETCOOP
         /// <inheritdoc/>
         public override void OnDeinitializeMelon()
         {
             base.OnDeinitializeMelon();
             NetworkSystem.Shutdown();
         }
-#endif
 
 #if DEBUG
         private static void Application_logMessageReceived(string condition, string stackTrace, LogType type)

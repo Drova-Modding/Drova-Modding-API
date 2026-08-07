@@ -6,12 +6,13 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Audio
 {
     /// <summary>
-    /// Provides dialogue audio clips from per-actor AssetBundles instead of loose .ogg files.
-    /// Bundles live under &lt;SavePath&gt;/Audio/bundles/ and are named after the lower-cased actor
-    /// (e.g. "jendrik"). Each bundle holds the AudioClips for that actor, addressed by the same key the
-    /// dialogue system builds for the file-based provider.
+    /// Provides dialogue audio clips from per-actor AssetBundles. Bundles live under
+    /// &lt;SavePath&gt;/Audio/bundles/ and are named after the lower-cased actor (e.g. "jendrik").
+    /// Each bundle holds the AudioClips for that actor, addressed by the key the dialogue system
+    /// builds for a line, without a file extension.
     ///
-    /// To use it instead of <see cref="FileAudioProvider"/>, register it once during mod init:
+    /// This is the provider <see cref="AudioManager"/> starts with, so it needs no registration.
+    /// Re-register it explicitly only to get back to it after swapping in another provider:
     /// <code>
     /// AudioManager.ReplaceDialogueAudioConnector(
     ///     new DefaultDialogueAudioConnector(new AssetBundleAudioProvider()));
@@ -78,7 +79,7 @@ namespace Drova_Modding_API.Systems.Audio
             foreach (var key in GetCandidateKeys(dialogeName, normalizedPath, locaKey, actorName, choiceId, isInCave))
             {
                 // AssetBundle assets are addressed by their (case-insensitive) name without extension,
-                // which equals the clip key the file-based provider uses minus the ".ogg".
+                // which is exactly the clip key the dialogue system builds.
                 string lowerKey = key.ToLowerInvariant();
 
                 // Most candidate keys miss. Skip the ones the bundle doesn't contain so we never pay
@@ -169,8 +170,8 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// Yields the candidate clip keys to try, in the same priority order as the file-based
-        /// provider's <c>GetAudioFilePath</c> (cave variants first, then choice/actor variants).
+        /// Yields the candidate clip keys to try, most specific first: cave variants, then the
+        /// choice/actor variants, then the bare tree-and-line key.
         /// </summary>
         private static IEnumerable<string> GetCandidateKeys(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId, bool isInCave)
         {

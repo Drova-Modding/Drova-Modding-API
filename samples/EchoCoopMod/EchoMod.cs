@@ -16,8 +16,6 @@ namespace EchoCoopMod
     ///
     /// This project references <c>Drova_Modding_API.dll</c> and <c>MelonLoader.dll</c> and nothing
     /// else - it has no LiteNetLib reference of its own, which is the point of the split surface.
-    /// Whether the transport actually exists is a property of the installed API build, checked here
-    /// through <see cref="NetworkAccess.IsSupported"/>.
     /// </summary>
     public class EchoMod : MelonMod
     {
@@ -42,12 +40,6 @@ namespace EchoCoopMod
             _address = category.CreateEntry("Address", "127.0.0.1");
             _port = category.CreateEntry("Port", 9050);
 
-            if (!NetworkAccess.IsSupported)
-            {
-                LoggerInstance.Warning("This API build has no coop support, the sample stays idle. Install the coop-enabled API build to try it.");
-                return;
-            }
-
             NetworkAccess.RegisterWithId<EchoMessage>(EchoMessageId, OnEcho);
 
             NetworkEvents.OnHostStarted += () => LoggerInstance.Msg("Hosting, waiting for a client.");
@@ -66,7 +58,6 @@ namespace EchoCoopMod
             base.OnSceneWasLoaded(buildIndex, sceneName);
 
             if (sceneName != SceneNames.GameplayMain) return;
-            if (!NetworkAccess.IsSupported) return;
             if (NetworkAccess.Role != NetRole.None) return;
 
             switch (_mode.Value)
@@ -85,7 +76,6 @@ namespace EchoCoopMod
         {
             base.OnDeinitializeMelon();
 
-            if (!NetworkAccess.IsSupported) return;
             if (NetworkAccess.Role == NetRole.None) return;
 
             NetworkAccess.Stop();

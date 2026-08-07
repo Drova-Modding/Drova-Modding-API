@@ -1,7 +1,5 @@
 using Drova_Modding_API.Systems.Networking;
-#if NETCOOP
 using MelonLogger = MelonLoader.MelonLogger;
-#endif
 
 namespace Drova_Modding_API.Access
 {
@@ -9,13 +7,10 @@ namespace Drova_Modding_API.Access
     /// Connection lifecycle of the networking transport, bridged out as plain C# events so the coop
     /// mod subscribes instead of touching the transport. All events fire on the Unity main thread.
     /// The raisers are wrapped so a throwing subscriber cannot tear down the transport's receive
-    /// loop. When the API is built without coop support these events simply never fire.
+    /// loop.
     /// </summary>
     public static class NetworkEvents
     {
-        // The compiler cannot see the raisers on a non-coop build, so it would flag the events as
-        // never used; they are still part of the public surface a coop mod compiles against.
-#pragma warning disable CS0067
         /// <summary>
         /// The local host started listening. Fires only in <see cref="NetRole.Host"/>.
         /// </summary>
@@ -50,9 +45,7 @@ namespace Drova_Modding_API.Access
         /// logging; it is not a stable contract.
         /// </summary>
         public static event Action<string>? OnNetworkError;
-#pragma warning restore CS0067
 
-#if NETCOOP
         internal static void RaiseHostStarted()
         {
             try
@@ -124,6 +117,5 @@ namespace Drova_Modding_API.Access
                 MelonLogger.Error("[NetworkEvents] OnNetworkError failed: " + e);
             }
         }
-#endif
     }
 }

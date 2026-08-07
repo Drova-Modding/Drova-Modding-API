@@ -57,7 +57,7 @@ namespace Drova_Modding_API.Access
                 return;
             }
             Instance.IsMenuOpen = true;
-            Instance.OnOptionMenuOpen.Invoke();
+            Instance.OnOptionMenuOpen?.Invoke();
             GUI_Window_Options manager = guiWindow.GetComponent<GUI_Window_Options>();
             // Workaround for Update 1.0.2.1 where the modded panel is not activated for whatever reason.
             if (manager._currentPanelIndex == -1 || manager._currentPanelIndex >= 5)
@@ -79,7 +79,7 @@ namespace Drova_Modding_API.Access
             {
                 Instance.IsMenuOpen = false;
                 window.GetComponent<GUI_Window_Options>()._currentPanelIndex = 0;
-                Instance.OnOptionMenuClose.Invoke();
+                Instance.OnOptionMenuClose?.Invoke();
             }
         }
 

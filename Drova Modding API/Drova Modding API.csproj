@@ -10,13 +10,6 @@
         <FileVersion>1.0.0.0</FileVersion>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Drova_Modding_API</AssemblyName>
-        <!--
-            The configuration name doubles as the coop toggle so it can be flipped from an IDE's
-            configuration dropdown: DebugCoop and ReleaseCoop are the coop variants of Debug and
-            Release. BaseConfiguration is what every Debug/Release condition in this file compares
-            against, so those conditions keep working for the coop names.
-        -->
-        <BaseConfiguration>$(Configuration.Replace('Coop', ''))</BaseConfiguration>
     </PropertyGroup>
 
     <ItemGroup>
@@ -414,6 +407,7 @@
 
     <PropertyGroup>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
@@ -421,26 +415,12 @@
         <RepositoryUrl>https://github.com/Drova-Modding/Drova-Modding-API</RepositoryUrl>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(BaseConfiguration)'=='Debug'">
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(BaseConfiguration)'=='Release'">
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
-    </PropertyGroup>
-
-    <!--
-        The SDK only wires up DEBUG, debug symbols and optimisation for the exact configuration names
-        Debug and Release, so the coop variants have to restore what their base configuration implies.
-        Without this a DebugCoop build would compile the Debug-only files while DEBUG is undefined.
-    -->
-    <PropertyGroup Condition="'$(Configuration)'!='$(BaseConfiguration)'">
-        <DefineConstants Condition="'$(BaseConfiguration)'=='Debug'">$(DefineConstants);DEBUG</DefineConstants>
-        <DefineConstants Condition="'$(BaseConfiguration)'=='Release'">$(DefineConstants);RELEASE</DefineConstants>
-        <DebugSymbols Condition="'$(BaseConfiguration)'=='Debug'">true</DebugSymbols>
-        <DebugType Condition="'$(BaseConfiguration)'=='Debug'">portable</DebugType>
-        <Optimize Condition="'$(BaseConfiguration)'=='Debug'">false</Optimize>
-        <Optimize Condition="'$(BaseConfiguration)'=='Release'">true</Optimize>
     </PropertyGroup>
 
     <ItemGroup>
@@ -448,18 +428,15 @@
         <Compile Include="Access\AddressableAccess.cs"/>
         <Compile Include="Access\CheatMenuAccess.cs"/>
         <Compile Include="Access\ConfigAccessor.cs"/>
-        <!--
-            Unconditional, unlike the networking files further down. The co-op contract has no transport
-            dependency, so every build of this API exposes it and a mod compiles against one surface
-            whether or not a co-op flavor exists.
-        -->
         <Compile Include="Access\CoopAccess.cs"/>
         <Compile Include="Systems\Coop\CoopTypes.cs"/>
         <Compile Include="Systems\Coop\CoopRandom.cs"/>
         <Compile Include="Systems\Coop\NullCoopProvider.cs"/>
+        <Compile Include="Access\CutsceneSyncAccess.cs"/>
         <Compile Include="Access\DamageAccess.cs"/>
         <Compile Include="Access\DifficultyAccess.cs"/>
         <Compile Include="Access\GameEvents.cs"/>
+        <Compile Include="Access\GVarSyncAccess.cs"/>
         <Compile Include="Access\InputAccess.cs"/>
         <Compile Include="Access\LocalizationAccess.cs"/>
         <Compile Include="Access\PlayerAccess.cs"/>
@@ -509,7 +486,6 @@
         <Compile Include="Systems\Audio\AssetBundleAudioProvider.cs" />
         <Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
         <Compile Include="Systems\Audio\DialogueAudioDistanceManager.cs" />
-        <Compile Include="Systems\Audio\FileAudioProvider.cs" />
         <Compile Include="Systems\Audio\IAudioConnector.cs" />
         <Compile Include="Systems\Audio\IAudioHandler.cs" />
         <Compile Include="Systems\Audio\IAudioProvider.cs" />
@@ -608,28 +584,6 @@
         <Compile Include="Systems\Networking\ConnectionRejection.cs" />
         <Compile Include="Access\NetworkAccess.cs" />
         <Compile Include="Access\NetworkEvents.cs" />
-    </ItemGroup>
-
-    <!--
-        Coop is off unless asked for, in falling order of precedence: an explicit -p:Coop=true, a
-        configuration whose name carries the Coop suffix, or the DROVA_COOP environment variable
-        (see docs/systems/networking.md). CoopSuffix keeps the output folders of a suffix-less
-        -p:Coop=true build apart from the plain build's, so the two never share a staging directory.
-    -->
-    <PropertyGroup>
-        <Coop Condition="'$(Coop)'=='' And '$(Configuration)'!='$(BaseConfiguration)'">true</Coop>
-        <Coop Condition="'$(Coop)'=='' And '$(DROVA_COOP)'=='1'">true</Coop>
-        <Coop Condition="'$(Coop)'==''">false</Coop>
-        <CoopSuffix Condition="'$(Coop)'=='true' And '$(Configuration)'=='$(BaseConfiguration)'">Coop</CoopSuffix>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Coop)'=='true'">
-        <DefineConstants>$(DefineConstants);NETCOOP</DefineConstants>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(Coop)'=='true'">
-        <PackageReference Include="LiteNetLib" Version="2.1.4" />
         <Compile Include="Systems\Networking\Impl\LiteWriter.cs" />
         <Compile Include="Systems\Networking\Impl\LiteReader.cs" />
         <Compile Include="Systems\Networking\Impl\PeerWrapper.cs" />
@@ -642,8 +596,11 @@
         <Compile Include="Systems\Networking\Impl\RelayLink.cs" />
         <Compile Include="Systems\Networking\Impl\SessionCrypto.cs" />
         <Compile Include="Systems\Networking\Impl\NetworkSystem.cs" />
+        <Compile Include="Systems\Networking\Diagnostics\NetworkDiagnostics.cs" />
     </ItemGroup>
-    <ItemGroup Condition="'$(BaseConfiguration)'=='Debug'">
+
+    <ItemGroup Condition="'$(Configuration)'=='Debug'">
+        <Compile Include="Systems\Networking\Diagnostics\NetworkStatsView.cs" />
         <Compile Include="Systems\Debugging\NearbyDumper.cs" />
         <Compile Include="Systems\Editor\EditorUI.cs" />
         <Compile Include="Systems\Editor\LocalizationEntriesEditorSystem.cs" />
@@ -807,7 +764,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="NVorbis" Version="0.10.5" />
+        <PackageReference Include="LiteNetLib" Version="2.1.4" />
     </ItemGroup>
 
     <ItemGroup>
@@ -819,22 +776,18 @@
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;"/>
         <Exec Command="COPY &quot;$(TargetDir)$(TargetName).xml&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;"/>
-        <Exec Command="COPY &quot;$(UserProfile)\.nuget\packages\nvorbis\0.10.5\lib\netstandard2.0\NVorbis.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;"/>
-        <Exec Command="COPY &quot;$(TargetDir)LiteNetLib.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;" Condition="'$(Coop)'=='true'"/>
+        <Exec Command="COPY &quot;$(TargetDir)LiteNetLib.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;"/>
     </Target>
 
     <Target Name="PackageMod" AfterTargets="PostBuild">
         <PropertyGroup>
             <DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
-            <StagingDir>$(DistDir)\staging\$(Configuration)$(CoopSuffix)</StagingDir>
-            <ZipName Condition="'$(BaseConfiguration)'=='Debug'">Modding_API_Dev.zip</ZipName>
-            <ZipName Condition="'$(BaseConfiguration)'=='Release'">Modding_API.zip</ZipName>
-            <ZipName Condition="'$(Coop)'=='true' And '$(BaseConfiguration)'=='Debug'">Modding_API_Dev_Coop.zip</ZipName>
-            <ZipName Condition="'$(Coop)'=='true' And '$(BaseConfiguration)'=='Release'">Modding_API_Coop.zip</ZipName>
+            <StagingDir>$(DistDir)\staging\$(Configuration)</StagingDir>
+            <ZipName Condition="'$(Configuration)'=='Debug'">Modding_API_Dev.zip</ZipName>
+            <ZipName Condition="'$(Configuration)'=='Release'">Modding_API.zip</ZipName>
             <ZipPath>$(DistDir)\$(ZipName)</ZipPath>
             <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin</GameDir>
             <GameLocalizationDir>$(GameDir)\Mods\Modding_API\Localization</GameLocalizationDir>
-            <NVorbisDll>$(GameDir)\UserLibs\NVorbis.dll</NVorbisDll>
             <AddressablesTxt>$(GameDir)\Mods\addressables.txt</AddressablesTxt>
         </PropertyGroup>
 
@@ -842,10 +795,9 @@
         <MakeDir Directories="$(DistDir);$(StagingDir)\Mods;$(StagingDir)\UserLibs"/>
 
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(StagingDir)\Mods"/>
-        <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(StagingDir)\Mods" Condition="'$(BaseConfiguration)'=='Debug'"/>
-        <Copy SourceFiles="$(AddressablesTxt)" DestinationFolder="$(StagingDir)\Mods" Condition="'$(BaseConfiguration)'=='Debug' And Exists('$(AddressablesTxt)')"/>
-        <Copy SourceFiles="$(NVorbisDll)" DestinationFolder="$(StagingDir)\UserLibs"/>
-        <Copy SourceFiles="$(TargetDir)LiteNetLib.dll" DestinationFolder="$(StagingDir)\UserLibs" Condition="'$(Coop)'=='true'"/>
+        <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug'"/>
+        <Copy SourceFiles="$(AddressablesTxt)" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug' And Exists('$(AddressablesTxt)')"/>
+        <Copy SourceFiles="$(TargetDir)LiteNetLib.dll" DestinationFolder="$(StagingDir)\UserLibs"/>
 
         <!--
             Only package the API's own localization, which always lives one level deeper under a
@@ -862,6 +814,6 @@
         <Delete Files="$(ZipPath)"/>
         <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(StagingDir)\*' -DestinationPath '$(ZipPath)' -Force&quot;"/>
 
-        <Message Importance="high" Text="Packaged $(Configuration) build (coop: $(Coop)) -&gt; $(ZipPath)"/>
+        <Message Importance="high" Text="Packaged $(Configuration) build -&gt; $(ZipPath)"/>
     </Target>
 </Project>

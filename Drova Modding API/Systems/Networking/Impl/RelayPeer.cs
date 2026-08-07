@@ -25,8 +25,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         public int Id => VirtualId;
 
         /// <summary>
-        /// Round trip to the relay, not to this peer: the game side cannot measure the second leg. Read
-        /// it as "at least this much".
+        /// One-way latency to the relay, not to this peer: the game side cannot measure the second leg.
+        /// Read it as "at least this much".
         /// </summary>
         public int Ping => _transport.RelayPing;
 

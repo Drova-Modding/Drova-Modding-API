@@ -13,7 +13,8 @@ namespace Drova_Modding_API.Systems.Networking
         int Id { get; }
 
         /// <summary>
-        /// The last measured round-trip time to this peer in milliseconds.
+        /// The last measured one-way latency to this peer in milliseconds, which is half the round
+        /// trip. Double it before comparing against anything expressed as a round trip.
         /// </summary>
         int Ping { get; }
 

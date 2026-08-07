@@ -1,55 +1,25 @@
 using Drova_Modding_API.Systems.Networking;
-#if NETCOOP
 using Drova_Modding_API.Systems.Networking.Impl;
-#endif
 
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// The coop mod's entry point to the optional networking transport. This is transport plumbing
-    /// only: it starts and stops a session, sends and receives messages, and raises connection
-    /// events through <see cref="NetworkEvents"/>. It never syncs game state and never draws UI -
-    /// that is the coop mod's job.
-    ///
-    /// The LiteNetLib-backed implementation only exists when the API is built with
-    /// <c>-p:Coop=true</c>. Check <see cref="IsSupported"/> before use; the action methods throw
-    /// <see cref="NotSupportedException"/> on a build without coop support so a lean API build plus a
-    /// coop mod fails loudly instead of silently doing nothing.
+    /// The coop mod's entry point to the networking transport. This is transport plumbing only: it
+    /// starts and stops a session, sends and receives messages, and raises connection events through
+    /// <see cref="NetworkEvents"/>. It never syncs game state and never draws UI - that is the coop
+    /// mod's job.
     /// </summary>
     public static class NetworkAccess
     {
         /// <summary>
-        /// True when this API build includes the networking transport. When false, every action
-        /// method throws; a coop mod should surface "install the coop-enabled API build" instead of
-        /// calling them.
+        /// The local peer's role. <see cref="NetRole.None"/> when no session is running.
         /// </summary>
-        public static bool IsSupported =>
-#if NETCOOP
-            true;
-#else
-            false;
-#endif
-
-        /// <summary>
-        /// The local peer's role. <see cref="NetRole.None"/> when no session is running or the build
-        /// has no coop support.
-        /// </summary>
-        public static NetRole Role =>
-#if NETCOOP
-            NetworkSystem.Role;
-#else
-            NetRole.None;
-#endif
+        public static NetRole Role => NetworkSystem.Role;
 
         /// <summary>
         /// True when a session is running and at least one peer is connected.
         /// </summary>
-        public static bool IsConnected =>
-#if NETCOOP
-            NetworkSystem.IsConnected;
-#else
-            false;
-#endif
+        public static bool IsConnected => NetworkSystem.IsConnected;
 
         /// <summary>
         /// Start hosting on the given UDP port. When <paramref name="key"/> is set, only peers that
@@ -59,11 +29,7 @@ namespace Drova_Modding_API.Access
         /// <param name="key">Optional connection key that clients must match.</param>
         public static void StartHost(int port, string? key = null)
         {
-#if NETCOOP
             NetworkSystem.StartHost(port, key);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -75,34 +41,20 @@ namespace Drova_Modding_API.Access
         /// <param name="key">Optional connection key that must match the host's.</param>
         public static void Connect(string address, int port, string? key = null)
         {
-#if NETCOOP
             NetworkSystem.Connect(address, port, key);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
         /// How many remote peers are connected. On a client that is 1 while in a session.
         /// </summary>
-        public static int PeerCount =>
-#if NETCOOP
-            NetworkSystem.PeerCount;
-#else
-            0;
-#endif
+        public static int PeerCount => NetworkSystem.PeerCount;
 
         /// <summary>
         /// The relay session code in use, or null when there is no relay session. A host that let the relay
         /// pick a code has it here by the time <see cref="NetworkEvents.OnHostStarted"/> fires, which is the
         /// code to show the players who should join.
         /// </summary>
-        public static string? SessionCode =>
-#if NETCOOP
-            NetworkSystem.SessionCode;
-#else
-            null;
-#endif
+        public static string? SessionCode => NetworkSystem.SessionCode;
 
         /// <summary>
         /// Whether messages are encrypted end to end between the players. True only in a relay session with
@@ -110,12 +62,7 @@ namespace Drova_Modding_API.Access
         /// is true the relay cannot read the traffic, and it cannot forge a message from another player
         /// either. Every message costs 28 bytes more on the wire.
         /// </summary>
-        public static bool IsEncrypted =>
-#if NETCOOP
-            NetworkSystem.IsEncrypted;
-#else
-            false;
-#endif
+        public static bool IsEncrypted => NetworkSystem.IsEncrypted;
 
         /// <summary>
         /// Claim a session code on a relay and host through it, for when the host is not reachable from
@@ -133,11 +80,7 @@ namespace Drova_Modding_API.Access
         /// end-to-end encryption, see <see cref="IsEncrypted"/>.</param>
         public static void StartHostViaRelay(string relayAddress, int relayPort, string? sessionCode = null, string? password = null)
         {
-#if NETCOOP
             NetworkSystem.StartHostViaRelay(relayAddress, relayPort, sessionCode, password);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -151,11 +94,7 @@ namespace Drova_Modding_API.Access
         /// every message will fail to decrypt, since the password is also the encryption key material.</param>
         public static void ConnectViaRelay(string relayAddress, int relayPort, string sessionCode, string? password = null)
         {
-#if NETCOOP
             NetworkSystem.ConnectViaRelay(relayAddress, relayPort, sessionCode, password);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -163,11 +102,7 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static void Stop()
         {
-#if NETCOOP
             NetworkSystem.Stop();
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -177,11 +112,7 @@ namespace Drova_Modding_API.Access
         /// <param name="buffer">The list to fill. Must not be null.</param>
         public static void GetPeers(List<INetPeer> buffer)
         {
-#if NETCOOP
             NetworkSystem.GetPeers(buffer);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -194,11 +125,7 @@ namespace Drova_Modding_API.Access
         /// <param name="handler">Invoked with the sending peer and the decoded message.</param>
         public static void RegisterWithId<T>(ushort id, Action<INetPeer, T> handler) where T : struct, INetMessage
         {
-#if NETCOOP
             NetworkSystem.RegisterWithId(id, handler);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -208,11 +135,7 @@ namespace Drova_Modding_API.Access
         /// <typeparam name="T">The message struct type.</typeparam>
         public static void Unregister<T>() where T : struct, INetMessage
         {
-#if NETCOOP
             NetworkSystem.Unregister<T>();
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -225,11 +148,7 @@ namespace Drova_Modding_API.Access
         /// <param name="delivery">The delivery guarantee.</param>
         public static void Send<T>(INetPeer peer, in T message, Delivery delivery = Delivery.Reliable) where T : struct, INetMessage
         {
-#if NETCOOP
             NetworkSystem.Send(peer, message, delivery);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -241,11 +160,7 @@ namespace Drova_Modding_API.Access
         /// <param name="delivery">The delivery guarantee.</param>
         public static void SendToAll<T>(in T message, Delivery delivery = Delivery.Reliable) where T : struct, INetMessage
         {
-#if NETCOOP
             NetworkSystem.SendToAll(message, delivery);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -258,11 +173,7 @@ namespace Drova_Modding_API.Access
         /// <param name="handler">Invoked with the sending peer and the raw payload.</param>
         public static void RegisterChannel(byte channel, RawHandler handler)
         {
-#if NETCOOP
             NetworkSystem.RegisterChannel(channel, handler);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -271,11 +182,7 @@ namespace Drova_Modding_API.Access
         /// <param name="channel">The raw channel to clear.</param>
         public static void UnregisterChannel(byte channel)
         {
-#if NETCOOP
             NetworkSystem.UnregisterChannel(channel);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -287,11 +194,7 @@ namespace Drova_Modding_API.Access
         /// <param name="delivery">The delivery guarantee.</param>
         public static void SendRaw(INetPeer peer, byte channel, ReadOnlySpan<byte> data, Delivery delivery = Delivery.Reliable)
         {
-#if NETCOOP
             NetworkSystem.SendRaw(peer, channel, data, delivery);
-#else
-            throw Unsupported();
-#endif
         }
 
         /// <summary>
@@ -302,18 +205,8 @@ namespace Drova_Modding_API.Access
         /// <param name="delivery">The delivery guarantee.</param>
         public static void SendRawToAll(byte channel, ReadOnlySpan<byte> data, Delivery delivery = Delivery.Reliable)
         {
-#if NETCOOP
             NetworkSystem.SendRawToAll(channel, data, delivery);
-#else
-            throw Unsupported();
-#endif
         }
 
-#if !NETCOOP
-        private static NotSupportedException Unsupported()
-        {
-            return new NotSupportedException("Drova Modding API was built without coop support. Rebuild with -p:Coop=true to enable networking.");
-        }
-#endif
     }
 }

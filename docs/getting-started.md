@@ -16,14 +16,48 @@ If MelonLoader is set up correctly, you'll see its console window when the game 
 
 ## 2. Install the API
 
-Download `Drova_Modding_API.dll` from the [Releases](https://github.com/Drova-Modding/Drova-Modding-API/releases)
-page (or build it yourself, see below) and drop it into:
+Download `Modding_API.zip` (or `Modding_API_Dev.zip` for the developer build) from the
+[Releases](https://github.com/Drova-Modding/Drova-Modding-API/releases) page — or build it
+yourself, see below — and extract it over the game folder. The archive already has the right
+layout, so extracting it in place puts every file where it belongs:
 
 ```
-…/Drova - Forsaken Kin/Mods/Drova_Modding_API.dll
+…/Drova - Forsaken Kin/
+├── Mods/
+│   └── Drova_Modding_API.dll
+└── UserLibs/
+    └── LiteNetLib.dll
 ```
+
+**Both folders are required.** The mod DLL alone will not run: the API links against LiteNetLib for
+the networking transport, and it is not bundled into the mod assembly. Copying only
+`Mods/Drova_Modding_API.dll` leaves the API unable to load, and MelonLoader reports
+that as a *missing* `Drova_Modding_API` rather than as a missing `UserLibs` file — see
+[Troubleshooting](#troubleshooting) below.
+
+Keep the file name exactly `Drova_Modding_API.dll` and keep it directly in `Mods/`. Mods resolve
+the API by assembly name, so a renamed copy (`Drova_Modding_API (1).dll` after a second browser
+download) or one tucked into a subfolder loads as a melon but stays invisible to every mod that
+depends on it. Delete any older copy in `Mods/` before extracting; two versions side by side load
+two copies of the API.
 
 The API is itself a MelonLoader mod. Your own mod will depend on it.
+
+### Troubleshooting
+
+**A mod fails with `Could not load file or assembly 'Drova_Modding_API, Version=1.0.0.0'`.**
+The version in that message is not a mismatch — the API's assembly version is permanently
+`1.0.0.0` and every mod ever built against it asks for exactly that. The message means the
+assembly could not be *found or loaded at all*. Check, in order: `UserLibs/LiteNetLib.dll` is
+present, the DLL in `Mods/` is named `Drova_Modding_API.dll`, and no second copy of the API is
+installed.
+
+**The Modding tab is missing from the options menu.** That tab is created the first time a mod
+asks for it, so it does not appear on its own — an API install with no options-using mod loaded
+shows no tab, and this is the normal symptom of the mods themselves having failed to load. Fix
+the load error above and the tab returns.
+
+`MelonLoader/Latest.log` names the failing mod and the exact exception for both cases.
 
 ## 3. Create your mod project
 
@@ -110,6 +144,13 @@ These are available while a `Debug` build of the API is installed:
 | `F6`                | Open the **Global Variable inspector** (runtime view/edit of gvars). |
 | `` ` `` (backquote) | Toggle cheat mode / the developer console.                           |
 | `^` (caret)         | Toggle cheat functionality (context dependent).                      |
+
+Console commands the API adds:
+
+| Command          | Action                                                                                                                                                                       |
+|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `api_dumpnearby` | Log the renderers around the player, for identifying world objects.                                                                                                          |
+| `api_netstats`   | Open the **coop network stats** (ping, throughput, dropped packets); see [Networking](./systems/networking.md#seeing-what-the-transport-is-doing). |
 
 With cheat mode on you can left-click an actor in the world to open a small menu (bottom-left)
 that lets you, for example, enter the dialogue editor for that actor. See

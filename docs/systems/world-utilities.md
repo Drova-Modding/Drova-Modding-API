@@ -93,15 +93,19 @@ anchors on all four gates.
 
 ## Letters & drawing puzzles (`WindowContentAccess`)
 
-- `OnLetterShown` — fires after `GUI_Window_Letter` builds its content, for world letters *and*
-  journal re-reads (the two-arg `ShowLetterContent` overload is the single funnel; the one-arg
-  overload delegates to it). Mutate the window's children in the handler, e.g. swap
-  `Image.sprite`s.
+- `OnLetterShown` — fires after `GUI_Window_Letter` builds its content, i.e. for world letters
+  (the two-arg `ShowLetterContent` overload is that window's funnel; the one-arg overload
+  delegates to it). Mutate the window's children in the handler, e.g. swap `Image.sprite`s.
+- `OnJournalLetterShown` — fires after the journal's Letters tab builds a letter's content. The
+  journal does **not** pass through `GUI_Window_Letter`: `GUI_Journal_EntryController.Init`
+  instantiates the same content prefab into its own pane, so a content rewrite that only
+  subscribes to `OnLetterShown` silently shows vanilla content on every journal re-read.
+  Subscribe to both and run the same mutation.
 - `RegisterDrawingTargetTransformer(func)` — replace the rune-drawing window's required pattern
   before it is compared. The drawn result is checked per-pixel against your replacement (alpha,
   plus RGB for multi-color windows), so replacements must be pixel-exact 8×8 grids.
 
-Both hooks are lazy — nothing is patched until the first subscription.
+All hooks are lazy — nothing is patched until the first subscription.
 
 ## Debug: `api_dumpnearby` (Debug builds only)
 

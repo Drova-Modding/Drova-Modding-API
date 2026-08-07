@@ -47,9 +47,15 @@ Full setup, including the `.csproj` reference and your first mod, is in
 
 ## Usage
 
-Put `Drova_Modding_API.dll` (from [Releases](https://github.com/Drova-Modding/Drova-Modding-API/releases),
-or build it yourself) into your Drova installs `Mods` folder. Then declare the dependency in your
-mod and reference the DLL:
+Extract `Modding_API.zip` (from [Releases](https://github.com/Drova-Modding/Drova-Modding-API/releases),
+or build it yourself) over your Drova install. It puts `Drova_Modding_API.dll` into `Mods` and the
+library it links against, `LiteNetLib.dll`, into `UserLibs`. Copying the mod DLL on its own is not
+enough; the API cannot load without both, and MelonLoader reports that as a missing
+`Drova_Modding_API` rather than a missing `UserLibs` file. See
+[Getting Started](./docs/getting-started.md#troubleshooting) if a mod asks for
+`Drova_Modding_API, Version=1.0.0.0`.
+
+Then declare the dependency in your mod and reference the DLL:
 
 ```csharp
 // other assembly infos...
@@ -78,8 +84,8 @@ public class MyMod : MelonMod { }
 - Routines, custom talents, custom global variables, and a runtime gvar inspector (F6).
 - [Co-op](./docs/systems/coop.md): ask whether somebody else is in the world and whether this
   machine should be the one acting on it. One line, and no effect in single-player.
-- An optional coop [networking transport](./docs/systems/networking.md) for mods that want to talk
-  between two games (off by default, see below).
+- A coop [networking transport](./docs/systems/networking.md) for mods that want to talk between two
+  games.
 
 See the [docs](./docs/README.md) for how to use each of these.
 
@@ -89,24 +95,15 @@ See the [docs](./docs/README.md) for how to use each of these.
 dotnet build "Drova Modding API.sln" -c Debug
 ```
 
-`Debug` builds include the dev tooling (dialogue editor, F6 global var inspector, NPC wizard);
-`Release` builds strip it. See [Getting Started](./docs/getting-started.md#developer-key-bindings)
-for the dev key bindings.
+`Debug` builds include the dev tooling (dialogue editor, F6 global var inspector, NPC wizard, and the
+`api_netstats` network stats window); `Release` builds strip it. See
+[Getting Started](./docs/getting-started.md#developer-key-bindings) for the dev key bindings and
+console commands.
 
-### Coop build
-
-The networking transport is **not** in a default build — no implementation, no LiteNetLib
-dependency. Opt in by building a `Coop` configuration (`DebugCoop` / `ReleaseCoop`, selectable from
-the configuration dropdown in Rider and Visual Studio):
-
-```sh
-dotnet build "Drova Modding API.sln" -c ReleaseCoop
-```
-
-This adds `LiteNetLib.dll` to `UserLibs` next to the mod DLL. Mods keep compiling against the same
-public surface either way and detect support at runtime via `NetworkAccess.IsSupported`; a
-buildable example is in [`samples/EchoCoopMod`](./samples/EchoCoopMod). Full details, including how
-to switch it on inside Rider, are in the [networking docs](./docs/systems/networking.md).
+Both configurations ship the networking transport, which puts `LiteNetLib.dll` into the game's
+`UserLibs` folder alongside the mod DLL in `Mods`. Mods compile against the API's public surface only
+— a buildable example is in [`samples/EchoCoopMod`](./samples/EchoCoopMod), and the details are in
+the [networking docs](./docs/systems/networking.md).
 
 ## Follow the project
 

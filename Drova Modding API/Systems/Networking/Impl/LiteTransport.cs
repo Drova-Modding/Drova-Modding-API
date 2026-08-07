@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Networking.Diagnostics;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using MelonLogger = MelonLoader.MelonLogger;
@@ -38,11 +39,34 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private NetManager? _manager;
         private TransportMode _mode = TransportMode.Direct;
         private string? _connectKey;
-        private long _undecryptable;
+        private long _loggedUndecryptable;
+        private long _loggedRefused;
         private long _lastDropLogMs;
         private long _lastRefusedLogMs;
 
         internal NetRole Role { get; private set; } = NetRole.None;
+
+        /// <summary>
+        /// How this session reaches the other players. Meaningless outside a session, where it is left at
+        /// whatever the last one used.
+        /// </summary>
+        internal TransportMode Mode => _mode;
+
+        /// <summary>
+        /// LiteNetLib's manager, for reading the counters it keeps. Null while no session is running.
+        /// </summary>
+        internal NetManager? Manager => _manager;
+
+        /// <summary>
+        /// The one real connection in a relay session, which is where every measurable number about that
+        /// session lives. Null in a direct session and before the relay accepted us.
+        /// </summary>
+        internal NetPeer? RelayConnection => _link.Connection;
+
+        /// <summary>
+        /// The virtual id the relay assigned this peer, valid once the session is running.
+        /// </summary>
+        internal byte LocalVirtualId => _link.LocalVirtualId;
 
         internal bool IsConnected => _mode == TransportMode.Relay
             ? _link.Welcomed && _link.PeerCount > 0
@@ -56,7 +80,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             : _manager?.ConnectedPeersCount ?? 0;
 
         /// <summary>
-        /// Round trip to the relay, or 0 outside a relay session. Every
+        /// One-way latency to the relay, or 0 outside a relay session. Every
         /// <see cref="RelayPeer.Ping"/> reports this, because the second leg is not measurable here.
         /// </summary>
         internal int RelayPing => _link.Connection?.Ping ?? 0;
@@ -86,6 +110,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal void StartHost(int port, string? key)
         {
             Stop();
+            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
+            // which is when somebody usually wants to look at them.
+            NetworkDiagnostics.Reset();
             _mode = TransportMode.Direct;
             _connectKey = key;
             _manager = NewManager();
@@ -97,6 +124,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal void Connect(string address, int port, string? key)
         {
             Stop();
+            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
+            // which is when somebody usually wants to look at them.
+            NetworkDiagnostics.Reset();
             _mode = TransportMode.Direct;
             _connectKey = key;
             _manager = NewManager();
@@ -263,6 +293,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private void ConnectToRelay(string address, int port, byte role, string? sessionCode, string? password, NetRole localRole)
         {
             Stop();
+            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
+            // which is when somebody usually wants to look at them.
+            NetworkDiagnostics.Reset();
             _mode = TransportMode.Relay;
             _connectKey = null;
             _link.Prepare(sessionCode, password);
@@ -333,6 +366,12 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 UnsyncedEvents = false,
                 AutoRecycle = false,
                 ChannelsCount = ChannelCount,
+
+                // Packet, byte and reliable-loss counters for the manager and every peer under it. They
+                // cost a handful of interlocked adds per packet, which is worth paying unconditionally:
+                // the build somebody is running when coop misbehaves is the one whose numbers are needed,
+                // and a build without them can only report that something felt slow.
+                EnableStatistics = true,
 
                 // How often queued sends are actually flushed. The default is 15 ms, and that delay is
                 // added to every message this transport carries. Measured end to end through a relay,
@@ -449,6 +488,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             }
             catch (Exception e)
             {
+                NetworkDiagnostics.CountReceiveFailure();
                 MelonLogger.Error("[Networking] receive on channel " + channel + " failed: " + e);
             }
             finally
@@ -493,7 +533,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             {
                 // Either the password differs from the host's or something rewrote the packet. Both are
                 // indistinguishable here and both mean the same thing: it is not ours.
-                _undecryptable++;
+                NetworkDiagnostics.CountUndecryptablePacket();
                 return;
             }
 
@@ -551,12 +591,22 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         /// </summary>
         private void FlushRefusedLog()
         {
+            long total = NetworkDiagnostics.RefusedMessages;
+
+            // The counter is restarted by a new session and by the stats view's reset button, so it can
+            // move backwards under this. Re-baselining rather than subtracting is what keeps a reset from
+            // being announced as a negative number of drops.
+            if (total <= _loggedRefused)
+            {
+                _loggedRefused = total;
+                return;
+            }
+
             long now = Environment.TickCount64;
             if (now - _lastRefusedLogMs < DropLogIntervalMs) return;
 
-            long refused = Dispatcher.TakeRefused();
-            if (refused == 0) return;
-
+            long refused = total - _loggedRefused;
+            _loggedRefused = total;
             _lastRefusedLogMs = now;
 
             MelonLogger.Warning("[Networking] dropped " + refused + " messages carrying a NaN or an infinity; " +
@@ -565,15 +615,20 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         private void FlushUndecryptableLog()
         {
-            if (_undecryptable == 0) return;
+            long total = NetworkDiagnostics.UndecryptablePackets;
+            if (total <= _loggedUndecryptable)
+            {
+                _loggedUndecryptable = total;
+                return;
+            }
 
             long now = Environment.TickCount64;
             if (now - _lastDropLogMs < DropLogIntervalMs) return;
 
-            // Counters are cleared before the log call, not after: if logging itself fails, the retry would
-            // otherwise repeat on every single poll.
-            long dropped = _undecryptable;
-            _undecryptable = 0;
+            // What has been logged is recorded before the log call, not after: if logging itself fails, the
+            // retry would otherwise repeat on every single poll.
+            long dropped = total - _loggedUndecryptable;
+            _loggedUndecryptable = total;
             _lastDropLogMs = now;
 
             // Summarised rather than logged per packet: a mismatched password makes every single packet

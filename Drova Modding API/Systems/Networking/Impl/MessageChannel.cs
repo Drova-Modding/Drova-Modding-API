@@ -1,3 +1,5 @@
+using Drova_Modding_API.Systems.Networking.Diagnostics;
+
 namespace Drova_Modding_API.Systems.Networking.Impl
 {
     /// <summary>
@@ -37,7 +39,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             // repairing is not, since substituting a value hands the handler a state no sender described.
             if (reader.Poisoned)
             {
-                Dispatcher.CountRefused();
+                NetworkDiagnostics.CountRefusedMessage();
                 return;
             }
 

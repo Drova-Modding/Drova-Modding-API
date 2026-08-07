@@ -7,11 +7,8 @@ never draws UI. A coop mod builds lobby, UI, and world sync on top of it.
 Entry points: `Drova_Modding_API.Access.NetworkAccess` and
 `Drova_Modding_API.Access.NetworkEvents` (both static).
 
-> **The transport is optional.** The public surface above always exists, but the implementation is
-> only compiled into a **coop-enabled API build** (`-p:Coop=true`). Check
-> `NetworkAccess.IsSupported` first — on a plain build every action method throws
-> `NotSupportedException` so a missing coop build fails loudly instead of silently doing nothing.
-> See [Building with coop support](#building-with-coop-support).
+> The transport ships in every API build. It is backed by LiteNetLib, which the API installs as
+> `UserLibs/LiteNetLib.dll` — see [Shipping](#shipping).
 
 ## Quick example
 
@@ -41,12 +38,6 @@ public class MyCoopMod : MelonMod
 
     public override void OnInitializeMelon()
     {
-        if (!NetworkAccess.IsSupported)
-        {
-            LoggerInstance.Warning("Install the coop-enabled Drova Modding API build.");
-            return;
-        }
-
         NetworkAccess.RegisterWithId<PingMessage>(PingId, (peer, message) =>
         {
             LoggerInstance.Msg($"Ping #{message.Sequence} from peer {peer.Id}");
@@ -156,50 +147,16 @@ Span<byte> payload = stackalloc byte[8];
 NetworkAccess.SendRaw(peer, 1, payload);
 ```
 
-## Building with coop support
+## Shipping
 
-The default build has **no** networking implementation and no LiteNetLib dependency at all. To get
-the coop-enabled build:
+The transport is backed by LiteNetLib 2.1.4, which the build copies into the game's **`UserLibs`**
+folder, where MelonLoader keeps shared managed dependencies, rather than next to the mod. Both
+`dist/Modding_API.zip` and `dist/Modding_API_Dev.zip` contain `Mods/Drova_Modding_API.dll` plus
+`UserLibs/LiteNetLib.dll`. Users need **both**; the mod DLL alone will fail to resolve LiteNetLib at
+runtime.
 
-```sh
-dotnet build "Drova Modding API.sln" -c Release -p:Coop=true
-```
-
-That defines `NETCOOP`, compiles `Systems/Networking/Impl/*`, pulls in LiteNetLib 2.1.4, and copies
-`LiteNetLib.dll` into the game's **`UserLibs`** folder (shared managed dependencies, same place as
-`NVorbis.dll`). The mod DLL in `Mods` never references LiteNetLib on a default build.
-
-### Turning it on in Rider (or Visual Studio)
-
-The solution has four build configurations, so coop is a dropdown toggle in the IDE toolbar:
-
-| Configuration | Dev tooling (dialogue editor, F6 inspector, NPC wizard) | Coop transport |
-|---------------|---------------------------------------------------------|----------------|
-| `Debug`       | yes                                                     | no             |
-| `DebugCoop`   | yes                                                     | yes            |
-| `Release`     | no                                                      | no             |
-| `ReleaseCoop` | no                                                      | yes            |
-
-The `Coop` variants are the base configuration plus the transport — same `DEBUG` define, same
-optimization settings, own `bin`/`dist` output so a switch never reuses the other build's artifacts.
-Each produces its own zip: `Modding_API_Dev.zip`, `Modding_API_Dev_Coop.zip`, `Modding_API.zip`,
-`Modding_API_Coop.zip`.
-
-Two other ways to the same result, if you would rather not switch configuration:
-
-| Way                  | How                                                                                      |
-|----------------------|------------------------------------------------------------------------------------------|
-| Environment variable | Set `DROVA_COOP=1` in Windows, then restart Rider. The `.csproj` reads it as a fallback. |
-| Command line         | `dotnet build … -p:Coop=true` on any configuration.                                      |
-
-An explicit `-p:Coop=true` wins over everything; the configuration name comes next; `DROVA_COOP` is
-the last resort. The build log line `Packaged … (coop: true)` confirms which you got.
-
-### Shipping a coop build
-
-`dist/Modding_API.zip` from a `-p:Coop=true` build contains `Mods/Drova_Modding_API.dll` plus
-`UserLibs/LiteNetLib.dll`. Users of a coop mod need **both**; the DLL alone will fail to resolve
-LiteNetLib at runtime.
+A mod that uses networking references `Drova_Modding_API.dll` only — LiteNetLib never appears in a
+consumer mod's references.
 
 ## Going through a relay
 
@@ -229,7 +186,7 @@ Everything else is unchanged: same messages, same events, same `INetPeer`. Diffe
 - **Success is asynchronous.** `StartHostViaRelay` returns before the relay has accepted the code —
   wait for `NetworkEvents.OnHostStarted`, and handle `OnConnectionRejected` for a refusal (code taken,
   wrong password, relay full).
-- **`INetPeer.Ping` is the round trip to the relay**, not to that player. Read it as a lower bound.
+- **`INetPeer.Ping` is the one-way latency to the relay**, not to that player. Read it as a lower bound.
 - **`INetPeer.Disconnect()` on the host kicks that client**; a client calling it on the host peer
   leaves the session.
 - **Raw channel 63 is unavailable** — it carries relay control traffic. `RegisterChannel` refuses it in
@@ -259,13 +216,59 @@ The server is its own project (`Drova-Coop-Relay`) with the wire protocol specif
 `docs/protocol.md`; the design notes live in
 [`docs/coop-networking-plan.md`](../plans/coop-networking-plan.md#relay).
 
+## Seeing what the transport is doing
+
+A **`Debug` build** carries an in-game stats
+window, opened from the developer console with **`api_netstats`**. It works in the main menu and in
+the world, session or not. It does not take gameplay input while open, so you can keep playing and
+watch the numbers move; drag it by the title bar.
+
+| Command                | What it does                                                              |
+|------------------------|---------------------------------------------------------------------------|
+| `api_netstats`         | Toggle the window. `on` and `off` set it explicitly.                      |
+| `api_netstats reset`   | Zero every counter, including LiteNetLib's.                               |
+| `api_netstats log`     | Write the current numbers to the MelonLoader log.                         |
+
+`reset` and `log` work whether the window is open. The same two are buttons in the window.
+
+| Section            | What it answers                                                                                                                                |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Session**        | Role, direct or relay, peer count, session code, whether the session is encrypted, and how long the counters have been running.                |
+| **Traffic**        | Packets and bytes in each direction, the current rate, and how many reliable packets had to be resent.                                         |
+| **Graphs**         | Round trip, outgoing rate and incoming rate over the last 30 seconds, sampled four times a second. Round trip is the **worst** peer's.         |
+| **Dropped**        | Packets that never reached a handler, split by cause: undecryptable, NaN or infinity, unknown message id, malformed, receive failures.         |
+| **Peers**          | Per peer: round trip, one-way latency, MTU, time since the last packet, bytes each way, and packets resent.                                    |
+| **Typed messages** | Per message id: how many were sent and received and how many bytes each direction cost. This is where you find out which message is expensive. |
+
+Resetting is what lets a single action be measured on its own rather than against the whole session,
+and the log snapshot is what you attach to a bug report — a screenshot of a window that updates four
+times a second usually is not enough.
+
+Reading it honestly:
+
+- **Resent packets are the only loss you can see from here.** They count reliable packets LiteNetLib
+  sent again. Unreliable traffic that never arrived leaves no trace anywhere by definition.
+- **In a relay session there is one real connection**, so per-player bytes do not exist and the peer
+  table says so. The latency shown for a player is the one-way latency to the relay — a lower bound,
+  and half of a round trip.
+- **A typed-message row counts a `SendToAll` once**, because it was serialized once. What the fan-out
+  costs on the wire is in the byte counters under **Traffic**.
+- **A steady "unknown message id" count is a version mismatch**, not a network fault: the two ends
+  disagree about which id means which message.
+
+Counting restarts whenever a session does and survives it ending, so **Dropped**, **Typed messages**
+and `api_netstats log` still say something after a disconnect. **Traffic** is LiteNetLib's own tally
+and lives on its manager, so it survives a peer dropping out but not an explicit `Stop()`.
+
+Everything except the window itself is compiled into `Release` builds too — only the view is
+stripped.
+
 ## API reference
 
 ### `NetworkAccess`
 
 | Member                                                                                                            | Description                                                                                    |
 |-------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------|
-| `bool IsSupported`                                                                                                | Whether this API build contains the transport. Check before anything else.                     |
 | `NetRole Role`                                                                                                    | `None`, `Host` or `Client`.                                                                    |
 | `bool IsConnected`                                                                                                | A session is running and at least one peer is connected.                                       |
 | `int PeerCount`                                                                                                   | How many remote peers are connected.                                                           |
@@ -301,7 +304,7 @@ The server is its own project (`Drova-Coop-Relay`) with the wire protocol specif
 
 | Type                  | Members                                                                                                                                                                               |
 |-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `INetPeer`            | `int Id`, `int Ping`, `void Disconnect()`                                                                                                                                             |
+| `INetPeer`            | `int Id`, `int Ping` (one-way, half the round trip), `void Disconnect()`                                                                                                              |
 | `INetMessage`         | `void Write(INetWriter)`, `void Read(INetReader)`                                                                                                                                     |
 | `INetWriter`          | `Put` for `byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`string`/`byte[]`                                                                       |
 | `INetReader`          | The matching `GetByte()` … `GetBytes()`                                                                                                                                               |

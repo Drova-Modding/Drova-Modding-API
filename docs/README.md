@@ -82,7 +82,7 @@ from your `MelonMod` subclass.
 | Page                                  | Summary                                                                                          |
 |---------------------------------------|--------------------------------------------------------------------------------------------------|
 | [Co-op](./systems/coop.md)            | Ask whether somebody else is in the world and whether this machine should act. Always available. |
-| [Networking](./systems/networking.md) | Optional coop transport: sessions, typed messages, raw channels. Needs a coop-enabled build.     |
+| [Networking](./systems/networking.md) | Coop transport: sessions, typed messages, raw channels.                                          |
 
 ## Contributing to the docs
 

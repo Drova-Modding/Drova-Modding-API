@@ -10,6 +10,13 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     {
         private static LiteTransport? _transport;
 
+        /// <summary>
+        /// The live transport, for the debug stats view to read the counters and per-peer numbers that
+        /// <see cref="Access.NetworkAccess"/> deliberately does not expose. Null until
+        /// <see cref="Initialize"/> has run.
+        /// </summary>
+        internal static LiteTransport? Transport => _transport;
+
         internal static NetRole Role => _transport?.Role ?? NetRole.None;
 
         internal static bool IsConnected => _transport?.IsConnected ?? false;

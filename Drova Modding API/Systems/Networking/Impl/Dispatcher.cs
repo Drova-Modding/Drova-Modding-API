@@ -1,3 +1,4 @@
+using Drova_Modding_API.Systems.Networking.Diagnostics;
 using LiteNetLib.Utils;
 
 namespace Drova_Modding_API.Systems.Networking.Impl
@@ -11,13 +12,16 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     /// </summary>
     internal static class Dispatcher
     {
-        private const int MaxMessageTypes = 256;
+        /// <summary>
+        /// How many typed message ids exist. Also the width of every per-id table in
+        /// <see cref="NetworkDiagnostics"/>, so the two cannot drift apart.
+        /// </summary>
+        internal const int MaxMessageTypes = 256;
 
         private static readonly MessageChannel?[] _typed = new MessageChannel[MaxMessageTypes];
         private static readonly RawHandler?[] _raw = new RawHandler[LiteTransport.ChannelCount];
         private static readonly LiteWriter _writer = new();
         private static readonly LiteReader _reader = new();
-        private static long _refused;
 
         internal static void RegisterWithId<T>(ushort id, Action<INetPeer, T> handler) where T : struct, INetMessage
         {
@@ -51,6 +55,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             writer.Reset();
             writer.Put(MessageType<T>.Id);
             message.Write(writer);
+            NetworkDiagnostics.RecordSent(MessageType<T>.Id, writer.Native.Length);
             return writer.Native;
         }
 
@@ -67,32 +72,25 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             // A typed packet too short to hold its own id is not a message. Without this the read runs off
             // the end of the buffer, and the receive path's catch turns every one of them into a logged
             // stack trace - a flood anyone with the port can start.
-            if (packet.AvailableBytes < sizeof(ushort)) return;
+            if (packet.AvailableBytes < sizeof(ushort))
+            {
+                NetworkDiagnostics.CountMalformedPacket();
+                return;
+            }
 
+            // Measured before the id is read, so the tally is the message as it sat on the wire.
+            int size = packet.AvailableBytes;
             _reader.Bind(packet);
             ushort id = _reader.GetUShort();
             MessageChannel? channel = id < MaxMessageTypes ? _typed[id] : null;
-            channel?.Handle(peer, _reader);
-        }
+            if (channel == null)
+            {
+                NetworkDiagnostics.CountUnknownMessageId();
+                return;
+            }
 
-        /// <summary>
-        /// Records a message refused for carrying a number no game can use. Counted rather than logged per
-        /// event: whoever can send one can send thousands.
-        /// </summary>
-        internal static void CountRefused()
-        {
-            _refused++;
-        }
-
-        /// <summary>
-        /// Takes the refusal tally and clears it, so the transport can summarize it on its own schedule.
-        /// </summary>
-        internal static long TakeRefused()
-        {
-            long refused = _refused;
-            _refused = 0;
-
-            return refused;
+            NetworkDiagnostics.RecordReceived(id, size);
+            channel.Handle(peer, _reader);
         }
 
         internal static void RegisterRawChannel(byte channel, RawHandler handler)
