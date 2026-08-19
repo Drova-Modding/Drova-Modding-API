@@ -18,7 +18,7 @@ using UnityEngine.InputSystem;
 
 [assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.6.0", "Drova Modding", null)]
 [assembly: MelonGame("Just2D", "Drova")]
-[assembly: VerifyLoaderVersion(0, 7, 0, true)]
+[assembly: VerifyLoaderVersion(0, 7, 3, true)]
 [assembly: MelonPriority(-1)]
 namespace Drova_Modding_API
 {
