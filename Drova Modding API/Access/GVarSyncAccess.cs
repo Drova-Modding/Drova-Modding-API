@@ -47,7 +47,7 @@ namespace Drova_Modding_API.Access
         /// Declares that a variable's transition should play out on every machine, not only the one
         /// that triggered it.
         ///
-        /// A synchronized variable normally crosses as state alone: the far machine gets the value and
+        /// A synchronised variable normally crosses as state alone: the far machine gets the value and
         /// none of the listeners, because a quest transition's listeners can be a cutscene and a
         /// teleport that were authored for the player standing at the trigger. A forced story sequence
         /// is the exception. When the story captures one player, it should capture all of them, and
