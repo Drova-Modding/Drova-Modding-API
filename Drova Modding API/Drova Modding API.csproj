@@ -6,8 +6,10 @@
         <RootNamespace>Drova_Modding_API</RootNamespace>
         <LangVersion>12</LangVersion>
         <IsPackable>false</IsPackable>
+        <!-- Binding identity baked into every mod ever compiled against the API. Frozen; bump Version instead. -->
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <FileVersion>1.0.0.0</FileVersion>
+        <Version>0.6.0</Version>
+        <FileVersion>0.6.0.0</FileVersion>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Drova_Modding_API</AssemblyName>
     </PropertyGroup>
