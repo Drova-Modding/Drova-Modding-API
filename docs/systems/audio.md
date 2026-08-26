@@ -24,6 +24,7 @@ the key the dialogue system builds for the line, without a file extension.
 …/Drova - Forsaken Kin/Mods/Modding_API/Audio/bundles/
   player        ← AssetBundle of the player's clips
   jendrik       ← AssetBundle of Jendrik's clips
+  narrator      ← AssetBundle of the narrator's clips (see below)
 ```
 
 Inside a bundle, the clip names follow the same scheme:
@@ -48,6 +49,21 @@ using Drova_Modding_API.Systems.Audio;
 AudioManager.ReplaceDialogueAudioConnector(
     new DefaultDialogueAudioConnector(new AssetBundleAudioProvider()));
 ```
+
+## The narrator bundle
+
+Drova has no narrator actor parameter. Narration is authored under the name of whatever prop or
+placeholder holds the dialogue tree (`EntityInfo_MysteriousLantern`, `Table_Brutus`, `WRONG`, …),
+and a normally voiced actor also delivers narrated lines whenever the text is wrapped in asterisks
+or parentheses. Ship those clips in a single `narrator` bundle.
+
+`AssetBundleAudioProvider` probes **two** bundles for every line — the node's own actor and
+`narrator` — because which of the two voices recorded a line cannot be decided from the actor alone.
+Order is narrator-first for the ~48 known narration actor names, actor-first otherwise. Clip keys are
+built from the node's own actor either way, so the second probe cannot cross-match another line.
+
+Practically: put a clip in whichever bundle its voice belongs to, keep the key unchanged, and the
+provider finds it.
 
 ## How do I…?
 
@@ -147,6 +163,8 @@ Built-in: `AssetBundleAudioProvider` (per-actor bundles; `UnloadAll()` frees cac
   "enable dialogue audio" option is on — see [Config](./config.md).
 - **Clip IDs are derived from the dialogue tree + node** (tree name, loca key, file path, actor). The
   file/bundle name must match that key. Use `AudioManager.GetUniqueID*` to compute them.
+- **Narration lives in a `narrator` bundle**, probed alongside the actor's bundle for every line —
+  see [The narrator bundle](#the-narrator-bundle).
 - **AssetBundles can't be loaded twice from the same file** — `AssetBundleAudioProvider` caches them;
   call `UnloadAll()` if you need to free them.
 - **Bundle clip import settings drive dialogue-open performance.** Use `Compressed In Memory` /

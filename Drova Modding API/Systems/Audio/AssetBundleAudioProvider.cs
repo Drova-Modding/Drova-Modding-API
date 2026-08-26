@@ -1,4 +1,5 @@
 using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Audio.Dialogue;
 using Drova_Modding_API.Systems.WorldEvents;
 using Il2CppInterop.Runtime;
 using UnityEngine;
@@ -9,7 +10,8 @@ namespace Drova_Modding_API.Systems.Audio
     /// Provides dialogue audio clips from per-actor AssetBundles. Bundles live under
     /// &lt;SavePath&gt;/Audio/bundles/ and are named after the lower-cased actor (e.g. "jendrik").
     /// Each bundle holds the AudioClips for that actor, addressed by the key the dialogue system
-    /// builds for a line, without a file extension.
+    /// builds for a line, without a file extension. Narration lives in a "narrator" bundle, which is
+    /// probed alongside the actor's own bundle for every line (see <see cref="NarratorActors"/>).
     ///
     /// This is the provider <see cref="AudioManager"/> starts with, so it needs no registration.
     /// Re-register it explicitly only to get back to it after swapping in another provider:
@@ -47,7 +49,7 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// Initializes a new instance of the AssetBundleAudioProvider class and caches the AreaNameSystem.
+        /// Initialises a new instance of the AssetBundleAudioProvider class and caches the AreaNameSystem.
         /// </summary>
         public AssetBundleAudioProvider()
         {
@@ -63,21 +65,69 @@ namespace Drova_Modding_API.Systems.Audio
                 return Task.FromResult<AudioClip>(null);
             }
 
-            var actorBundle = GetActorBundle(actorName);
-            if (actorBundle == null)
-            {
-                AudioLog.Msg($"No audio bundle for actor '{actorName}'");
-                return Task.FromResult<AudioClip>(null);
-            }
-
             string normalizedPath = filePath.Replace('/', '_');
             if(!_areaNameSystem)
             {
                 _areaNameSystem = WorldEventSystemManager.Instance!.AreaNameSystem;
             }
             var isInCave = _areaNameSystem.IsInCave();
-            foreach (var key in GetCandidateKeys(dialogeName, normalizedPath, locaKey, actorName, choiceId, isInCave))
+            List<string> candidateKeys = [.. GetCandidateKeys(dialogeName, normalizedPath, locaKey, actorName, choiceId, isInCave)];
+
+            List<string> probedActors = [.. GetBundleActors(actorName)];
+            bool anyBundle = false;
+            for (int i = 0; i < probedActors.Count; i++)
             {
+                ActorBundle? actorBundle = GetActorBundle(probedActors[i]);
+                if (actorBundle == null) continue;
+
+                anyBundle = true;
+                AudioClip clip = TryLoadClip(actorBundle, candidateKeys);
+                if (clip != null)
+                {
+                    return Task.FromResult(clip);
+                }
+            }
+
+            string probed = string.Join("', '", probedActors);
+            if (!anyBundle)
+            {
+                AudioLog.Msg($"No audio bundle for actor '{actorName}', looked for bundles '{probed}'");
+                return Task.FromResult<AudioClip>(null);
+            }
+
+            AudioLog.Msg($"Audio not found for {dialogeName}_{locaKey}_{normalizedPath}_{actorName} in bundles '{probed}'");
+            return Task.FromResult<AudioClip>(null);
+        }
+
+        /// <summary>
+        /// Yields the actors whose bundles may hold the line, most likely first. The narrator bundle
+        /// is always probed as well: narration is authored under the prop name that happens to hold
+        /// the tree, and a normally voiced actor also delivers narrated lines, so which of the two
+        /// voices recorded a given line cannot be decided from the actor alone. Clip keys are built
+        /// from the node's own actor either way, so probing the second bundle cannot cross-match.
+        /// </summary>
+        private static IEnumerable<string> GetBundleActors(string actorName)
+        {
+            if (NarratorActors.IsNarratorActor(actorName))
+            {
+                yield return NarratorActors.NARRATOR;
+                yield return actorName;
+                yield break;
+            }
+
+            yield return actorName;
+            yield return NarratorActors.NARRATOR;
+        }
+
+        /// <summary>
+        /// Returns the first candidate key the bundle actually resolves to a clip, or null.
+        /// </summary>
+        private static AudioClip TryLoadClip(ActorBundle actorBundle, List<string> candidateKeys)
+        {
+            for (int i = 0; i < candidateKeys.Count; i++)
+            {
+                string key = candidateKeys[i];
+
                 // AssetBundle assets are addressed by their (case-insensitive) name without extension,
                 // which is exactly the clip key the dialogue system builds.
                 string lowerKey = key.ToLowerInvariant();
@@ -91,7 +141,7 @@ namespace Drova_Modding_API.Systems.Audio
                 // decompress the same audio on the main thread again.
                 if (actorBundle.ClipCache.TryGetValue(lowerKey, out var cachedClip))
                 {
-                    return Task.FromResult(cachedClip);
+                    return cachedClip;
                 }
 
                 // Use the non-generic LoadAsset(name, type) overload rather than LoadAsset<AudioClip>:
@@ -103,12 +153,11 @@ namespace Drova_Modding_API.Systems.Audio
                 if (clip != null)
                 {
                     actorBundle.ClipCache[lowerKey] = clip;
-                    return Task.FromResult(clip);
+                    return clip;
                 }
             }
 
-            AudioLog.Msg($"Audio not found in bundle for {dialogeName}_{locaKey}_{normalizedPath}_{actorName}");
-            return Task.FromResult<AudioClip>(null);
+            return null;
         }
 
         /// <summary>
@@ -118,6 +167,8 @@ namespace Drova_Modding_API.Systems.Audio
         /// </summary>
         private ActorBundle? GetActorBundle(string actorName)
         {
+            if (string.IsNullOrEmpty(actorName)) return null;
+
             string key = actorName.ToLowerInvariant();
             if (_bundleCache.TryGetValue(key, out var cached))
             {

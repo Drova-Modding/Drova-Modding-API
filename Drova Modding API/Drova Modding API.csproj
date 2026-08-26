@@ -486,6 +486,7 @@
         <Compile Include="Systems\AreaNameSystem.cs" />
         <Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
         <Compile Include="Systems\Audio\AssetBundleAudioProvider.cs" />
+        <Compile Include="Systems\Audio\Dialogue\NarratorActors.cs" />
         <Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
         <Compile Include="Systems\Audio\DialogueAudioDistanceManager.cs" />
         <Compile Include="Systems\Audio\IAudioConnector.cs" />

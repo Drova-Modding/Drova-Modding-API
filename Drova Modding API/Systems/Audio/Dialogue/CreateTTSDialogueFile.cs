@@ -124,7 +124,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         if (loca.StartsWith("[LOCA] Key not found")) continue;
 
                         _sb
-                            .Append(DialogueUtils.MapActorNameToNumber(_actorMapping, statement.actorName))
+                            .Append(DialogueUtils.MapActorNameToNumber(_actorMapping, NarratorActors.Resolve(statement.actorName, loca)))
                             .Append(DialogueUtils.SEPERATOR)
                             .Append(loca)
                             .Append(DialogueUtils.SEPERATOR)
@@ -153,10 +153,12 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                                 //MelonLogger.Msg("Skipping node with generic quest dialogue, which isn't in use");
                                 continue;
                             }
+                            string choiceLoca = multipleChoice.GetLocalizedString(choice.statement);
+
                             _sb
-                               .Append(DialogueUtils.MapActorNameToNumber(_actorMapping, multipleChoice.actorName))
+                               .Append(DialogueUtils.MapActorNameToNumber(_actorMapping, NarratorActors.Resolve(multipleChoice.actorName, choiceLoca)))
                                .Append(DialogueUtils.SEPERATOR)
-                               .Append(multipleChoice.GetLocalizedString(choice.statement))
+                               .Append(choiceLoca)
                                .Append(DialogueUtils.SEPERATOR)
                                .Append(AudioManager.GetUniqueIDChoice(dialogueTree, choice))
                                .Append(DialogueUtils.SEPERATOR)
@@ -262,10 +264,12 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                                     continue;
                                 }
 
+                                string subLoca = statement.GetLocalizedString();
+
                                 _sb
-                                    .Append(DialogueUtils.MapActorNameToNumber(_actorMapping, actorName))
+                                    .Append(DialogueUtils.MapActorNameToNumber(_actorMapping, NarratorActors.Resolve(actorName, subLoca)))
                                     .Append(DialogueUtils.SEPERATOR)
-                                    .Append(statement.GetLocalizedString())
+                                    .Append(subLoca)
                                     .Append(DialogueUtils.SEPERATOR)
                                     .Append(AudioManager.GetUniqueIDStatementGeneric(subTree.subGraph, statement, actorName))
                                     .Append(DialogueUtils.SEPERATOR)
@@ -320,10 +324,12 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         DS_StatementNode statement = node.TryCast<DS_StatementNode>();
                         if (statement != null)
                         {
+                            string genericLoca = statement.GetLocalizedString();
+
                             _sb
-                                .Append(genericName)
+                                .Append(NarratorActors.Resolve(genericName, genericLoca))
                                 .Append(DialogueUtils.SEPERATOR)
-                                .Append(statement.GetLocalizedString())
+                                .Append(genericLoca)
                                 .Append(DialogueUtils.SEPERATOR)
                                 .Append(AudioManager.GetUniqueIDStatementGeneric(keyValue.Value, statement, genericName))
                                 .Append(DialogueUtils.SEPERATOR)
@@ -383,10 +389,12 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
 
                 if (statement != null)
                 {
+                    string loca = statement.GetLocalizedString();
+
                     sbGneric
-                        .Append(statement.actorName)
+                        .Append(NarratorActors.Resolve(statement.actorName, loca))
                         .Append(DialogueUtils.SEPERATOR)
-                        .Append(statement.GetLocalizedString())
+                        .Append(loca)
                         .Append(DialogueUtils.SEPERATOR)
                         .Append(AudioManager.GetUniqueIDStatement(keyValue.Value, statement))
                         .Append(DialogueUtils.SEPERATOR)
@@ -445,10 +453,12 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             MelonLogger.Msg("Skipping node without connections in " + subTree.subGraph.name);
                             continue;
                         }
+                        string loca = statement.GetLocalizedString();
+
                         sb
-                        .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
+                        .Append(DialogueUtils.MapActorNameToNumber(actorMapping, NarratorActors.Resolve(actorName, loca)))
                         .Append(DialogueUtils.SEPERATOR)
-                        .Append(statement.GetLocalizedString())
+                        .Append(loca)
                         .Append(DialogueUtils.SEPERATOR)
                         .Append(isGeneric ? AudioManager.GetUniqueIDStatementGeneric(subTree.subGraph, statement, actorName) :  AudioManager.GetUniqueIDStatement(subTree.subGraph, statement))
                         .Append(DialogueUtils.SEPERATOR)
