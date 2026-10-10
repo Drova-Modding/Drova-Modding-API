@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -526,6 +526,7 @@
         <Compile Include="Systems\SaveGame\Store\LazyActorStore.cs" />
         <Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
         <Compile Include="Systems\Dialogues\DialogGraph.cs" />
+        <Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
         <Compile Include="Systems\Spawning\External\ExternalAlignmentContainerModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalCosmeticsModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalDialogueModule.cs" />
@@ -661,7 +662,6 @@
         <Compile Include="Systems\Audio\Dialogue\DialogueUtils.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\MusicReactionDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\RedTowerDialogue.cs" />
-        <Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
         <Compile Include="Systems\Dialogues\EntityInfoPicturesToPngUtils.cs" />
         <Compile Include="Systems\Dialogues\Editor\DrawNodeEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\DrawTaskEditor.cs" />
@@ -845,4 +845,4 @@
 
         <Message Importance="high" Text="Packaged the test runner -&gt; $(DistDir)\Drova_TestRunner_*.zip"/>
     </Target>
-</Project>
+</Project>
