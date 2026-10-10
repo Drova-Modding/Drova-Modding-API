@@ -1,0 +1,26 @@
+# A dialogue clip from an audio bundle survives Unity unloading it: once the unused-asset sweep has destroyed the clip
+# the provider cached, the next lookup loads it again from the bundle instead of handing back the dead one.
+# Needs the deployed audio bundles and "dialogue audio" switched on in profile A's settings (audioclip says "none" otherwise).
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/audio_clip_unload.scn
+
+default hero 5
+default slot 0
+default actor Cengiz
+default clip DT_WorldDialogue_Template_WoodcampWorldDialogue_Plh_0_Cengiz
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+A expect audioclip $actor $clip contains "$clip"
+A expect clipalive == alive
+
+# The sweep must really destroy the clip, or the last step proves nothing.
+A unloadassets
+A expect clipalive == dead timeout=30
+
+A expect audioclip $actor $clip contains "$clip"
+A expect clipalive == alive

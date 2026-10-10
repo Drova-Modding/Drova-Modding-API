@@ -21,7 +21,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
     [RegisterTypeInIl2Cpp]
     public class WorldEventSystemManager(IntPtr ptr) : MonoBehaviour(ptr)
     {
-        private static readonly List<IWorldEvent> WorldEvents = [];
+        internal static readonly List<IWorldEvent> WorldEvents = [];
         private const int DefaultRegionalCooldownMinutes = 1;
         private readonly List<ARegionalEvent> _runningRegionalEvents = [];
         private readonly WorldEventPicker _worldEventPicker = new();
@@ -102,6 +102,29 @@ namespace Drova_Modding_API.Systems.WorldEvents
         }
 
         /// <summary>
+        /// A remote player (a co-op teammate) entered or left a region. Called on the machine that owns the world, so
+        /// regional events run for a teammate standing in a region alone too - around them, see
+        /// <see cref="Regional.ARegionalEvent.TryGetAnchor"/>.
+        /// </summary>
+        /// <param name="player">The teammate's id; not -1.</param>
+        /// <param name="region">The region.</param>
+        /// <param name="hasEntered">Entered rather than left.</param>
+        /// <param name="position">Where the teammate stands now, or null when unknown.</param>
+        [HideFromIl2Cpp]
+        public void ReportRemoteRegion(int player, Region region, bool hasEntered, Func<Vector2?> position)
+        {
+            _regionCoordinator?.OnRemoteRegionChanged(player, region, hasEntered, position);
+        }
+
+        /// <summary>A remote player left the session: out of every region they were in.</summary>
+        /// <param name="player">The teammate's id.</param>
+        [HideFromIl2Cpp]
+        public void ForgetRemotePlayer(int player)
+        {
+            _regionCoordinator?.ForgetRemote(player);
+        }
+
+        /// <summary>
         /// Add a region where world events are blocked.
         /// </summary>
         [HideFromIl2Cpp]
@@ -144,20 +167,16 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     continue;
                 }
 
-                bool optionFoundForMin = ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMinOptionKey, out int min);
-                bool optionFoundForMax = ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMaxOptionKey, out int max);
-                if (optionFoundForMin && optionFoundForMax)
-                {
+                // The keys are only written once the modding options menu has been opened. Until then the
+                // sliders' own defaults apply - falling back to the one-second tick instead started an
+                // event every few seconds on any profile that never opened that menu.
+                if (!ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMinOptionKey, out int min)) min = ModdingUI.ModdingUI.ModdingUIMinDefault;
+                if (!ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMaxOptionKey, out int max)) max = ModdingUI.ModdingUI.ModdingUIMaxDefault;
 #if DEBUG
-                    yield return new WaitForSeconds(UnityEngine.Random.Range(min * 30, max * 30));
+                yield return new WaitForSeconds(UnityEngine.Random.Range(min * 30, max * 30));
 #else
-                    yield return new WaitForSeconds(UnityEngine.Random.Range(min * 60, max * 60));
+                yield return new WaitForSeconds(UnityEngine.Random.Range(min * 60, max * 60));
 #endif
-                }
-                else
-                {
-                    yield return _startEventCooldown;
-                }
 
                 if (CurrentEvent == null && WorldEvents.Count > 0 && !IsPlayerInBlockedRegion())
                 {

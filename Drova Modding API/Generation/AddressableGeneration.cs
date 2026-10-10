@@ -16,7 +16,6 @@ namespace Drova_Modding_API.Generation
         struct Bucket
         {
             public int dataOffset;
-            public int[] entries;
         }
 
         [Serializable]
@@ -37,7 +36,7 @@ namespace Drova_Modding_API.Generation
 
         }
 
-        internal static object ReadObjectFromByteArray(byte[] keyData, int dataIndex)
+        internal static object? ReadObjectFromByteArray(byte[] keyData, int dataIndex)
         {
             try
             {
@@ -64,12 +63,12 @@ namespace Drova_Modding_API.Generation
                         {
                             int assemblyNameLength = keyData[dataIndex];
                             dataIndex++;
-                            string assemblyName = Encoding.ASCII.GetString(keyData, dataIndex, assemblyNameLength);
+                            _ = Encoding.ASCII.GetString(keyData, dataIndex, assemblyNameLength);
                             dataIndex += assemblyNameLength;
 
                             int classNameLength = keyData[dataIndex];
                             dataIndex++;
-                            string className = Encoding.ASCII.GetString(keyData, dataIndex, classNameLength);
+                            _ = Encoding.ASCII.GetString(keyData, dataIndex, classNameLength);
                             dataIndex += classNameLength;
                             int jsonLength = BitConverter.ToInt32(keyData, dataIndex);
                             dataIndex += 4;
@@ -116,14 +115,9 @@ namespace Drova_Modding_API.Generation
                 bi += 4;
                 int entryCount = SerializationUtilities.ReadInt32FromByteArray(bucketData, bi);
                 bi += 4;
-                int[] entryArray = new int[entryCount];
-                for (int c = 0; c < entryCount; c++)
-                {
-                    //entryArray[c] = SerializationUtilities.ReadInt32FromByteArray(bucketData, bi);
-                    bi += 4;
-                }
+                bi += 4 * entryCount;
 
-                buckets[i] = new Bucket { entries = entryArray, dataOffset = index };
+                buckets[i] = new Bucket { dataOffset = index };
             }
             MelonLogger.Msg("Buckets created");
             int keyCount = BitConverter.ToInt32(keyData, 0);
@@ -143,19 +137,19 @@ namespace Drova_Modding_API.Generation
                     int index = kBytesPerInt32 + (i * kBytesPerInt32 * k_EntryDataItemPerEntry);
                     int internalId = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    int providerIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    _ = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    int dependencyKeyIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    _ = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    int depHash = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    _ = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
-                    int dataIndex = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
+                    _ = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
                     int primaryKey = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
                     int resourceType = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     //object data = dataIndex < 0 ? null : SerializationUtilities.ReadObjectFromByteArray(extraData, dataIndex);
-                    sb.Append("Name/InternalId: " + data.m_InternalIds[internalId] + " Guid: " + keys[primaryKey].ToString() + " ressourceType: " + data.m_resourceTypes[resourceType].ClassName + "\n");
+                    sb.Append("Name/InternalId: " + data.m_InternalIds[internalId] + " Guid: " + keys[primaryKey] + " ressourceType: " + data.m_resourceTypes[resourceType].ClassName + "\n");
 
                 }
                 stream.Write(Encoding.ASCII.GetBytes(sb.ToString()));

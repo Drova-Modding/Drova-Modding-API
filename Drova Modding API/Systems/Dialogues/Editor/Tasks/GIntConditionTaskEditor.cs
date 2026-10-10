@@ -20,8 +20,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         public override void Init()
         {
             _castedTask ??= Task.TryCast<GIntConditionTask>();
+            if (_castedTask == null) return;
+
             var allpParams = GraphEditorManager.DialogueTree!.allParameters;
-            for (int i = 0; i < _castedTask!.Conditions.Count; i++)
+            for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
                 GraphGIntCompService task = _castedTask.Conditions[i];
                 if (!allpParams.Contains(task.Comparison))
@@ -45,7 +47,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     allpParams.Add(task.Variable);
                 }
                 _comparerDropdowns.Add(new GUIDropdown(Enum.GetNames<GInt.Comparer>(), (int)task.Comparison.value));
-                _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.INT, task.Variable.GetValue().GetParent().name, false, task.Variable.GetValue()));
+                _gvarEditors.Add(new GUIGvarSelectionEditor(GvarType.INT, null, false, task.Variable.GetValue()));
             }
         }
         public override Rect DrawTask(Vector2 position)
@@ -78,9 +80,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
                 Rect gvarRect = new(position.x, rect.y + 20, 220, 20);
 
-                if (gvarEditor.DrawGvarEditor(rect, gvarRect))
+                if (gvarEditor.DrawGvarEditor(rect, gvarRect) && gvarEditor.CurrentSelectedGvar != null)
                 {
-                    condition.Variable.SetValue(gvarEditor.CurrentSelectedGvar!.TryCast<GInt>());
+                    condition.Variable.SetValue(gvarEditor.CurrentSelectedGvar.TryCast<GInt>());
                 }
                 rect.y += 60;
                 if (comparerDropdown.Draw(rect))

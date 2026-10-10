@@ -14,20 +14,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private GUIDropdown? _hubRatingDropdown;
 
         // Outer height from the previous frame so the opaque wrapper can be drawn
-        // BEFORE the inner content without occluding it.
+        // before the inner content without occluding it.
         private float _cachedOuterHeight = 230f;
 
         public override void Init()
         {
             base.Init();
             _castedNode ??= Node.TryCast<DS_HubNode>();
+            if (_castedNode == null) return;
             _hubRatingDropdown ??= new GUIDropdown(Enum.GetNames<DS_HubNode.HubRating>(), (int)_castedNode.ratingCache);
             TransparentOuterBox = true;
         }
 
         public override void DrawNode(Vector2 position)
         {
-            if (_castedNode == null)
+            if (_castedNode == null || _hubRatingDropdown == null)
             {
                 return;
             }

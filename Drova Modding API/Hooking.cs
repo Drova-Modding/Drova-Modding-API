@@ -15,6 +15,14 @@ namespace Drova_Modding_API
     /// </summary>
     public static class Hooking
     {
+        private const BindingFlags Declared = BindingFlags.Public | BindingFlags.NonPublic
+            | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+
+        // Calls per patched target, counted by one shared prefix so a hook that applied but never runs shows up.
+        // ponytail: unsynchronized, assumes hooked methods run on the main thread.
+        private static readonly Dictionary<MethodBase, int> CallsByTarget = new();
+        private static readonly List<(string Label, MethodBase Target)> Applied = new();
+
         /// <summary>
         /// Patch <paramref name="targetType"/>.<paramref name="targetMethod"/> with a postfix.
         /// </summary>
@@ -87,6 +95,13 @@ namespace Drova_Modding_API
         {
             try
             {
+                // A name-only lookup prefers an inherited public method to the type's own private one
+                // (DS_DialogueUGUI.Finalize resolved to Il2CppSystem.Object.Finalize).
+                if (targetType.GetMember(targetMethod, MemberTypes.Method, Declared).Length > 0)
+                {
+                    return FindDeclaredTarget(targetType, targetMethod);
+                }
+
                 MethodInfo? target = AccessTools.Method(targetType, targetMethod);
                 if (target == null)
                 {
@@ -110,25 +125,10 @@ namespace Drova_Modding_API
             }
         }
 
-        /// <summary>
-        /// Resolves a name that matched more than once, by looking only at what the named type declares.
-        ///
-        /// **Almost always an inherited overload rather than a real choice.** A name-only lookup walks base
-        /// types, so a static <c>Foo(A, B, int)</c> on a derived type and the instance <c>Foo(B)</c> on its
-        /// base that calls it are two matches for "Foo" - and the caller who named the derived type meant the
-        /// one it declares. Narrowing to that is the tie-break; the interop assemblies are full of these
-        /// pairs and the alternative is a hook that cannot be applied by name at all.
-        ///
-        /// Still refused when the type itself declares several. Which overload is meant is then genuinely the
-        /// caller's decision, and guessing it would apply a hook to the wrong method and report success -
-        /// pass a resolved <see cref="MethodBase"/> instead, from
-        /// <see cref="AccessTools.Method(Type, string, Type[], Type[])"/>.
-        /// </summary>
+        // A caller who names a derived type means the method that type declares, not an inherited one of the same name.
+        // Several overloads on the type itself are refused: guessing would patch the wrong method and report success.
         private static MethodInfo? FindDeclaredTarget(Type targetType, string targetMethod)
         {
-            const BindingFlags Declared = BindingFlags.Public | BindingFlags.NonPublic
-                | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
-
             MethodInfo[] declared = targetType.GetMethods(Declared);
 
             MethodInfo? found = null;
@@ -174,12 +174,47 @@ namespace Drova_Modding_API
                 {
                     harmony.Patch(target, postfix: wrapped);
                 }
+
+                Applied.Add((label + (asPrefix ? " prefix" : " postfix"), target));
+                if (!CallsByTarget.ContainsKey(target))
+                {
+                    CallsByTarget[target] = 0;
+                    harmony.Patch(target, prefix: new HarmonyMethod(AccessTools.Method(typeof(Hooking), nameof(CountPrefix))) { priority = Priority.First });
+                }
                 return true;
             }
             catch (Exception e)
             {
                 MelonLogger.Error("[Hooking] FAILED to patch " + label + ": " + e);
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// How often each hook applied through this class has fired, by its label (e.g. "Health.CheckEvents postfix").
+        /// Counts calls of the target, so a prefix and a postfix on one method share a count.
+        /// </summary>
+        public static IReadOnlyList<(string Label, int Calls)> FiredCounts()
+        {
+            List<(string Label, int Calls)> counts = new(Applied.Count);
+            foreach ((string label, MethodBase target) in Applied)
+            {
+                counts.Add((label, CallsByTarget.GetValueOrDefault(target)));
+            }
+            return counts;
+        }
+
+        /// <summary>Labels of applied hooks that have not fired yet, which after exercising them usually means an inlined target.</summary>
+        public static IReadOnlyList<string> NeverFired()
+        {
+            return FiredCounts().Where(c => c.Calls == 0).Select(c => c.Label).ToList();
+        }
+
+        private static void CountPrefix(MethodBase __originalMethod)
+        {
+            if (__originalMethod != null && CallsByTarget.TryGetValue(__originalMethod, out int calls))
+            {
+                CallsByTarget[__originalMethod] = calls + 1;
             }
         }
 

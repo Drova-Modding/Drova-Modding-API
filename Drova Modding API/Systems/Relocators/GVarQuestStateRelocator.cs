@@ -20,15 +20,18 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
             /// <summary>
             /// Guid of the <see cref="GVarList.Guid"/>.
             /// </summary>
-            public string GVarListGuid;
+            public string? GVarListGuid;
         }
 
         /// <inheritdoc/>
-        public GQuestState DeserializeObjectFromJson(string json)
+        public GQuestState? DeserializeObjectFromJson(string json)
         {
-            SaveData data = JsonSerializer.Deserialize<SaveData>(json);
-            GVarList gVarList = ProviderAccess.GVarDatabase.GetGVarListByGuid(data.GVarListGuid);
-            return gVarList.GetQuestState();
+            SaveData? data = JsonSerializer.Deserialize<SaveData>(json, RelocatorSaveData.JsonOptions);
+            SubDatabase_GVars? database = ProviderAccess.GVarDatabase;
+            if (data == null || database == null) return null;
+
+            GVarList? gVarList = database.GetGVarListByGuid(data.GVarListGuid);
+            return gVarList != null ? gVarList.GetQuestState() : null;
         }
 
         /// <inheritdoc/>
@@ -38,7 +41,7 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
             {
                 Key = Key,
                 GVarListGuid = objectToSerialize.GetParent().Guid
-            });
+            }, RelocatorSaveData.JsonOptions);
         }
     }
 }

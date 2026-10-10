@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Drova_Modding_API.Access
 {
     /// <summary>
@@ -13,12 +15,12 @@ namespace Drova_Modding_API.Access
     /// </summary>
     public static class GVarSyncAccess
     {
-        private static readonly HashSet<string> _localLists = new(StringComparer.Ordinal);
-        private static readonly HashSet<string> _localVars = new(StringComparer.Ordinal);
-        private static readonly HashSet<string> _sharedJourneys = new(StringComparer.Ordinal);
-        private static readonly HashSet<string> _storySequences = new(StringComparer.Ordinal);
-        private static readonly HashSet<string> _loudVars = new(StringComparer.Ordinal);
-        private static readonly Dictionary<string, string> _sequenceQuestLists = new(StringComparer.Ordinal);
+        private static readonly HashSet<string> LocalLists = new(StringComparer.Ordinal);
+        private static readonly HashSet<string> LocalVars = new(StringComparer.Ordinal);
+        private static readonly HashSet<string> SharedJourneys = new(StringComparer.Ordinal);
+        private static readonly HashSet<string> StorySequences = new(StringComparer.Ordinal);
+        private static readonly HashSet<string> LoudVars = new(StringComparer.Ordinal);
+        private static readonly Dictionary<string, string> SequenceQuestLists = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Declares every variable in a GVar list as local to this player.
@@ -28,7 +30,7 @@ namespace Drova_Modding_API.Access
         {
             if (string.IsNullOrEmpty(listName)) return;
 
-            _localLists.Add(listName);
+            LocalLists.Add(listName);
         }
 
         /// <summary>
@@ -40,7 +42,7 @@ namespace Drova_Modding_API.Access
         {
             if (string.IsNullOrEmpty(listName) || string.IsNullOrEmpty(varName)) return;
 
-            _localVars.Add(Key(listName, varName));
+            LocalVars.Add(Key(listName, varName));
         }
 
         /// <summary>
@@ -61,7 +63,7 @@ namespace Drova_Modding_API.Access
         {
             if (string.IsNullOrEmpty(listName) || string.IsNullOrEmpty(varName)) return;
 
-            _sharedJourneys.Add(Key(listName, varName));
+            SharedJourneys.Add(Key(listName, varName));
         }
 
         /// <summary>
@@ -86,11 +88,11 @@ namespace Drova_Modding_API.Access
         {
             if (string.IsNullOrEmpty(listName)) return;
 
-            _storySequences.Add(listName);
+            StorySequences.Add(listName);
 
             if (!string.IsNullOrEmpty(questListName))
             {
-                _sequenceQuestLists[listName] = questListName!;
+                SequenceQuestLists[listName] = questListName!;
             }
         }
 
@@ -99,12 +101,12 @@ namespace Drova_Modding_API.Access
         /// </summary>
         /// <param name="listName">The stage list's asset name.</param>
         /// <param name="questListName">The governing list's asset name.</param>
-        public static bool TryGetSequenceQuestList(string listName, out string questListName)
+        public static bool TryGetSequenceQuestList(string listName, [NotNullWhen(true)] out string? questListName)
         {
-            questListName = string.Empty;
+            questListName = null;
 
             return !string.IsNullOrEmpty(listName)
-                && _sequenceQuestLists.TryGetValue(listName, out questListName!);
+                && SequenceQuestLists.TryGetValue(listName, out questListName);
         }
 
         /// <summary>
@@ -113,13 +115,13 @@ namespace Drova_Modding_API.Access
         /// <param name="listName">The list's asset name.</param>
         public static bool IsStorySequence(string listName)
         {
-            return !string.IsNullOrEmpty(listName) && _storySequences.Contains(listName);
+            return !string.IsNullOrEmpty(listName) && StorySequences.Contains(listName);
         }
 
         /// <summary>
         /// Every declared story-sequence list, by asset name.
         /// </summary>
-        public static IEnumerable<string> StorySequenceLists => _storySequences;
+        public static IEnumerable<string> StorySequenceLists => StorySequences;
 
         /// <summary>
         /// Declares that a variable's live transition should play out loudly on every machine, while
@@ -136,7 +138,7 @@ namespace Drova_Modding_API.Access
         {
             if (string.IsNullOrEmpty(listName) || string.IsNullOrEmpty(varName)) return;
 
-            _loudVars.Add(Key(listName, varName));
+            LoudVars.Add(Key(listName, varName));
         }
 
         /// <summary>
@@ -148,7 +150,7 @@ namespace Drova_Modding_API.Access
         {
             return !string.IsNullOrEmpty(listName)
                 && !string.IsNullOrEmpty(varName)
-                && _loudVars.Contains(Key(listName, varName));
+                && LoudVars.Contains(Key(listName, varName));
         }
 
         /// <summary>
@@ -158,7 +160,7 @@ namespace Drova_Modding_API.Access
         {
             get
             {
-                foreach (string key in _sharedJourneys)
+                foreach (string key in SharedJourneys)
                 {
                     int split = key.IndexOf('\n');
                     yield return (key[..split], key[(split + 1)..]);
@@ -175,7 +177,7 @@ namespace Drova_Modding_API.Access
         {
             return !string.IsNullOrEmpty(listName)
                 && !string.IsNullOrEmpty(varName)
-                && _sharedJourneys.Contains(Key(listName, varName));
+                && SharedJourneys.Contains(Key(listName, varName));
         }
 
         /// <summary>
@@ -187,9 +189,9 @@ namespace Drova_Modding_API.Access
         {
             if (string.IsNullOrEmpty(listName)) return false;
 
-            if (_localLists.Contains(listName)) return true;
+            if (LocalLists.Contains(listName)) return true;
 
-            return !string.IsNullOrEmpty(varName) && _localVars.Contains(Key(listName, varName));
+            return !string.IsNullOrEmpty(varName) && LocalVars.Contains(Key(listName, varName));
         }
 
         /// <summary>

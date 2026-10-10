@@ -35,10 +35,9 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Called when the event starts. Checks if the player is alive and not teleporting.
         /// </summary>
-        /// <returns></returns>
         public bool CanStartEvent()
         {
-            if (PlayerAccess.TryGetPlayer(out Actor player))
+            if (PlayerAccess.TryGetPlayer(out Actor? player))
             {
                 return player.IsAlive() && !player.IsPlayerTeleporting();
             }
@@ -51,9 +50,10 @@ namespace Drova_Modding_API.Systems.WorldEvents
         public virtual void StartEvent()
         {
             _isRunning = true;
-            if (!PlayerAccess.TryGetPlayer(out Actor player))
+            if (!PlayerAccess.TryGetPlayer(out Actor? player))
             {
-                WorldEventSystemManager.Instance?.EndEvent();
+                if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
+                return;
             }
             Vector3 position = player.transform.position;
             foreach (KeyValuePair<AssetReferenceGameObject, int> encounter in EncountersToSpawn)
@@ -74,14 +74,14 @@ namespace Drova_Modding_API.Systems.WorldEvents
                         // fighting a camp their friend is standing in the middle of and cannot see.
                         if (spawned != null)
                         {
-                            Access.ActorSpawnAccess.RecordSpawn(spawned.GetComponent<Actor>(), encounter.Key.AssetGUID);
+                            ActorSpawnAccess.RecordSpawn(spawned.GetComponent<Actor>(), encounter.Key.AssetGUID);
                         }
                         OnEncounterSpawned(spawned, encounter.Key, randomPosition.Value);
                     }
                     else
                     {
                         MelonLogger.Warning("Couldn't find a free position to spawn the encounter.");
-                        WorldEventSystemManager.Instance?.EndEvent();
+                        if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
                         return;
                     }
                 }
@@ -107,7 +107,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
             yield return new WaitForSeconds(SelfEndInSecond);
             if (_isRunning)
             {
-                WorldEventSystemManager.Instance?.EndEvent();
+                if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
             }
         }
 
@@ -133,7 +133,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 }
             }
             _spawnedEncounters.Clear();
-            WorldEventSystemManager.Instance?.EndEvent();
+            if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
         }
     }
 }

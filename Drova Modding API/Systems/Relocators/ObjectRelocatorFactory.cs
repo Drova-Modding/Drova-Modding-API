@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
     /// </summary>
     public class ObjectRelocatorFactory
     {
-        private static readonly Dictionary<Type, object> _relocators = new(){
+        private static readonly Dictionary<Type, object> RelocatorByType = new(){
             { typeof(Item), new ItemRelocator() },
             { typeof(DialogueTree), new DialogueTreeRelocator() },
             { typeof(EntityInfo), new EntityInfoRelocator() },
@@ -23,20 +23,18 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
         /// Registers a relocator for a specific type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="relocator"></param>
         public static void RegisterRelocator<T>(IObjectRelocator<T> relocator)
         {
-            _relocators[typeof(T)] = relocator;
+            RelocatorByType[typeof(T)] = relocator;
             
         }
         /// <summary>
         /// Gets the relocator for a specific type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static IObjectRelocator<T> GetRelocator<T>()
+        public static IObjectRelocator<T>? GetRelocator<T>()
         {
-            if (_relocators.TryGetValue(typeof(T), out object relocator))
+            if (RelocatorByType.TryGetValue(typeof(T), out object? relocator))
             {
                 return (IObjectRelocator<T>)relocator;
             }

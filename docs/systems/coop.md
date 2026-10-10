@@ -135,6 +135,22 @@ for (int index = 0; index < count; index++)
 Read the notes below first. Sharing a roll is the *second*-best tool, and letting the authority
 decide is usually the right answer.
 
+### Make the host's setting count on every machine
+
+For a setting that changes what the world contains (spawns, AI, a randomizer seed): two machines with different
+values build different worlds.
+
+```csharp
+CoopAccess.ShareHostSetting("MyMod.HardSpawns",
+    read: () => Options.HardSpawns ? "1" : "0",
+    enforce: value => Options.HostOverride = value == null ? null : value == "1",
+    needsReload: true);
+```
+
+The co-op mod sends the host's value, calls `enforce` on a client whose value differs, reloads that client's
+savegame once when `needsReload`, and calls `enforce(null)` when the session ends. Keep the host's value as an
+override instead of writing the player's config, so leaving gives them their own choice back.
+
 ### Ask whether the installed co-op mod syncs what I need
 
 ```csharp
@@ -193,13 +209,15 @@ public override void OnDeinitializeMelon()
 | `void Declare(CoopBehavior behavior)`                           | Announces what the calling mod does, for the log. Gates nothing.                                     |
 | `void Declare(string modName, CoopBehavior behavior)`           | Same, for a mod that spans assemblies or wants to be explicit.                                       |
 | `void GetPlayers(List<CoopPlayer> buffer)`                      | Fills the list with everybody in the session, the local player included. Cleared first.              |
-| `bool TryGetPlayerActor(CoopPlayerId id, out Actor actor)`      | The body being shown for a player. `false` when they have none here.                                 |
+| `bool TryGetPlayerActor(CoopPlayerId id, out Actor? actor)`     | The body being shown for a player. `false` when they have none here.                                 |
 | `bool IsRemotePlayer(Entity? entity)`                           | Whether this is somebody else's body. Always `false` with no session.                                |
 | `bool Supports(CoopCapability capability)`                      | Whether the installed implementation keeps that thing in step. Always `false` with no session.       |
 | `ulong SessionSeed`                                             | A number every machine in the session agrees on. Not stable across a save and load.                  |
 | `uint Roll(string key)`                                         | Derives a number from the session seed.                                                              |
 | `float RollValue(string key)`                                   | Derives a number in `[0, 1)`.                                                                        |
 | `int RollRange(string key, int minInclusive, int maxExclusive)` | Derives a number in a half-open range.                                                               |
+| `void ShareHostSetting(string key, Func<string> read, Action<string?> enforce, bool needsReload = false)` | Makes a setting follow the host while a session is live. A second call with the same key replaces the first. |
+| `IReadOnlyCollection<HostSetting> HostSettings`                 | Every shared setting, for the co-op implementation: `Key`, `Read`, `Enforce`, `NeedsReload`.         |
 | `event Action? OnSessionChanged`                                | Somebody joined or left, or authority moved.                                                         |
 | `event Action? OnProviderChanged`                               | A co-op implementation registered or unregistered.                                                   |
 | `void RegisterProvider(ICoopProvider provider)`                 | Registers an implementation. One at a time, and a second replaces the first and warns.               |
@@ -240,7 +258,7 @@ level" is not one number and a difficulty curve built on it fits at most one of 
 
 The same surface `CoopAccess` exposes, which is what it forwards to: `IsMultiplayer`,
 `IsWorldAuthority`, `SessionSeed`, `IsReplicating`, `GetPlayers(List<CoopPlayer>)`,
-`TryGetPlayerActor(CoopPlayerId, out Actor)`, `IsRemotePlayer(Entity?)` and
+`TryGetPlayerActor(CoopPlayerId, out Actor?)`, `IsRemotePlayer(Entity?)` and
 `Supports(CoopCapability)`.
 
 ### `CoopRandom` (static)

@@ -14,10 +14,10 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
     /// </summary>
     internal static class NetworkDiagnostics
     {
-        private static readonly long[] _sentMessages = new long[Dispatcher.MaxMessageTypes];
-        private static readonly long[] _sentBytes = new long[Dispatcher.MaxMessageTypes];
-        private static readonly long[] _receivedMessages = new long[Dispatcher.MaxMessageTypes];
-        private static readonly long[] _receivedBytes = new long[Dispatcher.MaxMessageTypes];
+        private static readonly long[] SentMessagesById = new long[Dispatcher.MaxMessageTypes];
+        private static readonly long[] SentBytesById = new long[Dispatcher.MaxMessageTypes];
+        private static readonly long[] ReceivedMessagesById = new long[Dispatcher.MaxMessageTypes];
+        private static readonly long[] ReceivedBytesById = new long[Dispatcher.MaxMessageTypes];
 
         /// <summary>
         /// Relay packets that failed to decrypt. Either a password differing from the host's or a packet
@@ -47,6 +47,19 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         internal static long ReceiveFailures { get; private set; }
 
         /// <summary>
+        /// Sends dropped for being larger than a relay will forward. A relay drops these itself and counts
+        /// the sender as abusive, so catching them here is the only way the sender learns.
+        /// </summary>
+        internal static long OversizedSends { get; private set; }
+
+        /// <summary>
+        /// Sends made before a session existed, which do nothing. A steady count is a mod sending before
+        /// <see cref="Access.NetworkEvents.OnHostStarted"/> or
+        /// <see cref="Access.NetworkEvents.OnConnectedToHost"/> told it the session was up.
+        /// </summary>
+        internal static long SendsWithoutSession { get; private set; }
+
+        /// <summary>
         /// <see cref="Environment.TickCount64"/> at the last <see cref="Reset"/>, which is the point every
         /// counter above is measured from.
         /// </summary>
@@ -59,16 +72,18 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         /// </summary>
         internal static void Reset()
         {
-            Array.Clear(_sentMessages, 0, _sentMessages.Length);
-            Array.Clear(_sentBytes, 0, _sentBytes.Length);
-            Array.Clear(_receivedMessages, 0, _receivedMessages.Length);
-            Array.Clear(_receivedBytes, 0, _receivedBytes.Length);
+            Array.Clear(SentMessagesById, 0, SentMessagesById.Length);
+            Array.Clear(SentBytesById, 0, SentBytesById.Length);
+            Array.Clear(ReceivedMessagesById, 0, ReceivedMessagesById.Length);
+            Array.Clear(ReceivedBytesById, 0, ReceivedBytesById.Length);
 
             UndecryptablePackets = 0;
             RefusedMessages = 0;
             UnknownMessageIds = 0;
             MalformedPackets = 0;
             ReceiveFailures = 0;
+            OversizedSends = 0;
+            SendsWithoutSession = 0;
             CountingSinceMs = Environment.TickCount64;
         }
 
@@ -82,6 +97,10 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
 
         internal static void CountReceiveFailure() => ReceiveFailures++;
 
+        internal static void CountOversizedSend() => OversizedSends++;
+
+        internal static void CountSendWithoutSession() => SendsWithoutSession++;
+
         /// <summary>
         /// Records a typed message on its way out, sized as it serialized including its id. A send to
         /// every peer counts once, because that is how often it was built - what the fan-out costs on the
@@ -93,8 +112,8 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         {
             if (id >= Dispatcher.MaxMessageTypes) return;
 
-            _sentMessages[id]++;
-            _sentBytes[id] += bytes;
+            SentMessagesById[id]++;
+            SentBytesById[id] += bytes;
         }
 
         /// <summary>
@@ -108,16 +127,16 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         {
             if (id >= Dispatcher.MaxMessageTypes) return;
 
-            _receivedMessages[id]++;
-            _receivedBytes[id] += bytes;
+            ReceivedMessagesById[id]++;
+            ReceivedBytesById[id] += bytes;
         }
 
-        internal static long SentMessages(int id) => _sentMessages[id];
+        internal static long SentMessages(int id) => SentMessagesById[id];
 
-        internal static long SentBytes(int id) => _sentBytes[id];
+        internal static long SentBytes(int id) => SentBytesById[id];
 
-        internal static long ReceivedMessages(int id) => _receivedMessages[id];
+        internal static long ReceivedMessages(int id) => ReceivedMessagesById[id];
 
-        internal static long ReceivedBytes(int id) => _receivedBytes[id];
+        internal static long ReceivedBytes(int id) => ReceivedBytesById[id];
     }
 }

@@ -11,7 +11,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_UnEquipNodeEditor : DrawNodeEditor
     {
         private DS_UnEquipNode? _castedNode;
-        private EquipmentSlotType[] equipmentSlotTypes;
+        private EquipmentSlotType[] _equipmentSlotTypes = [];
         private readonly List<GUIDropdown> _equipmentSlotDropdowns = [];
 
         public DS_UnEquipNodeEditor()
@@ -22,12 +22,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_UnEquipNode>();
-            equipmentSlotTypes = Resources.FindObjectsOfTypeAll<EquipmentSlotType>();
+            if (_castedNode == null) return;
+            _equipmentSlotTypes = Resources.FindObjectsOfTypeAll<EquipmentSlotType>();
 
             for (int i = 0; i < _castedNode._slotTypes.Count; i++)
             {
                 EquipmentSlotType slotType = _castedNode._slotTypes[i];
-                _equipmentSlotDropdowns.Add(new GUIDropdown(equipmentSlotTypes.Select(e => e.name).ToArray(), Array.FindIndex(equipmentSlotTypes, (e) => e.GUID == slotType.GUID)));
+                _equipmentSlotDropdowns.Add(new GUIDropdown(_equipmentSlotTypes.Select(e => e.name).ToArray(), Array.FindIndex(_equipmentSlotTypes, (e) => e.GUID == slotType.GUID)));
             }
         }
 
@@ -57,14 +58,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
                 if (equipmentSlotDropdown.Draw(new Rect(position.x + 10, position.y + 20 + (20 * i), 200, 20)))
                 {
-                    _castedNode._slotTypes[i] = equipmentSlotTypes[equipmentSlotDropdown.SelectedIndex];
+                    _castedNode._slotTypes[i] = _equipmentSlotTypes[equipmentSlotDropdown.SelectedIndex];
                 }
             }
 
             if (GUI.Button(new Rect(position.x, position.y + 20 + (60 * _castedNode._slotTypes.Count), 120, 20), "Add Slot"))
             {
-                _castedNode._slotTypes.Add(equipmentSlotTypes[0]);
-                _equipmentSlotDropdowns.Add(new GUIDropdown(equipmentSlotTypes.Select(e => e.name).ToArray(), 0));
+                _castedNode._slotTypes.Add(_equipmentSlotTypes[0]);
+                _equipmentSlotDropdowns.Add(new GUIDropdown(_equipmentSlotTypes.Select(e => e.name).ToArray(), 0));
             }
 
             GUI.depth = previousDepth;

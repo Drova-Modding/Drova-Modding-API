@@ -310,10 +310,12 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             GUILayout.Label("Dropped");
 
             Field("undecryptable", NetworkDiagnostics.UndecryptablePackets.ToString("N0"));
-            Field("NaN or infinity", NetworkDiagnostics.RefusedMessages.ToString("N0"));
+            Field("refused value", NetworkDiagnostics.RefusedMessages.ToString("N0"));
             Field("unknown id", NetworkDiagnostics.UnknownMessageIds.ToString("N0"));
             Field("malformed", NetworkDiagnostics.MalformedPackets.ToString("N0"));
             Field("receive failures", NetworkDiagnostics.ReceiveFailures.ToString("N0"));
+            Field("oversized sends", NetworkDiagnostics.OversizedSends.ToString("N0"));
+            Field("sends with no session", NetworkDiagnostics.SendsWithoutSession.ToString("N0"));
         }
 
         [HideFromIl2Cpp]
@@ -537,8 +539,9 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             }
 
             MelonLogger.Msg($"[NetStats] dropped: undecryptable {NetworkDiagnostics.UndecryptablePackets}, " +
-                            $"NaN/infinity {NetworkDiagnostics.RefusedMessages}, unknown id {NetworkDiagnostics.UnknownMessageIds}, " +
-                            $"malformed {NetworkDiagnostics.MalformedPackets}, receive failures {NetworkDiagnostics.ReceiveFailures}");
+                            $"refused value {NetworkDiagnostics.RefusedMessages}, unknown id {NetworkDiagnostics.UnknownMessageIds}, " +
+                            $"malformed {NetworkDiagnostics.MalformedPackets}, receive failures {NetworkDiagnostics.ReceiveFailures}, " +
+                            $"oversized {NetworkDiagnostics.OversizedSends}, no session {NetworkDiagnostics.SendsWithoutSession}");
 
             for (int id = 0; id < Dispatcher.MaxMessageTypes; id++)
             {

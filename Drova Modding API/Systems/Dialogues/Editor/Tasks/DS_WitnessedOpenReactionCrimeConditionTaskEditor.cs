@@ -19,7 +19,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<DS_WitnessedOpenReactionCrimeConditionTask>();
             if (_castedTask == null) return;
 
-            _crimeTypeDropdown = new GUIDropdown(System.Enum.GetNames<CrimeType>(), (int)_castedTask.CrimeType);
+            _crimeTypeDropdown = new GUIDropdown(Enum.GetNames<CrimeType>(), (int)_castedTask.CrimeType);
         }
 
         /// <inheritdoc />

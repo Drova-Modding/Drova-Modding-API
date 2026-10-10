@@ -123,7 +123,7 @@ namespace Drova_Modding_API.Systems.Audio
         {
             if (_registeredSources.Count == 0) return;
             ApplyConfiguredSettings();
-            if (!PlayerAccess.TryGetPlayer(out Il2CppDrova.Actor player)) return;
+            if (!PlayerAccess.TryGetPlayer(out Il2CppDrova.Actor? player)) return;
             Vector2 playerPos = player.transform.position;
 
             for (int i = _registeredSources.Count - 1; i >= 0; i--)
@@ -143,7 +143,7 @@ namespace Drova_Modding_API.Systems.Audio
                     {
                         reasons.Add("actor Transform is null");
                     }
-                    AudioLog.Msg($"Unregistering dialogue audio source for actor {actorTransform?.name ?? "<unknown>"}: {string.Join(", ", reasons)}");
+                    AudioLog.Msg($"Unregistering dialogue audio source for actor {(actorTransform == null ? "<unknown>" : actorTransform.name)}: {string.Join(", ", reasons)}");
                     _registeredSources.RemoveAt(i);
                     continue;
                 }

@@ -98,8 +98,8 @@ SaveGameSystem.AfterSaveGameLoaded  += save => { /* stores are populated; safe t
 ### Look up a store later
 
 ```csharp
-IStore<int>  byType = SaveGameSystem.Instance.GetStore<int>();
-IStorable    byKey  = SaveGameSystem.Instance.GetStore("MyMod_HighScores");
+IStore<int>? byType = SaveGameSystem.Instance.GetStore<int>();
+IStorable?   byKey  = SaveGameSystem.Instance.GetStore("MyMod_HighScores");
 ```
 
 ## Worked reference: how lazy actors persist
@@ -117,8 +117,8 @@ actors. So "persistent custom NPCs" is just this save system applied to actor me
 | Member                                               | Description                                                       |
 |------------------------------------------------------|-------------------------------------------------------------------|
 | `void AddStore(IStorable store)`                     | Register a store. Do this once, early (e.g. `OnInitializeMelon`). |
-| `IStore<T> GetStore<T>()`                            | Get a registered store by its element type.                       |
-| `IStorable GetStore(string saveGameKey)`             | Get a registered store by its key.                                |
+| `IStore<T>? GetStore<T>()`                           | Get a registered store by its element type, or null.              |
+| `IStorable? GetStore(string saveGameKey)`            | Get a registered store by its key, or null.                       |
 | `static event SaveGameDelegate BeforeSaveGameSaving` | Fired before a save is written.                                   |
 | `static event SaveGameDelegate BeforeSaveGameLoaded` | Fired before a save is loaded.                                    |
 | `static event SaveGameDelegate AfterSaveGameLoaded`  | Fired after a save is loaded (stores populated).                  |

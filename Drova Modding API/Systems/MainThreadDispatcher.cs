@@ -14,7 +14,7 @@ namespace Drova_Modding_API.Systems
     public static class MainThreadDispatcher
     {
         private static int _mainThreadId = -1;
-        private static readonly ConcurrentQueue<Action> _queue = new();
+        private static readonly ConcurrentQueue<Action> PendingActions = new();
 
         /// <summary>
         /// How long <see cref="WaitForTasks"/> pumps before giving up, so a task that never
@@ -38,7 +38,7 @@ namespace Drova_Modding_API.Systems
         /// <param name="action">The action to run on the main thread</param>
         public static void Enqueue(Action action)
         {
-            _queue.Enqueue(action);
+            PendingActions.Enqueue(action);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Drova_Modding_API.Systems
                 }
             }
             TaskCompletionSource<T> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            _queue.Enqueue(() =>
+            PendingActions.Enqueue(() =>
             {
                 try
                 {
@@ -111,7 +111,7 @@ namespace Drova_Modding_API.Systems
 
         internal static void Drain()
         {
-            while (_queue.TryDequeue(out Action action))
+            while (PendingActions.TryDequeue(out Action action))
             {
                 try
                 {

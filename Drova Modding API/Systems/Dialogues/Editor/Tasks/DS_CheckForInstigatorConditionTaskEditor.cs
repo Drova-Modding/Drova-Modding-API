@@ -21,9 +21,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<DS_CheckForInstigatorConditionTask>();
             if (_castedTask == null) return;
 
-            _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>();
+            EntityInfo[] entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>();
+            _entityInfos = entityInfos;
             List<string> list = new();
-            foreach (EntityInfo e in _entityInfos)
+            foreach (EntityInfo e in entityInfos)
             {
                 list.Add(e.name);
             }

@@ -11,7 +11,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_SetGBoolNodeEditor : DrawNodeEditor
     {
         private DS_SetGBoolNode? _castedNode;
-        private GUIGvarSelectionEditor _gvarSelectionEditor;
+        private GUIGvarSelectionEditor _gvarSelectionEditor = null!;
 
         public DS_SetGBoolNodeEditor()
         {
@@ -51,7 +51,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.color = Color.white;
             GUI.depth = 10;
             Rect gvarDropdownRect = new(position.x, position.y + 40, 220, 20);
-            if (_gvarSelectionEditor.DrawGvarEditor(new(position.x, position.y + 20, 220, 20), gvarDropdownRect))
+            if (_gvarSelectionEditor.DrawGvarEditor(new(position.x, position.y + 20, 220, 20), gvarDropdownRect) && _gvarSelectionEditor.CurrentSelectedGvar != null)
             {
                 _castedNode.Variable = _gvarSelectionEditor.CurrentSelectedGvar.TryCast<GBool>();
             }

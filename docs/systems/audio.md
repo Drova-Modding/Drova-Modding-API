@@ -65,6 +65,14 @@ built from the node's own actor either way, so the second probe cannot cross-mat
 Practically: put a clip in whichever bundle its voice belongs to, keep the key unchanged, and the
 provider finds it.
 
+## Bundles grouped by voice, not actor
+
+Ship the `<bundle>.manifest` files Unity writes next to each bundle. At startup the provider reads
+their asset lists into a clip → bundle index and looks every key up there first, so a clip is found
+whatever bundle holds it. This matters when the game renames an NPC: the tree's actor slot says
+`Idefix`, the speaker is `Venia`, and the clips sit in the `idefix` bundle. Without manifests the
+provider falls back to probing the actor's bundle and `narrator`.
+
 ## How do I…?
 
 #### Keep bundle loading off the main thread

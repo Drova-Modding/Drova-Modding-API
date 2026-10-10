@@ -1,4 +1,4 @@
-using Drova_Modding_API.Systems.SaveGame;
+using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Systems.SaveGame.Store;
 using Il2CppDrova;
 using Il2CppDrova.Utilities.LazyLoading;
@@ -168,9 +168,15 @@ namespace Drova_Modding_API.Systems.Spawning
         }
 
         /// <summary>
+        /// Whether a lazy actor was placed from a JSON definition, which every game with the same files places itself.
+        /// </summary>
+        public static bool IsPlaced(LazyActor? lazyActor)
+            => lazyActor != null && SpawnedLazyActorsByDefinitionId.Values.Any(placed => placed == lazyActor);
+
+        /// <summary>
         /// Tries to resolve the runtime <see cref="Actor"/> instance for a spawned definition id.
         /// </summary>
-        public static bool TryGetSpawnedActor(string? definitionId, out Actor? actor)
+        public static bool TryGetSpawnedActor(string? definitionId, [NotNullWhen(true)] out Actor? actor)
         {
             actor = null;
             if (string.IsNullOrWhiteSpace(definitionId))
@@ -198,7 +204,7 @@ namespace Drova_Modding_API.Systems.Spawning
             UnityEngine.Object.Destroy(lazyActor.gameObject);
             SpawnedLazyActorsByDefinitionId.Remove(definitionId);
 
-            IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            IStore<LazyActorSaveData> lazyActorStore = SystemInit.LazyActors;
             LazyActorSaveData[] matchingEntries = lazyActorStore
                 .GetAll()
                 .Where(saved =>
@@ -222,7 +228,7 @@ namespace Drova_Modding_API.Systems.Spawning
         internal static void HydrationRebuildSpawnedActorsFromStore()
         {
             SpawnedLazyActorsByDefinitionId.Clear();
-            IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            IStore<LazyActorSaveData> lazyActorStore = SystemInit.LazyActors;
 
             LazyActor[] allLazyActors = UnityEngine.Object.FindObjectsOfType<LazyActor>();
             Dictionary<string, LazyActor> lazyByGuid = new(StringComparer.OrdinalIgnoreCase);
@@ -248,7 +254,7 @@ namespace Drova_Modding_API.Systems.Spawning
         /// <summary>
         /// Searches all <c>*.json</c> files in the placement folder for a definition with the given id.
         /// </summary>
-        public static bool TryGetDefinition(string definitionId, out ExternalNpcDefinition? definition)
+        public static bool TryGetDefinition(string definitionId, [NotNullWhen(true)] out ExternalNpcDefinition? definition)
         {
             definition = null;
             if (string.IsNullOrWhiteSpace(definitionId))

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        Drives real Drova instances through a scenario file and checks what each world ends up holding.
+        Any mod can use it: the instances run the API's TestAgent (started by the agent-port launch argument), each with its
+        own save profile (the profile launch argument), and a mod adds its own commands with TestAgent.RegisterCommand.
+        No game references: it launches Drova.exe and talks plain text to the agents.
+    -->
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>annotations</Nullable>
+        <LangVersion>12</LangVersion>
+        <IsPackable>false</IsPackable>
+        <RootNamespace>Drova.TestRunner</RootNamespace>
+        <AssemblyName>Drova.TestRunner</AssemblyName>
+    </PropertyGroup>
+
+</Project>

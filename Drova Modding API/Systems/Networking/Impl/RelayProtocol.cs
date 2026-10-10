@@ -78,6 +78,14 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal const int MaxSessionCodeLength = 16;
 
         /// <summary>
+        /// Largest framed packet a relay forwards, mirroring the server's default
+        /// <c>RelayConfig.MaxPayloadBytes</c>. An operator can raise or lower it and the game side has no
+        /// way to be told, so this is treated as the contract: anything over it is dropped here, where the
+        /// sender can be told, rather than at the relay, where it is counted as abuse and nobody hears.
+        /// </summary>
+        internal const int MaxPayloadBytes = 1200;
+
+        /// <summary>
         /// Host to relay: drop the client whose virtual id follows.
         /// </summary>
         internal const byte ControlKickPeer = 1;
@@ -146,6 +154,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 8 => ConnectionRejection.RateLimited,
                 9 => ConnectionRejection.TooManySessions,
                 10 => ConnectionRejection.TooManyAttempts,
+                11 => ConnectionRejection.TooManyClients,
+                12 => ConnectionRejection.PasswordNotRequired,
                 _ => ConnectionRejection.Unspecified,
             };
         }

@@ -25,23 +25,28 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<DS_JudgeCanAtoneCrimeConditionTask>();
             if (_castedTask == null) return;
 
-            _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
-            _factions = Resources.FindObjectsOfTypeAll<Faction>();
+            SubDatabase_Item? itemDatabase = ProviderAccess.ItemDatabase;
+            Item[] items = itemDatabase != null ? itemDatabase.GetItems().ToArray() : [];
+            Faction[] factions = Resources.FindObjectsOfTypeAll<Faction>();
+            _items = items;
+            _factions = factions;
 
             int selectedItemIndex = -1;
-            if (_castedTask.Payment != null)
+            Item payment = _castedTask.Payment;
+            if (payment != null)
             {
-                selectedItemIndex = Array.FindIndex(_items, (item) => item.Guid == _castedTask.Payment.Guid);
+                selectedItemIndex = Array.FindIndex(items, (item) => item.Guid == payment.Guid);
             }
 
             int selectedFactionIndex = -1;
-            if (_castedTask.Faction != null)
+            Faction faction = _castedTask.Faction;
+            if (faction != null)
             {
-                selectedFactionIndex = Array.FindIndex(_factions, (faction) => faction.GUID == _castedTask.Faction.GUID);
+                selectedFactionIndex = Array.FindIndex(factions, (candidate) => candidate.GUID == faction.GUID);
             }
 
-            _itemDropdown = new GUIDropdownWithFilter(_items.Select((item) => item.ReadableId).ToArray(), selectedItemIndex, 20);
-            _factionDropdown = new GUIDropdownWithFilter(_factions.Select((faction) => faction.name).ToArray(), selectedFactionIndex, 20);
+            _itemDropdown = new GUIDropdownWithFilter(items.Select((item) => item.ReadableId).ToArray(), selectedItemIndex, 20);
+            _factionDropdown = new GUIDropdownWithFilter(factions.Select((candidate) => candidate.name).ToArray(), selectedFactionIndex, 20);
         }
 
         /// <inheritdoc />

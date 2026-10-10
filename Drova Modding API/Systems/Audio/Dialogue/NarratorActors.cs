@@ -15,7 +15,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         public const string NARRATOR = "Narrator";
 
         // Actor parameter names the game authors narration under. 
-        private static readonly HashSet<string> _narratorActors = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> NarratorActorNames = new(StringComparer.OrdinalIgnoreCase)
         {
             "Actor",
             "Aldo_Corpse",
@@ -77,7 +77,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         /// <param name="actorName">Actor name of the node, may be null</param>
         public static bool IsNarratorActor(string? actorName)
         {
-            return actorName != null && _narratorActors.Contains(actorName);
+            return actorName != null && NarratorActorNames.Contains(actorName);
         }
 
         /// <summary>

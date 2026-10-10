@@ -16,7 +16,7 @@ using Drova_Modding_API.Systems.Networking.Diagnostics;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.6.0", "Drova Modding", null)]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.6.0", "Drova Modding")]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 3, true)]
 [assembly: MelonPriority(-1)]
@@ -49,6 +49,7 @@ namespace Drova_Modding_API
 #endif
             SystemInit.RegisterStores();
             GameEvents.Initialize(HarmonyInstance);
+            Systems.Testing.TestAgent.Initialize(HarmonyInstance);
             LoggerInstance.Msg("Initialized Modding API.");
             OptionMenuAccess.Instance.OnOptionMenuClose += () =>
             {
@@ -66,6 +67,7 @@ namespace Drova_Modding_API
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
             base.OnSceneWasLoaded(buildIndex, sceneName);
+            Systems.Testing.TestAgent.OnSceneLoaded(sceneName);
 
             // Streamed chunk scenes load continuously while the player travels; this must stay
             // cheap for scenes nobody registered for (one dictionary lookup).
@@ -93,9 +95,9 @@ namespace Drova_Modding_API
                     Application.SetStackTraceLogType(LogType.Error, StackTraceLogType.Full);
                     _registeredLogCallback = true;
                 }
-                ProviderAccess.GetCheatGameHandler()?.EnableCheatMode(true);
+                Il2CppDrova.CheatGameHandler? cheats = ProviderAccess.GetCheatGameHandler();
+                if (cheats != null) cheats.EnableCheatMode(true);
                 MainMenuModdingUI.Init();
-                //_ttsFile.CreateDialogueFile();
 #endif
                 InputActionRegister.Instance.DisableGameplayActions();
                 InMainMenu = true;
@@ -118,10 +120,6 @@ namespace Drova_Modding_API
             }
 
             CheatMenuAccess.NotifySceneLoaded();
-            // if (sceneName == SceneNames.AILogic)
-            // {
-            //     _ttsFile.GenerateWorldDialogues();
-            // }
         }
 
         /// <inheritdoc/>
@@ -151,6 +149,7 @@ namespace Drova_Modding_API
             base.OnUpdate();
             MainThreadDispatcher.Drain();
             NetworkSystem.Poll();
+            Systems.Testing.TestAgent.Update();
 #if DEBUG
             if (_consoleAction.WasReleasedThisFrame())
             {

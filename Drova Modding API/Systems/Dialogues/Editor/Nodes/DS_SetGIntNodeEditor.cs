@@ -13,9 +13,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
 
         private DS_SetGIntNode? _castedNode;
-        private GUIDropdown _operatorDropdown;
-        private GUIGvarSelectionEditor _gvarSelectionEditor;
-        private GUIGvarSelectionEditor _valueSelectionEditor;
+        private GUIDropdown _operatorDropdown = null!;
+        private GUIGvarSelectionEditor _gvarSelectionEditor = null!;
+        private GUIGvarSelectionEditor? _valueSelectionEditor;
 
         public DS_SetGIntNodeEditor()
         {
@@ -101,7 +101,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     InitValueSelectionEditor();
                 }
 
-                if (_valueSelectionEditor != null && _valueSelectionEditor.DrawGvarEditor(new Rect(position.x, position.y + 60, 220, 20), new Rect(position.x, position.y + 80, 220, 20)))
+                if (_valueSelectionEditor != null && _valueSelectionEditor.DrawGvarEditor(new Rect(position.x, position.y + 60, 220, 20), new Rect(position.x, position.y + 80, 220, 20)) && _valueSelectionEditor.CurrentSelectedGvar != null)
                 {
                     _castedNode.GIntValue = _valueSelectionEditor.CurrentSelectedGvar.TryCast<GInt>();
                 }
@@ -122,7 +122,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             }
             Rect gvarDropdownRect = new(position.x, position.y + 40, 220, 20);
-            if (_gvarSelectionEditor.DrawGvarEditor(new Rect(position.x, position.y + 20, 220, 20), gvarDropdownRect))
+            if (_gvarSelectionEditor.DrawGvarEditor(new Rect(position.x, position.y + 20, 220, 20), gvarDropdownRect) && _gvarSelectionEditor.CurrentSelectedGvar != null)
             {
                 _castedNode.Variable = _gvarSelectionEditor.CurrentSelectedGvar.TryCast<GInt>();
             }

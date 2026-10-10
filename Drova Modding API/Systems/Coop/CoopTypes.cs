@@ -1,19 +1,16 @@
+using System.Diagnostics.CodeAnalysis;
 using Il2CppDrova;
 
 namespace Drova_Modding_API.Systems.Coop
 {
     /// <summary>
-    /// What a mod has decided about its own behavior in a shared world.
-    ///
-    /// **Declared rather than inferred**, because no amount of inspection can tell whether a mod that
-    /// spawns a bear meant one bear in the world or one bear per player. Only the author knows, and a mod
-    /// that has never thought about it should read as exactly that rather than as either answer.
+    /// What a mod has decided about its own behavior in a shared world. Declared, because only the author knows
+    /// whether a spawned bear means one bear in the world or one per player.
     /// </summary>
     public enum CoopBehavior
     {
         /// <summary>
-        /// Nobody has said. The default, and deliberately the zero value so that "never declared" is a
-        /// state the API can see rather than a state indistinguishable from a choice.
+        /// Nobody has said. The zero value, so "never declared" is distinguishable from a choice.
         /// </summary>
         Unreviewed = 0,
 
@@ -39,10 +36,7 @@ namespace Drova_Modding_API.Systems.Coop
 
     /// <summary>
     /// Something a co-op implementation may or may not keep in step between machines.
-    ///
-    /// **A queryable frontier rather than folklore.** What a co-op mod synchronizes changes release by
-    /// release, and a mod that guesses is either needlessly disabled or quietly broken. Asking means a mod
-    /// can say "I need spawned creatures to be shared, and they are not, so I will not roll one".
+    /// Ask with <see cref="Access.CoopAccess.Supports"/> instead of guessing what a release synchronizes.
     /// </summary>
     public enum CoopCapability
     {
@@ -72,10 +66,7 @@ namespace Drova_Modding_API.Systems.Coop
 
         /// <summary>
         /// Experience from a kill reaches every player, not only whoever landed the blow.
-        ///
-        /// Worth asking before scaling anything by player level. With this unsupported, the players in a
-        /// session drift apart in level for as long as they play, so "the player's level" is not one number
-        /// and a difficulty curve built on it fits at most one of them.
+        /// Without it the players' levels drift apart, so ask before scaling anything by player level.
         /// </summary>
         Experience,
     }
@@ -121,6 +112,15 @@ namespace Drova_Modding_API.Systems.Coop
     }
 
     /// <summary>
+    /// A mod setting whose host value wins while a session is live. See <see cref="Access.CoopAccess.ShareHostSetting"/>.
+    /// </summary>
+    /// <param name="Key">Unique across mods, e.g. <c>"InsaneMonsters.SpawnGroups"</c>.</param>
+    /// <param name="Read">The value in effect on this machine.</param>
+    /// <param name="Enforce">Makes the host's value the one in effect; <c>null</c> drops that override again.</param>
+    /// <param name="NeedsReload">Whether a value only takes effect when a savegame loads.</param>
+    public sealed record HostSetting(string Key, Func<string> Read, Action<string?> Enforce, bool NeedsReload);
+
+    /// <summary>
     /// One player in the session, as much of them as a mod has any business knowing.
     /// </summary>
     public readonly struct CoopPlayer
@@ -155,8 +155,7 @@ namespace Drova_Modding_API.Systems.Coop
         public bool IsAuthority { get; }
 
         /// <summary>
-        /// Their character level, or zero when it is not known. **Zero is not level zero.** It means the
-        /// answer has not arrived, which is a real state for a player who has just joined.
+        /// Their character level, or zero while it is not known yet (a player who has just joined).
         /// </summary>
         public int Level { get; }
     }
@@ -164,10 +163,6 @@ namespace Drova_Modding_API.Systems.Coop
     /// <summary>
     /// What a co-op implementation registers with <see cref="Access.CoopAccess"/> so that mods can ask
     /// about the session without depending on it.
-    ///
-    /// **The direction matters.** The API ships to everybody and cannot reference a co-op mod, while a
-    /// co-op mod already references the API. So the seam faces this way, and a mod that wants to know
-    /// whether it is the authority asks the API, which asks whoever answered.
     /// </summary>
     public interface ICoopProvider
     {
@@ -196,14 +191,11 @@ namespace Drova_Modding_API.Systems.Coop
         /// <param name="id">Which player.</param>
         /// <param name="actor">Their body, when one exists on this machine.</param>
         /// <returns>False when that player has no body here yet.</returns>
-        bool TryGetPlayerActor(CoopPlayerId id, out Actor actor);
+        bool TryGetPlayerActor(CoopPlayerId id, [NotNullWhen(true)] out Actor? actor);
 
         /// <summary>
         /// Whether this entity is a body being shown for somebody playing elsewhere.
-        ///
-        /// **Worth asking before almost anything.** Such a body is a clone of the player prefab, so it
-        /// answers yes to most of the game's own "is this the player" tests while being driven entirely
-        /// from the wire, so a mod that treats it as the player acts on a character it does not own.
+        /// Such a body is a clone of the player prefab, so most of the game's "is this the player" tests answer yes.
         /// </summary>
         /// <param name="entity">What to ask about. Can be null.</param>
         /// <returns>True when this is somebody else's body.</returns>
@@ -211,10 +203,6 @@ namespace Drova_Modding_API.Systems.Coop
 
         /// <summary>
         /// Whether this machine is currently applying a change that arrived from elsewhere.
-        ///
-        /// A mod that hooks the game to observe changes should do nothing while this is true, or it will
-        /// react to a replicated change as though the local game had made it, and if it reports what it
-        /// sees, hand it straight back.
         /// </summary>
         bool IsReplicating { get; }
 

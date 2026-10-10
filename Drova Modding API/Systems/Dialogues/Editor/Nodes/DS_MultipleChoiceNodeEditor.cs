@@ -24,6 +24,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_MultipleChoiceNode>();
+            if (_castedNode == null) return;
             if (_castedNode.availableChoices != null)
             {
                 for (int i = 0; i < _castedNode.availableChoices.Count; i++)
@@ -31,8 +32,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
                     if (choice.condition != null)
                     {
-                        DrawTaskEditor taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(choice.condition.GetIl2CppType());
-                        taskEditor!.Task = choice.condition;
+                        DrawTaskEditor? taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(choice.condition.GetIl2CppType());
+                        if (taskEditor == null) continue;
+
+                        taskEditor.Task = choice.condition;
                         taskEditor.GraphEditorManager = GraphEditorManager;
                         taskEditor.Init();
                         _choices.TryAdd(i, taskEditor);
@@ -55,15 +58,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             // Pre-calculate total height using cached DrawTask heights from the previous frame
             // Per choice: 20 (header) + 35 (UID) + 25 (loca choice) + 35 (loca) + 35 (statement) + 25 (end node) + 25 (condition buttons) + 10 (gap) = 210 base
-            int additionalHeight = 20; // top padding
+            int additionalHeight = 20;
             for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
                 additionalHeight += 210;
                 if (_taskHeights.TryGetValue(i, out float cachedHeight))
                     additionalHeight += (int)cachedHeight + 10;
             }
-            additionalHeight += 25; // Add Choice button
-            additionalHeight += 30; // Tag row + bottom padding
+            // Add Choice button, then the tag row and bottom padding.
+            additionalHeight += 25;
+            additionalHeight += 30;
 
             GUI.color = Color.white;
             NodeSizeInternal = new Vector2(350, additionalHeight);
@@ -86,7 +90,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 GUI.Box(new Rect(position.x + 5, position.y + step, 340, choiceBoxHeight),
                     new GUIContent($"Choice {i}:", _castedNode.GetLocalizedString(choice.statement)),
                     EditorBoxStyles.Choice);
-                step += 20; // space for "Choice i:" header label
+                step += 20;
 
                 GUI.Label(new Rect(position.x + 5, position.y + step, 100, 20), "UID:");
                 choice.UID = GUI.TextField(new Rect(position.x + 110, position.y + step, 200, 20), choice.UID);
@@ -131,11 +135,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                         {
                             GraphEditorManager.DialogueTree!.allTasks.Add(newTask);
                             choice.condition = newTask;
-                            DrawTaskEditor taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(newTask.GetIl2CppType());
-                            taskEditor!.Task = newTask;
-                            taskEditor.GraphEditorManager = GraphEditorManager;
-                            taskEditor.Init();
-                            _choices[i] = taskEditor;
+                            DrawTaskEditor? taskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(newTask.GetIl2CppType());
+                            if (taskEditor != null)
+                            {
+                                taskEditor.Task = newTask;
+                                taskEditor.GraphEditorManager = GraphEditorManager;
+                                taskEditor.Init();
+                                _choices[i] = taskEditor;
+                            }
                             _choiceIndexRequestingCondition = -1;
                         }
                     }
@@ -160,13 +167,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 if (_choices.TryGetValue(i, out DrawTaskEditor editor))
                 {
                     Rect size = editor.DrawTask(new Vector2(position.x + 5, position.y + step));
-                    _taskHeights[i] = size.height; // cache for next frame's height calculation
+                    _taskHeights[i] = size.height;
                     step += (int)size.height + 10;
                 }
 
                 // Ensure value-type choices persist modified primitive fields like isEndNode.
                 _castedNode.availableChoices[i] = choice;
-                step += 10; // gap between choices
+                step += 10;
             }
 
             if (_choiceIndexRequestingDelete >= 0)

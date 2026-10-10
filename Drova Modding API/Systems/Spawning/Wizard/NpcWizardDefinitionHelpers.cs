@@ -12,7 +12,7 @@ internal static class NpcWizardDefinitionHelpers
     internal static ExternalNpcPlacementSystem.ExternalNpcDefinition CreateDefaultDefinitionAtPlayerPosition()
     {
         ExternalNpcPlacementSystem.ExternalNpcDefinition definition = ExternalNpcPlacementSystem.CreateDefaultDefinition();
-        if (PlayerAccess.TryGetPlayer(out Actor player) && player != null)
+        if (PlayerAccess.TryGetPlayer(out Actor? player))
         {
             Vector3 playerPosition = player.transform.position;
             definition.PositionX = playerPosition.x;
@@ -24,7 +24,7 @@ internal static class NpcWizardDefinitionHelpers
 
     internal static bool TryTeleportPlayerToDefinition(ExternalNpcPlacementSystem.ExternalNpcDefinition definition)
     {
-        if (!PlayerAccess.TryGetPlayer(out Actor player) || player == null)
+        if (!PlayerAccess.TryGetPlayer(out Actor? player))
             return false;
 
         Vector3 current = player.transform.position;

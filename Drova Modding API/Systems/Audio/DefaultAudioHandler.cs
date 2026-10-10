@@ -13,14 +13,27 @@ namespace Drova_Modding_API.Systems.Audio
     /// </summary>
     internal class DefaultAudioHandler : IAudioHandler
     {
-        private object _firstCoroutine;
-        private object _secondCoroutine;
+        private object? _firstCoroutine;
+        private object? _secondCoroutine;
+        // The text the running TypeText reveals. A line clicked through or followed by the next request stops that coroutine
+        // before it ends, and would stay cut off mid-word while its audio plays on, so the stopped line is shown in full.
+        private TextMeshProUGUI? _typing;
+
+        /// <summary>
+        /// Shows the line still being typed in full: clicking through it moves the dialogue on to the answers.
+        /// </summary>
         public void HandleMultipleChoiceRequest(MultipleChoiceRequestInfo info, DS_DialogueUGUI dialogueUGUI)
         {
-            //info.
+            StopTyping();
         }
 
         public void HandleSubtitleRequest(SubtitlesRequestInfo info, DS_DialogueUGUI dialogueUGUI)
+        {
+            StopTyping();
+            _firstCoroutine = MelonCoroutines.Start(WaitForWindowAndSetup(info, dialogueUGUI));
+        }
+
+        private void StopTyping()
         {
             if (_firstCoroutine != null)
             {
@@ -30,8 +43,11 @@ namespace Drova_Modding_API.Systems.Audio
             {
                 MelonCoroutines.Stop(_secondCoroutine);
             }
-            //AudioLog.Msg($"Handling subtitle request for: {info.actor.name}");
-            _firstCoroutine = MelonCoroutines.Start(WaitForWindowAndSetup(info, dialogueUGUI));
+            if (_typing)
+            {
+                _typing!.maxVisibleCharacters = 99999;
+            }
+            _typing = null;
         }
 
         /// <summary>
@@ -39,7 +55,6 @@ namespace Drova_Modding_API.Systems.Audio
         /// </summary>
         /// <param name="info">The info to set</param>
         /// <param name="dialogueUGUI">The instance of the dialouge GUI</param>
-        /// <returns></returns>
         private IEnumerator WaitForWindowAndSetup(SubtitlesRequestInfo info, DS_DialogueUGUI dialogueUGUI)
         {
             string text = info.statement.text;
@@ -64,13 +79,14 @@ namespace Drova_Modding_API.Systems.Audio
             actorSpeech.maxVisibleCharacters = 0;
             try
             {
-                actorSpeech.ForceMeshUpdate(false, false);
+                actorSpeech.ForceMeshUpdate();
             }
             catch (Exception e)
             {
                 AudioLog.Warning("ForceMeshUpdate failed during setup for text: {0} - {1}", text, e.Message);
             }
             float audioLength = info.statement.audio.length;
+            _typing = actorSpeech;
             _secondCoroutine = MelonCoroutines.Start(TypeText(dialogueUGUI, text, audioLength));
         }
 
@@ -80,7 +96,6 @@ namespace Drova_Modding_API.Systems.Audio
         /// <param name="dialogueUGUI">The instance of the dialogue GUI</param>
         /// <param name="text">The text to type</param>
         /// <param name="audioLength">The length of the audio clip</param>
-        /// <returns></returns>
         private static IEnumerator TypeText(DS_DialogueUGUI dialogueUGUI, string text, float audioLength)
         {
             Il2CppDrova.GUI.Dialogue.DS_DialogueWindow currentWindow = dialogueUGUI._windowMgr.GetCurrentWindow();
@@ -102,7 +117,7 @@ namespace Drova_Modding_API.Systems.Audio
                     {
                         actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);
                     }
-                    actorSpeech.ForceMeshUpdate(false, false);
+                    actorSpeech.ForceMeshUpdate();
                 }
                 catch (Exception)
                 {
@@ -111,14 +126,14 @@ namespace Drova_Modding_API.Systems.Audio
                     if (currentWindow == null)
                     {
                         AudioLog.Warning("Window empty for text: {0}", text);
-                        break;
+                        yield break;
                     }
                     actorSpeech = currentWindow.SubtitlesGroup.ActorSpeech;
                     actorSpeech.text = dialogueUGUI._textHandler.GetTextWithoutOptionTags(text);
                     actorSpeech.maxVisibleCharacters = Mathf.Clamp(visibleCharacters, 0, totalCharacters);
                     try
                     {
-                        actorSpeech.ForceMeshUpdate(false, false);
+                        actorSpeech.ForceMeshUpdate();
                     }
                     catch (Exception innerEx)
                     {
@@ -132,7 +147,7 @@ namespace Drova_Modding_API.Systems.Audio
             actorSpeech.maxVisibleCharacters = totalCharacters;
             try
             {
-                actorSpeech.ForceMeshUpdate(false, false);
+                actorSpeech.ForceMeshUpdate();
             }
             catch (Exception e)
             {

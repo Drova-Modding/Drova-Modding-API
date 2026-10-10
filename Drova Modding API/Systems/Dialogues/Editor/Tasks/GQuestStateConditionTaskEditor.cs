@@ -12,10 +12,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 {
     /// <summary>
     /// Editor for GQuestStateConditionTask.
-    /// Comparison field is a BBParameter&lt;AGEnum&lt;QuestState&gt;.Comparer&gt; — Il2CppInterop
-    /// fails to initialise the class pointer for this nested-in-generic enum, so we go through
-    /// Il2CppSystem reflection and the non-generic <see cref="BBParameter"/> base instead of
-    /// referencing the typed wrapper directly.
+    /// Comparison is a BBParameter&lt;AGEnum&lt;QuestState&gt;.Comparer&gt;. Il2CppInterop fails to
+    /// initialize the class pointer for this nested-in-generic enum, so it is read through
+    /// Il2CppSystem reflection and the non-generic <see cref="BBParameter"/> base.
     /// </summary>
     public class GQuestStateConditionTaskEditor : DrawTaskEditor
     {
@@ -23,23 +22,24 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         private readonly List<GUIGvarSelectionEditor> _gvarSelectionEditors = [];
         private readonly List<GUIDropdown> _comparisionDropdowns = [];
         private readonly List<GUIDropdown> _valueDropdown = [];
-        private readonly List<BBParameter> _comparisonParams = [];
+        private readonly List<BBParameter?> _comparisonParams = [];
 
         private static Il2CppSystem.Reflection.FieldInfo? _comparisonField;
-        private static Il2CppSystem.Reflection.FieldInfo ComparisonField =>
+        private static Il2CppSystem.Reflection.FieldInfo? ComparisonField =>
             _comparisonField ??= Il2CppType.Of<GraphGQuestCompService>().GetField("Comparison",
                 Il2CppSystem.Reflection.BindingFlags.Instance |
                 Il2CppSystem.Reflection.BindingFlags.Public |
                 Il2CppSystem.Reflection.BindingFlags.NonPublic);
 
-        private static BBParameter ReadComparison(GraphGQuestCompService condition)
+        private static BBParameter? ReadComparison(GraphGQuestCompService condition)
         {
-            if (ComparisonField == null) return null;
-            Il2CppSystem.Object boxed = ComparisonField.GetValue(condition);
+            Il2CppSystem.Reflection.FieldInfo? field = ComparisonField;
+            if (field == null) return null;
+            Il2CppSystem.Object? boxed = field.GetValue(condition);
             return boxed?.Cast<BBParameter>();
         }
 
-        private static (string[] names, int index) ReadEnumState(BBParameter param)
+        private static (string[] names, int index) ReadEnumState(BBParameter? param)
         {
             if (param == null || param.varType == null) return ([], -1);
             Il2CppStringArray il2cppNames = Il2CppSystem.Enum.GetNames(param.varType);
@@ -53,17 +53,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         public override void Init()
         {
             _castedTask ??= Task.TryCast<GQuestStateConditionTask>();
+            if (_castedTask == null) return;
+
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
                 GraphGQuestCompService condition = _castedTask.Conditions[i];
-                _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, condition.Variable?.GetValue().GetParent().name, false, condition.Variable?.GetValue()));
+                _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, null, false, condition.Variable?.GetValue()));
 
-                BBParameter bbComparison = ReadComparison(condition);
+                BBParameter? bbComparison = ReadComparison(condition);
                 _comparisonParams.Add(bbComparison);
                 (string[] comparerNames, int comparerIndex) = ReadEnumState(bbComparison);
                 _comparisionDropdowns.Add(new GUIDropdown(comparerNames, comparerIndex));
 
-                int valueIndex = condition.Value != null ? (int)condition.Value?.GetValue() : -1;
+                int valueIndex = condition.Value != null ? (int)condition.Value.GetValue() : -1;
                 _valueDropdown.Add(new GUIDropdown(Enum.GetNames<QuestState>(), valueIndex));
             }
         }
@@ -93,9 +95,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             {
                 GraphGQuestCompService condition = _castedTask.Conditions[i];
                 GUIGvarSelectionEditor gvarEditor = _gvarSelectionEditors[i];
-                var comparerDropdown = _comparisionDropdowns[i];
+                GUIDropdown comparerDropdown = _comparisionDropdowns[i];
                 GUIDropdown valueDropdown = _valueDropdown[i];
-                BBParameter bbComparison = _comparisonParams[i];
+                BBParameter? bbComparison = _comparisonParams[i];
                 if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
                 {
                     _castedTask.Conditions.RemoveAt(i);
@@ -107,7 +109,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     continue;
                 }
                 Rect gvarRect = new(position.x, rect.y + 40, 220, 20);
-                if (gvarEditor.DrawGvarEditor(rect, gvarRect))
+                if (gvarEditor.DrawGvarEditor(rect, gvarRect) && gvarEditor.CurrentSelectedGvar != null)
                 {
                     condition.Variable.SetValue(gvarEditor.CurrentSelectedGvar.TryCast<GQuestState>());
                 }
@@ -127,14 +129,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             {
                 GraphGQuestCompService newCondition = new();
                 _castedTask.Conditions.Add(newCondition);
-                _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, newCondition.Variable.GetValue().GetParent().name, false, newCondition.Variable.GetValue()));
+                _gvarSelectionEditors.Add(new GUIGvarSelectionEditor(GvarType.QUEST, null, false, newCondition.Variable?.GetValue()));
 
-                BBParameter bbComparison = ReadComparison(newCondition);
+                BBParameter? bbComparison = ReadComparison(newCondition);
                 _comparisonParams.Add(bbComparison);
                 (string[] comparerNames, int comparerIndex) = ReadEnumState(bbComparison);
                 _comparisionDropdowns.Add(new GUIDropdown(comparerNames, comparerIndex));
 
-                _valueDropdown.Add(new GUIDropdown(Enum.GetNames<QuestState>(), (int)newCondition.Value.GetValue()));
+                int newValueIndex = newCondition.Value != null ? (int)newCondition.Value.GetValue() : -1;
+                _valueDropdown.Add(new GUIDropdown(Enum.GetNames<QuestState>(), newValueIndex));
             }
 
             GUI.color = previousColor;

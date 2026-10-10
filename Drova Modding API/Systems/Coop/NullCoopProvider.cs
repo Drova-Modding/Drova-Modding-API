@@ -1,14 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
 using Il2CppDrova;
 
 namespace Drova_Modding_API.Systems.Coop
 {
     /// <summary>
-    /// The answers when nobody is playing together: one player, who decides everything.
-    ///
-    /// **This is what makes the whole contract safe to adopt.** A mod written against
-    /// <see cref="Access.CoopAccess"/> has to behave identically on a machine with no co-op mod
-    /// installed, which is nearly every machine. The no-session answers are not placeholders, they are
-    /// the common case, and they are chosen to make an authority-gated mod run rather than sit idle.
+    /// The answers when nobody is playing together: one player, who decides everything, so an authority-gated
+    /// mod runs on a machine without a co-op mod.
     /// </summary>
     internal sealed class NullCoopProvider : ICoopProvider
     {
@@ -19,11 +16,7 @@ namespace Drova_Modding_API.Systems.Coop
 
         private NullCoopProvider()
         {
-            // Randomized per process rather than fixed, because a constant would ship the identical
-            // "random" sequence to every installation, so every player would meet the same encounters in
-            // the same order. Not stable across a save and load, and the documentation says so: there is
-            // nothing in a Drova save to hang a stable seed on, since a save is identified by hero and
-            // slot index alone, which are the same numbers on everybody's machine.
+            // Per process, so not every installation gets the same "random" encounters.
             _seed = unchecked((ulong)Guid.NewGuid().GetHashCode() << 32 | (uint)Environment.TickCount);
         }
 
@@ -41,7 +34,7 @@ namespace Drova_Modding_API.Systems.Coop
         {
             buffer.Clear();
 
-            if (!Access.PlayerAccess.TryGetPlayer(out Actor player) || player == null) return;
+            if (!Access.PlayerAccess.TryGetPlayer(out Actor? player)) return;
 
             Access.PlayerAccess.TryGetLevel(player, out int level);
 
@@ -49,14 +42,14 @@ namespace Drova_Modding_API.Systems.Coop
         }
 
         /// <inheritdoc/>
-        public bool TryGetPlayerActor(CoopPlayerId id, out Actor actor)
+        public bool TryGetPlayerActor(CoopPlayerId id, [NotNullWhen(true)] out Actor? actor)
         {
             if (id.Value == 0 && Access.PlayerAccess.TryGetPlayer(out actor))
             {
                 return true;
             }
 
-            actor = null!;
+            actor = null;
             return false;
         }
 
@@ -67,12 +60,8 @@ namespace Drova_Modding_API.Systems.Coop
         public bool IsReplicating => false;
 
         /// <summary>
-        /// Nothing is synchronized, because there is nothing to synchronize with.
-        ///
-        /// **Not the same as "everything works".** A mod asking whether spawned creatures are shared gets
-        /// false here and should read it as "there is nobody to share them with" rather than as a missing
-        /// feature. That is why <see cref="Access.CoopAccess.ShouldRun"/> exists, and it is the call most
-        /// mods want instead.
+        /// Nothing is synchronized, because there is nobody to synchronize with. Most mods want
+        /// <see cref="Access.CoopAccess.ShouldRun"/> instead.
         /// </summary>
         public bool Supports(CoopCapability capability) => false;
     }

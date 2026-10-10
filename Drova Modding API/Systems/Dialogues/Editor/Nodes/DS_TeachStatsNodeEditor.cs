@@ -1,13 +1,10 @@
-using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppDrova;
 using Il2CppDrova.GUI;
-using Il2CppDrova.Items.Stats;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppNodeCanvas.DialogueTrees;
 using System.Globalization;
 using UnityEngine;
-using System.Linq;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
@@ -18,7 +15,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         private DS_TeachStatsNode? _castedNode;
         private string[] _allStatNames = [];
-        private Il2CppArrayBase<GenericStatDesc> _allStats;
+        private Il2CppArrayBase<GenericStatDesc> _allStats = null!;
         private List<GUIDropdownWithFilter> _statDropdowns = [];
         private List<GUIDropdownWithFilter> _choiceStatDropdowns = [];
 
@@ -63,7 +60,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 int selectedIndex = -1;
                 if (teachable.statDesc != null)
                 {
-                    selectedIndex = System.Array.FindIndex(_allStatNames, x => x == teachable.statDesc.name);
+                    selectedIndex = Array.FindIndex(_allStatNames, x => x == teachable.statDesc.name);
                 }
                 _statDropdowns.Add(new GUIDropdownWithFilter(_allStatNames, selectedIndex, 20));
             }
@@ -81,7 +78,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     currentStatName = statInfo.statDesc.name;
                 }
 
-                int selectedIndex = System.Array.FindIndex(_allStatNames, x => x == currentStatName);
+                int selectedIndex = Array.FindIndex(_allStatNames, x => x == currentStatName);
                 _choiceStatDropdowns.Add(new GUIDropdownWithFilter(_allStatNames, selectedIndex, 20));
             }
         }

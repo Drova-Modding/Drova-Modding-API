@@ -42,7 +42,7 @@ namespace Drova_Modding_API.Access
         /// <param name="onLoaded">Handler, invoked on the main thread with the loaded scene.</param>
         public static void AddSceneListener(string sceneName, Action<Scene> onLoaded)
         {
-            if (!Listeners.TryGetValue(sceneName, out List<Action<Scene>>? list))
+            if (!Listeners.TryGetValue(sceneName, out List<Action<Scene>> list))
             {
                 list = [];
                 Listeners[sceneName] = list;
@@ -63,7 +63,7 @@ namespace Drova_Modding_API.Access
         /// <param name="onLoaded">The handler to remove.</param>
         public static void RemoveSceneListener(string sceneName, Action<Scene> onLoaded)
         {
-            if (Listeners.TryGetValue(sceneName, out List<Action<Scene>>? list))
+            if (Listeners.TryGetValue(sceneName, out List<Action<Scene>> list))
             {
                 list.Remove(onLoaded);
                 if (list.Count == 0)
@@ -105,7 +105,7 @@ namespace Drova_Modding_API.Access
         /// </summary>
         internal static void NotifySceneLoaded(string sceneName)
         {
-            bool anyTargeted = Listeners.TryGetValue(sceneName, out List<Action<Scene>>? list);
+            bool anyTargeted = Listeners.TryGetValue(sceneName, out List<Action<Scene>> list);
             if (!anyTargeted && OnSceneLoaded == null)
             {
                 return;

@@ -21,7 +21,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
             if (cloned == null || cloned.Count == 0) return;
 
             DTNode duplicatedNode = cloned[0].Cast<DTNode>();
-            DrawNodeEditor duplicatedEditor = editorManager.DrawNodeEditorFactory.GetDrawNodeEditorFromType(duplicatedNode.GetIl2CppType());
+            DrawNodeEditor? duplicatedEditor = editorManager.DrawNodeEditorFactory.GetDrawNodeEditorFromType(duplicatedNode.GetIl2CppType());
             if (duplicatedEditor == null) return;
 
             duplicatedEditor.Node = duplicatedNode;

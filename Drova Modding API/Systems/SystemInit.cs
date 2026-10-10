@@ -20,6 +20,8 @@ namespace Drova_Modding_API.Systems
     {
         private const string ActorSpawnRootName = "ModdingAPI_Actors";
 
+        internal static readonly LazyActorStore LazyActors = new();
+
         internal static void GameplayInit()
         {
             TalentContainerDatabase.InitializeDatabase();
@@ -56,7 +58,7 @@ namespace Drova_Modding_API.Systems
 
         internal static void RegisterStores()
         {
-            SaveGameSystem.Instance.AddStore(new LazyActorStore());
+            SaveGameSystem.Instance.AddStore(LazyActors);
         }
 
         internal static void AiLogicInit(Scene scene)

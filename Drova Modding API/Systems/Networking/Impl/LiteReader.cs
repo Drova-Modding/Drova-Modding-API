@@ -1,3 +1,4 @@
+using System.Text;
 using LiteNetLib.Utils;
 
 namespace Drova_Modding_API.Systems.Networking.Impl
@@ -10,11 +11,14 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     /// </summary>
     internal sealed class LiteReader : INetReader
     {
+        private static readonly UTF8Encoding Utf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false);
+
         private NetDataReader _packet = null!;
 
         /// <summary>
-        /// Whether this packet carried a number no game can use - a NaN or an infinity - and is therefore
-        /// not to be handed to anybody.
+        /// Whether this packet carried something no game can use, and is therefore not to be handed to
+        /// anybody. Two things set it: a number that is a NaN or an infinity, and a length prefix that
+        /// names more bytes than the packet holds or than the field allows.
         ///
         /// A flag rather than an exception, because this path is reachable by any peer: throwing turns one
         /// hostile packet into one logged stack trace, and a stream of them into a way of filling somebody
@@ -107,15 +111,98 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         public string GetString()
         {
-            return _packet.GetString();
+            return GetString(int.MaxValue);
+        }
+
+        public string GetString(int maxBytes)
+        {
+            if (!TryTakeBytes(maxBytes, out int offset, out int count) || count == 0) return string.Empty;
+
+            return Utf8.GetString(_packet.RawData, offset, count);
         }
 
         public byte[] GetBytes()
         {
+            return GetBytes(int.MaxValue);
+        }
+
+        public byte[] GetBytes(int maxLength)
+        {
+            if (_packet.AvailableBytes < sizeof(int))
+            {
+                Poisoned = true;
+                return Array.Empty<byte>();
+            }
+
             int length = _packet.GetInt();
+
+            // A negative length is what an int prefix read as unsigned elsewhere looks like from here, and
+            // one longer than the packet is a claim the packet cannot back. Neither is allocated for.
+            if (length < 0 || length > _packet.AvailableBytes)
+            {
+                Poisoned = true;
+                return Array.Empty<byte>();
+            }
+
+            if (length > maxLength)
+            {
+                _packet.SkipBytes(length);
+                Poisoned = true;
+                return Array.Empty<byte>();
+            }
+
+            if (length == 0) return Array.Empty<byte>();
+
             byte[] buffer = new byte[length];
             _packet.GetBytes(buffer, length);
             return buffer;
+        }
+
+        /// <summary>
+        /// Takes a length-prefixed run of bytes without copying it, poisoning the read when the prefix is
+        /// unusable. LiteNetLib's own capped string read cannot be used for this: it caps in characters
+        /// and returns an empty string when the value is over the cap, so an over-long field arrives as
+        /// no field at all with nothing to distinguish it from one that was genuinely empty.
+        /// </summary>
+        /// <param name="maxBytes">Longest value to accept.</param>
+        /// <param name="offset">Where the value starts in <see cref="NetDataReader.RawData"/>.</param>
+        /// <param name="count">How many bytes it holds, zero when there is nothing to read.</param>
+        /// <returns>False when the prefix was truncated, lied, or named more than the cap allows.</returns>
+        private bool TryTakeBytes(int maxBytes, out int offset, out int count)
+        {
+            offset = 0;
+            count = 0;
+
+            if (_packet.AvailableBytes < sizeof(ushort))
+            {
+                Poisoned = true;
+                return false;
+            }
+
+            // The writer stores the byte count plus one so that zero can mean absent rather than one byte.
+            ushort size = _packet.GetUShort();
+            if (size == 0) return true;
+
+            int bytes = size - 1;
+            if (bytes > _packet.AvailableBytes)
+            {
+                Poisoned = true;
+                return false;
+            }
+
+            if (bytes > maxBytes)
+            {
+                // Skipped rather than left in place, so the fields after it still line up. The message is
+                // dropped either way, but a reader out of step turns one bad field into a bad packet.
+                _packet.SkipBytes(bytes);
+                Poisoned = true;
+                return false;
+            }
+
+            offset = _packet.Position;
+            count = bytes;
+            _packet.SkipBytes(bytes);
+            return true;
         }
     }
 }

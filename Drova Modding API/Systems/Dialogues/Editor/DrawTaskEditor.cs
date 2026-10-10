@@ -11,15 +11,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// The task that is being drawn
         /// </summary>
-        public Il2CppNodeCanvas.Framework.Task Task { get; set; }
+        public Il2CppNodeCanvas.Framework.Task Task { get; set; } = null!;
 
         /// <summary>
         /// The graph editor manager
         /// </summary>
-        public GraphEditorManager GraphEditorManager;
+        public GraphEditorManager GraphEditorManager = null!;
 
         /// <summary>
-        /// GameplayInit the task, when the <see cref="Task"/> is set and on the first draw
+        /// Initialize the task, when the <see cref="Task"/> is set and on the first draw
         /// </summary>
         public virtual void Init()
         {

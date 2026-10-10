@@ -2,31 +2,13 @@ namespace Drova_Modding_API.Systems.Coop
 {
     /// <summary>
     /// Turns a session seed and a caller's key into a number every machine works out identically.
-    ///
-    /// **Keyed derivation, never a sequential stream.** Handing mods a shared <c>Random</c> looks like the
-    /// obvious answer and is a trap: two machines only stay in step if they draw from it the same number
-    /// of times in the same order, and nothing can enforce that. A player running one extra mod, or a
-    /// build with a debug branch that draws once more, offsets the stream permanently, with no symptom at
-    /// the point of the offset and a divergence that reproduces on nobody's machine.
-    ///
-    /// Derivation cannot desync from consumption order because there is no order. It can only differ if
-    /// the key differs, and a key is the caller's own composition: it can be logged, compared and fixed.
-    /// The cost is that the caller has to name each draw.
-    ///
-    /// A key should name what is being decided, including anything that makes this draw different from
-    /// the next one, so "banditcamp.creature.0" rather than "creature". Two draws with one key are one
-    /// draw.
+    /// Keyed rather than a shared stream, which desyncs as soon as one machine draws once more.
+    /// Name each draw specifically ("banditcamp.creature.0", not "creature"): two draws with one key are one draw.
     /// </summary>
     public static class CoopRandom
     {
         /// <summary>
-        /// Derives an unsigned number from a seed and a key.
-        ///
-        /// Uses FNV-1a over the seed's bytes followed by the key's characters. The choice matters less
-        /// than the property: it must be pure, cheap, and identical on every machine regardless of runtime
-        /// or culture. That rules out anything going through <c>string.GetHashCode</c>, which .NET
-        /// randomizes per process, so it would produce a different answer on each machine and fail
-        /// exactly the job this exists for.
+        /// Derives an unsigned number from a seed and a key with FNV-1a over the seed's bytes and the key's characters.
         /// </summary>
         /// <param name="seed">The session seed.</param>
         /// <param name="key">What is being decided. Null is treated as empty.</param>
@@ -56,10 +38,7 @@ namespace Drova_Modding_API.Systems.Coop
         }
 
         /// <summary>
-        /// Derives a number in <c>[0, 1)</c>.
-        ///
-        /// Built from the top 24 bits, which is the width a float can hold exactly. Taking the low bits
-        /// instead would quantize the result unevenly.
+        /// Derives a number in <c>[0, 1)</c> from the top 24 bits, the width a float holds exactly.
         /// </summary>
         /// <param name="seed">The session seed.</param>
         /// <param name="key">What is being decided.</param>

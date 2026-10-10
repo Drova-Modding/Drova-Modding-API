@@ -23,7 +23,7 @@ internal static class DSDialogueUGUIPatch
         if (info.statement.audio == null) {
             AudioLog.Warning($"Audio for actor {info.actor.name} not found with text {info.statement.text}");
             return;
-        };
+        }
 
         AudioManager._audioHandler.HandleSubtitleRequest(info, __instance);
 
@@ -33,8 +33,18 @@ internal static class DSDialogueUGUIPatch
         if (audioSource != null && dialogueActor != null)
         {
             AudioLog.Msg($"Registering audio source for actor {info.actor.name}");
-            DialogueAudioDistanceManager.Instance?.Register(audioSource, dialogueActor.transform);
+            DialogueAudioDistanceManager? distanceManager = DialogueAudioDistanceManager.Instance;
+            if (distanceManager != null) distanceManager.Register(audioSource, dialogueActor.transform);
         }
+    }
+}
+
+[HarmonyPatch(typeof(DS_DialogueUGUI), nameof(DS_DialogueUGUI.OnMultipleChoiceRequest), [typeof(MultipleChoiceRequestInfo)])]
+internal static class DSDialogueUGUIChoicePatch
+{
+    private static void Postfix(MultipleChoiceRequestInfo info, DS_DialogueUGUI __instance)
+    {
+        AudioManager._audioHandler.HandleMultipleChoiceRequest(info, __instance);
     }
 }
 

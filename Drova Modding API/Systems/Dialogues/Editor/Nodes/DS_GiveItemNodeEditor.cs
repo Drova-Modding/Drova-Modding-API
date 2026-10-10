@@ -12,7 +12,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_GiveItemNodeEditor : DrawNodeEditor
     {
 
-        private DS_GiveItemNode _castedNode;
+        private DS_GiveItemNode? _castedNode;
         private Item[] _items;
         private readonly List<GUIDropdownWithFilter> _itemDropdowns = [];
         private readonly List<GUIDropdown> _directionDropdowns = [];
@@ -28,7 +28,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         {
             _castedNode ??= Node.TryCast<DS_GiveItemNode>();
             if (_castedNode == null) return;
-            _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
+            SubDatabase_Item? itemDatabase = ProviderAccess.ItemDatabase;
+            _items = itemDatabase != null ? itemDatabase.GetItems().ToArray() : [];
 
             for (int i = 0; i < _castedNode.ItemStacks.Count; i++)
             {
@@ -54,7 +55,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
                 if (itemStack.Mode == DialogItems.ValueMode.GInt)
                 {
-                    string parentName = itemStack.AmountVar != null ? itemStack.AmountVar.GetParent().name : null;
+                    string? parentName = itemStack.AmountVar != null ? itemStack.AmountVar.GetParent().name : null;
                     _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT, parentName, false, itemStack.AmountVar));
                 }
             }
@@ -90,9 +91,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
                 if (i >= _itemDropdowns.Count)
                 {
-                    // If out of sync, we should probably re-init or handle it.
-                    // For now, let's just make sure we don't crash and try to fix it on the fly if possible.
-                    // But usually they should be in sync because of Init().
                     continue;
                 }
 
@@ -108,7 +106,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
                 if (DrawDeleteButton(position, i, useContainerYOffset))
                 {
-                    break; // Break to avoid modifying collection during iteration
+                    // The stack list was just modified.
+                    break;
                 }
 
                 GUI.Label(new Rect(position.x + 10, yOffset, 100, 20), "Item:");
@@ -180,6 +179,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         private bool DrawDeleteButton(Vector2 position, int i, float useContainerYOffset)
         {
+            if (_castedNode == null) return false;
+
             if (GUI.Button(new Rect(position.x + 240, useContainerYOffset + 50, 80, 20), "Delete"))
             {
                 _castedNode.ItemStacks.RemoveAt(i);
@@ -232,7 +233,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                         Rect dropdownListRect = new(position.x + 120, yOffset, 300, 20);
                         Rect dropdownValueRect = new(position.x + 120, yOffset + 20, 300, 20);
 
-                        if (gvarSelectionEditor.DrawGvarEditor(dropdownListRect, dropdownValueRect))
+                        if (gvarSelectionEditor.DrawGvarEditor(dropdownListRect, dropdownValueRect) && gvarSelectionEditor.CurrentSelectedGvar != null)
                         {
                             itemStack.AmountVar = gvarSelectionEditor.CurrentSelectedGvar.TryCast<GInt>();
                         }
@@ -242,9 +243,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                         // In case of switching from another mode to GInt
                         _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT));
                     }
-                    break;
-
-                default:
                     break;
             }
         }

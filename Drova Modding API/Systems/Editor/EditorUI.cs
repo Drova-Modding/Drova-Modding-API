@@ -16,7 +16,7 @@ namespace Drova_Modding_API.Systems.Editor
     {
         private TextMeshProUGUI _npcDisplay;
         private TextMeshProUGUI _playerPositionDisplay;
-        private Button _npcEditButton;
+        private Button _npcEditButton = null!;
         private Actor _currentSelectedActor;
         private GraphEditorManager _graphEditorManager;
 
@@ -98,7 +98,7 @@ namespace Drova_Modding_API.Systems.Editor
                 return;
             }
 
-            if (PlayerAccess.TryGetPlayer(out Actor player) && player != null)
+            if (PlayerAccess.TryGetPlayer(out Actor? player))
             {
                 Vector3 position = player.transform.position;
                 _playerPositionDisplay.text = $"Player Position (2D): X={position.x:F2}, Y={position.y:F2}";
@@ -113,7 +113,7 @@ namespace Drova_Modding_API.Systems.Editor
             EditorManager.OnNpcSelected -= OnNpcSelected;
             OptionMenuAccess.Instance.OnOptionMenuOpen -= OnOptionMenuOpen;
             OptionMenuAccess.Instance.OnOptionMenuClose -= OnOptionMenuClose;
-            _npcEditButton?.onClick.RemoveAllListeners();
+            if (_npcEditButton != null) _npcEditButton.onClick.RemoveAllListeners();
         }
 
         [HideFromIl2Cpp]

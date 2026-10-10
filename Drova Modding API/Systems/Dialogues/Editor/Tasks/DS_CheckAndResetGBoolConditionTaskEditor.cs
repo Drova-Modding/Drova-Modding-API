@@ -26,7 +26,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             }
 
             GBool? variable = _castedTask.IsBoolSet.GetValue();
-            _gvarEditor = new GUIGvarSelectionEditor(GvarType.BOOL, variable?.GetParent()?.name, false, variable);
+            GVarList? parent = variable == null ? null : variable.GetParent();
+            _gvarEditor = new GUIGvarSelectionEditor(GvarType.BOOL, parent == null ? null : parent.name, false, variable);
         }
 
         /// <inheritdoc/>
@@ -56,9 +57,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             Rect gvarListRect = new(x + 110, y, width - 120, rowH);
             Rect gvarRect = new(x + 110, y + rowStep, width - 120, rowH);
 
-            if (_gvarEditor.DrawGvarEditor(gvarListRect, gvarRect))
+            if (_gvarEditor.DrawGvarEditor(gvarListRect, gvarRect) && _gvarEditor.CurrentSelectedGvar != null)
             {
-                _castedTask.IsBoolSet.SetValue(_gvarEditor.CurrentSelectedGvar!.TryCast<GBool>());
+                _castedTask.IsBoolSet.SetValue(_gvarEditor.CurrentSelectedGvar.TryCast<GBool>());
             }
 
             return drawRect;

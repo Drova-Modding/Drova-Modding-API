@@ -13,8 +13,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private readonly GUIContent _hideDialogueWindowContent = new("Hide Dialogue Window");
         private readonly GUIContent _waitForFinishContent = new("Wait for finish");
 
-        private ImmutableList<AA_ABase> _interactions;
-        private GUIDropdown _interactableDropdown;
+        private ImmutableList<AA_ABase> _interactions = null!;
+        private GUIDropdown _interactableDropdown = null!;
 
         public DS_InteractAABaseNodeEditor()
         {
@@ -24,8 +24,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_InteractAABaseNode>();
+            if (_castedNode == null) return;
             _interactions = Resources.FindObjectsOfTypeAll<AA_ABase>().Where(e => e.name.StartsWith("AA_Interact_NPC") && !e.name.EndsWith("(Clone)")).ToImmutableList();
-            int selectionIndex = _interactions.FindIndex(AA_ABase => AA_ABase.name == _castedNode._interactPrefab?.name);
+            AA_ABase? prefab = _castedNode._interactPrefab;
+            string? prefabName = prefab == null ? null : prefab.name;
+            int selectionIndex = _interactions.FindIndex(AA_ABase => AA_ABase.name == prefabName);
             if (selectionIndex == -1)
             {
                 selectionIndex = 0;

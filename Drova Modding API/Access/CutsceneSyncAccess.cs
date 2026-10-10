@@ -12,7 +12,7 @@ namespace Drova_Modding_API.Access
     /// </summary>
     public static class CutsceneSyncAccess
     {
-        private static readonly Dictionary<string, string> _shared = new(StringComparer.Ordinal);
+        private static readonly Dictionary<string, string> SharedCutscenes = new(StringComparer.Ordinal);
 
         /// <summary>
         /// Declares one cutscene as shared by every player in a session.
@@ -24,11 +24,11 @@ namespace Drova_Modding_API.Access
         /// </summary>
         /// <param name="cutsceneDataName">The cutscene data asset's name.</param>
         /// <param name="addressableGuid">The asset's addressable guid, when known.</param>
-        public static void MarkShared(string cutsceneDataName, string addressableGuid = null)
+        public static void MarkShared(string cutsceneDataName, string? addressableGuid = null)
         {
             if (string.IsNullOrEmpty(cutsceneDataName)) return;
 
-            _shared[cutsceneDataName] = addressableGuid ?? string.Empty;
+            SharedCutscenes[cutsceneDataName] = addressableGuid ?? string.Empty;
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace Drova_Modding_API.Access
         /// <param name="cutsceneDataName">The cutscene data asset's name.</param>
         public static bool IsShared(string cutsceneDataName)
         {
-            return !string.IsNullOrEmpty(cutsceneDataName) && _shared.ContainsKey(cutsceneDataName);
+            return !string.IsNullOrEmpty(cutsceneDataName) && SharedCutscenes.ContainsKey(cutsceneDataName);
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Drova_Modding_API.Access
             addressableGuid = string.Empty;
 
             if (string.IsNullOrEmpty(cutsceneDataName)) return false;
-            if (!_shared.TryGetValue(cutsceneDataName, out string stored)) return false;
+            if (!SharedCutscenes.TryGetValue(cutsceneDataName, out string stored)) return false;
             if (string.IsNullOrEmpty(stored)) return false;
 
             addressableGuid = stored;

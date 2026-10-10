@@ -1,4 +1,5 @@
 using Drova_Modding_API.Access;
+using Il2CppDrova.Items;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using UnityEngine;
 
@@ -291,7 +292,11 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             try
             {
-                Il2CppStringArray readableIds = ProviderAccess.ItemDatabase.GetItemReadableIds();
+                SubDatabase_Item? database = ProviderAccess.ItemDatabase;
+                if (database == null)
+                    return null;
+
+                Il2CppStringArray readableIds = database.GetItemReadableIds();
                 if (readableIds == null || readableIds.Length == 0)
                     return new CacheSnapshot(new EditorDataSource([], GetCategoryForId));
 

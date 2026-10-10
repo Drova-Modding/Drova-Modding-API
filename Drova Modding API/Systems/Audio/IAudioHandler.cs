@@ -13,14 +13,12 @@ namespace Drova_Modding_API.Systems.Audio
         /// Handle a subtitle request
         /// </summary>
         /// <param name="info">Info of the request</param>
-        /// <param name="dialogueUGUI"></param>
+        /// <param name="dialogueUGUI">The dialogue window showing the subtitle.</param>
         void HandleSubtitleRequest(SubtitlesRequestInfo info, DS_DialogueUGUI dialogueUGUI);
 
         /// <summary>
         /// Handle a multiple choice request
         /// </summary>
-        /// <param name="info"></param>
-        /// <param name="dialogueUGUI"></param>
         void HandleMultipleChoiceRequest(MultipleChoiceRequestInfo info, DS_DialogueUGUI dialogueUGUI);
     }
 }

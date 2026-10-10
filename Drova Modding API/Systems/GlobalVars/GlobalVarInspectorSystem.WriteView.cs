@@ -388,7 +388,13 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 return;
             }
 
-            SubDatabase_GVars gVarDatabase = ProviderAccess.GVarDatabase;
+            SubDatabase_GVars? gVarDatabase = ProviderAccess.GVarDatabase;
+            if (gVarDatabase == null)
+            {
+                _createListWindowErrorMessage = "GVar database not available.";
+                return;
+            }
+
             if (gVarDatabase.GetGVarListByName(trimmedListName) != null)
             {
                 _createListWindowErrorMessage = $"A list named '{trimmedListName}' already exists.";
@@ -453,12 +459,6 @@ namespace Drova_Modding_API.Systems.GlobalVars
             if (!CustomGVarStore.TryCreateCustomVar(_selectedList, _newVarType, Guid.NewGuid().ToString(), _newVarName, _newVarInitialValue, out AGVarBase? createdVar, out string message))
             {
                 _statusMessage = message;
-                return;
-            }
-
-            if (createdVar == null)
-            {
-                _statusMessage = "Could not create custom variable.";
                 return;
             }
 

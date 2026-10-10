@@ -12,7 +12,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_PreloadClothNodeEditor : DrawNodeEditor
     {
         private DS_PreloadCloth? _castedNode;
-        private GUIDropdown _clothModeDropdown;
+        private GUIDropdown _clothModeDropdown = null!;
         private Item[] _clothItems;
         private string[] _clothItemNames;
         private readonly List<GUIDropdownWithFilter> _clothItemDropdowns = [];
@@ -25,6 +25,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_PreloadCloth>();
+            if (_castedNode == null) return;
             _clothItems = [.. Resources.FindObjectsOfTypeAll<Item>().Where(i => i.TryGetItemBehaviour(out ItemBhvr_EquipEffect_Cloth _))];
             _clothModeDropdown = new GUIDropdown(Enum.GetNames<DS_PreloadCloth.Mode>(), (int)_castedNode.PreloadMode);
             _clothItemNames = [.. _clothItems.Select(e => e.name)];

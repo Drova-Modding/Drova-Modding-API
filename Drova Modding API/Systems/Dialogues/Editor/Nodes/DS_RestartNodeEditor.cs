@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_RestartNodeEditor : DrawNodeEditor
     {
         private DS_RestartNode? _castedNode;
-        private DialogueTree[] _dialogueTrees;
+        private DialogueTree[] _dialogueTrees = [];
         private string[] _dialogueTreeNames;
         private GUIDropdownWithFilter _dialogueTreeDropdown;
 
@@ -22,9 +22,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_RestartNode>();
+            if (_castedNode == null) return;
             _dialogueTrees = Resources.FindObjectsOfTypeAll<DialogueTree>();
             _dialogueTreeNames = [.. _dialogueTrees.Select(e => e.name)];
-            _dialogueTreeDropdown = new GUIDropdownWithFilter(_dialogueTreeNames, Array.FindIndex(_dialogueTreeNames, (e) => e == _castedNode.GraphToRestart?.name), 20);
+            DialogueTree? graph = _castedNode.GraphToRestart;
+            string? graphName = graph == null ? null : graph.name;
+            _dialogueTreeDropdown = new GUIDropdownWithFilter(_dialogueTreeNames, Array.FindIndex(_dialogueTreeNames, (e) => e == graphName), 20);
         }
 
         public override void DrawNode(Vector2 position)

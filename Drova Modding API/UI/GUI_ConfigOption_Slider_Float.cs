@@ -24,7 +24,7 @@ namespace Drova_Modding_API.UI
         /// <summary>
         /// The config game handler
         /// </summary>
-        public ConfigGameHandler ConfigHandler;
+        public ConfigGameHandler? ConfigHandler;
         /// <summary>
         /// The key for the ConfigGameHandler
         /// </summary>
@@ -36,7 +36,6 @@ namespace Drova_Modding_API.UI
         /// <summary>
         /// Do not use
         /// </summary>
-        /// <param name="ptr"></param>
         // ReSharper disable once NotNullOrRequiredMemberIsNotInitialized
         public GUI_ConfigOption_Slider_Float(IntPtr ptr) : base(ptr)
         {
@@ -79,13 +78,13 @@ namespace Drova_Modding_API.UI
 
         private void OnDestroy()
         {
-            GetComponent<Slider>()?.onValueChanged.RemoveAllListeners();
+            Slider? slider = GetComponent<Slider>();
+            if (slider != null) slider.onValueChanged.RemoveAllListeners();
         }
 
         /// <summary>
         /// Value Change listener for the slider.
         /// </summary>
-        /// <param name="value"></param>
         [HideFromIl2Cpp]
         protected void OnValueChangedListener(float value)
         {
@@ -102,7 +101,8 @@ namespace Drova_Modding_API.UI
             {
                 _amountText.text = value.ToString("0.00");
             }
-            ConfigHandler?.GameplayConfig?.ConfigFile?.SetValue(Key?._key, value.ToString("0.00"));
+            ConfigFileBridgeOptions? config = ConfigHandler == null ? null : ConfigHandler.GameplayConfig;
+            if (config != null) config.ConfigFile?.SetValue(Key == null ? null : Key._key, value.ToString("0.00"));
         }
     }
 }

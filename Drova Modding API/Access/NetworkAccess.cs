@@ -23,7 +23,9 @@ namespace Drova_Modding_API.Access
 
         /// <summary>
         /// Start hosting on the given UDP port. When <paramref name="key"/> is set, only peers that
-        /// present the same key are accepted.
+        /// present the same key are accepted. The key travels in the clear and a direct session is not encrypted.
+        /// When the port cannot be opened, <see cref="NetworkEvents.OnNetworkError"/> fires and <see cref="Role"/> stays
+        /// <see cref="NetRole.None"/>.
         /// </summary>
         /// <param name="port">The UDP port to listen on.</param>
         /// <param name="key">Optional connection key that clients must match.</param>
@@ -65,6 +67,16 @@ namespace Drova_Modding_API.Access
         public static bool IsEncrypted => NetworkSystem.IsEncrypted;
 
         /// <summary>
+        /// Largest payload a single message may serialize to, in bytes. A message over it is dropped
+        /// before it is sent and counted, because the relay would drop it too and say so to nobody.
+        ///
+        /// Shrinks by 28 bytes once <see cref="IsEncrypted"/> is true, since the seal travels in the same
+        /// packet. Read it after the session is up when a message is sized to fill the budget, and split
+        /// anything larger the way a chunked snapshot does.
+        /// </summary>
+        public static int MaxPayloadSize => NetworkSystem.MaxPayloadSize;
+
+        /// <summary>
         /// Claim a session code on a relay and host through it, for when the host is not reachable from
         /// the internet. Unlike <see cref="StartHost"/> this cannot succeed immediately:
         /// <see cref="NetworkEvents.OnHostStarted"/> fires once the relay accepted the code, and
@@ -95,6 +107,51 @@ namespace Drova_Modding_API.Access
         public static void ConnectViaRelay(string relayAddress, int relayPort, string sessionCode, string? password = null)
         {
             NetworkSystem.ConnectViaRelay(relayAddress, relayPort, sessionCode, password);
+        }
+
+        /// <summary>
+        /// What a direct host (<see cref="StartHost"/>) answers when someone on the local network runs
+        /// <see cref="StartDiscovery"/>. Called on the main thread for each request. Keep it well under 1 KB, since it
+        /// travels in one datagram. Null, the default, means the host does not answer.
+        /// </summary>
+        /// <param name="provider">Builds the payload, for example a name and a player count.</param>
+        public static void SetDiscoveryInfo(Func<byte[]>? provider)
+        {
+            LanDiscovery.Provider = provider;
+        }
+
+        /// <summary>
+        /// Look for direct hosts on the local network: broadcasts now and every 2 seconds until
+        /// <see cref="StopDiscovery"/>. Independent of any session. Read the answers with <see cref="GetDiscoveredHosts"/>.
+        /// </summary>
+        /// <param name="port">The UDP port the hosts listen on.</param>
+        public static void StartDiscovery(int port)
+        {
+            LanDiscovery.Start(port);
+        }
+
+        /// <summary>
+        /// Stop looking for hosts and forget the ones found. Does nothing when discovery is not running.
+        /// </summary>
+        public static void StopDiscovery()
+        {
+            LanDiscovery.Stop();
+        }
+
+        /// <summary>
+        /// Whether <see cref="StartDiscovery"/> is running.
+        /// </summary>
+        public static bool IsDiscovering => LanDiscovery.IsRunning;
+
+        /// <summary>
+        /// Fills a buffer with the hosts that answered recently. A host silent for three broadcasts is dropped. The
+        /// buffer is cleared first.
+        /// </summary>
+        /// <param name="buffer">The list to fill.</param>
+        public static void GetDiscoveredHosts(List<DiscoveredHost> buffer)
+        {
+            buffer.Clear();
+            LanDiscovery.CopyHosts(buffer);
         }
 
         /// <summary>

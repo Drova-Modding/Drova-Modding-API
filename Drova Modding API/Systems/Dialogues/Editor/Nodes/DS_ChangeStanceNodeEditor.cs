@@ -8,8 +8,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_ChangeStanceNodeEditor : DrawNodeEditor
     {
 
-        private GUIDropdown _stanceDropdown;
-        private DS_ChangeStanceNode _castedNode;
+        private GUIDropdown _stanceDropdown = null!;
+        private DS_ChangeStanceNode? _castedNode;
 
         public DS_ChangeStanceNodeEditor()
         {

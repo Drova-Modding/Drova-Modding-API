@@ -1,4 +1,5 @@
-﻿using MelonLoader;
+﻿using System.Diagnostics.CodeAnalysis;
+using MelonLoader;
 
 namespace Drova_Modding_API.Access
 {
@@ -8,22 +9,22 @@ namespace Drova_Modding_API.Access
     public static class ConfigAccessor
     {
         /// <summary>
-        /// Sets the value of a config key to the specified value.
+        /// Reads the value of a config key from the game's gameplay config.
         /// </summary>
         /// <typeparam name="T">Can be float, int, string, bool or a Enum</typeparam>
         /// <param name="key">Name of the option</param>
-        /// <param name="value"></param>
-        /// <returns>Returns your value or default if not found</returns>
-        public static bool TryGetConfigValue<T>(string key, out T value)
+        /// <param name="value">The value, when found.</param>
+        /// <returns>False when the key is not found or the game is still bootstrapping.</returns>
+        public static bool TryGetConfigValue<T>(string key, [MaybeNullWhen(false)] out T value)
         {
-            Il2CppDrova.DrovaResourceProvider ressource = ProviderAccess.GetDrovaResourceProvider();
+            Il2CppDrova.DrovaResourceProvider? ressource = ProviderAccess.GetDrovaResourceProvider();
             if (ressource == null)
             {
                 MelonLogger.Warning("DrovaResourceProvider is null. The Game might still be bootstrapping");
                 value = default;
                 return false;
             }
-            Il2CppDrova.ConfigGameHandler provider = ProviderAccess.GetConfigGameHandler();
+            Il2CppDrova.ConfigGameHandler? provider = ProviderAccess.GetConfigGameHandler();
             if (provider == null)
             {
                 MelonLogger.Warning("ConfigGameHandler is null. The Game might still be bootstrapping");

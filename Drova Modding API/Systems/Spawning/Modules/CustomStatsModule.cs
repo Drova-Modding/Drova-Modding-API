@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.GlobalFields;
 using Il2CppDrova;
 using MelonLoader;
@@ -90,8 +91,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <summary>
         /// Sets whether the NPC should give experience at all. Default is true.
         /// </summary>
-        /// <param name="giveXp"></param>
-        /// <returns></returns>
         public CustomStatsModule WithGiveXp(bool giveXp)
         {
             _giveXp = giveXp;
@@ -183,15 +182,15 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             attributeStats._givesNoExp = !_giveXp;
         }
 
-        private static bool TryResolveStatDesc(string readableId, out GenericStatDesc statDesc)
+        private static bool TryResolveStatDesc(string readableId, [NotNullWhen(true)] out GenericStatDesc? statDesc)
         {
             EnsureStatDescCache();
             return CachedStatDescsByReadableId.TryGetValue(readableId, out statDesc);
         }
 
-        private static bool TryResolveArmorStatDesc(string readableId, out ResistanceStatDesc statDesc)
+        private static bool TryResolveArmorStatDesc(string readableId, [NotNullWhen(true)] out ResistanceStatDesc? statDesc)
         {
-            statDesc = null!;
+            statDesc = null;
             if (!TryResolveStatDesc(readableId, out var genericStatDesc)) return false;
 
             var resistanceStatDesc = genericStatDesc.TryCast<ResistanceStatDesc>();

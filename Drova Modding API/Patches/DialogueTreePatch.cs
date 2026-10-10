@@ -14,7 +14,7 @@ internal static class DialogueTreePatch
 #if DEBUG
         if (EditorManager.InEditor) return;
 #endif
-        DialogueTree dialogueTree = __instance.TryCast<DialogueTree>();
+        DialogueTree? dialogueTree = __instance.TryCast<DialogueTree>();
         if (dialogueTree == null) return;
         if (MainThreadDispatcher.IsMainThread)
         {
@@ -35,7 +35,8 @@ internal static class DialogueTreePatch_Subtitles
 {
     private static void Prefix(SubtitlesRequestInfo info, DialogueTree __instance)
     {
-        AudioLog.Msg($"Handling subtitle request in DialogueTree for: {info.actor.TryCast<DS_DialogueActor>().name}");
+        DS_DialogueActor? speaker = info.actor?.TryCast<DS_DialogueActor>();
+        AudioLog.Msg($"Handling subtitle request in DialogueTree for: {(speaker != null ? speaker.name : info.actor?.name)}");
         if (__instance.OnSubtitlesRequest == null)
         {
             AudioLog.Msg("OnSubtitlesRequest is null, will not invoke");

@@ -7,7 +7,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
     internal class ReadOutDialogueHitBehaviour
     {
         private const string DT_WorldDialogue_Template = "DT_WorldDialogue_Template";
-        private static readonly HashSet<string> alreadyMapped = [];
+        private static readonly HashSet<string> AlreadyMapped = [];
 
         internal static void GenerateHitBvhrDialogues(Dictionary<string, int> actorMapping, StringBuilder sb)
         {
@@ -35,9 +35,9 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                         actorName = arg.Participant._locaName.GetLocalizedString(null);
                     }
                     string id = AudioManager.GetUniqueIDStatementGeneric(DT_WorldDialogue_Template, arg.Path, "", actorName, arg.Key);
-                    if (alreadyMapped.Contains(id))
+                    if (AlreadyMapped.Contains(id))
                         continue;
-                    alreadyMapped.Add(id);
+                    AlreadyMapped.Add(id);
                     sb
                               .Append(DialogueUtils.MapActorNameToNumber(actorMapping, actorName))
                               .Append(DialogueUtils.SEPERATOR)

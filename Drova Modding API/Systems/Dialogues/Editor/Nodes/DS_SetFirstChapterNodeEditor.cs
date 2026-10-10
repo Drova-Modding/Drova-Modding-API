@@ -9,7 +9,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_SetFirstChapterNodeEditor : DrawNodeEditor
     {
         private DS_SetFirstChapter? _castedNode;
-        private GUIGvarSelectionEditor _gvarSelectionEditor;
+        private GUIGvarSelectionEditor _gvarSelectionEditor = null!;
 
         public DS_SetFirstChapterNodeEditor()
         {
@@ -42,7 +42,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.Box(new(position.x, position.y, NodeSize.x, NodeSize.y), "DS_SetFirstChapter");
             GUI.color = previousColor;
 
-            if (_gvarSelectionEditor.DrawGvarEditor(new Rect(position.x + 10, position.y + 20, 250, 20), new Rect(position.x + 10, position.y + 40, 250, 20)))
+            if (_gvarSelectionEditor.DrawGvarEditor(new Rect(position.x + 10, position.y + 20, 250, 20), new Rect(position.x + 10, position.y + 40, 250, 20)) && _gvarSelectionEditor.CurrentSelectedGvar != null)
             {
                 _castedNode.Variable = _gvarSelectionEditor.CurrentSelectedGvar.TryCast<GInt>();
             }

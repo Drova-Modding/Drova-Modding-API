@@ -84,6 +84,12 @@ from your `MelonMod` subclass.
 | [Co-op](./systems/coop.md)            | Ask whether somebody else is in the world and whether this machine should act. Always available. |
 | [Networking](./systems/networking.md) | Coop transport: sessions, typed messages, raw channels.                                          |
 
+### Testing
+
+| Page                            | Summary                                                                                          |
+|---------------------------------|--------------------------------------------------------------------------------------------------|
+| [Testing](./systems/testing.md) | Drive real game instances from a scenario file: load, walk, set variables, kill, assert results. |
+
 ## Contributing to the docs
 
 These pages live in `/docs` as plain Markdown — no build step. Edit a file, open a PR.

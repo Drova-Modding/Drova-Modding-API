@@ -68,7 +68,7 @@ namespace Drova_Modding_API.Systems.Networking
         void Put(string value);
 
         /// <summary>
-        /// Write a length-prefixed byte array. The matching read is <see cref="INetReader.GetBytes"/>.
+        /// Write a length-prefixed byte array. The matching read is <see cref="INetReader.GetBytes()"/>.
         /// </summary>
         void Put(byte[] value);
     }

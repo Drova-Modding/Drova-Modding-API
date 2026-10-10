@@ -57,28 +57,24 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// </summary>
         public int OptionsCount => _options.Length;
 
-        // ── Deferred overlay system ──────────────────────────────────────────
-        // GUI.depth only affects ordering between separate OnGUI callbacks.
-        // Within one OnGUI, last-drawn = on top.  We therefore defer all
-        // dropdown overlays to after all nodes have been drawn.
+        // GUI.depth only orders separate OnGUI callbacks. Within one OnGUI the last drawn
+        // is on top, so open lists are deferred until every node has been drawn.
+        private static readonly List<(GUIDropdown dd, Rect rect)> PendingOverlays = [];
 
-        private static readonly List<(GUIDropdown dd, Rect rect)> _pendingOverlays = [];
-
-        // Set by FlushOverlays; consumed (and cleared) on the next Draw() call
+        // Set by FlushOverlays and cleared by the next Draw() call.
         private bool _changedThisFlush;
 
         /// <summary>
         /// Draws all deferred dropdown overlays.
-        /// Call this once per frame, AFTER all nodes / controls have been drawn,
+        /// Call this once per frame, after all nodes and controls have been drawn,
         /// so that open dropdowns are always painted on top of everything else.
         /// </summary>
         public static void FlushOverlays(Rect visibleRect)
         {
-            // Snapshot + clear BEFORE drawing in case an item click triggers
-            // re-entrant Draw() calls that add new entries.
-            (GUIDropdown dd, Rect rect)[] toFlush = [.. _pendingOverlays];
+            // Snapshot and clear before drawing, since an item click can re-enter Draw() and add entries.
+            (GUIDropdown dd, Rect rect)[] toFlush = [.. PendingOverlays];
             var orderedFlush = toFlush.OrderBy(t => -t.rect.y).ThenBy(t => -t.rect.x);
-            _pendingOverlays.Clear();
+            PendingOverlays.Clear();
             foreach ((GUIDropdown dd, Rect rect) in orderedFlush)
             {
                 if(!visibleRect.Overlaps(rect)) continue;
@@ -86,7 +82,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
                     dd._changedThisFlush = true;
             }
         }
-        // ────────────────────────────────────────────────────────────────────
 
         /// <summary>
         /// Initializes a new instance of the GUIDropdown class.
@@ -139,9 +134,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
         /// <summary>
         /// Draws the dropdown UI and handles interactions.
-        /// The dropdown overlay (options list) is NOT drawn immediately; it is
-        /// registered for deferred rendering via <see cref="FlushOverlays"/> so
-        /// it always appears on top of all other controls.
+        /// The options list is not drawn here. It is registered for <see cref="FlushOverlays"/>
+        /// so it appears on top of all other controls.
         /// </summary>
         /// <param name="dropdownRect">The position and size of the dropdown.</param>
         /// <returns>
@@ -158,7 +152,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
 
             // Register for deferred overlay drawing if the list is open
             if (_showDropdown)
-                _pendingOverlays.Add((this, dropdownRect));
+                PendingOverlays.Add((this, dropdownRect));
 
             return changed;
         }

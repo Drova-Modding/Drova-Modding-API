@@ -66,9 +66,10 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                 return;
 
             var items = new Il2CppSystem.Collections.Generic.List<IItemContainer>();
+            SubDatabase_Item? database = ProviderAccess.ItemDatabase;
             foreach (var (readableId, amount) in _items)
             {
-                var item = ProviderAccess.ItemDatabase.GetItemByReadableId(readableId);
+                var item = database != null ? database.GetItemByReadableId(readableId) : null;
                 if (item == null)
                 {
                     MelonLogger.Warning($"{nameof(TraderModule)}: could not resolve item readable id '{readableId}'.");

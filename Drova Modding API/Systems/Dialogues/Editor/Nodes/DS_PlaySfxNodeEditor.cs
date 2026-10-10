@@ -10,8 +10,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_PlaySfxNodeEditor : DrawNodeEditor
     {
-        private DS_PlaySfx _castedNode;
-        private GUIDropdownWithFilter _sfxDropdown;
+        private DS_PlaySfx? _castedNode;
+        private GUIDropdownWithFilter? _sfxDropdown;
         private AudioContainer[] _audioContainers;
 
         public DS_PlaySfxNodeEditor()

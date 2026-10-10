@@ -16,6 +16,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private byte[] _frameBuffer = new byte[1500];
         private byte[] _plainBuffer = new byte[1500];
         private SessionCrypto? _crypto;
+        private Task<SessionCrypto>? _pendingKey;
         private string? _password;
 
         /// <summary>
@@ -57,13 +58,15 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal byte[] FrameBuffer => _frameBuffer;
 
         /// <summary>
-        /// Remembers what the session was started with. The key cannot be derived yet: a host that let the
-        /// relay pick its code does not know the code at this point.
+        /// Remembers what the session was started with, and starts deriving the key when both halves of
+        /// its material are already known. A host that let the relay pick its code has to wait for
+        /// <see cref="AssignSessionCode"/>, which is the only case that cannot start here.
         /// </summary>
         internal void Prepare(string? sessionCode, string? password)
         {
             SessionCode = sessionCode ?? string.Empty;
             _password = password;
+            BeginKeyDerivation();
         }
 
         /// <summary>
@@ -75,29 +78,35 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         }
 
         /// <summary>
-        /// Takes the code the relay picked for a host that asked for one.
+        /// Takes the code the relay picked for a host that asked for one, which is the first moment that
+        /// host can start deriving its key.
         /// </summary>
         internal void AssignSessionCode(string sessionCode)
         {
             SessionCode = sessionCode;
+            BeginKeyDerivation();
         }
 
         /// <summary>
-        /// Records the relay's welcome and derives the session key when there is a password to derive it
-        /// from. This is the first moment both ends are guaranteed to know the code, which is half the key
-        /// material, so it is where encryption can start.
+        /// Records the relay's welcome and takes delivery of the session key. The first packet may follow
+        /// the welcome immediately, so the key has to exist by the time this returns.
+        ///
+        /// The derivation itself was started at connect time and has been running on a thread pool thread
+        /// while the relay's handshake crossed the network, so this usually collects a finished result.
+        /// What is waited for here is whatever is left of it, and only a host that asked the relay to pick
+        /// its code waits for much: its key material is not complete until the code arrives, which is one
+        /// packet before this one.
         /// </summary>
         internal void Welcome(byte localVirtualId)
         {
             LocalVirtualId = localVirtualId;
             Welcomed = true;
 
-            if (string.IsNullOrEmpty(_password) || string.IsNullOrEmpty(SessionCode))
-            {
-                return;
-            }
+            BeginKeyDerivation();
+            if (_pendingKey == null) return;
 
-            _crypto = SessionCrypto.Create(SessionCode, _password);
+            _crypto = _pendingKey.GetAwaiter().GetResult();
+            _pendingKey = null;
             // Nothing needs the password once the key exists, so it does not stay reachable.
             _password = null;
         }
@@ -115,6 +124,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             Welcomed = false;
             PeerCount = 0;
             _crypto = null;
+            _pendingKey = null;
             _password = null;
         }
 
@@ -266,6 +276,22 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         {
             _plainReader.SetSource(_plainBuffer, 0, length);
             return _plainReader;
+        }
+
+        /// <summary>
+        /// Starts deriving the session key as soon as the password and the code are both known, and does
+        /// nothing on every later call. It costs about a tenth of a second of CPU on purpose, which is a
+        /// visible hitch on the thread the game renders from, so it runs on a thread pool thread instead
+        /// and overlaps the relay handshake rather than following it.
+        /// </summary>
+        private void BeginKeyDerivation()
+        {
+            if (_pendingKey != null || _crypto != null) return;
+            if (string.IsNullOrEmpty(_password) || string.IsNullOrEmpty(SessionCode)) return;
+
+            string sessionCode = SessionCode!;
+            string password = _password!;
+            _pendingKey = Task.Run(() => SessionCrypto.Create(sessionCode, password));
         }
 
         /// <summary>

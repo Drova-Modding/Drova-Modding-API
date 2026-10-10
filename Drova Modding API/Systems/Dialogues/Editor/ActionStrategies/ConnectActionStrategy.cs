@@ -6,7 +6,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
     {
         private const string ConnectHint = "Click a target node to connect. Press Esc or right-click to cancel.";
 
-        // Source node captured at OnStart — independent of selection changes during the action.
+        // Captured at OnStart so a selection change during the action does not move the source.
         private DrawNodeEditor? _sourceNode;
 
         public void OnCancel(GraphEditorActionContext context)

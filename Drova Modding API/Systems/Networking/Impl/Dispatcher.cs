@@ -7,21 +7,21 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     /// Routes typed and raw messages with no per-message allocation on the send or receive path.
     /// The single reused <see cref="LiteWriter"/> and <see cref="LiteReader"/> are safe without
     /// locking because the whole transport is pumped from the Unity main thread. Typed messages are
-    /// looked up by a 2-byte id in a flat array; the id for a type is cached in
+    /// looked up by a 1-byte id in a flat array; the id for a type is cached in
     /// <see cref="MessageType{T}"/> so a send never hashes on the type.
     /// </summary>
     internal static class Dispatcher
     {
         /// <summary>
-        /// How many typed message ids exist. Also the width of every per-id table in
-        /// <see cref="NetworkDiagnostics"/>, so the two cannot drift apart.
+        /// How many typed message ids exist - every id fits the one byte it travels in. Also the width of every per-id
+        /// table in <see cref="NetworkDiagnostics"/>, so the two cannot drift apart.
         /// </summary>
         internal const int MaxMessageTypes = 256;
 
-        private static readonly MessageChannel?[] _typed = new MessageChannel[MaxMessageTypes];
-        private static readonly RawHandler?[] _raw = new RawHandler[LiteTransport.ChannelCount];
-        private static readonly LiteWriter _writer = new();
-        private static readonly LiteReader _reader = new();
+        private static readonly MessageChannel?[] TypedChannels = new MessageChannel[MaxMessageTypes];
+        private static readonly RawHandler?[] RawHandlers = new RawHandler[LiteTransport.ChannelCount];
+        private static readonly LiteWriter SharedWriter = new();
+        private static readonly LiteReader SharedReader = new();
 
         internal static void RegisterWithId<T>(ushort id, Action<INetPeer, T> handler) where T : struct, INetMessage
         {
@@ -29,13 +29,13 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             {
                 throw new ArgumentOutOfRangeException(nameof(id), "message id must be below " + MaxMessageTypes);
             }
-            if (_typed[id] != null)
+            if (TypedChannels[id] != null)
             {
                 throw new InvalidOperationException("message id " + id + " is already registered");
             }
             MessageType<T>.Id = id;
             MessageType<T>.Registered = true;
-            _typed[id] = new MessageChannel<T>(handler);
+            TypedChannels[id] = new MessageChannel<T>(handler);
         }
 
         internal static void Unregister<T>() where T : struct, INetMessage
@@ -44,16 +44,17 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             {
                 return;
             }
-            _typed[MessageType<T>.Id] = null;
+            TypedChannels[MessageType<T>.Id] = null;
             MessageType<T>.Registered = false;
         }
 
         internal static NetDataWriter BuildTyped<T>(in T message) where T : struct, INetMessage
         {
             RequireRegistered<T>();
-            LiteWriter writer = _writer;
+            LiteWriter writer = SharedWriter;
             writer.Reset();
-            writer.Put(MessageType<T>.Id);
+            // One byte: ids are below MaxMessageTypes. Two cost a byte on every message, about 30 a second each way.
+            writer.Put((byte)MessageType<T>.Id);
             message.Write(writer);
             NetworkDiagnostics.RecordSent(MessageType<T>.Id, writer.Native.Length);
             return writer.Native;
@@ -72,7 +73,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             // A typed packet too short to hold its own id is not a message. Without this the read runs off
             // the end of the buffer, and the receive path's catch turns every one of them into a logged
             // stack trace - a flood anyone with the port can start.
-            if (packet.AvailableBytes < sizeof(ushort))
+            if (packet.AvailableBytes < sizeof(byte))
             {
                 NetworkDiagnostics.CountMalformedPacket();
                 return;
@@ -80,9 +81,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             // Measured before the id is read, so the tally is the message as it sat on the wire.
             int size = packet.AvailableBytes;
-            _reader.Bind(packet);
-            ushort id = _reader.GetUShort();
-            MessageChannel? channel = id < MaxMessageTypes ? _typed[id] : null;
+            SharedReader.Bind(packet);
+            ushort id = SharedReader.GetByte();
+            MessageChannel? channel = id < MaxMessageTypes ? TypedChannels[id] : null;
             if (channel == null)
             {
                 NetworkDiagnostics.CountUnknownMessageId();
@@ -90,7 +91,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             }
 
             NetworkDiagnostics.RecordReceived(id, size);
-            channel.Handle(peer, _reader);
+            channel.Handle(peer, SharedReader);
         }
 
         internal static void RegisterRawChannel(byte channel, RawHandler handler)
@@ -105,28 +106,28 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             {
                 throw new ArgumentOutOfRangeException(nameof(channel), "channel must be below " + RelayProtocol.ControlChannel);
             }
-            _raw[channel] = handler;
+            RawHandlers[channel] = handler;
         }
 
         internal static void UnregisterRawChannel(byte channel)
         {
-            if (channel >= _raw.Length)
+            if (channel >= RawHandlers.Length)
             {
                 return;
             }
-            _raw[channel] = null;
+            RawHandlers[channel] = null;
         }
 
         internal static void OnRawReceived(INetPeer peer, byte channel, ReadOnlySpan<byte> data)
         {
-            RawHandler? handler = channel < _raw.Length ? _raw[channel] : null;
+            RawHandler? handler = channel < RawHandlers.Length ? RawHandlers[channel] : null;
             handler?.Invoke(peer, data);
         }
 
         internal static void Reset()
         {
-            Array.Clear(_typed, 0, _typed.Length);
-            Array.Clear(_raw, 0, _raw.Length);
+            Array.Clear(TypedChannels, 0, TypedChannels.Length);
+            Array.Clear(RawHandlers, 0, RawHandlers.Length);
         }
     }
 

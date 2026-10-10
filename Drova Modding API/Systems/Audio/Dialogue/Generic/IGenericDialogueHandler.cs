@@ -9,7 +9,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Generic
         /// Check if this handler can handle the given dialogue tree
         /// </summary>
         /// <param name="tree">Tree</param>
-        /// <returns></returns>
         bool CanHandleDialogue(DialogueTree tree);
         /// <summary>
         /// Handle the given dialogue tree

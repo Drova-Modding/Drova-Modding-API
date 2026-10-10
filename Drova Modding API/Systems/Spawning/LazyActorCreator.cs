@@ -201,7 +201,10 @@ namespace Drova_Modding_API.Systems.Spawning
                     Object.Destroy(component);
             }
 
-            ProviderAccess.GetEntityGameHandler().RegisterLazyActor(lazyActor);
+            EntityGameHandler? entities = ProviderAccess.GetEntityGameHandler();
+            if (entities == null) return;
+
+            entities.RegisterLazyActor(lazyActor);
 
             // After the registration, and here rather than in the two callers, because this is the one point
             // both the fresh-create and the restore-from-save paths pass through. What it records is that

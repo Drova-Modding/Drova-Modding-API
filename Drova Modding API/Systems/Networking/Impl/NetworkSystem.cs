@@ -27,6 +27,20 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal static bool IsEncrypted => _transport?.IsEncrypted ?? false;
 
+        /// <summary>
+        /// Largest payload a message may serialize to. Answered before a session exists as well, so a mod
+        /// can size its messages at load time; the number only shrinks once a session turns out to be
+        /// encrypted.
+        /// </summary>
+        internal static int MaxPayloadSize
+        {
+            get
+            {
+                Initialize();
+                return _transport!.MaxPayloadSize;
+            }
+        }
+
         internal static void Initialize()
         {
             _transport ??= new LiteTransport();
@@ -35,11 +49,13 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal static void Poll()
         {
             _transport?.Poll();
+            LanDiscovery.Poll();
         }
 
         internal static void Shutdown()
         {
             _transport?.Stop();
+            LanDiscovery.Stop();
             // Handlers are process-global; drop them so a later session does not inherit stale ones.
             Dispatcher.Reset();
         }
@@ -97,7 +113,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal static void SendToAll<T>(in T message, Delivery delivery) where T : struct, INetMessage
         {
-            _transport?.SendTypedToAll(message, delivery);
+            Initialize();
+            _transport!.SendTypedToAll(message, delivery);
         }
 
         internal static void RegisterChannel(byte channel, RawHandler handler)
@@ -112,12 +129,14 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal static void SendRaw(INetPeer peer, byte channel, ReadOnlySpan<byte> data, Delivery delivery)
         {
-            _transport?.SendRaw(peer, channel, data, delivery);
+            Initialize();
+            _transport!.SendRaw(peer, channel, data, delivery);
         }
 
         internal static void SendRawToAll(byte channel, ReadOnlySpan<byte> data, Delivery delivery)
         {
-            _transport?.SendRawToAll(channel, data, delivery);
+            Initialize();
+            _transport!.SendRawToAll(channel, data, delivery);
         }
     }
 }

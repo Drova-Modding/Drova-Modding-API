@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -435,6 +435,9 @@
         <Compile Include="Systems\Coop\CoopRandom.cs"/>
         <Compile Include="Systems\Coop\NullCoopProvider.cs"/>
         <Compile Include="Access\CutsceneSyncAccess.cs"/>
+        <Compile Include="Systems\Testing\LaunchProfile.cs"/>
+        <Compile Include="Systems\Testing\TestAgent.cs"/>
+        <Compile Include="Systems\Testing\TestAgent.Actions.cs"/>
         <Compile Include="Access\DamageAccess.cs"/>
         <Compile Include="Access\DifficultyAccess.cs"/>
         <Compile Include="Access\GameEvents.cs"/>
@@ -453,6 +456,7 @@
         <Compile Include="Converters\Vector2JsonConverter.cs" />
         <Compile Include="Core.cs" />
         <Compile Include="Access\OptionMenuAccess.cs" />
+        <Compile Include="Access\PauseMenuAccess.cs" />
         <Compile Include="Extensions\GUIExtensions.cs" />
         <Compile Include="GlobalFields\InputActionFields.cs" />
         <Compile Include="GlobalFields\ItemReadableIds.cs" />
@@ -472,11 +476,13 @@
         <Compile Include="Patches\DialogueTreePatch.cs" />
         <Compile Include="Patches\DSDialogueUGUIPatch.cs" />
         <Compile Include="Patches\DSStatementPatch.cs" />
+        <Compile Include="Patches\DS_DialogueUGUIFinalizePatch.cs" />
         <Compile Include="Patches\DS_MultipleChoiceNodePatch.cs" />
         <Compile Include="Patches\DS_StatementNodePatch.cs" />
         <Compile Include="Patches\GUIWindowOptions.cs" />
         <Compile Include="Patches\GUIWindowPatch.cs" />
         <Compile Include="Patches\LazyActorPatch.cs" />
+        <Compile Include="Patches\ModuleOpenDoorsMovementPatch.cs" />
         <Compile Include="Patches\SaveableHealthPatch.cs" />
         <Compile Include="Patches\SaveableStatusEffectHandlerPatch.cs" />
         <Compile Include="Patches\SaveBBParametersToSavegameIndexPatch.cs" />
@@ -599,6 +605,8 @@
         <Compile Include="Systems\Networking\Impl\RelayLink.cs" />
         <Compile Include="Systems\Networking\Impl\SessionCrypto.cs" />
         <Compile Include="Systems\Networking\Impl\NetworkSystem.cs" />
+        <Compile Include="Systems\Networking\Impl\LanDiscovery.cs" />
+        <Compile Include="Systems\Networking\DiscoveredHost.cs" />
         <Compile Include="Systems\Networking\Diagnostics\NetworkDiagnostics.cs" />
     </ItemGroup>
 
@@ -617,6 +625,7 @@
         <Compile Include="Systems\Audio\Dialogue\Dynamic\BrawlDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Dynamic\RestWorldDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Dynamic\SleepDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Dynamic\DrinkWaterDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\AfterCombatPlayerDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\ArenaViewerDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\ArenaFightsDialogue.cs" />
@@ -818,5 +827,22 @@
         <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(StagingDir)\*' -DestinationPath '$(ZipPath)' -Force&quot;"/>
 
         <Message Importance="high" Text="Packaged $(Configuration) build -&gt; $(ZipPath)"/>
+    </Target>
+
+    <!-- The test runner as a ready-made executable per platform, zipped next to the API zips. Needs the .NET 8 runtime. -->
+    <Target Name="PackageTestRunner" AfterTargets="PackageMod" Condition="'$(Configuration)'=='Release'">
+        <PropertyGroup>
+            <DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
+            <RunnerProject>$(MSBuildProjectDirectory)\..\tools\Drova.TestRunner\Drova.TestRunner.csproj</RunnerProject>
+        </PropertyGroup>
+        <ItemGroup>
+            <RunnerRid Include="win-x64;linux-x64"/>
+        </ItemGroup>
+
+        <RemoveDir Directories="$(DistDir)\staging\TestRunner"/>
+        <Exec Command="dotnet publish &quot;$(RunnerProject)&quot; -c Release -r %(RunnerRid.Identity) --self-contained false -p:PublishSingleFile=true -p:DebugType=none -o &quot;$(DistDir)\staging\TestRunner\%(RunnerRid.Identity)&quot;"/>
+        <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(DistDir)\staging\TestRunner\%(RunnerRid.Identity)\*' -DestinationPath '$(DistDir)\Drova_TestRunner_%(RunnerRid.Identity).zip' -Force&quot;"/>
+
+        <Message Importance="high" Text="Packaged the test runner -&gt; $(DistDir)\Drova_TestRunner_*.zip"/>
     </Target>
 </Project>

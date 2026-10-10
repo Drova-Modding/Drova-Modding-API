@@ -12,7 +12,7 @@ Entry point: `Drova_Modding_API.Access.DamageAccess` (static).
 using Drova_Modding_API.Access;
 using Il2CppDrova;
 
-if (PlayerAccess.TryGetPlayer(out Actor player))
+if (PlayerAccess.TryGetPlayer(out Actor? player))
 {
     DamageAccess.TryApplyPhysicalDamage(player, 25);
 }
@@ -23,7 +23,7 @@ if (PlayerAccess.TryGetPlayer(out Actor player))
 ### Deal a specific kind of damage
 
 ```csharp
-if (DamageAccess.TryGetMagicalDamageType(out DamageStatDesc magical))
+if (DamageAccess.TryGetMagicalDamageType(out DamageStatDesc? magical))
 {
     DamageAccess.TryApplyDamage(target, 40, magical);
 }
@@ -32,7 +32,7 @@ if (DamageAccess.TryGetMagicalDamageType(out DamageStatDesc magical))
 ### Deal damage nothing resists
 
 ```csharp
-if (DamageAccess.TryGetPureDamageType(out DamageStatDesc pure))
+if (DamageAccess.TryGetPureDamageType(out DamageStatDesc? pure))
 {
     DamageAccess.TryApplyDamage(target, 10, pure);
 }
@@ -63,10 +63,10 @@ Read the first note below before you do. A source is not only a name on the blow
 | `bool TryApplyDamage(Health target, int amount, DamageStatDesc damageType, Entity? source = null)` | Same, for callers that already hold the health component.                                         |
 | `bool TryApplyPhysicalDamage(Actor target, int amount, Entity? source = null)`                     | Deals physical damage, the type essentially every weapon deals.                                   |
 | `bool TryHeal(Actor target, int amount, Entity? source = null)`                                    | Restores health through the same calculation.                                                     |
-| `bool TryGetPhysicalDamageType(out DamageStatDesc damageType)`                                     | The type answered by armor and physical resistance.                                               |
-| `bool TryGetMagicalDamageType(out DamageStatDesc damageType)`                                      | The type answered by magical resistance. What most spells deal.                                   |
-| `bool TryGetPureDamageType(out DamageStatDesc damageType)`                                         | The type nothing resists.                                                                         |
-| `bool TryGetHealingType(out DamageStatDesc damageType)`                                            | The type that makes a health change count as healing.                                             |
+| `bool TryGetPhysicalDamageType(out DamageStatDesc? damageType)`                                    | The type answered by armor and physical resistance.                                               |
+| `bool TryGetMagicalDamageType(out DamageStatDesc? damageType)`                                     | The type answered by magical resistance. What most spells deal.                                   |
+| `bool TryGetPureDamageType(out DamageStatDesc? damageType)`                                        | The type nothing resists.                                                                         |
+| `bool TryGetHealingType(out DamageStatDesc? damageType)`                                           | The type that makes a health change count as healing.                                             |
 
 ## Notes & gotchas
 

@@ -81,9 +81,10 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
             var pendingFlows = new List<Item>();
 
+            SubDatabase_Item? database = ProviderAccess.ItemDatabase;
             foreach (var readableId in _readableIds)
             {
-                var item = ProviderAccess.ItemDatabase.GetItemByReadableId(readableId);
+                var item = database != null ? database.GetItemByReadableId(readableId) : null;
                 if (item == null)
                 {
                     MelonLogger.Warning($"Could not resolve flow readable id '{readableId}'.");
@@ -179,7 +180,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             spellPreset.InitSpellSlots();
 
             var defaultPreset = GetDefaultSpellPreset();
-            var sourceSlots = defaultPreset?._slots;
+            var sourceSlots = defaultPreset == null ? null : defaultPreset._slots;
             var targetSlots = spellPreset._slots;
 
             if (sourceSlots == null || sourceSlots.Count == 0 || targetSlots == null || targetSlots.Count == 0)

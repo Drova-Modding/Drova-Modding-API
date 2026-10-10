@@ -30,7 +30,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return;
             }
 
-            _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
+            SubDatabase_Item? itemDatabase = ProviderAccess.ItemDatabase;
+            _items = itemDatabase != null ? itemDatabase.GetItems().ToArray() : [];
 
             if (_node.Items == null)
             {
@@ -40,8 +41,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _itemDropdowns.Clear();
             for (int i = 0; i < _node.Items.Count; i++)
             {
-                DialogItems dialogItem = _node.Items[i];
-                int selectedIndex = Array.FindIndex(_items, item => item.Guid == dialogItem.Item?.Guid);
+                Item? current = _node.Items[i].Item;
+                string? currentGuid = current == null ? null : current.Guid;
+                int selectedIndex = Array.FindIndex(_items, item => item.Guid == currentGuid);
                 if (selectedIndex < 0)
                 {
                     selectedIndex = 0;

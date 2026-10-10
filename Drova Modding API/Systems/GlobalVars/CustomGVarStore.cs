@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
 using Drova_Modding_API.Access;
@@ -107,7 +108,12 @@ namespace Drova_Modding_API.Systems.GlobalVars
                     return;
                 }
 
-                SubDatabase_GVars database = ProviderAccess.GVarDatabase;
+                SubDatabase_GVars? database = ProviderAccess.GVarDatabase;
+                if (database == null)
+                {
+                    MelonLogger.Warning("CustomGVarStore: the GVar database is not loaded yet.");
+                    return;
+                }
 
                 for (int fileIndex = 0; fileIndex < files.Length; fileIndex++)
                 {
@@ -164,7 +170,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             return true;
         }
 
-        public static bool TryCreateCustomList(string listName, bool isQuestVarList, string? modFileStem, out GVarList? list, out string message)
+        public static bool TryCreateCustomList(string listName, bool isQuestVarList, string? modFileStem, [NotNullWhen(true)] out GVarList? list, out string message)
         {
             list = null;
             message = string.Empty;
@@ -176,7 +182,12 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 return false;
             }
 
-            SubDatabase_GVars database = ProviderAccess.GVarDatabase;
+            SubDatabase_GVars? database = ProviderAccess.GVarDatabase;
+            if (database == null)
+            {
+                message = "GVar database not available.";
+                return false;
+            }
 
             if (database.GetGVarListByName(trimmedName) != null)
             {
@@ -217,7 +228,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             return true;
         }
 
-        public static bool TryCreateCustomVar(GVarList list, CustomGVarType type, string id, string name, string initialValue, out AGVarBase? createdVar, out string message)
+        public static bool TryCreateCustomVar(GVarList list, CustomGVarType type, string id, string name, string initialValue, [NotNullWhen(true)] out AGVarBase? createdVar, out string message)
         {
             createdVar = null;
             message = string.Empty;
@@ -323,7 +334,12 @@ namespace Drova_Modding_API.Systems.GlobalVars
 
             RemoveCustomVarsFromList(list);
 
-            SubDatabase_GVars database = ProviderAccess.GVarDatabase;
+            SubDatabase_GVars? database = ProviderAccess.GVarDatabase;
+            if (database == null)
+            {
+                message = "GVar database not available.";
+                return false;
+            }
 
             bool removed = database.AllGVars.Remove(list);
             if (!removed)
@@ -441,7 +457,12 @@ namespace Drova_Modding_API.Systems.GlobalVars
         {
             try
             {
-                SubDatabase_GVars database = ProviderAccess.GVarDatabase;
+                SubDatabase_GVars? database = ProviderAccess.GVarDatabase;
+                if (database == null)
+                {
+                    MelonLogger.Warning("CustomGVarStore: the GVar database is not loaded yet.");
+                    return;
+                }
 
                 string folderPath = GetStoreFolderPath();
                 EnsureStoreFolder(folderPath);

@@ -139,8 +139,6 @@
         /// <summary>
         /// Returns whether a region is in a cave or not
         /// </summary>
-        /// <param name="regions"></param>
-        /// <returns></returns>
         public static bool IsARegionInCave(this List<Region> regions)
         {
             for (int i = 0; i < regions.Count; i++)

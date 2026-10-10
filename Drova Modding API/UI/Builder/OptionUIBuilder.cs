@@ -18,7 +18,7 @@ namespace Drova_Modding_API.UI.Builder
     public class OptionUIBuilder
     {
         private readonly Transform _parent;
-        private readonly List<GameObject> gameObjects = [];
+        private readonly List<GameObject> _gameObjects = [];
         internal OptionUIBuilder(Transform parent)
         {
             _parent = parent;
@@ -124,7 +124,7 @@ namespace Drova_Modding_API.UI.Builder
         {
             GameObject title = InstantiateRow(GetTitleObject(), parent);
             SetLocalizedText(title, localizedString);
-            gameObjects.Add(title);
+            _gameObjects.Add(title);
             return this;
         }
 
@@ -135,7 +135,7 @@ namespace Drova_Modding_API.UI.Builder
         {
             GameObject disclaimer = InstantiateRow(GetDisclaimerObject(), _parent);
             SetLocalizedText(disclaimer, localizedString);
-            gameObjects.Add(disclaimer);
+            _gameObjects.Add(disclaimer);
             return this;
         }
 
@@ -146,7 +146,7 @@ namespace Drova_Modding_API.UI.Builder
         {
             GameObject header = InstantiateRow(GetHeaderObject(), _parent);
             SetLocalizedText(header, localizedString);
-            gameObjects.Add(header);
+            _gameObjects.Add(header);
             return this;
         }
 
@@ -232,7 +232,7 @@ namespace Drova_Modding_API.UI.Builder
                 sliderOption.OnValueChangedListener(value);
                 sliderOption.UpdateOptionValue(value);
             }
-            gameObjects.Add(slider);
+            _gameObjects.Add(slider);
             return this;
         }
 
@@ -313,7 +313,7 @@ namespace Drova_Modding_API.UI.Builder
                 sliderOption.ConfigHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(float.Parse(value));
             }
-            gameObjects.Add(slider);
+            _gameObjects.Add(slider);
             return this;
         }
 
@@ -408,7 +408,7 @@ namespace Drova_Modding_API.UI.Builder
 
                 toggle._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionBool);
             }
-            gameObjects.Add(@switch);
+            _gameObjects.Add(@switch);
             return this;
         }
 
@@ -416,7 +416,6 @@ namespace Drova_Modding_API.UI.Builder
         /// Create a section with input actions.
         /// </summary>
         /// <param name="inputActions">The input actions to display</param>
-        /// <returns></returns>
         public OptionUIBuilder CreateInputActionSection(List<InputActionTemplate> inputActions)
         {
             GameObject keybindingPrefab = GetKeyBinding();
@@ -506,7 +505,7 @@ namespace Drova_Modding_API.UI.Builder
 
             DropdownHandler dropdownHandler = rightOptionConfig.gameObject.AddComponent<DropdownHandler>();
 
-            Il2CppDrova.ConfigGameHandler configHandler = ProviderAccess.GetConfigGameHandler();
+            Il2CppDrova.ConfigGameHandler? configHandler = ProviderAccess.GetConfigGameHandler();
 
             if (!configHandler)
             {
@@ -528,7 +527,7 @@ namespace Drova_Modding_API.UI.Builder
             {
                 dropdownHandler.Init(keys, [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(defaulValue));
             }
-            gameObjects.Add(dropdown);
+            _gameObjects.Add(dropdown);
             return this;
         }
 
@@ -558,7 +557,7 @@ namespace Drova_Modding_API.UI.Builder
                 return this;
             }
             buttonJ2D.onClick.AddListener(new Action(onClick));
-            gameObjects.Add(button);
+            _gameObjects.Add(button);
             return this;
         }
 
@@ -567,9 +566,13 @@ namespace Drova_Modding_API.UI.Builder
          */
         public List<GameObject> Build()
         {
-            ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.SaveChangesToFile(false);
+            Il2CppDrova.ConfigGameHandler? configHandler = ProviderAccess.GetConfigGameHandler();
+            if (configHandler != null)
+            {
+                configHandler.GameplayConfig.ConfigFile.SaveChangesToFile(false);
+            }
             RefreshPanelNavigation();
-            return gameObjects;
+            return _gameObjects;
         }
 
         private static void SetLocalizedText(GameObject gameObject, LocalizedString localizedString)

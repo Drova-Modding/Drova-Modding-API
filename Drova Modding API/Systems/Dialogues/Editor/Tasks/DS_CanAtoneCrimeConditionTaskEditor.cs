@@ -12,16 +12,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     /// </summary>
     public class DS_CanAtoneCrimeConditionTaskEditor : DrawTaskEditor
     {
-        private DS_CanAtoneCrimeConditionTask _castedTask;
-        private Item[] _items;
-        private GUIDropdownWithFilter _itemDropdown;
+        private DS_CanAtoneCrimeConditionTask? _castedTask;
+        private Item[] _items = [];
+        private GUIDropdownWithFilter _itemDropdown = null!;
         private float _lastHeight = 100f;
 
         /// <inheritdoc />
         public override void Init()
         {
             _castedTask ??= Task.TryCast<DS_CanAtoneCrimeConditionTask>();
-            _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
+            if (_castedTask == null) return;
+
+            SubDatabase_Item? itemDatabase = ProviderAccess.ItemDatabase;
+            _items = itemDatabase != null ? itemDatabase.GetItems().ToArray() : [];
 
             int selectedIndex = -1;
             if (_castedTask.Shard != null)

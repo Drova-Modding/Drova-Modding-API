@@ -19,6 +19,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<ProbabilitySelector>();
+            if (_castedNode == null) return;
             if(_castedNode.childOptions == null)
             {
                 _castedNode.childOptions = new Il2CppSystem.Collections.Generic.List<ProbabilitySelector.Option>();

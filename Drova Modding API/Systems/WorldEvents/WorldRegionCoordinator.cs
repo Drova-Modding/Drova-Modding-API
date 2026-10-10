@@ -12,6 +12,13 @@ namespace Drova_Modding_API.Systems.WorldEvents
     internal sealed class WorldRegionCoordinator(List<ARegionalEvent> runningRegionalEvents, Func<float> getRegionalCooldownSeconds)
     {
         private readonly Dictionary<Region, float> _regionCooldowns = [];
+
+        // Who is in each region: the local player (LocalKey) and remote players by their id. A region's events start
+        // when its first occupant enters and end when its last one leaves, so a co-op teammate alone in a region gets
+        // the ambush too, and two players in one region share one.
+        private const int LocalKey = -1;
+        private readonly Dictionary<Region, List<int>> _occupants = [];
+        private readonly Dictionary<int, (HashSet<Region> Regions, Func<Vector2?> Position)> _remotes = [];
         private readonly HashSet<Region> _blockedRegions =
         [
             Region.Nemeton,
@@ -33,8 +40,98 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <param name="hasEntered"><see langword="true"/> when entering; <see langword="false"/> when leaving.</param>
         public void OnRegionChanged(Region region, bool hasEntered)
         {
-            HandleRegionChange(region, hasEntered);
-            HandleRunningEvents(region, hasEntered);
+            Change(LocalKey, region, hasEntered);
+        }
+
+        /// <summary>
+        /// A remote player (a co-op teammate, on the machine that owns the world) entered or left a region.
+        /// </summary>
+        /// <param name="player">The teammate's id; anything but -1.</param>
+        /// <param name="region">The region.</param>
+        /// <param name="hasEntered"><see langword="true"/> when entering; <see langword="false"/> when leaving.</param>
+        /// <param name="position">Where the teammate stands now, or null when unknown - what their ambush spawns around.</param>
+        public void OnRemoteRegionChanged(int player, Region region, bool hasEntered, Func<Vector2?> position)
+        {
+            if (player == LocalKey) return;
+
+            if (!_remotes.TryGetValue(player, out (HashSet<Region> Regions, Func<Vector2?> Position) remote))
+            {
+                remote = ([], position);
+                _remotes[player] = remote;
+            }
+
+            if (hasEntered) remote.Regions.Add(region);
+            else remote.Regions.Remove(region);
+
+            Change(player, region, hasEntered);
+        }
+
+        /// <summary>A remote player left: out of every region they were in.</summary>
+        /// <param name="player">The teammate's id.</param>
+        public void ForgetRemote(int player)
+        {
+            if (!_remotes.Remove(player, out (HashSet<Region> Regions, Func<Vector2?> Position) remote)) return;
+
+            foreach (Region region in remote.Regions.ToList())
+            {
+                Change(player, region, false);
+            }
+        }
+
+        private void Change(int key, Region region, bool hasEntered)
+        {
+            if (!_occupants.TryGetValue(region, out List<int> inside))
+            {
+                inside = [];
+                _occupants[region] = inside;
+            }
+
+            if (hasEntered)
+            {
+                // The local player re-entering a region nobody else holds is a fresh entry even if no leave was seen
+                // (a world reload); anyone else already inside means the region's events are running for the party.
+                if (inside.Contains(key))
+                {
+                    if (key != LocalKey || inside.Count > 1) return;
+                }
+                else
+                {
+                    inside.Add(key);
+                    if (inside.Count > 1) return;
+                }
+
+                Anchor(region, key);
+                HandleRegionChange(region, true);
+                HandleRunningEvents(region, true);
+                return;
+            }
+
+            if (!inside.Remove(key)) return;
+
+            // Somebody is still there: the region's events go on, now around them.
+            if (inside.Count > 0)
+            {
+                Anchor(region, inside[0]);
+                return;
+            }
+
+            HandleRegionChange(region, false);
+            HandleRunningEvents(region, false);
+        }
+
+        /// <summary>Points the region's events at the occupant they are for.</summary>
+        private void Anchor(Region region, int key)
+        {
+            if (!RegionalEventRegistry.TryGetEvents(region, out List<ARegionalEvent>? events)) return;
+
+            Func<Vector2?>? position = key == LocalKey ? null : _remotes[key].Position;
+            Func<bool>? blocked = key == LocalKey ? null : () => _remotes.TryGetValue(key, out (HashSet<Region> Regions, Func<Vector2?> Position) remote) && remote.Regions.Any(_blockedRegions.Contains);
+
+            foreach (ARegionalEvent regionalEvent in events)
+            {
+                regionalEvent.AnchorPosition = position;
+                regionalEvent.AnchorBlocked = blocked;
+            }
         }
 
         /// <summary>
@@ -76,7 +173,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// </summary>
         private void HandleRunningEvents(Region region, bool hasEntered)
         {
-            if (hasEntered && RegionalEventRegistry.TryGetEvents(region, out List<ARegionalEvent>? regionalEvents) && regionalEvents != null)
+            if (hasEntered && RegionalEventRegistry.TryGetEvents(region, out List<ARegionalEvent>? regionalEvents))
             {
                 if (IsRegionOnCooldown(region))
                 {
@@ -89,9 +186,15 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     ARegionalEvent randomEvent = regionalEvents[UnityEngine.Random.Range(0, regionalEvents.Count)];
                     if (!randomEvent.IsRunning)
                     {
+                        // Only one that is still running after its start counts: an event may end itself on the spot (a
+                        // skip roll, a co-op client that does not own the world), and counting that one put its region on
+                        // cooldown and ended it again on leave - stamping the event's own cooldown it had just declined.
                         randomEvent.StartEvent();
-                        runningRegionalEvents.Add(randomEvent);
-                        startedEvent = true;
+                        if (randomEvent.IsRunning)
+                        {
+                            runningRegionalEvents.Add(randomEvent);
+                            startedEvent = true;
+                        }
                     }
                 }
 
@@ -101,8 +204,11 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     if (!regionalEvent.IsRunning && regionalEvent.CanRunParallel())
                     {
                         regionalEvent.StartEvent();
-                        runningRegionalEvents.Add(regionalEvent);
-                        startedEvent = true;
+                        if (regionalEvent.IsRunning)
+                        {
+                            runningRegionalEvents.Add(regionalEvent);
+                            startedEvent = true;
+                        }
                     }
                 }
 
@@ -125,7 +231,8 @@ namespace Drova_Modding_API.Systems.WorldEvents
                         continue;
                     }
 
-                    runningEvent.EndEvent();
+                    // One that already ended itself (a spawn that could not happen) is not ended twice.
+                    if (runningEvent.IsRunning) runningEvent.EndEvent();
                     runningRegionalEvents.RemoveAt(index);
                 }
             }
@@ -136,7 +243,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// </summary>
         private static void HandleRegionChange(Region region, bool hasEntered)
         {
-            if (hasEntered && RegionalEventRegistry.TryGetEvents(region, out List<ARegionalEvent>? enteredEvents) && enteredEvents != null)
+            if (hasEntered && RegionalEventRegistry.TryGetEvents(region, out List<ARegionalEvent>? enteredEvents))
             {
                 for (int index = 0; index < enteredEvents.Count; index++)
                 {
@@ -147,7 +254,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 return;
             }
 
-            if (!hasEntered && RegionalEventRegistry.TryGetEvents(region, out List<ARegionalEvent>? leftEvents) && leftEvents != null)
+            if (!hasEntered && RegionalEventRegistry.TryGetEvents(region, out List<ARegionalEvent>? leftEvents))
             {
                 for (int index = 0; index < leftEvents.Count; index++)
                 {

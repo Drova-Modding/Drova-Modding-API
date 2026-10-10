@@ -169,11 +169,11 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
 
             HashSet<string> seenIds = [];
-            AddVarsOfType<GInt>(seenIds);
-            AddVarsOfType<GFloat>(seenIds);
-            AddVarsOfType<GString>(seenIds);
-            AddVarsOfType<GBool>(seenIds);
-            AddVarsOfType<GQuestState>(seenIds);
+            AddVarsOfType<GInt>(_selectedList, seenIds);
+            AddVarsOfType<GFloat>(_selectedList, seenIds);
+            AddVarsOfType<GString>(_selectedList, seenIds);
+            AddVarsOfType<GBool>(_selectedList, seenIds);
+            AddVarsOfType<GQuestState>(_selectedList, seenIds);
 
             if (_selectedList.IsQuestVarList && _selectedList._questState != null)
             {
@@ -190,9 +190,9 @@ namespace Drova_Modding_API.Systems.GlobalVars
         }
 
         [HideFromIl2Cpp]
-        private void AddVarsOfType<T>(HashSet<string> seenIds) where T : AGVarBase
+        private void AddVarsOfType<T>(GVarList list, HashSet<string> seenIds) where T : AGVarBase
         {
-            Il2CppArrayBase<T>? bases = _selectedList.GetVarsOfType<T>().ToArray();
+            Il2CppArrayBase<T>? bases = list.GetVarsOfType<T>().ToArray();
             for (int index = 0; index < bases.Count; index++)
             {
                 T gvar = bases[index];

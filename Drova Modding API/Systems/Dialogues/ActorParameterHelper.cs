@@ -10,7 +10,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Get the player actor parameters.
         /// </summary>
-        /// <returns></returns>
         public static ActorParameter GetPlayerActorParameters()
         {
             return new ActorParameter("Player");

@@ -100,7 +100,7 @@ public struct MovePlayer : INetMessage
 
 The `ushort` id is the wire contract: host and client must use the same id for the same type, so
 declare them as constants in one place. Registration order does not matter, ids are independent of
-it. Ids `0`–`255` are valid.
+it. Ids `0`–`255` are valid; each travels as a single byte in front of the message.
 
 ```csharp
 internal static class MessageIds
@@ -158,6 +158,38 @@ runtime.
 A mod that uses networking references `Drova_Modding_API.dll` only — LiteNetLib never appears in a
 consumer mod's references.
 
+## Finding hosts on the local network
+
+A direct host (`StartHost`) can answer LAN discovery, so players on the same network find it without
+typing an address. The host decides what it says about itself; the API only carries the bytes.
+
+```csharp
+// Host: answer with a small payload of your own. Asked again for every request, so it can be live.
+NetworkAccess.SetDiscoveryInfo(() => Encoding.UTF8.GetBytes($"{hostName};{players}/16"));
+NetworkAccess.StartHost(9061, "secret");
+
+// Client: broadcast now and every 2 s until stopped, then read what answered.
+NetworkAccess.StartDiscovery(9061);
+List<DiscoveredHost> found = new();
+NetworkAccess.GetDiscoveredHosts(found);
+foreach (DiscoveredHost host in found)
+{
+    // host.Payload is untrusted input from anyone on the network. Connect with host.Address and host.Port.
+}
+NetworkAccess.StopDiscovery();
+```
+
+- **Inert unless used.** Without `SetDiscoveryInfo` a host answers nothing, and without `StartDiscovery`
+  nothing is broadcast. A relay session never receives a broadcast.
+- **Independent of a session.** Discovery runs on its own socket, so a client can look while idle.
+- **Private networks only.** The host answers requests from private, link-local and loopback addresses,
+  so a host reachable from the internet through a forwarded port does not describe itself to it.
+- **IPv4 broadcast.** A host silent for three broadcasts (about 6 s) drops out of the list.
+- Keep the payload well under 1 KB; it travels in one datagram.
+
+A direct session is **not encrypted**. The connection key travels in the clear and only keeps out a
+client that does not know it; `IsEncrypted` is false. Use a relay with a password for a sealed session.
+
 ## Going through a relay
 
 Direct UDP needs the host to be reachable, which home connections usually are not without port
@@ -203,8 +235,9 @@ and the transport logs a summary rather than one line per packet.
 
 What that costs and what it does not cover:
 
-- **28 bytes per message** (nonce and tag), out of the relay's payload budget — around 1200 bytes by
-  default. Size messages accordingly.
+- **28 bytes per message** (nonce and tag), out of the relay's payload budget. `NetworkAccess.MaxPayloadSize`
+  is that budget with the nonce, tag and routing byte already subtracted, so read it once the session is
+  up and split anything larger.
 - **An open session is not encrypted.** No password, no key. `IsEncrypted` says so; show it.
 - **Replaying a genuine packet is still possible** for a hostile relay. Rejecting repeats would break
   unreliable channels, so that bound belongs to your own state handling.
@@ -274,11 +307,16 @@ stripped.
 | `int PeerCount`                                                                                                   | How many remote peers are connected.                                                           |
 | `string? SessionCode`                                                                                             | The relay session code in use, including one the relay assigned. Null outside a relay session. |
 | `bool IsEncrypted`                                                                                                | Whether messages are sealed end to end. True only for a relay session with a password.         |
-| `void StartHost(int port, string? key = null)`                                                                    | Listen on a UDP port; clients must present the same `key` when set.                            |
+| `int MaxPayloadSize`                                                                                              | Largest payload one message may serialize to. Anything larger is dropped before it is sent.    |
+| `void StartHost(int port, string? key = null)`                                                                    | Listen on a UDP port; clients must present the same `key` when set. Not encrypted.             |
 | `void Connect(string address, int port, string? key = null)`                                                      | Join a host.                                                                                   |
 | `void StartHostViaRelay(string relayAddress, int relayPort, string? sessionCode = null, string? password = null)` | Host through a relay; null code asks the relay to pick one. Confirmed by `OnHostStarted`.      |
 | `void ConnectViaRelay(string relayAddress, int relayPort, string sessionCode, string? password = null)`           | Join a relay session. Confirmed by `OnConnectedToHost`.                                        |
 | `void Stop()`                                                                                                     | Close the session and all connections.                                                         |
+| `void SetDiscoveryInfo(Func<byte[]>? provider)`                                                                   | What a direct host answers LAN discovery with. Null (the default) answers nothing.             |
+| `void StartDiscovery(int port)` / `void StopDiscovery()`                                                          | Broadcast for direct hosts on that port every 2 s, independent of any session.                 |
+| `bool IsDiscovering`                                                                                              | Whether discovery is running.                                                                  |
+| `void GetDiscoveredHosts(List<DiscoveredHost> buffer)`                                                            | Hosts that answered recently: `Address`, `Port`, `Payload`, `LastSeenUtc`.                     |
 | `void GetPeers(List<INetPeer> buffer)`                                                                            | Clear the buffer and fill it with the current peers. Reuse one list to avoid allocating.       |
 | `void RegisterWithId<T>(ushort id, Action<INetPeer, T> handler)`                                                  | Bind a message type to its wire id. `T` must be a `struct` implementing `INetMessage`.         |
 | `void Unregister<T>()`                                                                                            | Drop a message type's handler and free its id.                                                 |
@@ -307,12 +345,12 @@ stripped.
 | `INetPeer`            | `int Id`, `int Ping` (one-way, half the round trip), `void Disconnect()`                                                                                                              |
 | `INetMessage`         | `void Write(INetWriter)`, `void Read(INetReader)`                                                                                                                                     |
 | `INetWriter`          | `Put` for `byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`string`/`byte[]`                                                                       |
-| `INetReader`          | The matching `GetByte()` … `GetBytes()`                                                                                                                                               |
+| `INetReader`          | The matching `GetByte()` … `GetBytes()`, plus `GetString(int maxBytes)` and `GetBytes(int maxLength)` for fields with a known bound                                                   |
 | `RawHandler`          | `void (INetPeer peer, ReadOnlySpan<byte> data)`                                                                                                                                       |
 | `NetRole`             | `None`, `Host`, `Client`                                                                                                                                                              |
 | `Delivery`            | `Reliable` (default), `Unreliable`, `ReliableUnordered`, `Sequenced`, `ReliableSequenced`                                                                                             |
 | `DisconnectReason`    | `ConnectionFailed`, `Timeout`, `RemoteClose`, `LocalClose`, `Rejected`, `Unknown`, plus `SessionClosed` and `Kicked` in relay sessions                                                |
-| `ConnectionRejection` | `Unspecified`, `BadHandshake`, `BadSessionCode`, `SessionNotFound`, `SessionFull`, `DuplicateHost`, `WrongPassword`, `RelayFull`, `RateLimited`, `TooManySessions`, `TooManyAttempts` |
+| `ConnectionRejection` | `Unspecified`, `BadHandshake`, `BadSessionCode`, `SessionNotFound`, `SessionFull`, `DuplicateHost`, `WrongPassword`, `RelayFull`, `RateLimited`, `TooManySessions`, `TooManyAttempts`, `TooManyClients`, `PasswordNotRequired` |
 
 ## Notes & gotchas
 
@@ -328,4 +366,12 @@ stripped.
 - **Message ids are a compatibility contract.** Changing an id or a struct's field order breaks
   every peer on the old build. Version the payload if you need to evolve it.
 - **Keep messages small.** Reliable messages larger than the MTU are fragmented and reassembled for
-  you; unreliable ones above it cannot be sent at all.
+  you; unreliable ones above it cannot be sent at all. In a relay session anything over
+  `NetworkAccess.MaxPayloadSize` is dropped before it leaves, and summarized in the log — a relay would
+  drop it too, but silently and counted against you.
+- **Sending before a session exists does nothing.** `Send` and `SendToAll` are no-ops until
+  `OnHostStarted` or `OnConnectedToHost` has fired. They are counted and summarized in the log rather
+  than failing, so an early send shows up instead of vanishing.
+- **A length prefix is never trusted.** `GetString()` and `GetBytes()` refuse a prefix naming more bytes
+  than the packet holds, and the message is dropped rather than delivered half-read. Use the
+  `maxBytes`/`maxLength` overloads wherever a field has a real bound.

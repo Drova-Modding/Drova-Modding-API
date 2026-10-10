@@ -9,7 +9,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
 
         private DS_DefineActiveActors? _castedNode;
-        private EntityInfo[] _entityInfos;
+        private EntityInfo[] _entityInfos = [];
         private List<GUIDropdownWithFilter> _entityInfoDropdowns;
         private const int MaxEntityInfosCount = 20;
 
@@ -21,6 +21,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_DefineActiveActors>();
+            if (_castedNode == null) return;
             _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>()
                 .GroupBy(e => e.name)
                 .Select(g => g.First())
@@ -48,7 +49,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 return;
             }
-            Rect rect = new(position.x, position.y, 350, 70 + _entityInfoDropdowns.Sum(d => 20 + 30));
+            Rect rect = new(position.x, position.y, 350, 70 + (_entityInfoDropdowns.Count * 50));
             Color previousColor = GUI.color;
             int previousDepth = GUI.depth;
             GUI.depth = 10;
@@ -74,8 +75,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             if (GUI.Button(new Rect(position.x + 10, position.y + 30 + (20 * (_castedNode.entityInfos.Count + 1)), 130, 20), "Add Actor"))
             {
-                _castedNode.entityInfos.Add(EntityGameHandler.TryGet()._undefinedEntityInfo);
-                _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), -1, 20));
+                EntityGameHandler? entityHandler = EntityGameHandler.TryGet();
+                if (entityHandler != null)
+                {
+                    _castedNode.entityInfos.Add(entityHandler._undefinedEntityInfo);
+                    _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfos.Select(e => e.name).ToArray(), -1, 20));
+                }
             }
 
             GUI.depth = previousDepth;

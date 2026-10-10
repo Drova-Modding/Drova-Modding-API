@@ -15,7 +15,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     {
         
         private DS_HasItemEquippedTask? _castedTask;
-        private Item[] _items;
+        private Item[] _items = [];
         private readonly List<GUIDropdownWithFilter> _itemDropdowns = [];
         private readonly List<GUIDropdown> _valueModeDropdowns = [];
         private readonly Dictionary<int, GUIGvarSelectionEditor> _gvarSelectionEditors = [];
@@ -29,16 +29,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         public override void Init()
         {
             _castedTask ??= Task.TryCast<DS_HasItemEquippedTask>();
-            _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
+            if (_castedTask == null) return;
+
+            SubDatabase_Item? itemDatabase = ProviderAccess.ItemDatabase;
+            _items = itemDatabase != null ? itemDatabase.GetItems().ToArray() : [];
             for (int i = 0; i < _castedTask.Items.Count; i++)
             {
                 DialogItems item = _castedTask.Items[i];
-                int selectedIndex = Array.FindIndex(_items, id => id.Guid == item.Item.Guid);
+                int selectedIndex = item.Item != null ? Array.FindIndex(_items, id => id.Guid == item.Item.Guid) : -1;
                 _itemDropdowns.Add(new GUIDropdownWithFilter(_items.Select(e => e.ReadableId).ToArray(), selectedIndex, 20));
                 _valueModeDropdowns.Add(new GUIDropdown(Enum.GetNames<DialogItems.ValueMode>(), (int)item.Mode));
                 if (item.Mode == DialogItems.ValueMode.GInt)
                 {
-                    _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT, item.AmountVar.GetParent().name, false, item.AmountVar));
+                    _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT, null, false, item.AmountVar));
                 }
             }
         }
@@ -46,25 +49,24 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         /// <inheritdoc/>
         public override Rect DrawTask(Vector2 position)
         {
-        if (_castedTask == null)
+            if (_castedTask == null)
             {
                 return default;
             }
 
             const float width = 340f;
             const float rowH = 22f;
-            const float rowStep = 27f; // row height + small gap
+            const float rowStep = 27f;
 
             float x = position.x;
 
-            // Draw background box FIRST (using last frame's height) so controls appear on top
+            // Drawn first with last frame's height so the controls appear on top.
             Color previousColor = GUI.color;
             GUI.color = Color.blue;
             Rect drawRect = new(x, position.y, width, _lastHeight);
             GUI.Box(drawRect, "Has Items Task");
             GUI.color = previousColor;
 
-            // Controls — start below the box title
             float y = position.y + rowStep;
 
             for (int i = 0; i < _castedTask.Items.Count; i++)
@@ -96,9 +98,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 }
                 else if (_gvarSelectionEditors.TryGetValue(i, out GUIGvarSelectionEditor gvarEditor))
                 {
-                    if (gvarEditor.DrawGvarEditor(new Rect(x + 110, y, width - 115, rowH), new Rect(x + 110, y + rowStep, width - 115, rowH)))
+                    if (gvarEditor.DrawGvarEditor(new Rect(x + 110, y, width - 115, rowH), new Rect(x + 110, y + rowStep, width - 115, rowH)) && gvarEditor.CurrentSelectedGvar != null)
                     {
-                        item.AmountVar = gvarEditor.CurrentSelectedGvar!.TryCast<GInt>();
+                        item.AmountVar = gvarEditor.CurrentSelectedGvar.TryCast<GInt>();
                     }
                     y += rowStep * 2;
                 }
@@ -117,7 +119,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     i--;
                     continue;
                 }
-                y += rowStep + 8; // extra gap between items
+                y += rowStep + 8;
             }
 
             // Add Item button

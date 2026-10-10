@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using Drova_Modding_API.Access;
@@ -37,12 +38,45 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private readonly EventBasedNetListener _listener = new();
         private readonly RelayLink _link = new();
         private NetManager? _manager;
+        private PendingConnect? _pendingConnect;
         private TransportMode _mode = TransportMode.Direct;
+
+        /// <summary>
+        /// A test-only link delay from <c>--net-delay minMs-maxMs</c>: every received packet waits a random time in
+        /// that range before it is handed on. Two instances on one machine talk with no delay at all, and a
+        /// coop fault that needs two messages to land in one frame never shows there. Ordered and sequenced
+        /// traffic keeps its order, as LiteNetLib guarantees it; plain unreliable packets may overtake each other.
+        /// </summary>
+        private static readonly (int Min, int Max)? _netDelay = ReadNetDelay();
+        private readonly List<(long Due, NetPeer Peer, NetPacketReader Reader, byte Channel, DeliveryMethod Method)> _delayed = new();
+        private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+        private readonly Random _jitter = new();
+        private long _lastOrderedDue;
+
+        private static (int Min, int Max)? ReadNetDelay()
+        {
+            string? value = Testing.LaunchProfile.ReadArgument("--net-delay");
+            if (value == null) return null;
+
+            string[] parts = value.Split('-');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out int min) || !int.TryParse(parts[1], out int max) || min < 0 || max < min)
+            {
+                MelonLogger.Warning("[Networking] --net-delay wants minMs-maxMs; ignored: " + value);
+                return null;
+            }
+
+            MelonLogger.Msg($"[Networking] test link delay: every received packet waits {min}-{max} ms.");
+            return (min, max);
+        }
         private string? _connectKey;
         private long _loggedUndecryptable;
         private long _loggedRefused;
+        private long _loggedOversized;
+        private long _loggedWithoutSession;
         private long _lastDropLogMs;
         private long _lastRefusedLogMs;
+        private long _lastOversizedLogMs;
+        private long _lastWithoutSessionLogMs;
 
         internal NetRole Role { get; private set; } = NetRole.None;
 
@@ -98,6 +132,16 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         /// </summary>
         internal bool IsEncrypted => _mode == TransportMode.Relay && _link.IsEncrypted;
 
+        /// <summary>
+        /// Largest payload a single message may serialize to. The relay's limit less its routing byte, and
+        /// less the seal when the session is encrypted, because both ride inside the same packet.
+        ///
+        /// Reported in direct mode too, where nothing enforces it: a message sized against this works in
+        /// either mode, and one sized against a direct session's fragmentation does not survive a relay.
+        /// </summary>
+        internal int MaxPayloadSize => RelayProtocol.MaxPayloadBytes - RelayProtocol.HeaderSize
+                                       - (IsEncrypted ? SessionCrypto.Overhead : 0);
+
         internal LiteTransport()
         {
             _listener.ConnectionRequestEvent += OnConnectionRequest;
@@ -105,6 +149,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             _listener.PeerDisconnectedEvent += OnPeerDisconnected;
             _listener.NetworkReceiveEvent += OnNetworkReceive;
             _listener.NetworkErrorEvent += OnNetworkError;
+            _listener.NetworkReceiveUnconnectedEvent += OnReceiveUnconnected;
         }
 
         internal void StartHost(int port, string? key)
@@ -116,7 +161,15 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             _mode = TransportMode.Direct;
             _connectKey = key;
             _manager = NewManager();
-            _manager.Start(port);
+            // Only a direct host hears LAN discovery. A relay session never sees a broadcast.
+            _manager.BroadcastReceiveEnabled = true;
+            if (!_manager.Start(port))
+            {
+                Stop();
+                NetworkEvents.RaiseNetworkError($"could not listen on UDP port {port}; another program may be using it");
+                return;
+            }
+
             Role = NetRole.Host;
             NetworkEvents.RaiseHostStarted();
         }
@@ -157,13 +210,18 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal void Poll()
         {
+            CompletePendingConnect();
             _manager?.PollEvents();
+            DeliverDelayed();
             FlushUndecryptableLog();
             FlushRefusedLog();
+            FlushOversizedLog();
+            FlushWithoutSessionLog();
         }
 
         internal void Stop()
         {
+            _pendingConnect = null;
             if (_manager != null)
             {
                 _manager.Stop();
@@ -215,7 +273,11 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         {
             if (_mode == TransportMode.Relay)
             {
-                if (!RelayReady()) return;
+                if (!RelayReady())
+                {
+                    NetworkDiagnostics.CountSendWithoutSession();
+                    return;
+                }
 
                 SendTypedViaRelay(RelayLink.TargetForAll(Role), message, delivery);
                 return;
@@ -223,6 +285,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             if (_manager == null)
             {
+                NetworkDiagnostics.CountSendWithoutSession();
                 return;
             }
             // Serialised once and fanned out by the manager, unlike a per-peer loop.
@@ -249,7 +312,11 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         {
             if (_mode == TransportMode.Relay)
             {
-                if (!RelayReady()) return;
+                if (!RelayReady())
+                {
+                    NetworkDiagnostics.CountSendWithoutSession();
+                    return;
+                }
 
                 SendRawViaRelay(RelayLink.TargetForAll(Role), channel, data, delivery);
                 return;
@@ -257,6 +324,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             if (_manager == null)
             {
+                NetworkDiagnostics.CountSendWithoutSession();
                 return;
             }
             DeliveryMethod method = Map(delivery);
@@ -305,10 +373,42 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             // Derived here rather than in the link, because it has to exist before the connect data does
             // and it is the only half of the password the relay is ever allowed to see. Deliberately not
             // dependent on the session code: a host asking the relay to pick one does not know it yet.
-            byte[]? joinToken = string.IsNullOrEmpty(password) ? null : SessionCrypto.DeriveJoinToken(password);
-
-            _manager.Connect(address, port, RelayProtocol.BuildHandshake(role, sessionCode, joinToken));
             Role = localRole;
+
+            if (string.IsNullOrEmpty(password))
+            {
+                _manager.Connect(address, port, RelayProtocol.BuildHandshake(role, sessionCode, null));
+                return;
+            }
+
+            // Derived on a thread pool thread and connected from a later poll, because this is a tenth of
+            // a second of PBKDF2 and the caller is the thread the game renders from. Nothing can arrive
+            // before the connect, so there is nothing to hold back in the meantime.
+            _pendingConnect = new PendingConnect(address, port, role, sessionCode,
+                Task.Run(() => SessionCrypto.DeriveJoinToken(password!)));
+        }
+
+        /// <summary>
+        /// Sends the handshake once its join token has been derived. Called every poll while one is
+        /// outstanding.
+        /// </summary>
+        private void CompletePendingConnect()
+        {
+            PendingConnect? pending = _pendingConnect;
+            if (pending == null || !pending.Token.IsCompleted) return;
+
+            _pendingConnect = null;
+
+            if (!pending.Token.IsCompletedSuccessfully || _manager == null)
+            {
+                MelonLogger.Error("[Networking] could not derive the join token, so the session was not started: "
+                    + pending.Token.Exception);
+                Stop();
+                return;
+            }
+
+            _manager.Connect(pending.Address, pending.Port,
+                RelayProtocol.BuildHandshake(pending.Role, pending.SessionCode, pending.Token.Result));
         }
 
         private void SendTypedViaRelay<T>(byte target, in T message, Delivery delivery) where T : struct, INetMessage
@@ -326,6 +426,15 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         private void SendFramed(byte target, byte channel, ReadOnlySpan<byte> payload, Delivery delivery)
         {
+            // Refused here rather than sent and dropped at the relay. The relay counts an oversized packet
+            // against the peer that sent it and answers nothing, so a mod over the limit would see its
+            // messages vanish with the only record of why sitting in someone else's log.
+            if (payload.Length > MaxPayloadSize)
+            {
+                NetworkDiagnostics.CountOversizedSend();
+                return;
+            }
+
             int length = _link.Frame(target, channel, payload);
             _link.Connection!.Send(_link.FrameBuffer, 0, length, channel, Map(delivery));
         }
@@ -338,7 +447,11 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private bool TryRelayTarget(INetPeer peer, out byte target)
         {
             target = 0;
-            if (!RelayReady()) return false;
+            if (!RelayReady())
+            {
+                NetworkDiagnostics.CountSendWithoutSession();
+                return false;
+            }
 
             if (peer is not RelayPeer relayPeer)
             {
@@ -350,13 +463,24 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             return true;
         }
 
-        private bool TryDirectPeer(INetPeer peer, out PeerWrapper? wrapper)
+        private bool TryDirectPeer(INetPeer peer, [NotNullWhen(true)] out PeerWrapper? wrapper)
         {
             wrapper = peer as PeerWrapper;
-            if (wrapper != null) return true;
+            if (wrapper == null)
+            {
+                MelonLogger.Error("[Networking] a peer from a relay session was used in a direct session");
+                return false;
+            }
 
-            MelonLogger.Error("[Networking] a peer from a relay session was used in a direct session");
-            return false;
+            // A wrapper outlives the session it came from, so a mod holding one from a session that has
+            // ended would otherwise send into a manager that is gone.
+            if (_manager == null)
+            {
+                NetworkDiagnostics.CountSendWithoutSession();
+                return false;
+            }
+
+            return true;
         }
 
         private NetManager NewManager()
@@ -383,6 +507,11 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 // more frequent flushes, which is the right trade for traffic made of small messages that
                 // are worthless as soon as the next one supersedes them.
                 UpdateTime = 1,
+
+                // How long a silent peer is kept. LiteNetLib's 5 s default dropped co-op sessions whenever a story
+                // teleport loaded a big area: the whole process stalls for longer than that (a 15 s frame measured
+                // on entering the Red Tower), and both ends then time each other out at the same instant.
+                DisconnectTimeout = 30_000,
             };
         }
 
@@ -467,6 +596,43 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         }
 
         private void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        {
+            if (_netDelay is not { } delay)
+            {
+                Deliver(peer, reader, channel, deliveryMethod);
+                return;
+            }
+
+            long due = _clock.ElapsedMilliseconds + _jitter.Next(delay.Min, delay.Max + 1);
+            // Kept in order wherever LiteNetLib keeps it: this delay sits behind the transport, and a sequenced
+            // packet reordered here would be one the transport had already dropped as stale.
+            if (deliveryMethod != DeliveryMethod.Unreliable && deliveryMethod != DeliveryMethod.ReliableUnordered)
+            {
+                due = Math.Max(due, _lastOrderedDue);
+                _lastOrderedDue = due;
+            }
+
+            _delayed.Add((due, peer, reader, channel, deliveryMethod));
+        }
+
+        private void DeliverDelayed()
+        {
+            if (_delayed.Count == 0) return;
+
+            long now = _clock.ElapsedMilliseconds;
+            // Stable by due time, so ordered packets with equal times keep their arrival order.
+            List<(long Due, NetPeer Peer, NetPacketReader Reader, byte Channel, DeliveryMethod Method)> due =
+                _delayed.Where(entry => entry.Due <= now).OrderBy(entry => entry.Due).ToList();
+            if (due.Count == 0) return;
+
+            _delayed.RemoveAll(entry => entry.Due <= now);
+            foreach ((long _, NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod method) in due)
+            {
+                Deliver(peer, reader, channel, method);
+            }
+        }
+
+        private void Deliver(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
         {
             try
             {
@@ -583,7 +749,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         }
 
         /// <summary>
-        /// Summarizes messages the dispatcher refused for carrying a NaN or an infinity.
+        /// Summarizes messages the dispatcher refused for carrying a NaN, an infinity, or a length prefix
+        /// the packet could not back.
         ///
         /// Worth saying out loud rather than dropping in silence: a mod whose messages stop arriving with
         /// no explanation is a bug hunt in the wrong repository, and the honest answer - somebody is
@@ -609,8 +776,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             _loggedRefused = total;
             _lastRefusedLogMs = now;
 
-            MelonLogger.Warning("[Networking] dropped " + refused + " messages carrying a NaN or an infinity; " +
-                "a peer is sending numbers no game can use, whether through a bug or on purpose.");
+            MelonLogger.Warning("[Networking] dropped " + refused + " messages carrying a NaN, an infinity, " +
+                "or a length no packet could hold; a peer is sending values no game can use, whether through " +
+                "a bug or on purpose.");
         }
 
         private void FlushUndecryptableLog()
@@ -636,6 +804,54 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             MelonLogger.Error("[Networking] dropped " + dropped + " packets that failed to decrypt; do both sides use the same session password?");
         }
 
+        /// <summary>
+        /// Summarizes messages too large for a relay to forward. Nothing else reports them: the sender
+        /// sees a send that returned normally, and the receiver sees a message that never came.
+        /// </summary>
+        private void FlushOversizedLog()
+        {
+            long total = NetworkDiagnostics.OversizedSends;
+            if (total <= _loggedOversized)
+            {
+                _loggedOversized = total;
+                return;
+            }
+
+            long now = Environment.TickCount64;
+            if (now - _lastOversizedLogMs < DropLogIntervalMs) return;
+
+            long dropped = total - _loggedOversized;
+            _loggedOversized = total;
+            _lastOversizedLogMs = now;
+
+            MelonLogger.Error("[Networking] dropped " + dropped + " messages larger than the " +
+                MaxPayloadSize + " bytes a relay forwards; split them or send fewer fields.");
+        }
+
+        /// <summary>
+        /// Summarizes sends made while no session was running. They do nothing, and a mod that starts
+        /// sending a frame too early has no other way to find out.
+        /// </summary>
+        private void FlushWithoutSessionLog()
+        {
+            long total = NetworkDiagnostics.SendsWithoutSession;
+            if (total <= _loggedWithoutSession)
+            {
+                _loggedWithoutSession = total;
+                return;
+            }
+
+            long now = Environment.TickCount64;
+            if (now - _lastWithoutSessionLogMs < DropLogIntervalMs) return;
+
+            long dropped = total - _loggedWithoutSession;
+            _loggedWithoutSession = total;
+            _lastWithoutSessionLogMs = now;
+
+            MelonLogger.Warning("[Networking] " + dropped + " sends did nothing because no session was " +
+                "running; wait for OnHostStarted or OnConnectedToHost before sending.");
+        }
+
         private void OnRelayWelcome(byte localVirtualId)
         {
             _link.Welcome(localVirtualId);
@@ -649,6 +865,21 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             NetworkEvents.RaiseConnectedToHost();
             RelayPeer host = _link.EnsurePeer(this, RelayProtocol.HostVirtualId, out bool created);
             if (created) NetworkEvents.RaisePeerConnected(host);
+        }
+
+        private void OnReceiveUnconnected(IPEndPoint from, NetPacketReader reader, UnconnectedMessageType type)
+        {
+            try
+            {
+                if (_mode == TransportMode.Direct && Role == NetRole.Host && _manager != null)
+                {
+                    LanDiscovery.TryAnswer(_manager, from, reader, type);
+                }
+            }
+            finally
+            {
+                reader.Recycle();
+            }
         }
 
         private void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
@@ -668,6 +899,31 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             };
         }
 
+        /// <summary>
+        /// A relay handshake waiting on the join token being derived for it.
+        /// </summary>
+        private sealed class PendingConnect
+        {
+            internal PendingConnect(string address, int port, byte role, string? sessionCode, Task<byte[]> token)
+            {
+                Address = address;
+                Port = port;
+                Role = role;
+                SessionCode = sessionCode;
+                Token = token;
+            }
+
+            internal string Address { get; }
+
+            internal int Port { get; }
+
+            internal byte Role { get; }
+
+            internal string? SessionCode { get; }
+
+            internal Task<byte[]> Token { get; }
+        }
+
         private static DisconnectReason Map(LiteNetLib.DisconnectReason reason)
         {
             return reason switch
@@ -679,8 +935,15 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 LiteNetLib.DisconnectReason.RemoteConnectionClose => DisconnectReason.RemoteClose,
                 LiteNetLib.DisconnectReason.DisconnectPeerCalled => DisconnectReason.LocalClose,
                 LiteNetLib.DisconnectReason.ConnectionRejected => DisconnectReason.Rejected,
-                _ => DisconnectReason.Unknown,
+                _ => Unmapped(reason),
             };
+        }
+
+        // Said once with LiteNetLib's own name: "Unknown" alone left a relay that dropped both peers unexplained.
+        private static DisconnectReason Unmapped(LiteNetLib.DisconnectReason reason)
+        {
+            MelonLogger.Warning($"[Networking] a peer left for a reason this API does not name: {reason}.");
+            return DisconnectReason.Unknown;
         }
     }
 }

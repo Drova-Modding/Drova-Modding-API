@@ -24,6 +24,7 @@ namespace Drova_Modding_API.Systems.Audio
     {                   
         const string AudioFolderName = "Audio";
         const string BundleSubFolder = "bundles";
+        const string PlayerBundle = "player";
 
         // Audio extensions a clip may have been imported from; stripped from the bundle's asset names
         // so the membership set can be compared against the extension-less clip keys.
@@ -33,6 +34,14 @@ namespace Drova_Modding_API.Systems.Audio
         // Cached, lazily loaded bundles keyed by lower-cased actor name. AssetBundle.LoadFromFile must
         // not be called twice for the same file, so caching is required, not just an optimization.
         private readonly Dictionary<string, ActorBundle> _bundleCache = [];
+
+        // Bundle files Unity could not read. Not tried again: a failed LoadFromFile logs an engine error, and every line
+        // of a conversation asks for its speaker's bundle - one unreadable file was hundreds of errors per talk.
+        private readonly HashSet<string> _unreadable = [];
+
+        // Lower-cased clip key -> bundle that holds it, read from the bundles' .manifest files. Bundles are grouped by voice,
+        // which the actor name does not always tell: the game renames NPCs (Venia speaks lines exported under "Idefix").
+        private readonly Dictionary<string, string> _clipBundles = [];
 
         /// <summary>
         /// A loaded actor bundle together with the cheap lookups that keep dialogue loading off the
@@ -54,7 +63,49 @@ namespace Drova_Modding_API.Systems.Audio
         public AssetBundleAudioProvider()
         {
             _areaNameSystem = WorldEventSystemManager.Instance!.AreaNameSystem;
+            IndexManifests();
             GetActorBundle("player"); // Preload player bundle, as it's used for most generic lines and thus more likely to be needed
+        }
+
+        /// <summary>
+        /// Fills <see cref="_clipBundles"/> from the text manifests Unity writes next to each bundle, which list its assets as
+        /// <c>- Assets/.../&lt;key&gt;.wav</c>. Without manifests the index stays empty and clips are found by actor name only.
+        /// </summary>
+        private void IndexManifests()
+        {
+            string folder = Path.Combine(Utils.SavePath, AudioFolderName, BundleSubFolder);
+            if (!Directory.Exists(folder)) return;
+
+            foreach (string manifest in Directory.EnumerateFiles(folder, "*.manifest"))
+            {
+                string bundleName = Path.GetFileNameWithoutExtension(manifest).ToLowerInvariant();
+                foreach (string line in File.ReadLines(manifest))
+                {
+                    if (!line.StartsWith("- Assets/", StringComparison.Ordinal)) continue;
+                    string key = StripAudioExtension(Path.GetFileName(line).ToLowerInvariant());
+                    _clipBundles.TryAdd(key, bundleName);
+                }
+            }
+            AudioLog.Msg($"Indexed {_clipBundles.Count} dialogue clips from bundle manifests");
+        }
+
+        /// <summary>
+        /// Returns the first candidate key whose bundle, as named by the manifest index, resolves it to a clip, or null.
+        /// The player's bundle answers for the player only: comment trees such as <c>DT_Comment_DrinkWater</c> are
+        /// authored for a "Player" slot that any actor fills at runtime, and an NPC must not borrow the player's voice.
+        /// </summary>
+        private AudioClip? TryIndexedClip(List<string> candidateKeys, string actorName)
+        {
+            bool isPlayer = string.Equals(actorName, PlayerBundle, StringComparison.OrdinalIgnoreCase);
+            for (int i = 0; i < candidateKeys.Count; i++)
+            {
+                if (!_clipBundles.TryGetValue(candidateKeys[i].ToLowerInvariant(), out string bundleName)) continue;
+                if (!isPlayer && bundleName == PlayerBundle) continue;
+                ActorBundle? bundle = GetActorBundle(bundleName);
+                AudioClip? clip = bundle == null ? null : TryLoadClip(bundle, [candidateKeys[i]]);
+                if (clip != null) return clip;
+            }
+            return null;
         }
 
         /// <inheritdoc/>
@@ -72,6 +123,12 @@ namespace Drova_Modding_API.Systems.Audio
             }
             var isInCave = _areaNameSystem.IsInCave();
             List<string> candidateKeys = [.. GetCandidateKeys(dialogeName, normalizedPath, locaKey, actorName, choiceId, isInCave)];
+
+            AudioClip? indexed = TryIndexedClip(candidateKeys, actorName);
+            if (indexed != null)
+            {
+                return Task.FromResult(indexed);
+            }
 
             List<string> probedActors = [.. GetBundleActors(actorName)];
             bool anyBundle = false;
@@ -100,6 +157,39 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
+        /// A clip by its own name - the key it was found under, which a clip loaded from a bundle carries as its name - looked
+        /// for in the actor's bundle and the narrator's, then in every bundle already loaded. For a machine that did not run
+        /// the line itself (a co-op teammate's conversation): it knows which clip was played, not the dialogue it came from.
+        /// </summary>
+        /// <param name="actorName">The speaking actor, whose bundle is tried first.</param>
+        /// <param name="clipName">The clip's name.</param>
+        /// <returns>The clip, or null when no bundle has it or dialogue audio is switched off.</returns>
+        public AudioClip? GetClipByName(string actorName, string clipName)
+        {
+            if (string.IsNullOrEmpty(clipName)) return null;
+            if (!ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.EnableDialogueAudioOptionKey, out bool enabled) || !enabled) return null;
+
+            List<string> key = [clipName];
+            AudioClip? indexed = TryIndexedClip(key, actorName);
+            if (indexed != null) return indexed;
+
+            foreach (string actor in GetBundleActors(actorName))
+            {
+                ActorBundle? bundle = GetActorBundle(actor);
+                AudioClip? clip = bundle == null ? null : TryLoadClip(bundle, key);
+                if (clip != null) return clip;
+            }
+
+            foreach (ActorBundle bundle in _bundleCache.Values)
+            {
+                AudioClip? clip = TryLoadClip(bundle, key);
+                if (clip != null) return clip;
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Yields the actors whose bundles may hold the line, most likely first. The narrator bundle
         /// is always probed as well: narration is authored under the prop name that happens to hold
         /// the tree, and a normally voiced actor also delivers narrated lines, so which of the two
@@ -122,7 +212,7 @@ namespace Drova_Modding_API.Systems.Audio
         /// <summary>
         /// Returns the first candidate key the bundle actually resolves to a clip, or null.
         /// </summary>
-        private static AudioClip TryLoadClip(ActorBundle actorBundle, List<string> candidateKeys)
+        private static AudioClip? TryLoadClip(ActorBundle actorBundle, List<string> candidateKeys)
         {
             for (int i = 0; i < candidateKeys.Count; i++)
             {
@@ -138,8 +228,10 @@ namespace Drova_Modding_API.Systems.Audio
                 if (!actorBundle.AssetNames.Contains(lowerKey)) continue;
 
                 // Reuse an already-decoded clip so a re-loaded tree (or a repeated line) doesn't
-                // decompress the same audio on the main thread again.
-                if (actorBundle.ClipCache.TryGetValue(lowerKey, out var cachedClip))
+                // decompress the same audio on the main thread again. Unity unloads a clip nothing references
+                // any more (Resources.UnloadUnusedAssets on scene changes); a destroyed one compares equal to null
+                // and is loaded again from the bundle, which stays loaded.
+                if (actorBundle.ClipCache.TryGetValue(lowerKey, out var cachedClip) && cachedClip != null)
                 {
                     return cachedClip;
                 }
@@ -176,18 +268,45 @@ namespace Drova_Modding_API.Systems.Audio
             }
 
             string path = Path.Combine(Utils.SavePath, AudioFolderName, BundleSubFolder, key);
-            if (!File.Exists(path))
+            if (_unreadable.Contains(key) || !File.Exists(path))
             {
                 return null;
             }
             var bundle = AssetBundle.LoadFromFile(path);
             if (bundle == null)
             {
+                _unreadable.Add(key);
+                AudioLog.Error($"Unity could not read the audio bundle '{path}'; not tried again this session." + DamageHint(path));
                 return null;
             }
             var actorBundle = new ActorBundle(bundle, BuildAssetNameSet(bundle));
             _bundleCache[key] = actorBundle;
             return actorBundle;
+        }
+
+        /// <summary>
+        /// Why a bundle file may be unreadable, when it can be told: a UnityFS header records the file's whole size, and a
+        /// file longer than that went through a text-mode transfer (FTP in ASCII mode turns every line feed into two bytes).
+        /// </summary>
+        private static string DamageHint(string path)
+        {
+            try
+            {
+                using FileStream file = File.OpenRead(path);
+                byte[] head = new byte[128];
+                int read = file.Read(head, 0, head.Length);
+                int at = Array.IndexOf(head, (byte)0) + 1 + 4;                 // "UnityFS ", format version
+                for (int text = 0; text < 2; text++) at = Array.IndexOf(head, (byte)0, at) + 1; // engine versions
+                if (at <= 0 || at + 8 > read) return string.Empty;
+                long declared = 0;
+                for (int index = 0; index < 8; index++) declared = (declared << 8) | head[at + index];
+                return file.Length == declared ? string.Empty
+                    : $" It is {file.Length} bytes where its header says {declared}: copied as text (an FTP transfer in ASCII mode?). Copy it again in binary mode.";
+            }
+            catch (IOException)
+            {
+                return string.Empty;
+            }
         }
 
         /// <summary>

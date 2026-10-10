@@ -8,7 +8,8 @@ internal class AreaNamePatch
 {
     static void Postfix(AreaName __instance)
     {
-        AreaNameSystem.Instance?.OnAreaEntered(__instance.AreaKey);
+        AreaNameSystem? system = AreaNameSystem.Instance;
+        if (system != null) system.OnAreaEntered(__instance.AreaKey);
     }
 }
 
@@ -17,6 +18,7 @@ internal class AreaNamePatchExit
 {
     static void Postfix(AreaName __instance)
     {
-        AreaNameSystem.Instance?.UnregisterAreaName(__instance.AreaKey);
+        AreaNameSystem? system = AreaNameSystem.Instance;
+        if (system != null) system.UnregisterAreaName(__instance.AreaKey);
     }
 }

@@ -65,5 +65,19 @@ namespace Drova_Modding_API.Systems.Networking
         /// will not help; the session itself is holding the door shut.
         /// </summary>
         TooManyAttempts,
+
+        /// <summary>
+        /// This address already sits in as many sessions on that relay as it is allowed to, counting the
+        /// ones it joined rather than the ones it opened.
+        /// </summary>
+        TooManyClients,
+
+        /// <summary>
+        /// The session has no password and one was given. Worth telling apart from
+        /// <see cref="WrongPassword"/> because the fix is the opposite: the field has to be emptied, not
+        /// corrected. A relay that admitted this would leave the client encrypting under a key the host
+        /// does not have, which is a session that connects and then carries nothing.
+        /// </summary>
+        PasswordNotRequired,
     }
 }

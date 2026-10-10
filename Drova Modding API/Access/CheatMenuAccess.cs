@@ -1,4 +1,5 @@
-﻿using Il2CppCommandTerminal;
+﻿using System.Diagnostics.CodeAnalysis;
+using Il2CppCommandTerminal;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
@@ -24,6 +25,9 @@ namespace Drova_Modding_API.Access
         /// Cached CommandShell for using cheats without opening the console.
         /// </summary>
         private static CommandShell? _commandShell;
+
+        // What the private shell FireCommand runs already holds, so a cheat is added to it once.
+        private static readonly HashSet<string> FiredShellNames = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Raised when cheat mode is enabled. Internal use only – the patch calls this.
@@ -135,7 +139,7 @@ namespace Drova_Modding_API.Access
         /// The handler lookup itself throws while the game managers are still coming up, which is
         /// the normal state during the scenes that load before gameplay.
         /// </summary>
-        private static bool TryGetCheatHandler(out CheatGameHandler? handler)
+        private static bool TryGetCheatHandler([NotNullWhen(true)] out CheatGameHandler? handler)
         {
             try
             {
@@ -155,37 +159,18 @@ namespace Drova_Modding_API.Access
             if (!Terminal._isInitialized)
                 Terminal.Init();
             CommandShell shell = Terminal.Shell;
-            shell.AddCommand(name,
-                new CommandInfo()
-                {
-                    proc = action,
-                    help = help,
-                    hint = hint,
-                    min_arg_count = minArgs,
-                    max_arg_count = maxArgs,
-                    CamelCaseName = name
-                });
+            shell.AddCommand(name, InfoOf(action, minArgs, maxArgs, help, hint, name));
             if (_commandShell == null)
             {
                 _commandShell = new CommandShell();
                 _commandShell.RegisterCommands();
             }
-            _commandShell.AddCommand(name,
-                new CommandInfo()
-                {
-                    proc = action,
-                    help = help,
-                    hint = hint,
-                    min_arg_count = minArgs,
-                    max_arg_count = maxArgs,
-                    CamelCaseName = name
-                });
+            if (FiredShellNames.Add(name)) _commandShell.AddCommand(name, InfoOf(action, minArgs, maxArgs, help, hint, name));
         }
 
         /// <summary>
         /// Fires a cheat command as if it was user input
         /// </summary>
-        /// <param name="command"></param>
         public static void FireCommand(string command)
         {
             if (_commandShell == null)
@@ -193,7 +178,28 @@ namespace Drova_Modding_API.Access
                 _commandShell = new CommandShell();
                 _commandShell.RegisterCommands();
             }
+
+            // A mod's cheats reach the game's terminal only once cheat mode is on, but this shell is private: a
+            // command fired from code (the test agent's "run") ran nothing, silently, until somebody pressed F7.
+            foreach (PendingCheat cheat in PendingCheats)
+            {
+                if (FiredShellNames.Add(cheat.Name)) _commandShell.AddCommand(cheat.Name, InfoOf(cheat.Action, cheat.MinArgs, cheat.MaxArgs, cheat.Help, cheat.Hint, cheat.Name));
+            }
+
             _commandShell.RunCommand(command);
+        }
+
+        private static CommandInfo InfoOf(Action<Il2CppReferenceArray<CommandArg>> action, int minArgs, int maxArgs, string help, string hint, string name)
+        {
+            return new CommandInfo
+            {
+                proc = action,
+                help = help,
+                hint = hint,
+                min_arg_count = minArgs,
+                max_arg_count = maxArgs,
+                CamelCaseName = name
+            };
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     internal class DS_HasAttributeTaskEditor : DrawTaskEditor
     {
         private DS_HasAttribute? _castedTask;
-        private GenericStatDesc[] _allStats;
+        private GenericStatDesc[] _allStats = [];
         private readonly List<GUIDropdownWithFilter> _attributeDropdowns = [];
         private readonly List<GUIDropdown> _attributeComparers = [];
         private readonly List<GUIDropdown> _attributeMode = [];
@@ -21,23 +21,26 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         public override void Init()
         {
             _castedTask ??= Task.TryCast<DS_HasAttribute>();
+            if (_castedTask == null) return;
+
             _allStats = Resources.FindObjectsOfTypeAll<GenericStatDesc>();
             for (int i = 0; i < _castedTask.Attributes.Count; i++)
             {
                 DialogAttributeStat attribute = _castedTask.Attributes[i];
-                int selectedIndex = Array.FindIndex(_allStats, id => id.Guid == attribute.Attribute.Guid);
+                int selectedIndex = attribute.Attribute != null ? Array.FindIndex(_allStats, id => id.Guid == attribute.Attribute.Guid) : -1;
                 _attributeDropdowns.Add(new GUIDropdownWithFilter(_allStats.Select(e => e.GetLocaName()).ToArray(), selectedIndex, 20));
                 _attributeComparers.Add(new GUIDropdown(Enum.GetNames<DialogAttributeStat.AttributeComparer>(), (int)attribute.Comparison));
                 _attributeMode.Add(new GUIDropdown(Enum.GetNames<DialogAttributeStat.ValueMode>(), (int)attribute.Mode));
                 if (attribute.Mode == DialogAttributeStat.ValueMode.GInt)
                 {
-                    _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT, attribute.AmountVar.GetParent().name, false, attribute.AmountVar));
+                    _gvarSelectionEditors.TryAdd(i, new GUIGvarSelectionEditor(GvarType.INT, null, false, attribute.AmountVar));
                 }
             }
         }
 
         public override Rect DrawTask(Vector2 position)
         {
+            if (_castedTask == null) return default;
 
             for (int i = 0; i < _castedTask.Attributes.Count; i++)
             {
@@ -52,7 +55,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     _attributeDropdowns.RemoveAt(i);
                     _attributeComparers.RemoveAt(i);
                     _attributeMode.RemoveAt(i);
-                    _gvarSelectionEditors.Remove(i);
+                    // Editors are keyed by index, so the ones after i would now be off by one. They are rebuilt on draw.
+                    _gvarSelectionEditors.Clear();
                     i--;
                     continue;
                 }
@@ -74,12 +78,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 attributeRect.y += 20;
                 if (attribute.Mode == DialogAttributeStat.ValueMode.GInt)
                 {
-                    _gvarSelectionEditors.TryGetValue(i, out GUIGvarSelectionEditor gvarEditor);
-                    if (gvarEditor != null)
+                    if (!_gvarSelectionEditors.TryGetValue(i, out GUIGvarSelectionEditor? gvarEditor) || gvarEditor == null)
                     {
-                        _gvarSelectionEditors[i] = new GUIGvarSelectionEditor(GvarType.INT, attribute.AmountVar.GetParent().name, false, attribute.AmountVar);
+                        gvarEditor = new GUIGvarSelectionEditor(GvarType.INT, null, false, attribute.AmountVar);
+                        _gvarSelectionEditors[i] = gvarEditor;
                     }
-                    if (gvarEditor.DrawGvarEditor(attributeRect, attributeRect))
+                    if (gvarEditor.DrawGvarEditor(attributeRect, attributeRect) && gvarEditor.CurrentSelectedGvar != null)
                     {
                         attribute.AmountVar = gvarEditor.CurrentSelectedGvar.TryCast<GInt>();
                     }
