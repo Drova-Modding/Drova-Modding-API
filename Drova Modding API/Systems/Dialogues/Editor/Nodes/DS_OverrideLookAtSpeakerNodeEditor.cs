@@ -11,8 +11,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_OverrideLookAtSpeakerNodeEditor : DrawNodeEditor
     {
         private DS_OverrideLookAtSpeaker? _castedNode;
-        private GUIDropdown _styleDropdown;
-        private GUIDropdown _tempoDropdown;
+        private GUIDropdown _styleDropdown = null!;
+        private GUIDropdown _tempoDropdown = null!;
         private readonly Dictionary<string, string> _speakersNameToGuid = [];
         private readonly List<LookDirectionEditor> _lookDirectionEditors = [];
 
@@ -24,6 +24,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_OverrideLookAtSpeaker>();
+            if (_castedNode == null) return;
             if (_castedNode._availableOptions == null)
             {
                 _castedNode._availableOptions = new DialogueRunTimeOptions();
@@ -31,7 +32,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _styleDropdown = new GUIDropdown(Enum.GetNames<Style>(), (int)_castedNode._availableOptions.Style);
             _tempoDropdown = new GUIDropdown(Enum.GetNames<Tempo>(), (int)_castedNode._availableOptions.TextSpeed);
 
-            GraphEditorManager.DialogueTree.actorParameters.ForEach(new Action<DialogueTree.ActorParameter>(actor => _speakersNameToGuid.TryAdd(actor.name, actor.ID)));
+            DialogueTree? dialogueTree = GraphEditorManager.DialogueTree;
+            if (dialogueTree != null)
+            {
+                dialogueTree.actorParameters.ForEach(new Action<DialogueTree.ActorParameter>(actor => _speakersNameToGuid.TryAdd(actor.name, actor.ID)));
+            }
             if (_castedNode._lookDirectionOverrides != null)
             {
                 for (int i = 0; i < _castedNode._lookDirectionOverrides._lookDirections.Count; i++)

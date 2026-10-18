@@ -20,6 +20,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = 10;
             GUI.color = Color.green;
             GUI.Box(new Rect(position.x, position.y, 250, 30), new GUIContent("DS_DelayedTeach_Statement", "Say Teach Statement"));
+
+            GUI.color = previousColor;
+            GUI.depth = previousDepth;
         }
     }
 }

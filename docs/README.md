@@ -49,13 +49,14 @@ from your `MelonMod` subclass.
 | [Input](./systems/input.md)               | Register input actions, read button/axis state, and rebind keys.                             |
 | [Addressables](./systems/addressables.md) | Load game assets (creatures, items, UI prefabs, entity infos) by reference.                  |
 | [Difficulty](./systems/difficulty.md)     | Read the savegame's game mode (Classic, Insane, …) and insane/permadeath checks.             |
+| [Damage](./systems/damage.md)             | Damage or heal an actor through the game's own health calculation.                           |
 
 ### NPCs & spawning
 
-| Page                                                        | Summary                                                                          |
-|-------------------------------------------------------------|----------------------------------------------------------------------------------|
-| [Spawning NPCs](./systems/spawning.md)                      | Compose NPCs from modules with `NpcCreator`, spawn bandits, and use lazy actors. |
-| [External NPCs (JSON & Wizard)](./systems/external-npcs.md) | Place NPCs from JSON files or the in-game wizard — no code required.             |
+| Page                                                        | Summary                                                                                             |
+|-------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| [Spawning NPCs](./systems/spawning.md)                      | Compose NPCs from modules with `NpcCreator`, spawn bandits, use lazy actors, and remove them again. |
+| [External NPCs (JSON & Wizard)](./systems/external-npcs.md) | Place NPCs from JSON files or the in-game wizard — no code required.                                |
 
 ### Persistence
 
@@ -71,10 +72,23 @@ from your `MelonMod` subclass.
 | [Dialogues](./systems/dialogues.md)          | Build dialogue graphs in code and edit existing ones in the in-game editor. |
 | [Audio](./systems/audio.md)                  | Provide spoken dialogue audio from loose files or AssetBundles.             |
 | [World Events](./systems/world-events.md)    | Register global and region-triggered world events.                          |
-| [Areas & Regions](./systems/area-region.md)  | Track which region the player is in and react to entering/leaving.          |
+| [Areas & Regions](./systems/area-region.md)  | Read which region the player is in and react to entering/leaving.           |
 | [Routines](./systems/routines.md)            | Give NPCs waypoint routines.                                                |
 | [Global Variables](./systems/global-vars.md) | React to gvar changes and register custom global variables.                 |
 | [Talents](./systems/talents.md)              | Register custom talents into the talent graph.                              |
+
+### Multiplayer
+
+| Page                                  | Summary                                                                                          |
+|---------------------------------------|--------------------------------------------------------------------------------------------------|
+| [Co-op](./systems/coop.md)            | Ask whether somebody else is in the world and whether this machine should act. Always available. |
+| [Networking](./systems/networking.md) | Coop transport: sessions, typed messages, raw channels.                                          |
+
+### Testing
+
+| Page                            | Summary                                                                                          |
+|---------------------------------|--------------------------------------------------------------------------------------------------|
+| [Testing](./systems/testing.md) | Drive real game instances from a scenario file: load, walk, set variables, kill, assert results. |
 
 ## Contributing to the docs
 

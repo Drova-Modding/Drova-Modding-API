@@ -16,7 +16,7 @@ namespace Drova_Modding_API.Register
         /// The name of the gameplay action map
         /// </summary>
         public const string GAMEPLAY_ACTION_MAP_NAME = "gameplay";
-        private static InputActionRegister _inputActionRegister;
+        private static InputActionRegister _inputActionRegister = null!;
         internal static bool isMappingCurrently = false;
 
         /// <summary>
@@ -33,12 +33,12 @@ namespace Drova_Modding_API.Register
 #pragma warning disable CS0649
         private readonly Il2CppReferenceField<InputActionAsset> _inputActionAsset;
 #pragma warning restore CS0649
-        private InputActionMap gameplayMap = new(GAMEPLAY_ACTION_MAP_NAME);
+        private InputActionMap _gameplayMap = new(GAMEPLAY_ACTION_MAP_NAME);
 
         /**
          * Event that is called when the input actions are loaded.
          */
-        public static event Action OnInputActionsLoaded;
+        public static event Action? OnInputActionsLoaded;
 
         /**
          * Constructor for the InputActionRegister.
@@ -48,7 +48,7 @@ namespace Drova_Modding_API.Register
         internal void Start()
         {
             _inputActionAsset.Value = ScriptableObject.CreateInstance<InputActionAsset>();
-            _inputActionAsset.Value.AddActionMap(gameplayMap);
+            _inputActionAsset.Value.AddActionMap(_gameplayMap);
             _inputActionRegister = this;
             LoadActions();
             OnInputActionsLoaded?.Invoke();
@@ -85,7 +85,7 @@ namespace Drova_Modding_API.Register
                 }
                 string json = File.ReadAllText(file);
                 _inputActionAsset.Value.LoadFromJson(json);
-                gameplayMap = _inputActionAsset.Value.FindActionMap(GAMEPLAY_ACTION_MAP_NAME);
+                _gameplayMap = _inputActionAsset.Value.FindActionMap(GAMEPLAY_ACTION_MAP_NAME);
 
                 string rebindingFile = Path.Combine(path, "rebindings.json");
                 if (File.Exists(rebindingFile))
@@ -103,7 +103,6 @@ namespace Drova_Modding_API.Register
         /// <summary>
         /// Add a new action map to the input action asset
         /// </summary>
-        /// <param name="map"></param>
         public void RegisterInputActionMap(InputActionMap map)
         {
             if (map == null)
@@ -125,47 +124,46 @@ namespace Drova_Modding_API.Register
         /// <summary>
         /// Add a new action to the gameplay action map
         /// </summary>
-        /// <param name="name">The unique name of your action</param>
+        /// <param name="actionName">The unique name of your action</param>
         /// <returns>A <see cref="InputAction"/> or <c>null</c> when action name is null or the action already exists</returns>
-        public InputAction? AddActionToGameplayMap(string name)
+        public InputAction? AddActionToGameplayMap(string actionName)
         {
-            if (name == null)
+            if (actionName == null)
             {
                 MelonLogger.Error("Action name is null");
                 return null;
             }
-            for (int i = 0; i < gameplayMap.actions.Count; i++)
+            for (int i = 0; i < _gameplayMap.actions.Count; i++)
             {
-                if (gameplayMap.actions[i].name == name)
+                if (_gameplayMap.actions[i].name == actionName)
                 {
                     MelonLogger.Msg("Action already exists and will not be added");
                     return null;
                 }
             }
-            return gameplayMap.AddAction(name);
+            return _gameplayMap.AddAction(actionName);
         }
 
         /// <summary>
         /// Get an action by its name
         /// </summary>
         /// <param name="actionName">The unique name of the action</param>
-        /// <returns></returns>
         public InputAction this[string actionName]
         {
             get
             {
-                return gameplayMap[actionName];
+                return _gameplayMap[actionName];
             }
         }
 
         internal void EnableGameplayActions()
         {
-            gameplayMap.Enable();
+            _gameplayMap.Enable();
         }
 
         internal void DisableGameplayActions()
         {
-            gameplayMap.Disable();
+            _gameplayMap.Disable();
         }
     }
 }

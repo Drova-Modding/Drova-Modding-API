@@ -31,7 +31,7 @@ internal sealed class NpcWizardDialogueService
         Action<string> markCurrentDialogueAsLoaded,
         Action clearDialogueLoadedMarker)
     {
-        if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(definitionId, out Actor? actor) || actor == null)
+        if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(definitionId, out Actor? actor))
         {
             setStatus("Spawn the current definition first, then open dialogue editor.");
             return false;
@@ -69,7 +69,7 @@ internal sealed class NpcWizardDialogueService
         Action<string> setStatus,
         Action<string> markCurrentDialogueAsLoaded)
     {
-        if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(definitionId, out Actor? actor) || actor == null)
+        if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(definitionId, out Actor? actor))
         {
             setStatus("Spawn the current definition first, then save dialogue.");
             return false;
@@ -109,7 +109,7 @@ internal sealed class NpcWizardDialogueService
         Action<string> setStatus,
         Action<string> markCurrentDialogueAsLoaded)
     {
-        if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(definitionId, out Actor? actor) || actor == null)
+        if (!ExternalNpcPlacementSystem.TryGetSpawnedActor(definitionId, out Actor? actor))
         {
             setStatus("Spawn the current definition first, then load dialogue.");
             return false;
@@ -122,7 +122,7 @@ internal sealed class NpcWizardDialogueService
             return false;
         }
 
-        if (!DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) || loadedDialogue == null)
+        if (!DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue))
         {
             setStatus($"No stored dialogue found for '{dialogueId}'.");
             return false;
@@ -153,7 +153,7 @@ internal sealed class NpcWizardDialogueService
         if (controller.graph != null)
             return true;
 
-        if (DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) && loadedDialogue != null)
+        if (DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue))
         {
             loadedDialogue.Serialize(null);
             controller.graph = loadedDialogue;

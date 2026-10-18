@@ -257,7 +257,7 @@ namespace Drova_Modding_API.Access
                 {
                     return;
                 }
-                if (!PlayerAccess.TryGetPlayer(out Actor player) || __instance.Pointer != player.Pointer)
+                if (!PlayerAccess.TryGetPlayer(out Actor? player) || __instance.Pointer != player.Pointer)
                 {
                     return;
                 }
@@ -414,9 +414,9 @@ namespace Drova_Modding_API.Access
 
         private static void RaiseQuestChanged(AGVarBase gvar, QuestState state)
         {
-            // The parent list is a ScriptableObject; go through UnityEngine.Object so a
-            // destroyed or foreign parent degrades to "no event" instead of throwing.
-            UnityEngine.Object? parent = gvar.GetParent()?.TryCast<UnityEngine.Object>();
+            // Through UnityEngine.Object, so a destroyed or foreign parent list degrades to "no event" instead of throwing.
+            GVarList? list = gvar.GetParent();
+            UnityEngine.Object? parent = list == null ? null : list.TryCast<UnityEngine.Object>();
             if (!parent)
             {
                 return;

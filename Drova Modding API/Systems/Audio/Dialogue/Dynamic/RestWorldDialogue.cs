@@ -6,19 +6,19 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue.Dynamic
     internal class RestWorldDialogue
     {
         private const string DT_WorldDialogue_Template = "DT_WorldDialogue_Template";
-        private static readonly LocalizedString[] localizedStringsForHadewin = [new LocalizedString("RestWorldDialogue", "Working_62"), new LocalizedString("RestWorldDialogue", "Working_63")];
-        private static readonly LocalizedString[] localizedStringsForFlunka = [new LocalizedString("RestWorldDialogue", "Working_60"), new LocalizedString("RestWorldDialogue", "Working_59")];
-        private static readonly LocalizedString[] localizedStringsForMiranda = [new LocalizedString("RestWorldDialogue", "Working_61")];
-        private static readonly LocalizedString[] localizedStringsForMorvin = [new LocalizedString("RestWorldDialogue", "FreetimeWorking_74"), new LocalizedString("RestWorldDialogue", "FreetimeWorking_75"), new LocalizedString("RestWorldDialogue", "FreetimeWorking_76"), new LocalizedString("RestWorldDialogue", "FreetimeWorking_77")];
-        private static readonly LocalizedString[] localizedStringsForBaldo = [new LocalizedString("RestWorldDialogue", "Freetime_50"), new LocalizedString("RestWorldDialogue", "Freetime_51")];
+        private static readonly LocalizedString[] LocalizedStringsForHadewin = [new LocalizedString("RestWorldDialogue", "Working_62"), new LocalizedString("RestWorldDialogue", "Working_63")];
+        private static readonly LocalizedString[] LocalizedStringsForFlunka = [new LocalizedString("RestWorldDialogue", "Working_60"), new LocalizedString("RestWorldDialogue", "Working_59")];
+        private static readonly LocalizedString[] LocalizedStringsForMiranda = [new LocalizedString("RestWorldDialogue", "Working_61")];
+        private static readonly LocalizedString[] LocalizedStringsForMorvin = [new LocalizedString("RestWorldDialogue", "FreetimeWorking_74"), new LocalizedString("RestWorldDialogue", "FreetimeWorking_75"), new LocalizedString("RestWorldDialogue", "FreetimeWorking_76"), new LocalizedString("RestWorldDialogue", "FreetimeWorking_77")];
+        private static readonly LocalizedString[] LocalizedStringsForBaldo = [new LocalizedString("RestWorldDialogue", "Freetime_50"), new LocalizedString("RestWorldDialogue", "Freetime_51")];
 
         public static void GenerateDialogue(StringBuilder builder, Dictionary<string, int> actorMapping)
         {
-            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.RUINCAMP_HADEWIN, localizedStringsForHadewin);
-            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.RUINCAMP_FLUNKA, localizedStringsForFlunka);
-            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.RUINCAMP_MIRANDA, localizedStringsForMiranda);
-            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.RUINCAMP_PROXIMUS, localizedStringsForMorvin);
-            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.BALDO_AS_ALDO, localizedStringsForBaldo);
+            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.RUINCAMP_HADEWIN, LocalizedStringsForHadewin);
+            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.RUINCAMP_FLUNKA, LocalizedStringsForFlunka);
+            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.RUINCAMP_MIRANDA, LocalizedStringsForMiranda);
+            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.RUINCAMP_PROXIMUS, LocalizedStringsForMorvin);
+            GenerateDialogue(builder, actorMapping, DialogueNameAndFactions.BALDO_AS_ALDO, LocalizedStringsForBaldo);
         }
 
         private static void GenerateDialogue(StringBuilder builder, Dictionary<string, int> actorMapping, string npc, LocalizedString[] localizedStrings)

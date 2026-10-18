@@ -12,8 +12,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
 
         private DS_SetDialogueRequirementsNode? _castedNode;
-        private GUIDropdown _styleDropdown;
-        private GUIDropdown _tempoDropdown;
+        private GUIDropdown _styleDropdown = null!;
+        private GUIDropdown _tempoDropdown = null!;
 
         public DS_SetDialogueRequirementsNodeEditor()
         {
@@ -23,6 +23,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_SetDialogueRequirementsNode>();
+            if (_castedNode == null) return;
             _styleDropdown = new GUIDropdown(Enum.GetNames<Style>(), (int)_castedNode.style);
             _tempoDropdown = new GUIDropdown(Enum.GetNames<Tempo>(), (int)_castedNode.tempo);
         }

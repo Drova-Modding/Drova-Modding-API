@@ -18,7 +18,7 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
             /// <summary>
             /// The dialogue key <see cref="Il2CppNodeCanvas.Framework.Graph.Key"/>.
             /// </summary>
-            public string DialogueKey;
+            public string? DialogueKey;
         }
 
         private readonly DialogueTree[] _dialogueTrees;
@@ -32,16 +32,18 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
         }
 
         /// <inheritdoc/>
-        public DialogueTree DeserializeObjectFromJson(string json)
+        public DialogueTree? DeserializeObjectFromJson(string json)
         {
-            SaveData saveData = JsonSerializer.Deserialize<SaveData>(json);
+            SaveData? saveData = JsonSerializer.Deserialize<SaveData>(json, RelocatorSaveData.JsonOptions);
+            if (saveData == null) return null;
+
             return _dialogueTrees.Where(e => e.Key == saveData.DialogueKey).FirstOrDefault();
         }
 
         /// <inheritdoc/>
         public string SerializeObjectToJson(DialogueTree objectToSerialize)
         {
-            return JsonSerializer.Serialize(new SaveData() { Key = Key, DialogueKey = objectToSerialize.Key });
+            return JsonSerializer.Serialize(new SaveData() { Key = Key, DialogueKey = objectToSerialize.Key }, RelocatorSaveData.JsonOptions);
         }
     }
 }

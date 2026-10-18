@@ -4,7 +4,6 @@ using Il2CppDrova.Talent;
 using Il2CppNodeCanvas.DialogueTrees;
 using System.Globalization;
 using UnityEngine;
-using System.Linq;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {

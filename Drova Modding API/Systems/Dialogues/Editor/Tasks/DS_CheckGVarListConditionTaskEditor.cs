@@ -1,5 +1,6 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppDrova.DialogueNew;
+using Il2CppDrova.GlobalVarSystem;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
@@ -15,12 +16,15 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         public override void Init()
         {
             _castedTask ??= Task.TryCast<DS_CheckGVarListConditionTask>();
-            _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.NONE, _castedTask.Target?.name, true);
+            if (_castedTask == null) return;
+
+            GVarList? target = _castedTask.Target;
+            _gvarSelectionEditor = new GUIGvarSelectionEditor(GvarType.NONE, target == null ? null : target.name, true);
         }
 
         public override Rect DrawTask(Vector2 position)
         {
-            if (_castedTask == null)
+            if (_castedTask == null || _gvarSelectionEditor == null)
             {
                 return default;
             }
@@ -32,7 +36,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 _castedTask.Target = _gvarSelectionEditor.CurrentSelectedGvarList;
             }
 
-            rect.height += 20 * (_gvarSelectionEditor.GvarListDropdown.IsDropdownShown ? 20 : 1); // 20 is the height of the dropdown list * 20 is the number of elements in the list
+            // An open list dropdown shows up to 20 rows of 20 px.
+            rect.height += 20 * (_gvarSelectionEditor.GvarListDropdown.IsDropdownShown ? 20 : 1);
             Color previousColor = GUI.color;
 
             GUI.color = Color.blue;

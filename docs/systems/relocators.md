@@ -34,13 +34,13 @@ Serialize an item to a string for saving and read it back later:
 using Drova_Modding_API.Systems.Editor.Relocators;
 using Il2CppDrova.Items;
 
-IObjectRelocator<Item> itemRelocator = ObjectRelocatorFactory.GetRelocator<Item>();
+IObjectRelocator<Item>? itemRelocator = ObjectRelocatorFactory.GetRelocator<Item>();
 
 // Save: store this string in your IStore/IStorable.
 string json = itemRelocator.SerializeObjectToJson(someItem);
 
 // Load: turn the string back into the live game object.
-Item restored = itemRelocator.DeserializeObjectFromJson(json);
+Item? restored = itemRelocator.DeserializeObjectFromJson(json); // null when it no longer resolves
 ```
 
 Under the hood `ItemRelocator` stores the item's `Guid` and resolves it via
@@ -82,12 +82,12 @@ public class MyThingRelocator : IObjectRelocator<MyThing>
     public class SaveData : RelocatorSaveData { public string ThingGuid; }
 
     public string SerializeObjectToJson(MyThing thing) =>
-        JsonSerializer.Serialize(new SaveData { Key = Key, ThingGuid = thing.Guid });
+        JsonSerializer.Serialize(new SaveData { Key = Key, ThingGuid = thing.Guid }, RelocatorSaveData.JsonOptions);
 
-    public MyThing DeserializeObjectFromJson(string json)
+    public MyThing? DeserializeObjectFromJson(string json)
     {
-        var data = JsonSerializer.Deserialize<SaveData>(json);
-        return LookUpMyThingByGuid(data.ThingGuid);
+        SaveData? data = JsonSerializer.Deserialize<SaveData>(json, RelocatorSaveData.JsonOptions);
+        return data == null ? null : LookUpMyThingByGuid(data.ThingGuid);
     }
 }
 
@@ -103,17 +103,18 @@ ObjectRelocatorFactory.RegisterRelocator(new MyThingRelocator());
 |--------------------------------------------|-------------------------------------------------------------------------------------------|
 | `string Key { get; }`                      | Discriminator stored in the payload so a generic record can route to the right relocator. |
 | `string SerializeObjectToJson(T obj)`      | Serialize the object to a JSON string (typically a stored GUID).                          |
-| `T DeserializeObjectFromJson(string json)` | Re-resolve the live object from the JSON string.                                          |
+| `T? DeserializeObjectFromJson(string json)`| Re-resolve the live object from the JSON string, or null when it is not found.            |
 
 ### `ObjectRelocatorFactory` (static)
 
 | Member                                           | Description                                      |
 |--------------------------------------------------|--------------------------------------------------|
-| `IObjectRelocator<T> GetRelocator<T>()`          | Get the registered relocator for `T`, or `null`. |
+| `IObjectRelocator<T>? GetRelocator<T>()`         | Get the registered relocator for `T`, or `null`. |
 | `void RegisterRelocator<T>(IObjectRelocator<T>)` | Register/replace the relocator for `T`.          |
 
 `RelocatorSaveData` is the base payload class; it carries a `string Key`. Subclass it to add your
-GUID/reference fields.
+GUID/reference fields. Serialize with `RelocatorSaveData.JsonOptions`: payloads use public fields,
+which System.Text.Json skips without it.
 
 ## Notes & gotchas
 

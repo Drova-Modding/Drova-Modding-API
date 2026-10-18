@@ -29,10 +29,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             const float rowH = 22f;
             const float rowStep = 27f;
 
+            Color previousColor = GUI.color;
             GUI.color = Color.blue;
             Rect drawRect = new(position.x, position.y, width, rowStep * 2 + 5);
             GUI.Box(drawRect, "DS_IsUniqueConditionTask");
-            GUI.color = Color.white;
+            GUI.color = previousColor;
 
             float x = position.x + 5;
             float y = position.y + rowStep;

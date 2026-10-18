@@ -1,6 +1,7 @@
 using HarmonyLib;
 using Il2CppDrova.GUI;
 using Il2CppDrova.GUI.Arena;
+using Il2CppDrova.JournalSystem;
 using MelonLoader;
 using UnityEngine;
 
@@ -14,11 +15,13 @@ namespace Drova_Modding_API.Access
     public static class WindowContentAccess
     {
         /// <summary>
-        /// A letter/note window finished building its content. Fires for world letters AND
-        /// journal re-reads: the hook is the two-argument
-        /// <c>GUI_Window_Letter.ShowLetterContent(GameObject, Action)</c> overload, which the
-        /// one-argument overload delegates to, so it is the single funnel for every letter
-        /// display. Mutate the window's children (e.g. swap <c>Image.sprite</c>s) in the handler.
+        /// A letter/note window finished building its content. Fires for world letters: the hook
+        /// is the two-argument <c>GUI_Window_Letter.ShowLetterContent(GameObject, Action)</c>
+        /// overload, which the one-argument overload delegates to. The journal's Letters tab
+        /// does NOT pass through this window - it builds the same content prefab in its own pane
+        /// (<see cref="OnJournalLetterShown"/>) - so content rewrites must subscribe to both to
+        /// stay consistent across a re-read. Mutate the window's children (e.g. swap
+        /// <c>Image.sprite</c>s) in the handler.
         /// </summary>
         public static event Action<GUI_Window_Letter>? OnLetterShown
         {
@@ -33,8 +36,30 @@ namespace Drova_Modding_API.Access
             }
         }
 
+        /// <summary>
+        /// The journal's Letters tab finished building a letter's content. The hook is a postfix
+        /// on <c>GUI_Journal_EntryController.Init(Journal_RuntimeTopic)</c>, which instantiates
+        /// the letter content prefab into the journal pane; it fires only when the shown topic
+        /// is a letter. Mutate the controller's children (e.g. swap <c>Image.sprite</c>s) in the
+        /// handler, exactly like an <see cref="OnLetterShown"/> handler does for the window.
+        /// </summary>
+        public static event Action<GUI_Journal_EntryController>? OnJournalLetterShown
+        {
+            add
+            {
+                EnsureJournalHooked();
+                _onJournalLetterShown += value;
+            }
+            remove
+            {
+                _onJournalLetterShown -= value;
+            }
+        }
+
         private static Action<GUI_Window_Letter>? _onLetterShown;
+        private static Action<GUI_Journal_EntryController>? _onJournalLetterShown;
         private static bool _letterHooked;
+        private static bool _journalHooked;
         private static bool _drawingHooked;
 
         private static readonly List<Func<Texture2D, Texture2D?>> DrawingTransformers = [];
@@ -82,6 +107,18 @@ namespace Drova_Modding_API.Access
                 nameof(ShowLetterContentPostfix), "GUI_Window_Letter.ShowLetterContent(prefab, callback)");
         }
 
+        private static void EnsureJournalHooked()
+        {
+            if (_journalHooked)
+            {
+                return;
+            }
+            _journalHooked = true;
+            Hooking.TryPostfix(Core.SharedHarmony, typeof(GUI_Journal_EntryController),
+                nameof(GUI_Journal_EntryController.Init), typeof(WindowContentAccess),
+                nameof(JournalInitPostfix));
+        }
+
         private static void EnsureDrawingHooked()
         {
             if (_drawingHooked)
@@ -105,6 +142,24 @@ namespace Drova_Modding_API.Access
             catch (Exception e)
             {
                 MelonLogger.Error("[WindowContentAccess] letter handler failed: " + e);
+            }
+        }
+
+        private static void JournalInitPostfix(GUI_Journal_EntryController __instance, Journal_RuntimeTopic topic)
+        {
+            try
+            {
+                // Init also builds quest and NPC topics; only letter topics carry a content
+                // prefab whose children handlers may want to rewrite.
+                if (__instance != null && topic != null
+                    && topic.Topic?.TryCast<JournalLetterTopic>() != null)
+                {
+                    _onJournalLetterShown?.Invoke(__instance);
+                }
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("[WindowContentAccess] journal letter handler failed: " + e);
             }
         }
 

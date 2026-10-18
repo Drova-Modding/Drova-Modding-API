@@ -64,7 +64,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 }
                 catch (Exception ex)
                 {
-                    MelonLogger.Error($"[LazyActorPreInitRegistry] Callback threw an exception for actor '{actor?.name}': {ex}");
+                    MelonLogger.Error($"[LazyActorPreInitRegistry] Callback threw an exception for actor '{(actor == null ? null : actor.name)}': {ex}");
                 }
             }
         }

@@ -45,7 +45,11 @@ namespace Drova_Modding_API.Systems.GlobalVars
             if (string.IsNullOrWhiteSpace(GVarListGuid) || string.IsNullOrWhiteSpace(GBoolGuid))
                 return null;
 
-            GVarList? gvarList = ProviderAccess.GVarDatabase.GetGVarListByGuid(GVarListGuid);
+            SubDatabase_GVars? database = ProviderAccess.GVarDatabase;
+            if (database == null)
+                return null;
+
+            GVarList? gvarList = database.GetGVarListByGuid(GVarListGuid);
             if (gvarList == null)
                 return null;
 

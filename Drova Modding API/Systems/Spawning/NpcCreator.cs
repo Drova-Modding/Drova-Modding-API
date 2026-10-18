@@ -1,5 +1,4 @@
 using Drova_Modding_API.Access;
-using Drova_Modding_API.Systems.SaveGame;
 using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.Spawning.Modules;
 using Il2CppDrova;
@@ -275,7 +274,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 return lazyActor;
             }
 
-            IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            IStore<LazyActorSaveData> lazyActorStore = SystemInit.LazyActors;
 
             // Handle custom EntityInfo with parameters
             if (_customLazyEntityInfo != null)

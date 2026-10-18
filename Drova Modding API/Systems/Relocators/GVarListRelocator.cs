@@ -20,20 +20,23 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
             /// <summary>
             /// The global variable list key. <see cref="GVarList.Guid"/>
             /// </summary>
-            public string GVarListGuid;
+            public string? GVarListGuid;
         }
 
         /// <inheritdoc/>
-        public GVarList DeserializeObjectFromJson(string json)
+        public GVarList? DeserializeObjectFromJson(string json)
         {
-            SaveData saveData = JsonSerializer.Deserialize<SaveData>(json);
-            return ProviderAccess.GVarDatabase.GetGVarListByGuid(saveData.GVarListGuid);
+            SaveData? saveData = JsonSerializer.Deserialize<SaveData>(json, RelocatorSaveData.JsonOptions);
+            SubDatabase_GVars? database = ProviderAccess.GVarDatabase;
+            if (saveData == null || database == null) return null;
+
+            return database.GetGVarListByGuid(saveData.GVarListGuid);
         }
 
         /// <inheritdoc/>
         public string SerializeObjectToJson(GVarList objectToSerialize)
         {
-            return JsonSerializer.Serialize(new SaveData() { Key = Key, GVarListGuid = objectToSerialize.Guid });
+            return JsonSerializer.Serialize(new SaveData() { Key = Key, GVarListGuid = objectToSerialize.Guid }, RelocatorSaveData.JsonOptions);
 
         }
     }

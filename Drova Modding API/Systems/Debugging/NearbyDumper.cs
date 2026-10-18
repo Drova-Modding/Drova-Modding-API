@@ -46,7 +46,7 @@ namespace Drova_Modding_API.Systems.Debugging
             try
             {
                 float radius = args.Length > 0 ? args[0].Float : DefaultRadius;
-                if (!PlayerAccess.TryGetPlayer(out Actor player))
+                if (!PlayerAccess.TryGetPlayer(out Actor? player))
                 {
                     MelonLogger.Warning("api_dumpnearby: no player yet.");
                     return;

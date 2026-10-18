@@ -19,8 +19,6 @@ namespace Drova_Modding_API.Extensions
         /// <summary>
         /// Checks if the actor is in a Dialogue
         /// </summary>
-        /// <param name="actor"></param>
-        /// <returns></returns>
         public static bool IsInDialogue(this Actor actor)
         {
             return actor._dialogueModule.IsInDialogue();

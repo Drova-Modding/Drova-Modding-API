@@ -32,7 +32,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// </summary>
         /// <param name="statement">The Localization/Audio</param>
         /// <param name="actorParameter">The Actor which should speak this dialogue</param>
-        /// <returns></returns>
         public virtual DS_StatementNode CreateStatementNode(DS_Statement statement, ActorParameter actorParameter)
         {
             DS_StatementNode newNode = Tree.AddNode<DS_StatementNode>();
@@ -46,8 +45,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Create a multiple choice node. A node that contains multiple choices that the player can select.
         /// </summary>
-        /// <param name="choices"></param>
-        /// <returns></returns>
         public virtual DS_MultipleChoiceNode CreateMultipleChoices(ChoiceCreationData[] choices)
         {
             DS_MultipleChoiceNode newNode = Tree.AddNode<DS_MultipleChoiceNode>();
@@ -76,7 +73,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <param name="actorParameter">Which actor should perform this action</param>
         /// <param name="waitForFinish">If the dialogue should wait for the action to finish</param>
         /// <param name="waitTime">How long the dialogue should wait for the action to finish</param>
-        /// <returns></returns>
         public virtual DS_InteractAABaseNode CreateInteractionNode(AA_ABase baseInteractionPrefab, ActorParameter actorParameter, bool waitForFinish = true, float waitTime = 0)
         {
             DS_InteractAABaseNode newNode = Tree.AddNode<DS_InteractAABaseNode>();
@@ -94,8 +90,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// Create a node that hides the dialog window. This is useful for actions that should be performed without the dialog window being visible like <see cref="DS_ChangeStanceNode"/>
         /// </summary>
         /// <param name="coroutine">Coroutine for additional logic when the dialog should become visible again, can be null</param>
-        /// <returns></returns>
-        public virtual DS_HideDialogWindow CreateDialogWindowHideNode(UnityEngine.Coroutine? coroutine)
+        public virtual DS_HideDialogWindow CreateDialogWindowHideNode(Coroutine? coroutine)
         {
             DS_HideDialogWindow newNode = Tree.AddNode<DS_HideDialogWindow>();
             newNode._routine = coroutine;
@@ -108,7 +103,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// </summary>
         /// <param name="interactionMode">The interaction to change at</param>
         /// <param name="actor">The actor which should change to the interaction</param>
-        /// <returns></returns>
         public virtual DS_ChangeStanceNode CreateChangeStanceNode(EInteractionMode interactionMode, ActorParameter actor)
         {
             DS_ChangeStanceNode newNode = Tree.AddNode<DS_ChangeStanceNode>();
@@ -123,7 +117,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// Create a node that gives the player experience points.
         /// </summary>
         /// <param name="exp">How much of exp you want to give</param>
-        /// <returns></returns>
         public virtual DS_GiveExp CreateExpNode(int exp)
         {
             DS_GiveExp newNode = Tree.AddNode<DS_GiveExp>();
@@ -139,7 +132,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <param name="actor">The Actor to execute this node</param>
         /// <param name="equip">If the reciever should equip it</param>
         /// <param name="equipInEmptyActiveSlot">If the receiver should equip it in a empty active slot</param>
-        /// <returns></returns>
         public virtual DS_GiveItemNode CreateGiveItemNode(ICollection<DialogItemsExchange> itemsExchanges, ActorParameter actor, bool equip = false, bool equipInEmptyActiveSlot = false)
         {
             DS_GiveItemNode newNode = Tree.AddNode<DS_GiveItemNode>();
@@ -160,7 +152,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// Create a node that waits for a certain amount of time.
         /// </summary>
         /// <param name="time">The time to wait (in seconds)</param>
-        /// <returns></returns>
         public virtual DS_DebugNode CreateWaitNode(float time)
         {
             DS_DebugNode newNode = Tree.AddNode<DS_DebugNode>();
@@ -172,7 +163,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Create a node that sets the first chapter of the dialogue. Normally used by Asmus at the beginning.
         /// </summary>
-        /// <returns></returns>
         public virtual DS_SetFirstChapter CreateSetFirstChapterNode()
         {
             DS_SetFirstChapter newNode = Tree.AddNode<DS_SetFirstChapter>();
@@ -184,7 +174,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// Create a node that sets the faction for the player.
         /// </summary>
         /// <param name="faction">The faction to set</param>
-        /// <returns></returns>
         public virtual DS_SetFactionNode CreateSetFactionNode(Faction faction)
         {
             DS_SetFactionNode newNode = Tree.AddNode<DS_SetFactionNode>();
@@ -199,7 +188,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// </summary>
         /// <param name="tag">node to revisit</param>
         /// <param name="repeats">repeats</param>
-        /// <returns></returns>
         public virtual DS_RevisitMultipleChoiceNode CreateRevisitMultipleChoiceNode(string tag, int repeats = 10)
         {
             DS_RevisitMultipleChoiceNode newNode = Tree.AddNode<DS_RevisitMultipleChoiceNode>();
@@ -213,7 +201,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// Create a node that defines active actors
         /// </summary>
         /// <param name="actors">Actors to define</param>
-        /// <returns></returns>
         public virtual DS_DefineActiveActors CreateDefineActiveActorsNode(EntityInfo[] actors)
         {
             DS_DefineActiveActors newNode = Tree.AddNode<DS_DefineActiveActors>();
@@ -230,7 +217,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// Created a node that holds multiple conditions
         /// </summary>
         /// <param name="conditions">Conditions</param>
-        /// <returns></returns>
         public virtual MultipleConditionNode CreateMultipleConditionNode(ConditionTask[] conditions)
         {
             MultipleConditionNode newNode = Tree.AddNode<MultipleConditionNode>();
@@ -248,7 +234,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// </summary>
         /// <param name="var">Variable to set</param>
         /// <param name="value">Value to set</param>
-        /// <returns></returns>
         public virtual DS_SetGBoolNode CreateSetGBoolNode(GBool var, bool value)
         {
             DS_SetGBoolNode newNode = Tree.AddNode<DS_SetGBoolNode>();
@@ -261,7 +246,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Creates a node that ends the dialog tree, mostly used for error cases / fallback
         /// </summary>
-        /// <returns></returns>
         public virtual FinishNode CreateFinishNode()
         {
             FinishNode newNode = Tree.AddNode<FinishNode>();
@@ -273,7 +257,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// Creates a node that jumps to a <see cref="DS_HubNode"/>
         /// </summary>
         /// <param name="hubTag">The tag of the <see cref="Node.tag"/></param>
-        /// <returns></returns>
         public virtual DS_HubJumpNode CreateHubJumpNode(string hubTag)
         {
             DS_HubJumpNode newNode = Tree.AddNode<DS_HubJumpNode>();
@@ -287,7 +270,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// </summary>
         /// <param name="tag">Tag of the node, in case you want to jump here from <see cref="DS_HubJumpNode"/></param>
         /// <param name="choices">Choices of the Hubnode</param>
-        /// <returns></returns>
         public virtual DS_HubNode CreateHubNode(string tag, ChoiceCreationData[] choices)
         {
             DS_HubNode newNode = Tree.AddNode<DS_HubNode>();
@@ -312,7 +294,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// Creates a sub dialogue tree
         /// </summary>
         /// <param name="tree">Created dialogueTree with <see cref="ScriptableObject.CreateInstance{DialogueTree}()"/> </param>
-        /// <returns></returns>
         public virtual SubDialogueTree CreateSubDialogueTree(DialogueTree tree)
         {
             SubDialogueTree newNode = Tree.AddNode<SubDialogueTree>();

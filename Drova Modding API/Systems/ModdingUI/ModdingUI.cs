@@ -19,6 +19,12 @@ namespace Drova_Modding_API.Systems.ModdingUI
          * The key for the max option.
          */
         public const string ModdingUIMaxOptionKey = "ModdingUIMax";
+
+        /// <summary>The min slider's default, in minutes - also what applies before the menu was ever opened.</summary>
+        public const int ModdingUIMinDefault = 30;
+
+        /// <summary>The max slider's default, in minutes - also what applies before the menu was ever opened.</summary>
+        public const int ModdingUIMaxDefault = 60;
         /// <summary>
         /// Config key for regional event cooldown in minutes.
         /// </summary>
@@ -101,8 +107,8 @@ namespace Drova_Modding_API.Systems.ModdingUI
             List<GameObject> builded = builder.CreateTitle(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingUITitle"))
                 .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderDisclaimer2"))
                 .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderDisclaimer"))
-                .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMinRandomness"), ModdingUIMinOptionKey, 1, 120, 30)
-                .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMaxRandomness"), ModdingUIMaxOptionKey, 2, 360, 60)
+                .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMinRandomness"), ModdingUIMinOptionKey, 1, 120, ModdingUIMinDefault)
+                .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ModdingSliderMaxRandomness"), ModdingUIMaxOptionKey, 2, 360, ModdingUIMaxDefault)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "RegionalEventCooldown"), RegionalEventCooldownOptionKey, 0, 60, 1)
                 .CreateHeader(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioHeader"))
                 .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioDisclaimer"))
@@ -136,7 +142,7 @@ namespace Drova_Modding_API.Systems.ModdingUI
                         maxSliderOptions.UpdateOptionValue((int)value + 1);
                     }
                     var instance = WorldEvents.WorldEventSystemManager.Instance;
-                    instance?.RefreshCooldown();
+                    if (instance != null) instance.RefreshCooldown();
                 }));
                 maxSlider.onValueChanged.AddListener(new Action<float>((value) =>
                 {
@@ -146,7 +152,7 @@ namespace Drova_Modding_API.Systems.ModdingUI
                         minSliderOptions.UpdateOptionValue((int)value - 1);
                     }
                     var instance = WorldEvents.WorldEventSystemManager.Instance;
-                    instance?.RefreshCooldown();
+                    if (instance != null) instance.RefreshCooldown();
                 }));
 
                 if (builded.Count >= 11)

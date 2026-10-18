@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_SetTextSpeedNodeEditor : DrawNodeEditor
     {
-        private DS_SetTextSpeedNode _castedNode;
+        private DS_SetTextSpeedNode? _castedNode;
         private GUIDropdown _tempoDropdown;
 
         public DS_SetTextSpeedNodeEditor()
@@ -43,7 +43,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             GUI.depth = previousDepth;
             GUI.color = previousColor;
-            return;
         }
     }
 }

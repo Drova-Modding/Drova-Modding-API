@@ -1,11 +1,11 @@
-﻿using Il2CppDrova.GlobalVarSystem;
+﻿using System.Diagnostics.CodeAnalysis;
+using Il2CppDrova.GlobalVarSystem;
 using Il2CppDrova.Items;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppDrova.Utilities;
 using Il2CppInterop.Runtime;
 using Il2CppTypeObj = Il2CppSystem.Type;
 #if DEBUG
-using Il2CppNodeCanvas.Framework.Internal;
 using Il2CppSirenix.Serialization;
 #endif
 using MelonLoader;
@@ -168,7 +168,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
         /// <summary>
         /// Tries to load a dialogue by id from the custom dialogue store.
         /// </summary>
-        public static bool TryLoadDialogue(string dialogueId, out DialogueTree? dialogue)
+        public static bool TryLoadDialogue(string dialogueId, [NotNullWhen(true)] out DialogueTree? dialogue)
         {
             dialogue = null;
             if (string.IsNullOrWhiteSpace(dialogueId))
@@ -413,7 +413,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
             return candidates;
         }
 
-        private static bool TryGetLiveObjectReferences(string dialogueId, out Il2CppSystem.Collections.Generic.List<UnityEngine.Object>? references)
+        private static bool TryGetLiveObjectReferences(string dialogueId, [NotNullWhen(true)] out Il2CppSystem.Collections.Generic.List<UnityEngine.Object>? references)
         {
             references = null;
             string trimmedId = dialogueId.Trim();
@@ -521,11 +521,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Store
             {
                 Il2CppSystem.Collections.Generic.List<UnityEngine.Object> objectReferences;
                 Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> graphJsonBytes =
-                    SerializationUtility.SerializeValue<GraphSource>(
+                    SerializationUtility.SerializeValue(
                         dialogue.graphSource.Pack(dialogue),
                         DataFormat.JSON,
-                        out objectReferences,
-                        null);
+                        out objectReferences);
 
                 string debugPath = Path.Combine(GetDialogueFolderPath(), $"{SanitizeFileName(dialogueId)}.graph.dev.json");
                 File.WriteAllBytes(debugPath, graphJsonBytes);

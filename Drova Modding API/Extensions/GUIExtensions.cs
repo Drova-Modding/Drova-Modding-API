@@ -7,7 +7,7 @@ namespace Drova_Modding_API.Extensions
     /// </summary>
     public static class GUIExtensions
     {
-        private static Texture2D _lineTexture;
+        private static Texture2D? _lineTexture;
 
         /// <summary>
         /// Draws a line between two points in the GUI.

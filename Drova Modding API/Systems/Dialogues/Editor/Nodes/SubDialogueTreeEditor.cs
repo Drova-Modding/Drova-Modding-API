@@ -22,18 +22,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     {
         private SubDialogueTree? _castedNode;
         private readonly GUIContent GUIContent = new("SubDialogueTree", "Execute a Sub Dialogue Tree. When that Dialogue Tree is finished, this node will continue either in Success or Failure if it has any connections. Useful for making reusable and self-contained Dialogue Trees.");
-        private DialogueTree[] _dialogueTrees;
+        private DialogueTree[] _dialogueTrees = [];
         private string[] _dialogueTreeNames;
         private GUIDropdownWithFilter _dialogueTreeDropdown;
 
-        // ── Actor parameter mapping (sub-graph slot -> parent actor) ──────────
         private const float BaseHeight = 110f;
         private const float MappingHeaderY = 80f;
         private const float MappingRowY = 100f;
         private const float MappingRowHeight = 24f;
 
         // The sub-graph the mapping rows were last built for; used to detect changes.
-        private DialogueTree _mappingSubGraph;
+        private DialogueTree? _mappingSubGraph;
         // _actorParametersMap key per sub-graph actor slot (the slot's ID/GUID).
         private string[] _subGraphActorIds = [];
         // Display label per sub-graph actor slot.
@@ -53,9 +52,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<SubDialogueTree>();
+            if (_castedNode == null) return;
+
             _dialogueTrees = Resources.FindObjectsOfTypeAll<DialogueTree>();
             _dialogueTreeNames = [.. _dialogueTrees.Select(e => e.name)];
-            _dialogueTreeDropdown = new GUIDropdownWithFilter(_dialogueTreeNames, Array.FindIndex(_dialogueTreeNames, (e) => e == _castedNode.subGraph?.name), 20);
+            DialogueTree? subGraph = _castedNode.subGraph;
+            string? subGraphName = subGraph == null ? null : subGraph.name;
+            _dialogueTreeDropdown = new GUIDropdownWithFilter(_dialogueTreeNames, Array.FindIndex(_dialogueTreeNames, (e) => e == subGraphName), 20);
             BuildActorMapping();
         }
 
@@ -107,6 +110,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void OnDoubleClick(Vector2 mousePosition)
         {
             base.OnDoubleClick(mousePosition);
+            if (_castedNode == null) return;
+
             GraphEditorManager.GoIntoSubGraph(_castedNode);
         }
 
@@ -139,21 +144,25 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
             BuildParentActorOptions();
 
-            DialogueTree subGraph = _castedNode?.subGraph;
-            if (subGraph != null && (subGraph.IsLazyLoading || subGraph.allNodes.Count == 0))
+            DialogueTree? subGraph = _castedNode?.subGraph;
+            if (subGraph != null)
             {
-                subGraph.SelfDeserialize();
+                if (subGraph.IsLazyLoading || subGraph.allNodes.Count == 0)
+                {
+                    subGraph.SelfDeserialize();
+                }
+                subGraph.DeserializeIfNotDoneYet(true);
             }
-            subGraph?.DeserializeIfNotDoneYet(true);
 
-            int subCount = subGraph?.actorParameters?.Count ?? 0;
+            Il2CppSystem.Collections.Generic.List<DialogueTree.ActorParameter>? subParameters = subGraph != null ? subGraph.actorParameters : null;
+            int subCount = subParameters?.Count ?? 0;
             _subGraphActorIds = new string[subCount];
             _subGraphActorLabels = new string[subCount];
             _actorMappingDropdowns = new GUIDropdown[subCount];
 
-            for (int i = 0; i < subCount; i++)
+            for (int i = 0; subParameters != null && i < subCount; i++)
             {
-                DialogueTree.ActorParameter actorParameter = subGraph.actorParameters[i];
+                DialogueTree.ActorParameter actorParameter = subParameters[i];
                 string slotId = GetActorParameterId(actorParameter);
                 _subGraphActorIds[i] = slotId;
                 _subGraphActorLabels[i] = GetActorParameterName(actorParameter);
@@ -182,13 +191,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         private void BuildParentActorOptions()
         {
-            DialogueTree parent = GraphEditorManager?.DialogueTree;
-            int parentCount = parent?.actorParameters?.Count ?? 0;
+            DialogueTree? parent = GraphEditorManager.DialogueTree;
+            Il2CppSystem.Collections.Generic.List<DialogueTree.ActorParameter>? parentParameters = parent != null ? parent.actorParameters : null;
+            int parentCount = parentParameters?.Count ?? 0;
             _parentActorIds = new string[parentCount];
             _parentActorLabels = new string[parentCount];
-            for (int i = 0; i < parentCount; i++)
+            for (int i = 0; parentParameters != null && i < parentCount; i++)
             {
-                DialogueTree.ActorParameter actorParameter = parent.actorParameters[i];
+                DialogueTree.ActorParameter actorParameter = parentParameters[i];
                 _parentActorIds[i] = GetActorParameterId(actorParameter);
                 _parentActorLabels[i] = GetActorParameterName(actorParameter);
             }
@@ -196,8 +206,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         private string GetMapping(string key)
         {
+            if (_castedNode == null) return string.Empty;
+
             Il2CppSystem.Collections.Generic.Dictionary<string, string> map = _castedNode._actorParametersMap;
-            if (map != null && key != null && map.ContainsKey(key))
+            if (map != null && map.ContainsKey(key))
             {
                 return map[key];
             }
@@ -206,7 +218,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         private void SetMapping(string key, string value)
         {
-            if (string.IsNullOrEmpty(key)) return;
+            if (string.IsNullOrEmpty(key) || _castedNode == null) return;
 
             Il2CppSystem.Collections.Generic.Dictionary<string, string> map = _castedNode._actorParametersMap;
             if (map == null)

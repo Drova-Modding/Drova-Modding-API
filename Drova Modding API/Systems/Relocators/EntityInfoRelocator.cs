@@ -18,7 +18,7 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
             /// <summary>
             /// The entity info guid
             /// </summary>
-            public string Guid;
+            public string? Guid;
         }
 
         private readonly EntityInfo[] _entityInfos;
@@ -34,13 +34,15 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
         /// <inheritdoc/>
         public string SerializeObjectToJson(EntityInfo objectToSerialize)
         {
-            return JsonSerializer.Serialize(new SaveData() { Key = Key, Guid = objectToSerialize._guid });
+            return JsonSerializer.Serialize(new SaveData() { Key = Key, Guid = objectToSerialize._guid }, RelocatorSaveData.JsonOptions);
         }
 
         /// <inheritdoc/>
-        public EntityInfo DeserializeObjectFromJson(string json)
+        public EntityInfo? DeserializeObjectFromJson(string json)
         {
-            SaveData saveData = JsonSerializer.Deserialize<SaveData>(json);
+            SaveData? saveData = JsonSerializer.Deserialize<SaveData>(json, RelocatorSaveData.JsonOptions);
+            if (saveData == null) return null;
+
             return _entityInfos.Where(e => e.GUID == saveData.Guid).FirstOrDefault();
         }
     }

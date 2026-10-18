@@ -50,15 +50,19 @@ namespace Drova_Modding_API.Systems.Editor
                 for (int i = 0; i < hitCount; i++)
                 {
                     RaycastHit2D hit = _hits[i];
-                    if (_ignoredLayers.Any((ignore) => hit.collider.name == ignore)) continue;
-                    Actor npc = hit.collider.GetComponent<Actor>();
+                    Collider2D collider = hit.collider;
+                    if (!collider) continue;
+                    if (_ignoredLayers.Any((ignore) => collider.name == ignore)) continue;
+                    Actor npc = collider.GetComponent<Actor>();
                     // Npc Shadow
                     if (npc)
                     {
                         EditorManager.TriggerNpcSelected(npc);
                         return;
                     }
-                    npc = hit.collider.transform.parent.GetComponent<Actor>();
+                    Transform parent = collider.transform.parent;
+                    if (!parent) continue;
+                    npc = parent.GetComponent<Actor>();
                     // NPC trigger colliders
                     if (npc)
                     {

@@ -47,7 +47,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
         /// <returns></returns>
         public virtual DrawTaskEditor? GetDrawTaskEditorFromType(Il2CppSystem.Type? type)
         {
-            // Special case for empty task, i guess its be used, when no other task is true as a fallback or alternative path
+            // A null type is the empty task, the fallback branch when no other condition holds.
             if (type == null)
             {
                 return new NullTaskEditor();

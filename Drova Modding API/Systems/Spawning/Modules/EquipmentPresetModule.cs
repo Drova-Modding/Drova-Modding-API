@@ -45,9 +45,10 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             if (inventory == null) return;
             var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
 
+            SubDatabase_Item? database = ProviderAccess.ItemDatabase;
             foreach (var readableId in _readableIds)
             {
-                var item = ProviderAccess.ItemDatabase.GetItemByReadableId(readableId);
+                var item = database != null ? database.GetItemByReadableId(readableId) : null;
                 if (item == null)
                 {
                     MelonLogger.Warning($"Could not resolve equipment readable id '{readableId}'.");
@@ -59,10 +60,9 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
             foreach (var itemRef in _items)
             {
-                var handle = itemRef.LoadAssetAsync();
-                handle.WaitForCompletion();
-                if (handle.Result != null)
-                    equipPreset._equipment.Add(handle.Result);
+                var loadedItem = Addressables.LoadAssetAsync<Item>(itemRef).WaitForCompletion();
+                if (loadedItem != null)
+                    equipPreset._equipment.Add(loadedItem);
             }
         }
     }

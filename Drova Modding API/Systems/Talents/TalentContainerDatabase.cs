@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Access;
 using Il2CppDrova;
 using Il2CppDrova.Talent;
@@ -72,15 +73,15 @@ namespace Drova_Modding_API.Systems.Talents
         {
             if (_isInitialized) return;
             _isInitialized = true;
-            var graph = ProviderAccess.GetGameDatabase().TalentGraph;
-            InitializeTalentGraph(graph);
+            GameDatabase? database = ProviderAccess.GetGameDatabase();
+            InitializeTalentGraph(database != null ? database.TalentGraph : null);
             PlayerAccess.OnPlayerFound += PlayerAccessOnOnPlayerFound;
         }
         private static void PlayerAccessOnOnPlayerFound(Actor player)
         {
             InitializeTalentGraph(player.GetComponentInChildren<TalentGraphOwner>().graph.Cast<TalentGraph>());
         }
-        private static void InitializeTalentGraph(TalentGraph graph)
+        private static void InitializeTalentGraph(TalentGraph? graph)
         {
             if (graph != null)
             {
@@ -118,7 +119,7 @@ namespace Drova_Modding_API.Systems.Talents
         /// <summary>
         /// Gets a specific TalentContainer by name from the database cache.
         /// </summary>
-        public static bool TryGetTalent(string name, out TalentContainer? talent)
+        public static bool TryGetTalent(string name, [NotNullWhen(true)] out TalentContainer? talent)
         {
             if (_talentCache == null)
             {

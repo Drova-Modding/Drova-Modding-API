@@ -8,7 +8,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     internal class DS_SetFactionNodeEditor : DrawNodeEditor
     {
         private DS_SetFactionNode? _castedNode;
-        private GUIDropdown _factionDropdown;
+        private GUIDropdown _factionDropdown = null!;
         private Faction[] _factions;
 
         public DS_SetFactionNodeEditor()
@@ -19,8 +19,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<DS_SetFactionNode>();
+            if (_castedNode == null) return;
             _factions = Resources.FindObjectsOfTypeAll<Faction>().ToArray();
-            int selectedIndex = Array.FindIndex(_factions, Faction => Faction.name == _castedNode._faction?.name);
+            Faction? faction = _castedNode._faction;
+            string? factionName = faction == null ? null : faction.name;
+            int selectedIndex = Array.FindIndex(_factions, Faction => Faction.name == factionName);
             if (selectedIndex == -1)
             {
                 selectedIndex = 0;

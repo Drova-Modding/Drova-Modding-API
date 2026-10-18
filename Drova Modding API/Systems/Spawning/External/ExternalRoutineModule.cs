@@ -2,7 +2,6 @@ using Drova_Modding_API.Access;
 using Drova_Modding_API.Converters;
 using Drova_Modding_API.Systems.Spawning.Modules;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Spawning
@@ -42,7 +41,7 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             EnsureUiState(payload);
             EnsureVisualizerExists();
-            _visualizer?.SetPoints(_cachedState.Points, true);
+            if (_visualizer != null) _visualizer.SetPoints(_cachedState.Points, true);
             
             bool modeChanged = false;
 

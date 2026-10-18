@@ -65,6 +65,17 @@ bool registeredNow = CheatMenuAccess.RegisterCheat(/* … */);
 
 So registering in `OnInitializeMelon` works even though cheat mode starts later.
 
+`RegisterCheat` never throws, whatever state the game is in - not before the game handlers
+exist, not before the terminal is in the scene. Queued commands are retried when cheat mode is
+enabled and on every scene load, so a mod does not need its own try/catch or retry loop:
+
+```csharp
+// This is all it takes
+CheatMenuAccess.RegisterCheat("mymod_hello", OnHello, 0, 0, "Prints a greeting", "mymod_hello");
+```
+
+Registering the same name twice is a no-op, so calling it again from a scene hook is harmless.
+
 ### Turn cheat mode on/off from code
 
 ```csharp

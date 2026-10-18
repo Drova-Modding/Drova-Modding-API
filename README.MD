@@ -19,6 +19,7 @@ Jump straight to a system:
 [Options Menu](./docs/systems/options-menu.md) ·
 [Localization](./docs/systems/localization.md) ·
 [Game Access](./docs/systems/game-access.md) ·
+[Damage](./docs/systems/damage.md) ·
 [Input](./docs/systems/input.md) ·
 [Addressables](./docs/systems/addressables.md) ·
 [Spawning NPCs](./docs/systems/spawning.md) ·
@@ -31,7 +32,9 @@ Jump straight to a system:
 [Routines](./docs/systems/routines.md) ·
 [Global Variables](./docs/systems/global-vars.md) ·
 [Talents](./docs/systems/talents.md) ·
-[Cheat Menu](./docs/systems/cheat-menu.md)
+[Cheat Menu](./docs/systems/cheat-menu.md) ·
+[Co-op](./docs/systems/coop.md) ·
+[Networking](./docs/systems/networking.md)
 
 ## Installation (developers)
 
@@ -44,9 +47,15 @@ Full setup, including the `.csproj` reference and your first mod, is in
 
 ## Usage
 
-Put `Drova_Modding_API.dll` (from [Releases](https://github.com/Drova-Modding/Drova-Modding-API/releases),
-or build it yourself) into your Drova install's `Mods` folder. Then declare the dependency in your
-mod and reference the DLL:
+Extract `Modding_API.zip` (from [Releases](https://github.com/Drova-Modding/Drova-Modding-API/releases),
+or build it yourself) over your Drova install. It puts `Drova_Modding_API.dll` into `Mods` and the
+library it links against, `LiteNetLib.dll`, into `UserLibs`. Copying the mod DLL on its own is not
+enough; the API cannot load without both, and MelonLoader reports that as a missing
+`Drova_Modding_API` rather than a missing `UserLibs` file. See
+[Getting Started](./docs/getting-started.md#troubleshooting) if a mod asks for
+`Drova_Modding_API, Version=1.0.0.0`.
+
+Then declare the dependency in your mod and reference the DLL:
 
 ```csharp
 // other assembly infos...
@@ -63,7 +72,7 @@ public class MyMod : MelonMod { }
 ## Features
 
 - Add your own panel (sliders, switches, dropdowns, buttons, key rebinds) to the options menu, with persistent settings.
-- Ship localization files for your mod and inject new languages.
+- Ship localisation files for your mod and inject new languages.
 - Easy access to the game's managers, databases, and the player.
 - Load game assets (creatures, items, entity infos, UI prefabs) via ready-made addressable references.
 - Spawn NPCs and bandits from a modular trait system; persist them as lazy actors across save/load.
@@ -73,6 +82,10 @@ public class MyMod : MelonMod { }
 - Spoken dialogue audio from loose files or AssetBundles.
 - A world-event system with regional coordination, and area/region tracking.
 - Routines, custom talents, custom global variables, and a runtime gvar inspector (F6).
+- [Co-op](./docs/systems/coop.md): ask whether somebody else is in the world and whether this
+  machine should be the one acting on it. One line, and no effect in single-player.
+- A coop [networking transport](./docs/systems/networking.md) for mods that want to talk between two
+  games.
 
 See the [docs](./docs/README.md) for how to use each of these.
 
@@ -82,9 +95,15 @@ See the [docs](./docs/README.md) for how to use each of these.
 dotnet build "Drova Modding API.sln" -c Debug
 ```
 
-`Debug` builds include the dev tooling (dialogue editor, F6 global var inspector, NPC wizard);
-`Release` builds strip it. See [Getting Started](./docs/getting-started.md#developer-key-bindings)
-for the dev key bindings.
+`Debug` builds include the dev tooling (dialogue editor, F6 global var inspector, NPC wizard, and the
+`api_netstats` network stats window); `Release` builds strip it. See
+[Getting Started](./docs/getting-started.md#developer-key-bindings) for the dev key bindings and
+console commands.
+
+Both configurations ship the networking transport, which puts `LiteNetLib.dll` into the game's
+`UserLibs` folder alongside the mod DLL in `Mods`. Mods compile against the API's public surface only
+— a buildable example is in [`samples/EchoCoopMod`](./samples/EchoCoopMod), and the details are in
+the [networking docs](./docs/systems/networking.md).
 
 ## Follow the project
 
@@ -112,4 +131,4 @@ open a PR. Questions and ideas are welcome on the
 
 ## License
 
-This project is provided as-is for modding purposes. See [LICENSE](./LICENSE) for details.
+This project is provided as-is for modding purposes. See [LICENCE](./LICENSE) for details.

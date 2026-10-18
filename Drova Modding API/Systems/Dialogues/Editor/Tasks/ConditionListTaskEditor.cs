@@ -10,11 +10,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
     /// </summary>
     internal class ConditionListTaskEditor : DrawTaskEditor
     {
-        private ConditionList _castedTask;
+        private ConditionList? _castedTask;
         private readonly List<DrawTaskEditor> _drawTaskEditors = [];
         private readonly Dictionary<int, float> _taskHeights = [];
         private readonly GUICreateConditionTask _createConditionTask = new();
-        private GUIDropdown _conditionsCheckModeDropdown;
+        private GUIDropdown _conditionsCheckModeDropdown = null!;
         private const int HeaderHeight = 20;
         private const int Padding = 10;
         private const int DropdownHeight = 20;
@@ -22,10 +22,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         public override void Init()
         {
             _castedTask = Task.TryCast<ConditionList>();
+            if (_castedTask == null) return;
+
             _conditionsCheckModeDropdown = new GUIDropdown(Enum.GetNames<ConditionsCheckMode>(), (int)_castedTask.checkMode);
             for (int i = 0; i < _castedTask.conditions.Count; i++)
             {
-                DrawTaskEditor drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedTask.conditions[i].GetIl2CppType());
+                DrawTaskEditor? drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(_castedTask.conditions[i].GetIl2CppType());
                 if (drawTaskEditor != null)
                 {
                     drawTaskEditor.Task = _castedTask.conditions[i];
@@ -38,6 +40,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
         public override Rect DrawTask(Vector2 position)
         {
+            if (_castedTask == null) return default;
+
             float totalHeight = HeaderHeight;
             float maxWidth = 250;
             for (int i = 0; i < _drawTaskEditors.Count; i++)
@@ -60,15 +64,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 yOffset += drawn.height + Padding;
             }
 
-            ConditionTask task = _createConditionTask.Draw(new Vector2(position.x, position.y + yOffset));
-            if (task != null)
+            ConditionTask? task = _createConditionTask.Draw(new Vector2(position.x, position.y + yOffset));
+            Il2CppNodeCanvas.DialogueTrees.DialogueTree? dialogueTree = GraphEditorManager.DialogueTree;
+            if (task != null && dialogueTree != null)
             {
-                GraphEditorManager.DialogueTree.allTasks.Add(task);
-                DrawTaskEditor editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(task.GetIl2CppType());
-                editor.Task = task;
-                editor.GraphEditorManager = GraphEditorManager;
-                editor.Init();
-                _drawTaskEditors.Add(editor);
+                dialogueTree.allTasks.Add(task);
+                DrawTaskEditor? editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(task.GetIl2CppType());
+                if (editor != null)
+                {
+                    editor.Task = task;
+                    editor.GraphEditorManager = GraphEditorManager;
+                    editor.Init();
+                    _drawTaskEditors.Add(editor);
+                }
                 _castedTask.conditions.Add(task);
             }
             yOffset += selectionHeight + Padding;

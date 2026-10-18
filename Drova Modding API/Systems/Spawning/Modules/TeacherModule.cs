@@ -19,7 +19,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// Sets the max teachable attribute level
         /// </summary>
         /// <param name="maxAttributeLevel">max level, default 130</param>
-        /// <returns></returns>
         public TeacherModule With(int maxAttributeLevel)
         {
             _maxAttributeLevel = maxAttributeLevel;
@@ -30,7 +29,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// Sets the teachable stats
         /// </summary>
         /// <param name="stats">Stats</param>
-        /// <returns></returns>
         public TeacherModule With(params TeacherConfig.Stat[] stats)
         {
             foreach (var stat in stats)
@@ -43,8 +41,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <summary>
         /// Sets the teachable talents
         /// </summary>
-        /// <param name="talents"></param>
-        /// <returns></returns>
         public TeacherModule With(params TeachableTalent[] talents)
         {
             foreach (var talent in talents)
@@ -57,7 +53,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <summary>
         /// Applies the teacher config to the actor
         /// </summary>
-        /// <param name="context"></param>
         public void Apply(ModuleContext context)
         {
             var actor = context.GetComponent<Actor>();

@@ -1,4 +1,5 @@
-﻿using Il2CppCommandTerminal;
+﻿using System.Diagnostics.CodeAnalysis;
+using Il2CppCommandTerminal;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
@@ -18,11 +19,15 @@ namespace Drova_Modding_API.Access
             string Hint);
 
         private static readonly List<PendingCheat> PendingCheats = [];
+        private static readonly HashSet<string> RegisteredNames = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Cached CommandShell for using cheats without opening the console.
         /// </summary>
         private static CommandShell? _commandShell;
+
+        // What the private shell FireCommand runs already holds, so a cheat is added to it once.
+        private static readonly HashSet<string> FiredShellNames = new(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Raised when cheat mode is enabled. Internal use only – the patch calls this.
@@ -40,9 +45,9 @@ namespace Drova_Modding_API.Access
         /// <param name="toggle">True to enable, false to disable</param>
         public static void ToggleCheatMenu(bool toggle)
         {
-            if (CheatGameHandler.TryGet(out CheatGameHandler handler))
+            if (TryGetCheatHandler(out CheatGameHandler? handler))
             {
-                handler.EnableCheatMode(toggle);
+                handler!.EnableCheatMode(toggle);
             }
         }
 
@@ -60,16 +65,21 @@ namespace Drova_Modding_API.Access
         /// <c>true</c> if the command was registered immediately;
         /// <c>false</c> if it was queued for later registration.
         /// </returns>
+        /// <remarks>
+        /// This never throws, whatever state the game is in. Calling it from
+        /// <c>OnInitializeMelon</c>, from a loading scene, or before the terminal exists is
+        /// supported: the command is queued and registered on the next cheat mode change or
+        /// scene load. Callers do not need their own try/catch or retry loop.
+        /// </remarks>
         public static bool RegisterCheat(string name, Action<Il2CppReferenceArray<CommandArg>> action, int minArgs, int maxArgs, string help = "", string hint = "")
         {
-            if (CheatGameHandler.TryGet(out CheatGameHandler handler) && handler.IsCheatModeEnabled)
-            {
-                RegisterCheatInternal(name, action, minArgs, maxArgs, help, hint);
-                return true;
-            }
+            if (RegisteredNames.Contains(name)) return true;
 
-            // Queue for when cheat mode is enabled later
-            PendingCheats.Add(new PendingCheat(name, action, minArgs, maxArgs, help, hint));
+            PendingCheat cheat = new(name, action, minArgs, maxArgs, help, hint);
+            if (TryRegisterCheat(cheat)) return true;
+
+            PendingCheats.RemoveAll(pending => string.Equals(pending.Name, name, StringComparison.OrdinalIgnoreCase));
+            PendingCheats.Add(cheat);
             return false;
         }
 
@@ -81,15 +91,67 @@ namespace Drova_Modding_API.Access
             OnCheatModeEnabled?.Invoke();
         }
 
+        /// <summary>
+        /// Retries queued registrations. Called by <see cref="Core.OnSceneWasLoaded"/> because a
+        /// cheat can be queued while cheat mode is already on - the terminal itself only exists
+        /// once the scene carrying it has loaded, and nothing raises
+        /// <see cref="OnCheatModeEnabled"/> in that case.
+        /// </summary>
+        internal static void NotifySceneLoaded()
+        {
+            FlushPendingCheats();
+        }
+
         private static void FlushPendingCheats()
         {
             if (PendingCheats.Count == 0) return;
 
-            foreach (var cheat in PendingCheats)
+            for (int i = PendingCheats.Count - 1; i >= 0; i--)
             {
-                RegisterCheatInternal(cheat.Name, cheat.Action, cheat.MinArgs, cheat.MaxArgs, cheat.Help, cheat.Hint);
+                if (TryRegisterCheat(PendingCheats[i]))
+                    PendingCheats.RemoveAt(i);
             }
-            PendingCheats.Clear();
+        }
+
+        /// <summary>
+        /// Registers a single cheat if the game is ready for it, swallowing the failures that come
+        /// from asking too early. A failure leaves the cheat queued for the next attempt.
+        /// </summary>
+        private static bool TryRegisterCheat(PendingCheat cheat)
+        {
+            if (!TryGetCheatHandler(out CheatGameHandler? handler)) return false;
+
+            try
+            {
+                if (!handler!.IsCheatModeEnabled) return false;
+
+                RegisterCheatInternal(cheat.Name, cheat.Action, cheat.MinArgs, cheat.MaxArgs, cheat.Help, cheat.Hint);
+                RegisteredNames.Add(cheat.Name);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// The handler lookup itself throws while the game managers are still coming up, which is
+        /// the normal state during the scenes that load before gameplay.
+        /// </summary>
+        private static bool TryGetCheatHandler([NotNullWhen(true)] out CheatGameHandler? handler)
+        {
+            try
+            {
+                CheatGameHandler.TryGet(out CheatGameHandler found);
+                handler = found;
+                return handler != null;
+            }
+            catch (Exception)
+            {
+                handler = null;
+                return false;
+            }
         }
 
         private static void RegisterCheatInternal(string name, Action<Il2CppReferenceArray<CommandArg>> action, int minArgs, int maxArgs, string help, string hint)
@@ -97,37 +159,18 @@ namespace Drova_Modding_API.Access
             if (!Terminal._isInitialized)
                 Terminal.Init();
             CommandShell shell = Terminal.Shell;
-            shell.AddCommand(name,
-                new CommandInfo()
-                {
-                    proc = action,
-                    help = help,
-                    hint = hint,
-                    min_arg_count = minArgs,
-                    max_arg_count = maxArgs,
-                    CamelCaseName = name
-                });
+            shell.AddCommand(name, InfoOf(action, minArgs, maxArgs, help, hint, name));
             if (_commandShell == null)
             {
                 _commandShell = new CommandShell();
                 _commandShell.RegisterCommands();
             }
-            _commandShell.AddCommand(name,
-                new CommandInfo()
-                {
-                    proc = action,
-                    help = help,
-                    hint = hint,
-                    min_arg_count = minArgs,
-                    max_arg_count = maxArgs,
-                    CamelCaseName = name
-                });
+            if (FiredShellNames.Add(name)) _commandShell.AddCommand(name, InfoOf(action, minArgs, maxArgs, help, hint, name));
         }
 
         /// <summary>
         /// Fires a cheat command as if it was user input
         /// </summary>
-        /// <param name="command"></param>
         public static void FireCommand(string command)
         {
             if (_commandShell == null)
@@ -135,7 +178,28 @@ namespace Drova_Modding_API.Access
                 _commandShell = new CommandShell();
                 _commandShell.RegisterCommands();
             }
+
+            // A mod's cheats reach the game's terminal only once cheat mode is on, but this shell is private: a
+            // command fired from code (the test agent's "run") ran nothing, silently, until somebody pressed F7.
+            foreach (PendingCheat cheat in PendingCheats)
+            {
+                if (FiredShellNames.Add(cheat.Name)) _commandShell.AddCommand(cheat.Name, InfoOf(cheat.Action, cheat.MinArgs, cheat.MaxArgs, cheat.Help, cheat.Hint, cheat.Name));
+            }
+
             _commandShell.RunCommand(command);
+        }
+
+        private static CommandInfo InfoOf(Action<Il2CppReferenceArray<CommandArg>> action, int minArgs, int maxArgs, string help, string hint, string name)
+        {
+            return new CommandInfo
+            {
+                proc = action,
+                help = help,
+                hint = hint,
+                min_arg_count = minArgs,
+                max_arg_count = maxArgs,
+                CamelCaseName = name
+            };
         }
     }
 }

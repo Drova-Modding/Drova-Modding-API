@@ -1,4 +1,6 @@
-﻿namespace Drova_Modding_API.Systems.Editor.Relocators
+﻿using System.Text.Json;
+
+namespace Drova_Modding_API.Systems.Editor.Relocators
 {
     /// <summary>
     /// Data to save for relocation.
@@ -6,8 +8,13 @@
     public class RelocatorSaveData
     {
         /// <summary>
+        /// Serializer options for relocator payloads. Payloads use public fields, which System.Text.Json skips by default.
+        /// </summary>
+        public static readonly JsonSerializerOptions JsonOptions = new() { IncludeFields = true };
+
+        /// <summary>
         /// Key for the relocator.
         /// </summary>
-        public string Key;
+        public string? Key;
     }
 }

@@ -1,0 +1,949 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using System.Net.Sockets;
+using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Networking.Diagnostics;
+using LiteNetLib;
+using LiteNetLib.Utils;
+using MelonLogger = MelonLoader.MelonLogger;
+
+namespace Drova_Modding_API.Systems.Networking.Impl
+{
+    /// <summary>
+    /// Owns the LiteNetLib <see cref="NetManager"/> and translates its callbacks into
+    /// <see cref="NetworkEvents"/> and <see cref="Dispatcher"/> calls. Events are pumped manually
+    /// from <see cref="Poll"/> (called by <c>Core.OnUpdate</c>), so every callback below runs on the
+    /// Unity main thread and may touch game state directly.
+    ///
+    /// Two modes share this class. In <see cref="TransportMode.Direct"/> every remote player is a real
+    /// connection; in <see cref="TransportMode.Relay"/> there is one connection to a relay and players
+    /// are virtual ids behind it (see <see cref="RelayLink"/>). The public surface is identical either
+    /// way - only which start method was called differs.
+    /// </summary>
+    internal sealed class LiteTransport
+    {
+        /// <summary>
+        /// The channel typed messages travel on; raw channels use 1 and up.
+        /// </summary>
+        internal const byte TypedChannel = 0;
+
+        /// <summary>
+        /// Number of channels the manager multiplexes. Channel 0 is typed, 1..62 are raw, and 63 is
+        /// reserved for relay control traffic.
+        /// </summary>
+        internal const int ChannelCount = 64;
+
+        private const long DropLogIntervalMs = 5_000;
+
+        private readonly EventBasedNetListener _listener = new();
+        private readonly RelayLink _link = new();
+        private NetManager? _manager;
+        private PendingConnect? _pendingConnect;
+        private TransportMode _mode = TransportMode.Direct;
+
+        /// <summary>
+        /// A test-only link delay from <c>--net-delay minMs-maxMs</c>: every received packet waits a random time in
+        /// that range before it is handed on. Two instances on one machine talk with no delay at all, and a
+        /// coop fault that needs two messages to land in one frame never shows there. Ordered and sequenced
+        /// traffic keeps its order, as LiteNetLib guarantees it; plain unreliable packets may overtake each other.
+        /// </summary>
+        private static readonly (int Min, int Max)? _netDelay = ReadNetDelay();
+        private readonly List<(long Due, NetPeer Peer, NetPacketReader Reader, byte Channel, DeliveryMethod Method)> _delayed = new();
+        private readonly System.Diagnostics.Stopwatch _clock = System.Diagnostics.Stopwatch.StartNew();
+        private readonly Random _jitter = new();
+        private long _lastOrderedDue;
+
+        private static (int Min, int Max)? ReadNetDelay()
+        {
+            string? value = Testing.LaunchProfile.ReadArgument("--net-delay");
+            if (value == null) return null;
+
+            string[] parts = value.Split('-');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out int min) || !int.TryParse(parts[1], out int max) || min < 0 || max < min)
+            {
+                MelonLogger.Warning("[Networking] --net-delay wants minMs-maxMs; ignored: " + value);
+                return null;
+            }
+
+            MelonLogger.Msg($"[Networking] test link delay: every received packet waits {min}-{max} ms.");
+            return (min, max);
+        }
+        private string? _connectKey;
+        private long _loggedUndecryptable;
+        private long _loggedRefused;
+        private long _loggedOversized;
+        private long _loggedWithoutSession;
+        private long _lastDropLogMs;
+        private long _lastRefusedLogMs;
+        private long _lastOversizedLogMs;
+        private long _lastWithoutSessionLogMs;
+
+        internal NetRole Role { get; private set; } = NetRole.None;
+
+        /// <summary>
+        /// How this session reaches the other players. Meaningless outside a session, where it is left at
+        /// whatever the last one used.
+        /// </summary>
+        internal TransportMode Mode => _mode;
+
+        /// <summary>
+        /// LiteNetLib's manager, for reading the counters it keeps. Null while no session is running.
+        /// </summary>
+        internal NetManager? Manager => _manager;
+
+        /// <summary>
+        /// The one real connection in a relay session, which is where every measurable number about that
+        /// session lives. Null in a direct session and before the relay accepted us.
+        /// </summary>
+        internal NetPeer? RelayConnection => _link.Connection;
+
+        /// <summary>
+        /// The virtual id the relay assigned this peer, valid once the session is running.
+        /// </summary>
+        internal byte LocalVirtualId => _link.LocalVirtualId;
+
+        internal bool IsConnected => _mode == TransportMode.Relay
+            ? _link.Welcomed && _link.PeerCount > 0
+            : _manager != null && _manager.ConnectedPeersCount > 0;
+
+        /// <summary>
+        /// How many remote peers are currently known.
+        /// </summary>
+        internal int PeerCount => _mode == TransportMode.Relay
+            ? _link.PeerCount
+            : _manager?.ConnectedPeersCount ?? 0;
+
+        /// <summary>
+        /// One-way latency to the relay, or 0 outside a relay session. Every
+        /// <see cref="RelayPeer.Ping"/> reports this, because the second leg is not measurable here.
+        /// </summary>
+        internal int RelayPing => _link.Connection?.Ping ?? 0;
+
+        /// <summary>
+        /// The relay session code in use, or null outside a relay session. A host that asked the relay to
+        /// pick one sees the assigned code here by the time <see cref="NetworkEvents.OnHostStarted"/> fires.
+        /// </summary>
+        internal string? SessionCode => _mode == TransportMode.Relay && !string.IsNullOrEmpty(_link.SessionCode)
+            ? _link.SessionCode
+            : null;
+
+        /// <summary>
+        /// Whether payloads are sealed end to end, which needs a password-protected relay session.
+        /// </summary>
+        internal bool IsEncrypted => _mode == TransportMode.Relay && _link.IsEncrypted;
+
+        /// <summary>
+        /// Largest payload a single message may serialize to. The relay's limit less its routing byte, and
+        /// less the seal when the session is encrypted, because both ride inside the same packet.
+        ///
+        /// Reported in direct mode too, where nothing enforces it: a message sized against this works in
+        /// either mode, and one sized against a direct session's fragmentation does not survive a relay.
+        /// </summary>
+        internal int MaxPayloadSize => RelayProtocol.MaxPayloadBytes - RelayProtocol.HeaderSize
+                                       - (IsEncrypted ? SessionCrypto.Overhead : 0);
+
+        internal LiteTransport()
+        {
+            _listener.ConnectionRequestEvent += OnConnectionRequest;
+            _listener.PeerConnectedEvent += OnPeerConnected;
+            _listener.PeerDisconnectedEvent += OnPeerDisconnected;
+            _listener.NetworkReceiveEvent += OnNetworkReceive;
+            _listener.NetworkErrorEvent += OnNetworkError;
+            _listener.NetworkReceiveUnconnectedEvent += OnReceiveUnconnected;
+        }
+
+        internal void StartHost(int port, string? key)
+        {
+            Stop();
+            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
+            // which is when somebody usually wants to look at them.
+            NetworkDiagnostics.Reset();
+            _mode = TransportMode.Direct;
+            _connectKey = key;
+            _manager = NewManager();
+            // Only a direct host hears LAN discovery. A relay session never sees a broadcast.
+            _manager.BroadcastReceiveEnabled = true;
+            if (!_manager.Start(port))
+            {
+                Stop();
+                NetworkEvents.RaiseNetworkError($"could not listen on UDP port {port}; another program may be using it");
+                return;
+            }
+
+            Role = NetRole.Host;
+            NetworkEvents.RaiseHostStarted();
+        }
+
+        internal void Connect(string address, int port, string? key)
+        {
+            Stop();
+            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
+            // which is when somebody usually wants to look at them.
+            NetworkDiagnostics.Reset();
+            _mode = TransportMode.Direct;
+            _connectKey = key;
+            _manager = NewManager();
+            _manager.Start();
+            _manager.Connect(address, port, key ?? string.Empty);
+            Role = NetRole.Client;
+        }
+
+        /// <summary>
+        /// Claims a session code on a relay, or asks the relay to pick one when
+        /// <paramref name="sessionCode"/> is null or empty. Unlike <see cref="StartHost"/> this cannot
+        /// report success immediately: <see cref="NetworkEvents.OnHostStarted"/> fires when the relay has
+        /// accepted the code, and <see cref="NetworkEvents.OnConnectionRejected"/> when it refused it.
+        /// </summary>
+        internal void StartHostViaRelay(string address, int port, string? sessionCode, string? password)
+        {
+            ConnectToRelay(address, port, RelayProtocol.RoleHost, sessionCode, password, NetRole.Host);
+        }
+
+        /// <summary>
+        /// Joins a session code on a relay. <see cref="NetworkEvents.OnConnectedToHost"/> fires once the
+        /// relay has put us in the session.
+        /// </summary>
+        internal void ConnectViaRelay(string address, int port, string sessionCode, string? password)
+        {
+            ConnectToRelay(address, port, RelayProtocol.RoleClient, sessionCode, password, NetRole.Client);
+        }
+
+        internal void Poll()
+        {
+            CompletePendingConnect();
+            _manager?.PollEvents();
+            DeliverDelayed();
+            FlushUndecryptableLog();
+            FlushRefusedLog();
+            FlushOversizedLog();
+            FlushWithoutSessionLog();
+        }
+
+        internal void Stop()
+        {
+            _pendingConnect = null;
+            if (_manager != null)
+            {
+                _manager.Stop();
+                _manager = null;
+            }
+            _link.Reset();
+            _mode = TransportMode.Direct;
+            Role = NetRole.None;
+        }
+
+        /// <summary>
+        /// Appends the current peers to the buffer. The caller owns the list, so repeated calls with the
+        /// same list do not allocate.
+        /// </summary>
+        internal void CopyPeers(List<INetPeer> buffer)
+        {
+            if (_mode == TransportMode.Relay)
+            {
+                _link.CopyPeers(buffer);
+                return;
+            }
+
+            if (_manager == null) return;
+
+            // The manager's enumerator is a struct, so walking connected peers does not allocate.
+            foreach (NetPeer peer in _manager)
+            {
+                buffer.Add(PeerWrapper.Of(peer));
+            }
+        }
+
+        internal void SendTyped<T>(INetPeer peer, in T message, Delivery delivery) where T : struct, INetMessage
+        {
+            if (_mode == TransportMode.Relay)
+            {
+                if (!TryRelayTarget(peer, out byte target)) return;
+
+                SendTypedViaRelay(target, message, delivery);
+                return;
+            }
+
+            if (!TryDirectPeer(peer, out PeerWrapper? wrapper)) return;
+
+            NetDataWriter writer = Dispatcher.BuildTyped(message);
+            wrapper!.Native.Send(writer, TypedChannel, Map(delivery));
+        }
+
+        internal void SendTypedToAll<T>(in T message, Delivery delivery) where T : struct, INetMessage
+        {
+            if (_mode == TransportMode.Relay)
+            {
+                if (!RelayReady())
+                {
+                    NetworkDiagnostics.CountSendWithoutSession();
+                    return;
+                }
+
+                SendTypedViaRelay(RelayLink.TargetForAll(Role), message, delivery);
+                return;
+            }
+
+            if (_manager == null)
+            {
+                NetworkDiagnostics.CountSendWithoutSession();
+                return;
+            }
+            // Serialised once and fanned out by the manager, unlike a per-peer loop.
+            NetDataWriter writer = Dispatcher.BuildTyped(message);
+            _manager.SendToAll(writer, TypedChannel, Map(delivery));
+        }
+
+        internal void SendRaw(INetPeer peer, byte channel, ReadOnlySpan<byte> data, Delivery delivery)
+        {
+            if (_mode == TransportMode.Relay)
+            {
+                if (!TryRelayTarget(peer, out byte target)) return;
+
+                SendRawViaRelay(target, channel, data, delivery);
+                return;
+            }
+
+            if (!TryDirectPeer(peer, out PeerWrapper? wrapper)) return;
+
+            wrapper!.Native.Send(data, channel, Map(delivery));
+        }
+
+        internal void SendRawToAll(byte channel, ReadOnlySpan<byte> data, Delivery delivery)
+        {
+            if (_mode == TransportMode.Relay)
+            {
+                if (!RelayReady())
+                {
+                    NetworkDiagnostics.CountSendWithoutSession();
+                    return;
+                }
+
+                SendRawViaRelay(RelayLink.TargetForAll(Role), channel, data, delivery);
+                return;
+            }
+
+            if (_manager == null)
+            {
+                NetworkDiagnostics.CountSendWithoutSession();
+                return;
+            }
+            DeliveryMethod method = Map(delivery);
+            // The manager's enumerator is a struct, so iterating connected peers does not allocate.
+            foreach (NetPeer peer in _manager)
+            {
+                peer.Send(data, channel, method);
+            }
+        }
+
+        /// <summary>
+        /// Backs <see cref="RelayPeer.Disconnect"/>. A host asks the relay to drop the client; a client
+        /// asking to drop its host leaves the session instead, since it has no authority over the host.
+        /// </summary>
+        internal void DisconnectRelayPeer(RelayPeer peer)
+        {
+            if (!RelayReady()) return;
+
+            if (Role != NetRole.Host || peer.VirtualId == RelayProtocol.HostVirtualId)
+            {
+                Stop();
+                return;
+            }
+
+            NetDataWriter control = _link.BuildControl(RelayProtocol.ControlKickPeer, peer.VirtualId);
+            _link.Connection!.Send(control, RelayProtocol.ControlChannel, DeliveryMethod.ReliableOrdered);
+
+            // The relay does not report back a kick the host itself asked for, so the event is raised
+            // here to keep both roles seeing a departure exactly once.
+            RelayPeer? removed = _link.Remove(peer.VirtualId);
+            if (removed != null) NetworkEvents.RaisePeerDisconnected(removed, DisconnectReason.LocalClose);
+        }
+
+        private void ConnectToRelay(string address, int port, byte role, string? sessionCode, string? password, NetRole localRole)
+        {
+            Stop();
+            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
+            // which is when somebody usually wants to look at them.
+            NetworkDiagnostics.Reset();
+            _mode = TransportMode.Relay;
+            _connectKey = null;
+            _link.Prepare(sessionCode, password);
+            _manager = NewManager();
+            _manager.Start();
+
+            // Derived here rather than in the link, because it has to exist before the connect data does
+            // and it is the only half of the password the relay is ever allowed to see. Deliberately not
+            // dependent on the session code: a host asking the relay to pick one does not know it yet.
+            Role = localRole;
+
+            if (string.IsNullOrEmpty(password))
+            {
+                _manager.Connect(address, port, RelayProtocol.BuildHandshake(role, sessionCode, null));
+                return;
+            }
+
+            // Derived on a thread pool thread and connected from a later poll, because this is a tenth of
+            // a second of PBKDF2 and the caller is the thread the game renders from. Nothing can arrive
+            // before the connect, so there is nothing to hold back in the meantime.
+            _pendingConnect = new PendingConnect(address, port, role, sessionCode,
+                Task.Run(() => SessionCrypto.DeriveJoinToken(password!)));
+        }
+
+        /// <summary>
+        /// Sends the handshake once its join token has been derived. Called every poll while one is
+        /// outstanding.
+        /// </summary>
+        private void CompletePendingConnect()
+        {
+            PendingConnect? pending = _pendingConnect;
+            if (pending == null || !pending.Token.IsCompleted) return;
+
+            _pendingConnect = null;
+
+            if (!pending.Token.IsCompletedSuccessfully || _manager == null)
+            {
+                MelonLogger.Error("[Networking] could not derive the join token, so the session was not started: "
+                    + pending.Token.Exception);
+                Stop();
+                return;
+            }
+
+            _manager.Connect(pending.Address, pending.Port,
+                RelayProtocol.BuildHandshake(pending.Role, pending.SessionCode, pending.Token.Result));
+        }
+
+        private void SendTypedViaRelay<T>(byte target, in T message, Delivery delivery) where T : struct, INetMessage
+        {
+            // Serialised into the shared writer exactly as a direct send would be, then framed - and
+            // sealed, when the session has a key - on its way into the relay's envelope.
+            NetDataWriter plaintext = Dispatcher.BuildTyped(message);
+            SendFramed(target, TypedChannel, new ReadOnlySpan<byte>(plaintext.Data, 0, plaintext.Length), delivery);
+        }
+
+        private void SendRawViaRelay(byte target, byte channel, ReadOnlySpan<byte> data, Delivery delivery)
+        {
+            SendFramed(target, channel, data, delivery);
+        }
+
+        private void SendFramed(byte target, byte channel, ReadOnlySpan<byte> payload, Delivery delivery)
+        {
+            // Refused here rather than sent and dropped at the relay. The relay counts an oversized packet
+            // against the peer that sent it and answers nothing, so a mod over the limit would see its
+            // messages vanish with the only record of why sitting in someone else's log.
+            if (payload.Length > MaxPayloadSize)
+            {
+                NetworkDiagnostics.CountOversizedSend();
+                return;
+            }
+
+            int length = _link.Frame(target, channel, payload);
+            _link.Connection!.Send(_link.FrameBuffer, 0, length, channel, Map(delivery));
+        }
+
+        private bool RelayReady()
+        {
+            return _link.Welcomed && _link.Connection != null;
+        }
+
+        private bool TryRelayTarget(INetPeer peer, out byte target)
+        {
+            target = 0;
+            if (!RelayReady())
+            {
+                NetworkDiagnostics.CountSendWithoutSession();
+                return false;
+            }
+
+            if (peer is not RelayPeer relayPeer)
+            {
+                MelonLogger.Error("[Networking] a peer from a direct session was used in a relay session");
+                return false;
+            }
+
+            target = relayPeer.VirtualId;
+            return true;
+        }
+
+        private bool TryDirectPeer(INetPeer peer, [NotNullWhen(true)] out PeerWrapper? wrapper)
+        {
+            wrapper = peer as PeerWrapper;
+            if (wrapper == null)
+            {
+                MelonLogger.Error("[Networking] a peer from a relay session was used in a direct session");
+                return false;
+            }
+
+            // A wrapper outlives the session it came from, so a mod holding one from a session that has
+            // ended would otherwise send into a manager that is gone.
+            if (_manager == null)
+            {
+                NetworkDiagnostics.CountSendWithoutSession();
+                return false;
+            }
+
+            return true;
+        }
+
+        private NetManager NewManager()
+        {
+            return new NetManager(_listener)
+            {
+                UnsyncedEvents = false,
+                AutoRecycle = false,
+                ChannelsCount = ChannelCount,
+
+                // Packet, byte and reliable-loss counters for the manager and every peer under it. They
+                // cost a handful of interlocked adds per packet, which is worth paying unconditionally:
+                // the build somebody is running when coop misbehaves is the one whose numbers are needed,
+                // and a build without them can only report that something felt slow.
+                EnableStatistics = true,
+
+                // How often queued sends are actually flushed. The default is 15 ms, and that delay is
+                // added to every message this transport carries. Measured end to end through a relay,
+                // where a round trip crosses four such queues, it accounted for most of a 50 ms round trip
+                // between two peers running on the same machine.
+                //
+                // For a game sending player state every frame that wait buys nothing: the packet is
+                // complete and held back for a timer. One millisecond spends a little more CPU on smaller,
+                // more frequent flushes, which is the right trade for traffic made of small messages that
+                // are worthless as soon as the next one supersedes them.
+                UpdateTime = 1,
+
+                // How long a silent peer is kept. LiteNetLib's 5 s default dropped co-op sessions whenever a story
+                // teleport loaded a big area: the whole process stalls for longer than that (a 15 s frame measured
+                // on entering the Red Tower), and both ends then time each other out at the same instant.
+                DisconnectTimeout = 30_000,
+            };
+        }
+
+        private void OnConnectionRequest(ConnectionRequest request)
+        {
+            // Only a direct host listens for requests; in relay mode the relay does the accepting.
+            if (_mode == TransportMode.Relay)
+            {
+                request.Reject();
+                return;
+            }
+
+            // No key means an open host; otherwise the client must present the matching key.
+            if (string.IsNullOrEmpty(_connectKey))
+            {
+                request.Accept();
+            }
+            else
+            {
+                request.AcceptIfKey(_connectKey);
+            }
+        }
+
+        private void OnPeerConnected(NetPeer peer)
+        {
+            // In relay mode the connection being up says nothing about the session; the relay's welcome
+            // does, so the events wait for it.
+            if (_mode == TransportMode.Relay)
+            {
+                _link.Attach(peer);
+                return;
+            }
+
+            PeerWrapper wrapper = PeerWrapper.Of(peer);
+            // On a client, the first (and only) peer is the host; announce that before the generic
+            // peer-connected event so a subscriber can special-case the host.
+            if (Role == NetRole.Client)
+            {
+                NetworkEvents.RaiseConnectedToHost();
+            }
+            NetworkEvents.RaisePeerConnected(wrapper);
+        }
+
+        private void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
+        {
+            if (_mode == TransportMode.Relay)
+            {
+                OnRelayDisconnected(disconnectInfo);
+                return;
+            }
+
+            if (disconnectInfo.Reason == LiteNetLib.DisconnectReason.ConnectionRejected)
+            {
+                NetworkEvents.RaiseConnectionRejected(ConnectionRejection.Unspecified);
+            }
+
+            PeerWrapper wrapper = PeerWrapper.Of(peer);
+            NetworkEvents.RaisePeerDisconnected(wrapper, Map(disconnectInfo.Reason));
+        }
+
+        private void OnRelayDisconnected(DisconnectInfo disconnectInfo)
+        {
+            byte code = disconnectInfo.AdditionalData.AvailableBytes > 0 ? disconnectInfo.AdditionalData.GetByte() : (byte)0;
+
+            if (disconnectInfo.Reason == LiteNetLib.DisconnectReason.ConnectionRejected)
+            {
+                NetworkEvents.RaiseConnectionRejected(RelayProtocol.MapRejection(code));
+            }
+
+            DisconnectReason reason = code switch
+            {
+                RelayProtocol.DisconnectSessionClosed => DisconnectReason.SessionClosed,
+                RelayProtocol.DisconnectKicked => DisconnectReason.Kicked,
+                _ => Map(disconnectInfo.Reason),
+            };
+
+            // Losing the one relay connection means losing every player behind it, so each is announced
+            // before the session state goes away.
+            _link.ForEachPeer(lost => NetworkEvents.RaisePeerDisconnected(lost, reason));
+            _link.Reset();
+            Role = NetRole.None;
+        }
+
+        private void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        {
+            if (_netDelay is not { } delay)
+            {
+                Deliver(peer, reader, channel, deliveryMethod);
+                return;
+            }
+
+            long due = _clock.ElapsedMilliseconds + _jitter.Next(delay.Min, delay.Max + 1);
+            // Kept in order wherever LiteNetLib keeps it: this delay sits behind the transport, and a sequenced
+            // packet reordered here would be one the transport had already dropped as stale.
+            if (deliveryMethod != DeliveryMethod.Unreliable && deliveryMethod != DeliveryMethod.ReliableUnordered)
+            {
+                due = Math.Max(due, _lastOrderedDue);
+                _lastOrderedDue = due;
+            }
+
+            _delayed.Add((due, peer, reader, channel, deliveryMethod));
+        }
+
+        private void DeliverDelayed()
+        {
+            if (_delayed.Count == 0) return;
+
+            long now = _clock.ElapsedMilliseconds;
+            // Stable by due time, so ordered packets with equal times keep their arrival order.
+            List<(long Due, NetPeer Peer, NetPacketReader Reader, byte Channel, DeliveryMethod Method)> due =
+                _delayed.Where(entry => entry.Due <= now).OrderBy(entry => entry.Due).ToList();
+            if (due.Count == 0) return;
+
+            _delayed.RemoveAll(entry => entry.Due <= now);
+            foreach ((long _, NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod method) in due)
+            {
+                Deliver(peer, reader, channel, method);
+            }
+        }
+
+        private void Deliver(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        {
+            try
+            {
+                if (_mode == TransportMode.Relay)
+                {
+                    OnRelayReceive(reader, channel);
+                    return;
+                }
+
+                PeerWrapper wrapper = PeerWrapper.Of(peer);
+                if (channel == TypedChannel)
+                {
+                    Dispatcher.OnTypedReceived(wrapper, reader);
+                }
+                else
+                {
+                    Dispatcher.OnRawReceived(wrapper, channel, reader.GetRemainingBytesSpan());
+                }
+            }
+            catch (Exception e)
+            {
+                NetworkDiagnostics.CountReceiveFailure();
+                MelonLogger.Error("[Networking] receive on channel " + channel + " failed: " + e);
+            }
+            finally
+            {
+                // AutoRecycle is off, so return the reader to LiteNetLib's pool by hand.
+                reader.Recycle();
+            }
+        }
+
+        private void OnRelayReceive(NetPacketReader reader, byte channel)
+        {
+            if (reader.AvailableBytes < 1) return;
+
+            byte sender = reader.GetByte();
+
+            if (channel == RelayProtocol.ControlChannel && sender == RelayProtocol.RelayVirtualId)
+            {
+                OnRelayControl(reader);
+                return;
+            }
+
+            // Channels are independent, so a payload can outrun the control message announcing its
+            // sender. Whoever the relay stamped is a peer, whether we have been told about them yet.
+            RelayPeer relayPeer = _link.EnsurePeer(this, sender, out bool created);
+            if (created) NetworkEvents.RaisePeerConnected(relayPeer);
+
+            if (!_link.IsEncrypted)
+            {
+                if (channel == TypedChannel)
+                {
+                    Dispatcher.OnTypedReceived(relayPeer, reader);
+                }
+                else
+                {
+                    Dispatcher.OnRawReceived(relayPeer, channel, reader.GetRemainingBytesSpan());
+                }
+
+                return;
+            }
+
+            if (!_link.TryOpen(sender, channel, reader.GetRemainingBytesSpan(), out int length))
+            {
+                // Either the password differs from the host's or something rewrote the packet. Both are
+                // indistinguishable here and both mean the same thing: it is not ours.
+                NetworkDiagnostics.CountUndecryptablePacket();
+                return;
+            }
+
+            if (channel == TypedChannel)
+            {
+                Dispatcher.OnTypedReceived(relayPeer, _link.PlainReader(length));
+            }
+            else
+            {
+                Dispatcher.OnRawReceived(relayPeer, channel, new ReadOnlySpan<byte>(_link.PlainBuffer, 0, length));
+            }
+        }
+
+        private void OnRelayControl(NetPacketReader reader)
+        {
+            if (reader.AvailableBytes < 1) return;
+
+            byte opcode = reader.GetByte();
+
+            // The assigned code is the one opcode whose argument is a string, so it has to be split off
+            // before anything reads a single argument byte.
+            if (opcode == RelayProtocol.ControlSessionCode)
+            {
+                string assigned = reader.GetString(RelayProtocol.MaxSessionCodeLength);
+                if (assigned.Length > 0) _link.AssignSessionCode(assigned);
+                return;
+            }
+
+            if (reader.AvailableBytes < 1) return;
+
+            byte argument = reader.GetByte();
+
+            switch (opcode)
+            {
+                case RelayProtocol.ControlWelcome:
+                    OnRelayWelcome(argument);
+                    break;
+                case RelayProtocol.ControlPeerJoined:
+                    RelayPeer joined = _link.EnsurePeer(this, argument, out bool created);
+                    if (created) NetworkEvents.RaisePeerConnected(joined);
+                    break;
+                case RelayProtocol.ControlPeerLeft:
+                    RelayPeer? left = _link.Remove(argument);
+                    if (left != null) NetworkEvents.RaisePeerDisconnected(left, DisconnectReason.RemoteClose);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Summarizes messages the dispatcher refused for carrying a NaN, an infinity, or a length prefix
+        /// the packet could not back.
+        ///
+        /// Worth saying out loud rather than dropping in silence: a mod whose messages stop arriving with
+        /// no explanation is a bug hunt in the wrong repository, and the honest answer - somebody is
+        /// sending numbers no game can use - is only visible here.
+        /// </summary>
+        private void FlushRefusedLog()
+        {
+            long total = NetworkDiagnostics.RefusedMessages;
+
+            // The counter is restarted by a new session and by the stats view's reset button, so it can
+            // move backwards under this. Re-baselining rather than subtracting is what keeps a reset from
+            // being announced as a negative number of drops.
+            if (total <= _loggedRefused)
+            {
+                _loggedRefused = total;
+                return;
+            }
+
+            long now = Environment.TickCount64;
+            if (now - _lastRefusedLogMs < DropLogIntervalMs) return;
+
+            long refused = total - _loggedRefused;
+            _loggedRefused = total;
+            _lastRefusedLogMs = now;
+
+            MelonLogger.Warning("[Networking] dropped " + refused + " messages carrying a NaN, an infinity, " +
+                "or a length no packet could hold; a peer is sending values no game can use, whether through " +
+                "a bug or on purpose.");
+        }
+
+        private void FlushUndecryptableLog()
+        {
+            long total = NetworkDiagnostics.UndecryptablePackets;
+            if (total <= _loggedUndecryptable)
+            {
+                _loggedUndecryptable = total;
+                return;
+            }
+
+            long now = Environment.TickCount64;
+            if (now - _lastDropLogMs < DropLogIntervalMs) return;
+
+            // What has been logged is recorded before the log call, not after: if logging itself fails, the
+            // retry would otherwise repeat on every single poll.
+            long dropped = total - _loggedUndecryptable;
+            _loggedUndecryptable = total;
+            _lastDropLogMs = now;
+
+            // Summarised rather than logged per packet: a mismatched password makes every single packet
+            // fail, and that must not turn into a log flood on top of a session that already will not work.
+            MelonLogger.Error("[Networking] dropped " + dropped + " packets that failed to decrypt; do both sides use the same session password?");
+        }
+
+        /// <summary>
+        /// Summarizes messages too large for a relay to forward. Nothing else reports them: the sender
+        /// sees a send that returned normally, and the receiver sees a message that never came.
+        /// </summary>
+        private void FlushOversizedLog()
+        {
+            long total = NetworkDiagnostics.OversizedSends;
+            if (total <= _loggedOversized)
+            {
+                _loggedOversized = total;
+                return;
+            }
+
+            long now = Environment.TickCount64;
+            if (now - _lastOversizedLogMs < DropLogIntervalMs) return;
+
+            long dropped = total - _loggedOversized;
+            _loggedOversized = total;
+            _lastOversizedLogMs = now;
+
+            MelonLogger.Error("[Networking] dropped " + dropped + " messages larger than the " +
+                MaxPayloadSize + " bytes a relay forwards; split them or send fewer fields.");
+        }
+
+        /// <summary>
+        /// Summarizes sends made while no session was running. They do nothing, and a mod that starts
+        /// sending a frame too early has no other way to find out.
+        /// </summary>
+        private void FlushWithoutSessionLog()
+        {
+            long total = NetworkDiagnostics.SendsWithoutSession;
+            if (total <= _loggedWithoutSession)
+            {
+                _loggedWithoutSession = total;
+                return;
+            }
+
+            long now = Environment.TickCount64;
+            if (now - _lastWithoutSessionLogMs < DropLogIntervalMs) return;
+
+            long dropped = total - _loggedWithoutSession;
+            _loggedWithoutSession = total;
+            _lastWithoutSessionLogMs = now;
+
+            MelonLogger.Warning("[Networking] " + dropped + " sends did nothing because no session was " +
+                "running; wait for OnHostStarted or OnConnectedToHost before sending.");
+        }
+
+        private void OnRelayWelcome(byte localVirtualId)
+        {
+            _link.Welcome(localVirtualId);
+
+            if (Role == NetRole.Host)
+            {
+                NetworkEvents.RaiseHostStarted();
+                return;
+            }
+
+            NetworkEvents.RaiseConnectedToHost();
+            RelayPeer host = _link.EnsurePeer(this, RelayProtocol.HostVirtualId, out bool created);
+            if (created) NetworkEvents.RaisePeerConnected(host);
+        }
+
+        private void OnReceiveUnconnected(IPEndPoint from, NetPacketReader reader, UnconnectedMessageType type)
+        {
+            try
+            {
+                if (_mode == TransportMode.Direct && Role == NetRole.Host && _manager != null)
+                {
+                    LanDiscovery.TryAnswer(_manager, from, reader, type);
+                }
+            }
+            finally
+            {
+                reader.Recycle();
+            }
+        }
+
+        private void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
+        {
+            NetworkEvents.RaiseNetworkError(endPoint + ": " + socketError);
+        }
+
+        private static DeliveryMethod Map(Delivery delivery)
+        {
+            return delivery switch
+            {
+                Delivery.Unreliable => DeliveryMethod.Unreliable,
+                Delivery.ReliableUnordered => DeliveryMethod.ReliableUnordered,
+                Delivery.Sequenced => DeliveryMethod.Sequenced,
+                Delivery.ReliableSequenced => DeliveryMethod.ReliableSequenced,
+                _ => DeliveryMethod.ReliableOrdered,
+            };
+        }
+
+        /// <summary>
+        /// A relay handshake waiting on the join token being derived for it.
+        /// </summary>
+        private sealed class PendingConnect
+        {
+            internal PendingConnect(string address, int port, byte role, string? sessionCode, Task<byte[]> token)
+            {
+                Address = address;
+                Port = port;
+                Role = role;
+                SessionCode = sessionCode;
+                Token = token;
+            }
+
+            internal string Address { get; }
+
+            internal int Port { get; }
+
+            internal byte Role { get; }
+
+            internal string? SessionCode { get; }
+
+            internal Task<byte[]> Token { get; }
+        }
+
+        private static DisconnectReason Map(LiteNetLib.DisconnectReason reason)
+        {
+            return reason switch
+            {
+                LiteNetLib.DisconnectReason.ConnectionFailed => DisconnectReason.ConnectionFailed,
+                LiteNetLib.DisconnectReason.HostUnreachable => DisconnectReason.ConnectionFailed,
+                LiteNetLib.DisconnectReason.NetworkUnreachable => DisconnectReason.ConnectionFailed,
+                LiteNetLib.DisconnectReason.Timeout => DisconnectReason.Timeout,
+                LiteNetLib.DisconnectReason.RemoteConnectionClose => DisconnectReason.RemoteClose,
+                LiteNetLib.DisconnectReason.DisconnectPeerCalled => DisconnectReason.LocalClose,
+                LiteNetLib.DisconnectReason.ConnectionRejected => DisconnectReason.Rejected,
+                _ => Unmapped(reason),
+            };
+        }
+
+        // Said once with LiteNetLib's own name: "Unknown" alone left a relay that dropped both peers unexplained.
+        private static DisconnectReason Unmapped(LiteNetLib.DisconnectReason reason)
+        {
+            MelonLogger.Warning($"[Networking] a peer left for a reason this API does not name: {reason}.");
+            return DisconnectReason.Unknown;
+        }
+    }
+}

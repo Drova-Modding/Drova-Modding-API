@@ -5,7 +5,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     internal class DS_RevisitMultipleChoiceNodeEditor : DrawNodeEditor
     {
-        private DS_RevisitMultipleChoiceNode _castedNode;
+        private DS_RevisitMultipleChoiceNode? _castedNode;
 
         public DS_RevisitMultipleChoiceNodeEditor()
         {

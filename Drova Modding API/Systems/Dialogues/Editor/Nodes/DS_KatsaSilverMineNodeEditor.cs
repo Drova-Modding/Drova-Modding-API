@@ -10,12 +10,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_KatsaSilverMineNodeEditor : DrawNodeEditor
     {
-        private DS_KatsaSilverMine _castedNode;
-        private GUIGvarSelectionEditor _playerAmountEditor;
-        private GUIGvarSelectionEditor _playerMineSilverAmountEditor;
-        private GUIGvarSelectionEditor _friendlyAmountEditor;
-        private GUIGvarSelectionEditor _defaultAmountEditor;
-        private GUIGvarSelectionEditor _angryAmountEditor;
+        private DS_KatsaSilverMine? _castedNode;
+        private GUIGvarSelectionEditor _playerAmountEditor = null!;
+        private GUIGvarSelectionEditor _playerMineSilverAmountEditor = null!;
+        private GUIGvarSelectionEditor _friendlyAmountEditor = null!;
+        private GUIGvarSelectionEditor _defaultAmountEditor = null!;
+        private GUIGvarSelectionEditor _angryAmountEditor = null!;
 
         public DS_KatsaSilverMineNodeEditor()
         {
@@ -25,12 +25,17 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_KatsaSilverMine>();
-            _castedNode.SilverOreItem = GlobalAssetsGameHandler.TryGet().SilverOreItem;
-            _playerAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.PlayerAmount.GetParent().name, false, _castedNode.PlayerAmount);
-            _playerMineSilverAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.PlayerMineSilverAmount.GetParent().name, false, _castedNode.PlayerMineSilverAmount);
-            _friendlyAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.FriendlyAmount.GetParent().name, false, _castedNode.FriendlyAmount);
-            _defaultAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.DefaultAmount.GetParent().name, false, _castedNode.DefaultAmount);
-            _angryAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, _castedNode.AngryAmount.GetParent().name, false, _castedNode.AngryAmount);
+            if (_castedNode == null) return;
+            GlobalAssetsGameHandler? globalAssets = GlobalAssetsGameHandler.TryGet();
+            if (globalAssets != null)
+            {
+                _castedNode.SilverOreItem = globalAssets.SilverOreItem;
+            }
+            _playerAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, null, false, _castedNode.PlayerAmount);
+            _playerMineSilverAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, null, false, _castedNode.PlayerMineSilverAmount);
+            _friendlyAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, null, false, _castedNode.FriendlyAmount);
+            _defaultAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, null, false, _castedNode.DefaultAmount);
+            _angryAmountEditor = new GUIGvarSelectionEditor(GvarType.INT, null, false, _castedNode.AngryAmount);
         }
         public override void DrawNode(Vector2 position)
         {

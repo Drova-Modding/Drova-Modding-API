@@ -15,7 +15,6 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// True, if any button is down
         /// </summary>
-        /// <returns></returns>
         public static bool AnyButtonDown()
         {
             return Il2CppCustomFramework.InputHandling.InputSystem.AnyButtonDown();
@@ -32,8 +31,6 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// True, if the action with the given name is clicked
         /// </summary>
-        /// <param name="actionName"></param>
-        /// <returns></returns>
         public static bool IsActionClicked(string actionName)
         {
             return Il2CppCustomFramework.InputHandling.InputSystem.IsActionClicked(actionName);
@@ -42,8 +39,6 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// True, if the action with the given name is pressed
         /// </summary>
-        /// <param name="actionName"></param>
-        /// <returns></returns>
         public static bool IsActionPressed(string actionName)
         {
             return Il2CppCustomFramework.InputHandling.InputSystem.IsActionPressed(actionName);
@@ -52,8 +47,6 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// True, if the action with the given name is released
         /// </summary>
-        /// <param name="actionName"></param>
-        /// <returns></returns>
         public static bool IsActionReleased(string actionName)
         {
             return Il2CppCustomFramework.InputHandling.InputSystem.IsActionReleased(actionName);
@@ -63,8 +56,6 @@ namespace Drova_Modding_API.Access
         /// Returns a localized text for the given action name. For controller and mouse buttons it will return a formatted string
         /// which shows the action as an icon. For keyboard keys it will return the key name.
         /// </summary>
-        /// <param name="actionName"></param>
-        /// <returns></returns>
         public static string GetLocalizedAnimText(string actionName)
         {
             return Il2CppCustomFramework.InputHandling.InputSystem.GetLocalizedAnimText(actionName);
@@ -85,15 +76,11 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Start rebinding the input action with the given name. The action will be rebounded with the next input clicked.
         /// </summary>
-        /// <param name="actionName"></param>
-        /// <param name="pole"></param>
-        /// <param name="axisRange"></param>
-        /// <param name="onInputMappedFinishedCallback"></param>
-        public static void RebindKeyboardInputAction(string actionName, Pole? pole = null, AxisRange axisRange = AxisRange.Full, Il2CppSystem.Action<InputMapper.InputMappedEventData> onInputMappedFinishedCallback = null)
+        public static void RebindKeyboardInputAction(string actionName, Pole? pole = null, AxisRange axisRange = AxisRange.Full, Il2CppSystem.Action<InputMapper.InputMappedEventData>? onInputMappedFinishedCallback = null)
         {
             InputMapper inputMapper = new();
             inputMapper.add_InputMappedEvent(onInputMappedFinishedCallback);
-            inputMapper.add_InputMappedEvent(new System.Action<InputMapper.InputMappedEventData>(SaveRemapping));
+            inputMapper.add_InputMappedEvent(new Action<InputMapper.InputMappedEventData>(SaveRemapping));
             inputMapper.options = new InputMapper.Options
             {
                 checkForConflicts = false,
@@ -121,9 +108,8 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Get the action element map for the given action name and pole from the keyboard
         /// </summary>
-        /// <param name="actionName"></param>
+        /// <param name="actionName">The registered action's name.</param>
         /// <param name="pole">Null, if action is a button. Use Pole.Positive or Pole.Negative to get the ActionElementMap for a specific axis direction</param>
-        /// <returns></returns>
         internal static ActionElementMap GetActionKeyboardElementMap(string actionName, Il2CppSystem.Nullable<Pole> pole)
         {
             return GetActionElementMap(actionName, pole, new Il2CppSystem.Nullable<ControllerType>(ControllerType.Keyboard));
@@ -137,7 +123,6 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Callback after the input is remapped to save the data to the player prefs
         /// </summary>
-        /// <param name="data"></param>
         private static void SaveRemapping(InputMapper.InputMappedEventData data)
         {
             // Save the remapping
@@ -147,8 +132,6 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Convert Function from Pole? to IL2CppSystem.Nullable{Pole}
         /// </summary>
-        /// <param name="pole"></param>
-        /// <returns></returns>
         private static Il2CppSystem.Nullable<Pole> ConvertPole(Pole? pole)
         {
             if (pole == null)

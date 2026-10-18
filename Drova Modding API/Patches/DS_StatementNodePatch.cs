@@ -9,8 +9,6 @@ using UnityEngine;
 [HarmonyPatch(typeof(DS_StatementNode), nameof(DS_StatementNode.OnExecute), [typeof(Component), typeof(IBlackboard)])]
 internal static class DS_StatementNodePatch
 {
-    private const string NPC = "NPC";
-    private const string TEACHER = "Teacher";
     private static void Prefix(Component agent, DS_StatementNode __instance)
     {
         if (__instance.statement.audio != null) return;
@@ -19,7 +17,11 @@ internal static class DS_StatementNodePatch
             DS_DialogueTreeController component = agent.GetComponent<DS_DialogueTreeController>();
             DS_StatementNode.LoadActorIfNecessary(__instance.DLGTree, __instance.actorName, __instance.finalActor, component);
         }
-        if (__instance.finalActor == null || __instance.finalActor.Cast<DS_DialogueActor>().Actor.IsDead())
+        // A lazy speaker (not loaded here - common for a teammate's scene in co-op) has no body, and the game's
+        // IsDead dereferences it: the null check comes first, and TryCast because not every speaker is a DS_DialogueActor.
+        DS_DialogueActor? dialogueActor = __instance.finalActor?.TryCast<DS_DialogueActor>();
+        Actor? speaker = dialogueActor != null ? dialogueActor.Actor : null;
+        if (speaker == null || speaker.IsDead())
         {
             MelonLoader.MelonLogger.Warning("finalActor is null or dead, cannot play audio for DS_StatementNode");
             return;

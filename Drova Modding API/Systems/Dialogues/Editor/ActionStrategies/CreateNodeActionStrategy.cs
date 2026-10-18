@@ -13,7 +13,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
             Vector2 clickPosition = context.PointerPosition;
             if (editorManager.DialogueTree == null) return;
 
-            DTNode newNode = editorManager.DrawNodeEditorFactory.CreateNodeByName(editorManager.DialogueTree, nodeName);
+            DTNode? newNode = editorManager.DrawNodeEditorFactory.CreateNodeByName(editorManager.DialogueTree, nodeName);
             if (newNode == null)
             {
                 MelonLogger.Warning("Unable to create dialogue node for {0}", nodeName);
@@ -22,7 +22,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 
             editorManager.ApplyDefaultActorParameter(newNode);
 
-            DrawNodeEditor nodeEditor = editorManager.DrawNodeEditorFactory.GetDrawNodeEditorFromType(newNode.GetIl2CppType());
+            DrawNodeEditor? nodeEditor = editorManager.DrawNodeEditorFactory.GetDrawNodeEditorFromType(newNode.GetIl2CppType());
             if (nodeEditor == null)
             {
                 MelonLogger.Warning("Unable to create editor for node type {0}", newNode.GetIl2CppType().Name);

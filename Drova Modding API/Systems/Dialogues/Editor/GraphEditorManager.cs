@@ -347,7 +347,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 if (node == null) continue;
                 if (!_drawNodeEditors.ContainsKey(node.UID))
                 {
-                    DrawNodeEditor editor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(node.GetIl2CppType());
+                    DrawNodeEditor? editor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(node.GetIl2CppType());
                     if (editor == null)
                     {
                         MelonLogger.Warning("Editor is null for {0}", node.GetIl2CppType().Name);
@@ -389,7 +389,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 }
                 else
                 {
-                    DrawNodeEditor connectedEditor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(targetNode.GetIl2CppType());
+                    DrawNodeEditor? connectedEditor = DrawNodeEditorFactory.GetDrawNodeEditorFromType(targetNode.GetIl2CppType());
                     if (connectedEditor == null)
                     {
                         MelonLogger.Warning("Editor is null for {0}", targetNode.GetIl2CppType().Name);
@@ -491,7 +491,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             if (DialogueTree == null) return;
 
-            int count = DialogueTree.actorParameters?.Count ?? 0;
+            Il2CppSystem.Collections.Generic.List<DialogueTree.ActorParameter>? parameters = DialogueTree.actorParameters;
+            int count = parameters?.Count ?? 0;
             const float rowHeight = 22f;
             // Header (name field) + one row per existing parameter, or a single "none" row.
             float listRows = count > 0 ? count : 1;
@@ -505,7 +506,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 AddActorParameter(_newActorParameterName);
             }
 
-            if (count == 0)
+            if (parameters == null || count == 0)
             {
                 GUI.Label(new Rect(20, 174, 330, 20), "No actor parameters");
                 return;
@@ -517,7 +518,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             for (int i = 0; i < count; i++)
             {
                 float rowY = 174 + (i * rowHeight);
-                string label = (i == 0 ? "Default: " : string.Empty) + GetActorParameterName(DialogueTree.actorParameters[i]);
+                string label = (i == 0 ? "Default: " : string.Empty) + GetActorParameterName(parameters[i]);
                 GUI.Label(new Rect(20, rowY, 300, 20), label);
                 if (GUI.Button(new Rect(326, rowY, 24, 20), "X"))
                 {
@@ -536,7 +537,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             if (DialogueTree == null) return;
 
-            string trimmedName = actorName?.Trim() ?? string.Empty;
+            string trimmedName = actorName.Trim();
             if (string.IsNullOrWhiteSpace(trimmedName)) return;
 
             DialogueTree.actorParameters ??= new Il2CppSystem.Collections.Generic.List<DialogueTree.ActorParameter>();
@@ -556,7 +557,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         [HideFromIl2Cpp]
         private void RemoveActorParameter(int index)
         {
-            if (DialogueTree?.actorParameters == null) return;
+            if (DialogueTree == null || DialogueTree.actorParameters == null) return;
             if (index < 0 || index >= DialogueTree.actorParameters.Count) return;
 
             DialogueTree.actorParameters.RemoveAt(index);
@@ -601,7 +602,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             {
                 float zoomDelta = e.delta.y * -0.01f;
                 //float oldScaleFactor = _scaleFactor;
-                _scaleFactor = Mathf.Clamp(_scaleFactor + zoomDelta, 0.1f, 5.0f); // Allow more extreme zoom levels
+                _scaleFactor = Mathf.Clamp(_scaleFactor + zoomDelta, 0.1f, 5.0f);
 
                 e.Use();
             }
@@ -717,7 +718,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         private void DrawInfiniteBackground()
         {
             float gridSize = 50;
-            Color gridColor = new(0.7f, 0.7f, 0.7f, 0.5f); // semi-transparent gray
+            Color gridColor = new(0.7f, 0.7f, 0.7f, 0.5f);
 
             // GUIExtensions.DrawLine uses RotateAroundPivot, which expects the pivot
             // in screen space. The caller's pan/scale matrix would corrupt vertical
@@ -792,7 +793,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
             const float thickness = 2f;
             foreach (DrawNodeEditor editor in _overlappingEditors)
             {
-                if (editor == null) continue;
                 Rect nodeRect = new(editor.Position, editor.NodeSize);
                 if (!visibleArea.Overlaps(nodeRect)) continue;
 
@@ -1018,7 +1018,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         {
             actorNames = [];
             actorIds = [];
-            if (DialogueTree?.actorParameters == null || DialogueTree.actorParameters.Count == 0)
+            if (DialogueTree == null || DialogueTree.actorParameters == null || DialogueTree.actorParameters.Count == 0)
             {
                 return false;
             }
@@ -1122,7 +1122,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
                 if (GUI.Button(new Rect(_contextMenuPosition.x, _contextMenuPosition.y + (i * 20), menuWidth, 20), subContextMenuOptions[i]))
                 {
                     HandleSubContextMenuSelection(subContextMenuOptions[i]);
-                    _showSubContextMenu = false; // Close the menu after selection
+                    _showSubContextMenu = false;
                 }
             }
         }

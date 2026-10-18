@@ -19,9 +19,6 @@ namespace Drova_Modding_API.Systems.Dialogues
             for (int i = 0; i < potratis.Count; i++)
             {
                 var portrait = potratis[i];
-                //var texture = new Texture2D(portrait.texture.width, portrait.texture.height, TextureFormat.BC7, false);
-                //texture.SetPixels(portrait.texture.GetPixels());
-                //texture.Apply();
                 var bytes = portrait.texture.EncodeToPNG();
                 File.WriteAllBytes(Path.Combine(Utils.SavePath, "/pngs/", $"EntityInfoPortrait_{allEntityInfosWithPictures[i].GetLocalizedName()}.png"), bytes);
             }

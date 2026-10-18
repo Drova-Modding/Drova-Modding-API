@@ -21,9 +21,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<DS_FactionCheckConditionTask>();
             if (_castedTask == null) return;
 
-            _factions = Resources.FindObjectsOfTypeAll<Faction>();
+            Faction[] factions = Resources.FindObjectsOfTypeAll<Faction>();
+            _factions = factions;
             List<string> list = new();
-            foreach (Faction faction in _factions)
+            foreach (Faction faction in factions)
             {
                 list.Add(faction.name);
             }

@@ -29,8 +29,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return;
             }
 
-            _items = ProviderAccess.GetGameDatabase().Items.GetItems().ToArray();
-            int selectedIndex = Array.FindIndex(_items, item => item.Guid == _node._spell?.Guid);
+            SubDatabase_Item? itemDatabase = ProviderAccess.ItemDatabase;
+            _items = itemDatabase != null ? itemDatabase.GetItems().ToArray() : [];
+            Item? spell = _node._spell;
+            string? spellGuid = spell == null ? null : spell.Guid;
+            int selectedIndex = Array.FindIndex(_items, item => item.Guid == spellGuid);
             if (selectedIndex < 0)
             {
                 selectedIndex = 0;

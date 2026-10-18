@@ -10,8 +10,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_SetAcquaintanceNodeEditor : DrawNodeEditor
     {
-        private DS_SetAcquaintance _castedNode;
-        private EntityInfo[] _entityInfos;
+        private DS_SetAcquaintance? _castedNode;
+        private EntityInfo[] _entityInfos = [];
         private GUIDropdownWithFilter _entityInfoDropdown;
 
         public DS_SetAcquaintanceNodeEditor()
@@ -22,6 +22,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_SetAcquaintance>();
+            if (_castedNode == null) return;
             _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>()
                 .GroupBy(e => e.name)
                 .Select(g => g.First())

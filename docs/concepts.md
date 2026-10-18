@@ -84,6 +84,10 @@ A few things that will bite you if you don't know them:
   `T?`. Helper methods in the API convert where needed.
 - **You rarely need reflection** — IL2CPP exposes internal fields (often prefixed with `_`)
   directly, which is why API code reads things like `handler.GameplayConfig._configFile`.
+- **A patch can apply and never run:** a public method inlined into its callers keeps its body, so Harmony
+  patches it cleanly, but nothing calls it. Apply hooks through `Hooking.TryPrefix`/`TryPostfix` (one failing
+  target does not take the others down), exercise the feature, then check `Hooking.NeverFired()` or
+  `Hooking.FiredCounts()`. Patch the private funnel the public method calls instead.
 
 ## Naming you'll see a lot
 

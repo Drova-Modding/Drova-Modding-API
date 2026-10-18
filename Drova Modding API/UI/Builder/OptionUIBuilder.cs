@@ -18,7 +18,7 @@ namespace Drova_Modding_API.UI.Builder
     public class OptionUIBuilder
     {
         private readonly Transform _parent;
-        private readonly List<GameObject> gameObjects = [];
+        private readonly List<GameObject> _gameObjects = [];
         internal OptionUIBuilder(Transform parent)
         {
             _parent = parent;
@@ -59,6 +59,56 @@ namespace Drova_Modding_API.UI.Builder
             return Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Control).WaitForCompletion();
         }
 
+        /// <summary>
+        /// The shipped option row prefabs carry an <c>ActivateByInputDevice</c> whose object lists were
+        /// authored with null entries. The component logs one warning per null every time it is enabled
+        /// or the input device changes, so the nulls are stripped off our own clones.
+        /// </summary>
+        private static GameObject InstantiateRow(GameObject prefab, Transform parent)
+        {
+            GameObject row = UnityEngine.Object.Instantiate(prefab, parent);
+            foreach (ActivateByInputDevice activateByInputDevice in row.GetComponentsInChildren<ActivateByInputDevice>(true))
+            {
+                RemoveNullEntries(activateByInputDevice._computerObjects);
+                RemoveNullEntries(activateByInputDevice._joystickObjects);
+            }
+            return row;
+        }
+
+        private static void RemoveNullEntries(Il2CppSystem.Collections.Generic.List<GameObject> objects)
+        {
+            if (objects == null) return;
+            for (int i = objects.Count - 1; i >= 0; i--)
+            {
+                if (!objects[i]) objects.RemoveAt(i);
+            }
+        }
+
+        /// <summary>
+        /// <c>GUI_OptionPanel_Generic</c> fills its row list once in <c>InitRows</c> and skips that work
+        /// whenever the list is non-null. The cloned panel already ran it against the template rows that
+        /// <see cref="OptionMenuAccess.AddPanel(Sprite?, string)"/> destroys, so without refilling the list
+        /// from the row root the panel has no rows to build explicit up/down links for and controller
+        /// navigation never reaches a modded row.
+        /// </summary>
+        private void RefreshPanelNavigation()
+        {
+            Il2CppDrova.GUI_OptionPanel_Generic panel = _parent.GetComponentInParent<Il2CppDrova.GUI_OptionPanel_Generic>(true);
+            if (!panel)
+            {
+                MelonLogger.Warning("No option panel found above the built rows, controller navigation was not set up");
+                return;
+            }
+            Transform rowRoot = panel._rowRoot ? panel._rowRoot : _parent;
+            Il2CppSystem.Collections.Generic.List<GUI_OptionsRow> rows = new();
+            foreach (GUI_OptionsRow row in rowRoot.GetComponentsInChildren<GUI_OptionsRow>(true))
+            {
+                rows.Add(row);
+            }
+            panel._rows = rows;
+            panel.SetupNavigations();
+        }
+
         /**
          * Create a title.
          */
@@ -72,9 +122,9 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateTitle(LocalizedString localizedString, Transform parent)
         {
-            GameObject title = UnityEngine.Object.Instantiate(GetTitleObject(), parent);
+            GameObject title = InstantiateRow(GetTitleObject(), parent);
             SetLocalizedText(title, localizedString);
-            gameObjects.Add(title);
+            _gameObjects.Add(title);
             return this;
         }
 
@@ -83,9 +133,9 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateDisclaimer(LocalizedString localizedString)
         {
-            GameObject disclaimer = UnityEngine.Object.Instantiate(GetDisclaimerObject(), _parent);
+            GameObject disclaimer = InstantiateRow(GetDisclaimerObject(), _parent);
             SetLocalizedText(disclaimer, localizedString);
-            gameObjects.Add(disclaimer);
+            _gameObjects.Add(disclaimer);
             return this;
         }
 
@@ -94,9 +144,9 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateHeader(LocalizedString localizedString)
         {
-            GameObject header = UnityEngine.Object.Instantiate(GetHeaderObject(), _parent);
+            GameObject header = InstantiateRow(GetHeaderObject(), _parent);
             SetLocalizedText(header, localizedString);
-            gameObjects.Add(header);
+            _gameObjects.Add(header);
             return this;
         }
 
@@ -110,7 +160,7 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateSlider(LocalizedString title, string optionKey, int min = 0, int max = 100, int defaultValue = 0)
         {
-            GameObject slider = UnityEngine.Object.Instantiate(GetSliderObject(), _parent);
+            GameObject slider = InstantiateRow(GetSliderObject(), _parent);
             Transform left = slider.transform.FindChild("Left");
             if (!left)
             {
@@ -182,7 +232,7 @@ namespace Drova_Modding_API.UI.Builder
                 sliderOption.OnValueChangedListener(value);
                 sliderOption.UpdateOptionValue(value);
             }
-            gameObjects.Add(slider);
+            _gameObjects.Add(slider);
             return this;
         }
 
@@ -197,7 +247,7 @@ namespace Drova_Modding_API.UI.Builder
          */
         public OptionUIBuilder CreateSlider(LocalizedString title, string optionKey, float min = 0, float max = 100, float defaultValue = 0, bool wholeNumbers = false)
         {
-            GameObject slider = UnityEngine.Object.Instantiate(GetSliderObject(), _parent);
+            GameObject slider = InstantiateRow(GetSliderObject(), _parent);
             SetLocalizedText(slider.transform.FindChild("Left").gameObject, title);
             Transform rightOptionConfig = slider.transform.FindChild("Right/GUI_Slider_OptionConfig");
             if (!rightOptionConfig)
@@ -263,7 +313,7 @@ namespace Drova_Modding_API.UI.Builder
                 sliderOption.ConfigHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionFloat);
                 sliderOption.SetUIValueCustom(float.Parse(value));
             }
-            gameObjects.Add(slider);
+            _gameObjects.Add(slider);
             return this;
         }
 
@@ -279,7 +329,7 @@ namespace Drova_Modding_API.UI.Builder
         public OptionUIBuilder CreateSwitch(LocalizedString title, LocalizedString onValue, LocalizedString offValue, string optionKey, bool defaultValue = false, bool useGreyText = true)
         {
             GameObject objectToInstantiate = GetSwitchObject();
-            GameObject @switch = UnityEngine.Object.Instantiate(objectToInstantiate, _parent);
+            GameObject @switch = InstantiateRow(objectToInstantiate, _parent);
             if (useGreyText)
             {
                 GUI_OptionsRow row = @switch.GetComponent<GUI_OptionsRow>();
@@ -358,7 +408,7 @@ namespace Drova_Modding_API.UI.Builder
 
                 toggle._configHandler.GameplayConfig._keyToOptions.TryAdd(optionKey, configOptionBool);
             }
-            gameObjects.Add(@switch);
+            _gameObjects.Add(@switch);
             return this;
         }
 
@@ -366,7 +416,6 @@ namespace Drova_Modding_API.UI.Builder
         /// Create a section with input actions.
         /// </summary>
         /// <param name="inputActions">The input actions to display</param>
-        /// <returns></returns>
         public OptionUIBuilder CreateInputActionSection(List<InputActionTemplate> inputActions)
         {
             GameObject keybindingPrefab = GetKeyBinding();
@@ -374,7 +423,7 @@ namespace Drova_Modding_API.UI.Builder
             for (int i = 0; i < inputActions.Count; i++)
             {
                 InputActionTemplate inputAction = inputActions[i];
-                GameObject keyBinding = UnityEngine.Object.Instantiate(keybindingPrefab, _parent);
+                GameObject keyBinding = InstantiateRow(keybindingPrefab, _parent);
                 GUI_Option_Controls_KeyFieldElement toDestroy = keyBinding.GetComponent<GUI_Option_Controls_KeyFieldElement>();
                 if (toDestroy)
                 {
@@ -428,7 +477,7 @@ namespace Drova_Modding_API.UI.Builder
         /// <param name="defaulValue">Value when option does not exist</param>
         public OptionUIBuilder CreateDropdown<E>(LocalizedString title, string optionKey, Dictionary<E, LocalizedString> dropdownOptions, E defaulValue) where E : Enum
         {
-            GameObject dropdown = UnityEngine.Object.Instantiate(GetDropdownObject(), _parent);
+            GameObject dropdown = InstantiateRow(GetDropdownObject(), _parent);
             Transform left = dropdown.transform.FindChild("Left");
             if (!left)
             {
@@ -456,7 +505,7 @@ namespace Drova_Modding_API.UI.Builder
 
             DropdownHandler dropdownHandler = rightOptionConfig.gameObject.AddComponent<DropdownHandler>();
 
-            Il2CppDrova.ConfigGameHandler configHandler = ProviderAccess.GetConfigGameHandler();
+            Il2CppDrova.ConfigGameHandler? configHandler = ProviderAccess.GetConfigGameHandler();
 
             if (!configHandler)
             {
@@ -478,7 +527,7 @@ namespace Drova_Modding_API.UI.Builder
             {
                 dropdownHandler.Init(keys, [.. dropdownOptions.Values], configHandler, optionKey, Utils.GetIndexFromEnum(defaulValue));
             }
-            gameObjects.Add(dropdown);
+            _gameObjects.Add(dropdown);
             return this;
         }
 
@@ -491,7 +540,7 @@ namespace Drova_Modding_API.UI.Builder
         public OptionUIBuilder CreateButton(LocalizedString title, LocalizedString buttonName, Action onClick)
         {
             GameObject buttonPrefab = Addressables.LoadAssetAsync<GameObject>(AddressableAccess.GUIOptions.GUI_OptionRow_Button_ResetDefault).WaitForCompletion();
-            GameObject button = UnityEngine.Object.Instantiate(buttonPrefab, _parent);
+            GameObject button = InstantiateRow(buttonPrefab, _parent);
             Transform left = button.transform.FindChild("Left");
             Transform right = button.transform.FindChild("Right");
             if (!left || !right)
@@ -508,7 +557,7 @@ namespace Drova_Modding_API.UI.Builder
                 return this;
             }
             buttonJ2D.onClick.AddListener(new Action(onClick));
-            gameObjects.Add(button);
+            _gameObjects.Add(button);
             return this;
         }
 
@@ -517,8 +566,13 @@ namespace Drova_Modding_API.UI.Builder
          */
         public List<GameObject> Build()
         {
-            ProviderAccess.GetConfigGameHandler().GameplayConfig.ConfigFile.SaveChangesToFile(false);
-            return gameObjects;
+            Il2CppDrova.ConfigGameHandler? configHandler = ProviderAccess.GetConfigGameHandler();
+            if (configHandler != null)
+            {
+                configHandler.GameplayConfig.ConfigFile.SaveChangesToFile(false);
+            }
+            RefreshPanelNavigation();
+            return _gameObjects;
         }
 
         private static void SetLocalizedText(GameObject gameObject, LocalizedString localizedString)

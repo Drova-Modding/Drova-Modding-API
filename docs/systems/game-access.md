@@ -40,9 +40,9 @@ so subscribing to `OnPlayerFound` is usually all you need.
 ### Get the player safely
 
 ```csharp
-if (PlayerAccess.TryGetPlayer(out Actor player))
+if (PlayerAccess.TryGetPlayer(out Actor? player))
 {
-    // player is non-null here
+    // player is non-null here ([NotNullWhen(true)])
 }
 
 // or, if you want to handle null yourself:
@@ -55,18 +55,34 @@ Actor? player = PlayerAccess.GetPlayer(); // null in menus / before ready
 ### Read the player's equipped weapon slots and stats
 
 ```csharp
-ActorEquipSlot primary  = PlayerAccess.GetPrimarySlot();
-ActorEquipSlot offhand  = PlayerAccess.GetSecondarySlot(); // same as primary for 2-handers
-ActorEquipSlot bowAmmo  = PlayerAccess.GetBowSlot();
-ActorEquipSlot slingAmmo = PlayerAccess.GetSlingshotSlot();
+// All null without a player.
+ActorEquipSlot? primary  = PlayerAccess.GetPrimarySlot();
+ActorEquipSlot? offhand  = PlayerAccess.GetSecondarySlot(); // same as primary for 2-handers
+ActorEquipSlot? bowAmmo  = PlayerAccess.GetBowSlot();
+ActorEquipSlot? slingAmmo = PlayerAccess.GetSlingshotSlot();
 
-PlayerAttributeStats stats = PlayerAccess.GetPlayerAttributeStats();
+PlayerAttributeStats? stats = PlayerAccess.GetPlayerAttributeStats();
 ```
+
+### Read a character level
+
+```csharp
+if (PlayerAccess.TryGetLevel(out int level))
+{
+    // Scale something by the player's level.
+}
+
+// Or for a specific actor. "Which player" is a question the static one cannot ask,
+// and in a co-op session there is more than one:
+PlayerAccess.TryGetLevel(someActor, out int otherLevel);
+```
+
+A `Try` pair rather than a plain number on purpose. See the notes.
 
 ### Reach a game handler
 
 `ProviderAccess` exposes handlers either as `Get…()` methods (returning the handler or `null`)
-or `TryGet…(out …)` methods. Always null-check:
+or `TryGet…(out T? value)` methods, whose value is set whenever they return `true`. Always null-check:
 
 ```csharp
 // Entities: the player object and spawn/despawn events.
@@ -79,7 +95,7 @@ SceneGameHandler? scene = ProviderAccess.GetSceneGameHandler();
 SavegameGameHandler? save = ProviderAccess.GetSaveGameHandler();
 
 // Time scale / game state.
-if (ProviderAccess.TryGetGameStateGameHandler(out var gameState) && gameState != null)
+if (ProviderAccess.TryGetGameStateGameHandler(out var gameState))
 {
     // pause/slow-mo, etc.
 }
@@ -92,21 +108,21 @@ ProviderAccess.TryGetWeatherGameHandler(out var weather);
 ### Look something up in a database
 
 ```csharp
-// Items, recipes, status effects, global variables.
+// Items, recipes, status effects, global variables. Null before the game has loaded its database.
 var itemDb   = ProviderAccess.ItemDatabase;
 var recipeDb = ProviderAccess.RecipeDatabase;
 var gvarDb   = ProviderAccess.GVarDatabase;
 var statusDb = ProviderAccess.StatusEffectDatabase;
 
 // The big aggregate databases:
-GameDatabase gameDb = ProviderAccess.GetGameDatabase();
-AIDatabase   aiDb   = ProviderAccess.GetAIDatabase(); // behaviour trees / FSM graphs
+GameDatabase? gameDb = ProviderAccess.GetGameDatabase();
+AIDatabase?   aiDb   = ProviderAccess.GetAIDatabase(); // behaviour trees / FSM graphs
 ```
 
 ### Get the GameManager
 
 ```csharp
-if (ProviderAccess.TryGetGameManager(out GameManager gm))
+if (ProviderAccess.TryGetGameManager(out GameManager? gm))
 {
     // gm is cached after the first successful lookup
 }
@@ -120,22 +136,24 @@ if (ProviderAccess.TryGetGameManager(out GameManager gm))
 |----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
 | `event Action<Actor>? OnPlayerFound`                     | Raised once the player actor exists and is initialized. Fires on every load.                                         |
 | `Actor? GetPlayer()`                                     | The player actor, or `null` in menus / before ready.                                                                 |
-| `bool TryGetPlayer(out Actor player)`                    | Null-safe player getter.                                                                                             |
+| `bool TryGetPlayer(out Actor? player)`                   | Null-safe player getter.                                                                                             |
 | `void StartWaitForPlayerCoroutine()`                     | Begin polling for the player; fires `OnPlayerFound` when ready. (The API starts this for you on gameplay/save load.) |
-| `ActorEquipSlot GetPrimarySlot()` / `GetSecondarySlot()` | Primary / secondary weapon slot.                                                                                     |
-| `ActorEquipSlot GetBowSlot()` / `GetSlingshotSlot()`     | Bow / slingshot ammo slot.                                                                                           |
-| `PlayerAttributeStats GetPlayerAttributeStats()`         | The player's attribute stat container.                                                                               |
+| `ActorEquipSlot? GetPrimarySlot()` / `GetSecondarySlot()`| Primary / secondary weapon slot.                                                                                     |
+| `ActorEquipSlot? GetBowSlot()` / `GetSlingshotSlot()`    | Bow / slingshot ammo slot.                                                                                           |
+| `PlayerAttributeStats? GetPlayerAttributeStats()`        | The player's attribute stat container.                                                                               |
+| `bool TryGetLevel(out int level)`                        | The local player's character level. `false` in menus, during a load, and for the first frames of a world.            |
+| `bool TryGetLevel(Actor? actor, out int level)`          | Any actor's level. `false` when the actor is null or its stats haven't loaded.                                       |
 
 ### `ProviderAccess` (static) — selected members
 
 | Member                                                                             | Description                                          |
 |------------------------------------------------------------------------------------|------------------------------------------------------|
-| `DrovaResourceProvider GetDrovaResourceProvider()`                                 | The main resource provider (cached).                 |
-| `GameDatabase GetGameDatabase()`                                                   | Aggregate game database.                             |
-| `SubDatabase_Item ItemDatabase` / `SubDatabase_Recipe RecipeDatabase`              | Item / recipe databases.                             |
-| `SubDatabase_GVars GVarDatabase` / `SubDatabase_StatusEffect StatusEffectDatabase` | Global-var / status-effect databases.                |
-| `AIDatabase GetAIDatabase()`                                                       | Behaviour trees / AI graphs.                         |
-| `bool TryGetGameManager(out GameManager)`                                          | The `GameManager` (cached).                          |
+| `DrovaResourceProvider? GetDrovaResourceProvider()`                                | The main resource provider (cached).                 |
+| `GameDatabase? GetGameDatabase()`                                                  | Aggregate game database. Null before it has loaded.  |
+| `SubDatabase_Item? ItemDatabase` / `SubDatabase_Recipe? RecipeDatabase`            | Item / recipe databases.                             |
+| `SubDatabase_GVars? GVarDatabase` / `SubDatabase_StatusEffect? StatusEffectDatabase` | Global-var / status-effect databases.                |
+| `AIDatabase? GetAIDatabase()`                                                      | Behaviour trees / AI graphs.                         |
+| `bool TryGetGameManager(out GameManager?)`                                         | The `GameManager` (cached).                          |
 | `EntityGameHandler? GetEntityGameHandler()`                                        | Player object + entity spawn/despawn events.         |
 | `DialogueSystemGameHandler? GetDialogueSystemGameHandler()`                        | Active dialogues / dialogue system.                  |
 | `SavegameGameHandler? GetSaveGameHandler()`                                        | Save game data and events.                           |
@@ -147,7 +165,7 @@ if (ProviderAccess.TryGetGameManager(out GameManager gm))
 | `bool TryGetGameStateGameHandler(out …)`                                           | Time scale / game state.                             |
 | `bool TryGetPlayerMetaDataGameHandler(out …)`                                      | Journal, map collection, crafting.                   |
 | `bool TryGetLazyManager(out …)`                                                    | Lazy-loading manager.                                |
-| `AstarPath GetAstarPath()`                                                         | Pathfinding (`AstarPath.active`).                    |
+| `AstarPath? GetAstarPath()`                                                        | Pathfinding (`AstarPath.active`).                    |
 
 > `ProviderAccess` has many more `Get…GameHandler()` / `TryGet…` methods than listed here — one
 > per game subsystem (achievements, analytics, camera, GUI, map, object pooler, quests, tutorial,
@@ -162,4 +180,10 @@ if (ProviderAccess.TryGetGameManager(out GameManager gm))
   loads; the event fires only after `Actor._isInitialized`.
 - **Returned objects are live game types** (`Il2CppDrova.*`). Use `TryCast<T>()`/`Cast<T>()` for
   casts and expect IL2CPP semantics (see [Core Concepts](../concepts.md)).
+- **Read the level with `TryGetLevel`, not through `GetPlayerAttributeStats`.** The level lives on
+  the base `AttributeStats`, so that accessor's cast is not needed to reach it, and the cast is what
+  makes the obvious version dangerous. It misses for a frame or two after a world loads, and a mod
+  that answers a failed read with a default of `1` gets no error, it gets a *plausible* level:
+  anything scaled by it silently collapses to its weakest form and nothing says so. The `Try` pair
+  makes "not ready yet" a case you have to handle.
 - `GetDrovaResourceProvider` and `TryGetGameManager` cache their result after the first hit.

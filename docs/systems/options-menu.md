@@ -181,7 +181,7 @@ OptionMenuAccess.Instance.OnOptionMenuClose += () =>
 | `CreateDropdown<E>(LocalizedString title, string key, Dictionary<E, LocalizedString> options, E default)`                  | An enum dropdown (`E : Enum`).                                                              |
 | `CreateButton(LocalizedString title, LocalizedString buttonName, Action onClick)`                                          | A button row.                                                                               |
 | `CreateInputActionSection(List<InputActionTemplate>)`                                                                      | A section of key-rebind rows (see [Input](./input.md)).                                     |
-| `List<GameObject> Build()`                                                                                                 | Finalizes the panel, saves the config file, and returns the created rows in creation order. |
+| `List<GameObject> Build()`                                                                                                 | Finalizes the panel, saves the config file, rebuilds controller navigation over the rows, and returns them in creation order. |
 
 `record InputActionTemplate(LocalizedString Title, string ActionName)` pairs a rebound row's
 label with the input action name it controls.
@@ -195,5 +195,9 @@ label with the input action name it controls.
 - **Labels are `LocalizedString`s.** Provide the text through [Localization](./localization.md).
 - **Values persist automatically.** The builder writes to the game's gameplay config and
   `Build()` saves the file. Read values back with [Config](./config.md).
+- **Always finish with `Build()`, including on a panel that only holds text rows.** Controller
+  navigation is explicit up/down links the panel wires once over the row list it discovered at
+  clone time, which is before your rows exist. `Build()` is what re-discovers them; skip it and
+  the tab is mouse-only, with the stick unable to reach any row in it.
 - The API itself disables gameplay input actions while the options menu is open and re-enables
   them on close — see [Input](./input.md).

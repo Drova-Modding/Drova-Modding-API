@@ -23,7 +23,6 @@ namespace Drova_Modding_API.UI
         TextMeshProUGUI _controllerKeybindingText;
         string _actionName;
         GUI_OptionPanel_Controls _controls;
-        GameObject conflictMarker;
         GameObject _controller;
         GameObject _keyboard;
         GameObject? _exitButton;
@@ -78,12 +77,10 @@ namespace Drova_Modding_API.UI
                 MelonLogger.Error("Keybinding button or text not found."); return;
             }
 
-            Transform conflictMarkerChild = _keyboard.transform.FindChild("ConflictMarker");
-            if (conflictMarkerChild == null)
+            if (_keyboard.transform.FindChild("ConflictMarker") == null)
             {
                 MelonLogger.Error("ConflictMarker not found."); return;
             }
-            conflictMarker = conflictMarkerChild.gameObject;
 
             Init();
             InputSystem.add_onDeviceChange(new Action<InputDevice, InputDeviceChange>(this.OnDeviceChange));
@@ -171,7 +168,7 @@ namespace Drova_Modding_API.UI
         }
 
         [HideFromIl2Cpp]
-        private void ListenForRebinding(TextMeshProUGUI textMesh, string group, string excludeGroup, string secondaryExcludeGroup = null)
+        private void ListenForRebinding(TextMeshProUGUI textMesh, string group, string excludeGroup, string? secondaryExcludeGroup = null)
         {
             InputAction action = InputActionRegister.Instance[_actionName];
             int bindingIndex = action.GetBindingIndex(InputBinding.MaskByGroup(group));
@@ -184,7 +181,7 @@ namespace Drova_Modding_API.UI
 
             string originalBindingText = action.bindings[bindingIndex].ToDisplayString();
             InputActionRegister.isMappingCurrently = true;
-            _exitButton?.SetActive(false);
+            if (_exitButton != null) _exitButton.SetActive(false);
 
             RebindingOperation rebindOperation = action.PerformInteractiveRebinding(bindingIndex)
                 .WithControlsExcluding(excludeGroup)
@@ -222,7 +219,7 @@ namespace Drova_Modding_API.UI
         private void FinishRebinding(RebindingOperation operation)
         {
             InputActionRegister.isMappingCurrently = false;
-            _exitButton?.SetActive(true);
+            if (_exitButton != null) _exitButton.SetActive(true);
             if (_rebindOperation == operation)
             {
                 _rebindOperation = null;
@@ -246,7 +243,6 @@ namespace Drova_Modding_API.UI
         /// <summary>
         /// Implements ISelectHandler to ensure that when the row is selected, the appropriate button (controller or keyboard) is also selected for visual feedback.
         /// </summary>
-        /// <param name="eventData"></param>
         public void OnSelect(BaseEventData eventData)
         {
             // OnSelect is called when the GameObject itself is selected by the EventSystem.
@@ -269,7 +265,6 @@ namespace Drova_Modding_API.UI
         /// <summary>
         /// Implements ISubmitHandler to ensure that when the user presses the submit button (e.g., "A" on a controller), it triggers the rebinding process for the appropriate button.
         /// </summary>
-        /// <param name="eventData"></param>
         public void OnSubmit(BaseEventData eventData)
         {
             if (Gamepad.current != null)

@@ -21,6 +21,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             CastedNode ??= Node.TryCast<DS_StatementNode>();
+            if (CastedNode == null) return;
             if(CastedNode.statement == null)
             {
                 CastedNode.statement = new DS_Statement();

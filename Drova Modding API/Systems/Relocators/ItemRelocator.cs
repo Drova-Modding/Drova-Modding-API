@@ -20,20 +20,23 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
             /// <summary>
             /// The item guid <see cref="Item.Guid"/>
             /// </summary>
-            public string ItemGuid;
+            public string? ItemGuid;
         }
 
         /// <inheritdoc/>
-        public Item DeserializeObjectFromJson(string json)
+        public Item? DeserializeObjectFromJson(string json)
         {
-            SaveData saveData = JsonSerializer.Deserialize<SaveData>(json);
-            return ProviderAccess.ItemDatabase.GetItemByGuid(saveData.ItemGuid);
+            SaveData? saveData = JsonSerializer.Deserialize<SaveData>(json, RelocatorSaveData.JsonOptions);
+            SubDatabase_Item? database = ProviderAccess.ItemDatabase;
+            if (saveData == null || database == null) return null;
+
+            return database.GetItemByGuid(saveData.ItemGuid);
         }
 
         /// <inheritdoc/>
         public string SerializeObjectToJson(Item objectToSerialize)
         {
-            return JsonSerializer.Serialize(new SaveData() { Key = Key, ItemGuid = objectToSerialize.Guid });
+            return JsonSerializer.Serialize(new SaveData() { Key = Key, ItemGuid = objectToSerialize.Guid }, RelocatorSaveData.JsonOptions);
         }
     }
 }

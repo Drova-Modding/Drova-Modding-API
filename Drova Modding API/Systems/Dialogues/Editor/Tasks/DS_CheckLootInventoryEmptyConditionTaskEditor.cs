@@ -21,9 +21,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<DS_CheckLootInventoryEmptyConditionTask>();
             if (_castedTask == null) return;
 
-            _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>();
+            EntityInfo[] entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>();
+            _entityInfos = entityInfos;
             List<string> list = new();
-            foreach (EntityInfo entityInfo in _entityInfos)
+            foreach (EntityInfo entityInfo in entityInfos)
             {
                 list.Add(entityInfo.name);
             }

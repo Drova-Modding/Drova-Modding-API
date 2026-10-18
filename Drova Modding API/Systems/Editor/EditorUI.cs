@@ -16,7 +16,7 @@ namespace Drova_Modding_API.Systems.Editor
     {
         private TextMeshProUGUI _npcDisplay;
         private TextMeshProUGUI _playerPositionDisplay;
-        private Button _npcEditButton;
+        private Button _npcEditButton = null!;
         private Actor _currentSelectedActor;
         private GraphEditorManager _graphEditorManager;
 
@@ -71,14 +71,24 @@ namespace Drova_Modding_API.Systems.Editor
         
         private void OnOptionMenuOpen()
         {
-            _npcDisplay.gameObject.SetActive(false);
-            _playerPositionDisplay.gameObject.SetActive(false);
+            SetDisplaysActive(false);
         }
-        
+
         private void OnOptionMenuClose()
         {
-            _npcDisplay.gameObject.SetActive(true);
-            _playerPositionDisplay.gameObject.SetActive(true);
+            SetDisplaysActive(true);
+        }
+
+        /// <summary>
+        /// Guards against the option menu events firing on an instance whose GameObject was already
+        /// destroyed by a scene reload, which would throw when dereferencing the displays.
+        /// </summary>
+        [HideFromIl2Cpp]
+        private void SetDisplaysActive(bool active)
+        {
+            if (!this) return;
+            if (_npcDisplay) _npcDisplay.gameObject.SetActive(active);
+            if (_playerPositionDisplay) _playerPositionDisplay.gameObject.SetActive(active);
         }
 
         internal void Update()
@@ -88,7 +98,7 @@ namespace Drova_Modding_API.Systems.Editor
                 return;
             }
 
-            if (PlayerAccess.TryGetPlayer(out Actor player) && player != null)
+            if (PlayerAccess.TryGetPlayer(out Actor? player))
             {
                 Vector3 position = player.transform.position;
                 _playerPositionDisplay.text = $"Player Position (2D): X={position.x:F2}, Y={position.y:F2}";
@@ -101,7 +111,9 @@ namespace Drova_Modding_API.Systems.Editor
         internal void OnDestroy()
         {
             EditorManager.OnNpcSelected -= OnNpcSelected;
-            _npcEditButton?.onClick.RemoveAllListeners();
+            OptionMenuAccess.Instance.OnOptionMenuOpen -= OnOptionMenuOpen;
+            OptionMenuAccess.Instance.OnOptionMenuClose -= OnOptionMenuClose;
+            if (_npcEditButton != null) _npcEditButton.onClick.RemoveAllListeners();
         }
 
         [HideFromIl2Cpp]

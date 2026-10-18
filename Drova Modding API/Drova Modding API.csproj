@@ -6,8 +6,10 @@
         <RootNamespace>Drova_Modding_API</RootNamespace>
         <LangVersion>12</LangVersion>
         <IsPackable>false</IsPackable>
+        <!-- Binding identity baked into every mod ever compiled against the API. Frozen; bump Version instead. -->
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <FileVersion>1.0.0.0</FileVersion>
+        <Version>0.6.0</Version>
+        <FileVersion>0.6.0.0</FileVersion>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Drova_Modding_API</AssemblyName>
     </PropertyGroup>
@@ -407,6 +409,7 @@
 
     <PropertyGroup>
         <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
@@ -414,25 +417,37 @@
         <RepositoryUrl>https://github.com/Drova-Modding/Drova-Modding-API</RepositoryUrl>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
         <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Access\ActorSpawnAccess.cs"/>
         <Compile Include="Access\AddressableAccess.cs"/>
         <Compile Include="Access\CheatMenuAccess.cs"/>
         <Compile Include="Access\ConfigAccessor.cs"/>
+        <Compile Include="Access\CoopAccess.cs"/>
+        <Compile Include="Systems\Coop\CoopTypes.cs"/>
+        <Compile Include="Systems\Coop\CoopRandom.cs"/>
+        <Compile Include="Systems\Coop\NullCoopProvider.cs"/>
+        <Compile Include="Access\CutsceneSyncAccess.cs"/>
+        <Compile Include="Systems\Testing\LaunchProfile.cs"/>
+        <Compile Include="Systems\Testing\TestAgent.cs"/>
+        <Compile Include="Systems\Testing\TestAgent.Actions.cs"/>
+        <Compile Include="Access\DamageAccess.cs"/>
         <Compile Include="Access\DifficultyAccess.cs"/>
         <Compile Include="Access\GameEvents.cs"/>
+        <Compile Include="Access\GVarSyncAccess.cs"/>
         <Compile Include="Access\InputAccess.cs"/>
         <Compile Include="Access\LocalizationAccess.cs"/>
         <Compile Include="Access\PlayerAccess.cs"/>
         <Compile Include="Access\ProviderAccess.cs"/>
         <Compile Include="Access\QuestStateReader.cs"/>
+        <Compile Include="Access\RegionAccess.cs"/>
         <Compile Include="Access\SceneStreamAccess.cs"/>
         <Compile Include="Access\TeleporterAccess.cs"/>
         <Compile Include="Access\WindowContentAccess.cs"/>
@@ -441,6 +456,7 @@
         <Compile Include="Converters\Vector2JsonConverter.cs" />
         <Compile Include="Core.cs" />
         <Compile Include="Access\OptionMenuAccess.cs" />
+        <Compile Include="Access\PauseMenuAccess.cs" />
         <Compile Include="Extensions\GUIExtensions.cs" />
         <Compile Include="GlobalFields\InputActionFields.cs" />
         <Compile Include="GlobalFields\ItemReadableIds.cs" />
@@ -460,11 +476,13 @@
         <Compile Include="Patches\DialogueTreePatch.cs" />
         <Compile Include="Patches\DSDialogueUGUIPatch.cs" />
         <Compile Include="Patches\DSStatementPatch.cs" />
+        <Compile Include="Patches\DS_DialogueUGUIFinalizePatch.cs" />
         <Compile Include="Patches\DS_MultipleChoiceNodePatch.cs" />
         <Compile Include="Patches\DS_StatementNodePatch.cs" />
         <Compile Include="Patches\GUIWindowOptions.cs" />
         <Compile Include="Patches\GUIWindowPatch.cs" />
         <Compile Include="Patches\LazyActorPatch.cs" />
+        <Compile Include="Patches\ModuleOpenDoorsMovementPatch.cs" />
         <Compile Include="Patches\SaveableHealthPatch.cs" />
         <Compile Include="Patches\SaveableStatusEffectHandlerPatch.cs" />
         <Compile Include="Patches\SaveBBParametersToSavegameIndexPatch.cs" />
@@ -474,9 +492,9 @@
         <Compile Include="Systems\AreaNameSystem.cs" />
         <Compile Include="Systems\Audio\DefaultAudioHandler.cs" />
         <Compile Include="Systems\Audio\AssetBundleAudioProvider.cs" />
+        <Compile Include="Systems\Audio\Dialogue\NarratorActors.cs" />
         <Compile Include="Systems\Audio\DefaultDialogueAudioConnector.cs" />
         <Compile Include="Systems\Audio\DialogueAudioDistanceManager.cs" />
-        <Compile Include="Systems\Audio\FileAudioProvider.cs" />
         <Compile Include="Systems\Audio\IAudioConnector.cs" />
         <Compile Include="Systems\Audio\IAudioHandler.cs" />
         <Compile Include="Systems\Audio\IAudioProvider.cs" />
@@ -508,6 +526,7 @@
         <Compile Include="Systems\SaveGame\Store\LazyActorStore.cs" />
         <Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
         <Compile Include="Systems\Dialogues\DialogGraph.cs" />
+        <Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
         <Compile Include="Systems\Spawning\External\ExternalAlignmentContainerModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalCosmeticsModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalDialogueModule.cs" />
@@ -564,8 +583,36 @@
         <Compile Include="UI\GUI_ConfigOption_Slider_Float.cs" />
         <Compile Include="UI\GUI_Options_Controls_KeyFieldElement_Custom.cs" />
         <Compile Include="Utils.cs" />
+        <Compile Include="Systems\Networking\NetRole.cs" />
+        <Compile Include="Systems\Networking\Delivery.cs" />
+        <Compile Include="Systems\Networking\DisconnectReason.cs" />
+        <Compile Include="Systems\Networking\INetPeer.cs" />
+        <Compile Include="Systems\Networking\INetWriter.cs" />
+        <Compile Include="Systems\Networking\INetReader.cs" />
+        <Compile Include="Systems\Networking\INetMessage.cs" />
+        <Compile Include="Systems\Networking\RawHandler.cs" />
+        <Compile Include="Systems\Networking\ConnectionRejection.cs" />
+        <Compile Include="Access\NetworkAccess.cs" />
+        <Compile Include="Access\NetworkEvents.cs" />
+        <Compile Include="Systems\Networking\Impl\LiteWriter.cs" />
+        <Compile Include="Systems\Networking\Impl\LiteReader.cs" />
+        <Compile Include="Systems\Networking\Impl\PeerWrapper.cs" />
+        <Compile Include="Systems\Networking\Impl\MessageChannel.cs" />
+        <Compile Include="Systems\Networking\Impl\Dispatcher.cs" />
+        <Compile Include="Systems\Networking\Impl\LiteTransport.cs" />
+        <Compile Include="Systems\Networking\Impl\TransportMode.cs" />
+        <Compile Include="Systems\Networking\Impl\RelayProtocol.cs" />
+        <Compile Include="Systems\Networking\Impl\RelayPeer.cs" />
+        <Compile Include="Systems\Networking\Impl\RelayLink.cs" />
+        <Compile Include="Systems\Networking\Impl\SessionCrypto.cs" />
+        <Compile Include="Systems\Networking\Impl\NetworkSystem.cs" />
+        <Compile Include="Systems\Networking\Impl\LanDiscovery.cs" />
+        <Compile Include="Systems\Networking\DiscoveredHost.cs" />
+        <Compile Include="Systems\Networking\Diagnostics\NetworkDiagnostics.cs" />
     </ItemGroup>
+
     <ItemGroup Condition="'$(Configuration)'=='Debug'">
+        <Compile Include="Systems\Networking\Diagnostics\NetworkStatsView.cs" />
         <Compile Include="Systems\Debugging\NearbyDumper.cs" />
         <Compile Include="Systems\Editor\EditorUI.cs" />
         <Compile Include="Systems\Editor\LocalizationEntriesEditorSystem.cs" />
@@ -579,6 +626,7 @@
         <Compile Include="Systems\Audio\Dialogue\Dynamic\BrawlDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Dynamic\RestWorldDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Dynamic\SleepDialogue.cs" />
+        <Compile Include="Systems\Audio\Dialogue\Dynamic\DrinkWaterDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\AfterCombatPlayerDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\ArenaViewerDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\ArenaFightsDialogue.cs" />
@@ -614,7 +662,6 @@
         <Compile Include="Systems\Audio\Dialogue\DialogueUtils.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\MusicReactionDialogue.cs" />
         <Compile Include="Systems\Audio\Dialogue\Generic\RedTowerDialogue.cs" />
-        <Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
         <Compile Include="Systems\Dialogues\EntityInfoPicturesToPngUtils.cs" />
         <Compile Include="Systems\Dialogues\Editor\DrawNodeEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\DrawTaskEditor.cs" />
@@ -729,7 +776,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="NVorbis" Version="0.10.5" />
+        <PackageReference Include="LiteNetLib" Version="2.1.4" />
     </ItemGroup>
 
     <ItemGroup>
@@ -741,7 +788,7 @@
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <Exec Command="COPY &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;"/>
         <Exec Command="COPY &quot;$(TargetDir)$(TargetName).xml&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\Mods&quot;"/>
-        <Exec Command="COPY &quot;$(UserProfile)\.nuget\packages\nvorbis\0.10.5\lib\netstandard2.0\NVorbis.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;"/>
+        <Exec Command="COPY &quot;$(TargetDir)LiteNetLib.dll&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin\UserLibs&quot;"/>
     </Target>
 
     <Target Name="PackageMod" AfterTargets="PostBuild">
@@ -753,7 +800,6 @@
             <ZipPath>$(DistDir)\$(ZipName)</ZipPath>
             <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Drova - Forsaken Kin</GameDir>
             <GameLocalizationDir>$(GameDir)\Mods\Modding_API\Localization</GameLocalizationDir>
-            <NVorbisDll>$(GameDir)\UserLibs\NVorbis.dll</NVorbisDll>
             <AddressablesTxt>$(GameDir)\Mods\addressables.txt</AddressablesTxt>
         </PropertyGroup>
 
@@ -763,7 +809,7 @@
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(StagingDir)\Mods"/>
         <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug'"/>
         <Copy SourceFiles="$(AddressablesTxt)" DestinationFolder="$(StagingDir)\Mods" Condition="'$(Configuration)'=='Debug' And Exists('$(AddressablesTxt)')"/>
-        <Copy SourceFiles="$(NVorbisDll)" DestinationFolder="$(StagingDir)\UserLibs"/>
+        <Copy SourceFiles="$(TargetDir)LiteNetLib.dll" DestinationFolder="$(StagingDir)\UserLibs"/>
 
         <!--
             Only package the API's own localization, which always lives one level deeper under a
@@ -782,4 +828,21 @@
 
         <Message Importance="high" Text="Packaged $(Configuration) build -&gt; $(ZipPath)"/>
     </Target>
-</Project>
+
+    <!-- The test runner as a ready-made executable per platform, zipped next to the API zips. Needs the .NET 8 runtime. -->
+    <Target Name="PackageTestRunner" AfterTargets="PackageMod" Condition="'$(Configuration)'=='Release'">
+        <PropertyGroup>
+            <DistDir>$(MSBuildProjectDirectory)\..\dist</DistDir>
+            <RunnerProject>$(MSBuildProjectDirectory)\..\tools\Drova.TestRunner\Drova.TestRunner.csproj</RunnerProject>
+        </PropertyGroup>
+        <ItemGroup>
+            <RunnerRid Include="win-x64;linux-x64"/>
+        </ItemGroup>
+
+        <RemoveDir Directories="$(DistDir)\staging\TestRunner"/>
+        <Exec Command="dotnet publish &quot;$(RunnerProject)&quot; -c Release -r %(RunnerRid.Identity) --self-contained false -p:PublishSingleFile=true -p:DebugType=none -o &quot;$(DistDir)\staging\TestRunner\%(RunnerRid.Identity)&quot;"/>
+        <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;Compress-Archive -Path '$(DistDir)\staging\TestRunner\%(RunnerRid.Identity)\*' -DestinationPath '$(DistDir)\Drova_TestRunner_%(RunnerRid.Identity).zip' -Force&quot;"/>
+
+        <Message Importance="high" Text="Packaged the test runner -&gt; $(DistDir)\Drova_TestRunner_*.zip"/>
+    </Target>
+</Project>

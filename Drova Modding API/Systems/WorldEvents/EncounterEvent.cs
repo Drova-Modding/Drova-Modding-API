@@ -35,10 +35,9 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Called when the event starts. Checks if the player is alive and not teleporting.
         /// </summary>
-        /// <returns></returns>
         public bool CanStartEvent()
         {
-            if (PlayerAccess.TryGetPlayer(out Actor player))
+            if (PlayerAccess.TryGetPlayer(out Actor? player))
             {
                 return player.IsAlive() && !player.IsPlayerTeleporting();
             }
@@ -51,9 +50,10 @@ namespace Drova_Modding_API.Systems.WorldEvents
         public virtual void StartEvent()
         {
             _isRunning = true;
-            if (!PlayerAccess.TryGetPlayer(out Actor player))
+            if (!PlayerAccess.TryGetPlayer(out Actor? player))
             {
-                WorldEventSystemManager.Instance?.EndEvent();
+                if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
+                return;
             }
             Vector3 position = player.transform.position;
             foreach (KeyValuePair<AssetReferenceGameObject, int> encounter in EncountersToSpawn)
@@ -67,12 +67,21 @@ namespace Drova_Modding_API.Systems.WorldEvents
                         // TODO: Rewrite when il2cpp is on Version 2, than we can finally use EVENTS WOHOOOOOOOO
                         GameObject spawned = encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity).WaitForCompletion();
                         _spawnedEncounters.Add(spawned);
+
+                        // Announced with the asset it came from. A creature put into the world at runtime
+                        // carries no identity anything else can resolve, so without this it exists for
+                        // whoever spawned it and for nobody else - which in a shared session is one player
+                        // fighting a camp their friend is standing in the middle of and cannot see.
+                        if (spawned != null)
+                        {
+                            ActorSpawnAccess.RecordSpawn(spawned.GetComponent<Actor>(), encounter.Key.AssetGUID);
+                        }
                         OnEncounterSpawned(spawned, encounter.Key, randomPosition.Value);
                     }
                     else
                     {
                         MelonLogger.Warning("Couldn't find a free position to spawn the encounter.");
-                        WorldEventSystemManager.Instance?.EndEvent();
+                        if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
                         return;
                     }
                 }
@@ -98,7 +107,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
             yield return new WaitForSeconds(SelfEndInSecond);
             if (_isRunning)
             {
-                WorldEventSystemManager.Instance?.EndEvent();
+                if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
             }
         }
 
@@ -124,7 +133,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 }
             }
             _spawnedEncounters.Clear();
-            WorldEventSystemManager.Instance?.EndEvent();
+            if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
         }
     }
 }

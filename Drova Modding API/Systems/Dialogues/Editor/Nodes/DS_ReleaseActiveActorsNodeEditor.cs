@@ -10,8 +10,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_ReleaseActiveActorsNodeEditor : DrawNodeEditor
     {
-        private DS_ReleaseActiveActors _castedNode;
-        private EntityInfo[] _entityInfos;
+        private DS_ReleaseActiveActors? _castedNode;
+        private EntityInfo[] _entityInfos = [];
         private string[] _entityInfoNames;
         private readonly List<GUIDropdownWithFilter> _entityInfoDropdowns = [];
 
@@ -23,6 +23,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode = Node.TryCast<DS_ReleaseActiveActors>();
+            if (_castedNode == null) return;
             _entityInfos = Resources.FindObjectsOfTypeAll<EntityInfo>();
             List<string> list = new();
             foreach (EntityInfo e in _entityInfos)
@@ -61,6 +62,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 {
                     _castedNode._entityInfos.RemoveAt(i);
                     _entityInfoDropdowns.RemoveAt(i);
+                    i--;
+                    continue;
                 }
                 if (entityInfoDropdown.Draw(new Rect(position.x + 5, position.y + 20 + (20 * i), 200, 20)))
                 {
@@ -71,7 +74,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             _castedNode._canRemoveOwner = GUI.Toggle(new Rect(position.x + 5, position.y + 60 + (100 * _castedNode._entityInfos.Count), 250, 25), _castedNode._canRemoveOwner, "Can remove owner");
             _castedNode._removeOwner = GUI.Toggle(new Rect(position.x + 5, position.y + 90 + (100 * _castedNode._entityInfos.Count), 250, 25), _castedNode._removeOwner, "Remove owner");
 
-            if (GUI.Button(new Rect(position.x + 5, position.y + 30 + (100 * _castedNode._entityInfos.Count), 200, 20), "Add EntityInfo"))
+            if (GUI.Button(new Rect(position.x + 5, position.y + 30 + (100 * _castedNode._entityInfos.Count), 200, 20), "Add EntityInfo") && _entityInfos.Length > 0)
             {
                 _castedNode._entityInfos.Add(_entityInfos[0]);
                 _entityInfoDropdowns.Add(new GUIDropdownWithFilter(_entityInfoNames, 0, 20));

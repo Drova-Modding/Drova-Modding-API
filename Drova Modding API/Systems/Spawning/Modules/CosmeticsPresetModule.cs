@@ -48,9 +48,10 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             if (inventory._cosmeticPreset == null)
                 inventory._cosmeticPreset = ScriptableObject.CreateInstance<CosmeticPreset>();
 
+            SubDatabase_Item? database = ProviderAccess.ItemDatabase;
             foreach (var readableId in _readableIds)
             {
-                var item = ProviderAccess.ItemDatabase.GetItemByReadableId(readableId);
+                var item = database != null ? database.GetItemByReadableId(readableId) : null;
                 if (item == null)
                 {
                     MelonLogger.Warning($"Could not resolve cosmetic readable id '{readableId}'.");
@@ -62,10 +63,9 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
             foreach (var cosmeticRef in _cosmetics)
             {
-                var handle = cosmeticRef.LoadAssetAsync();
-                handle.WaitForCompletion();
-                if (handle.Result != null)
-                    inventory._cosmeticPreset._cosmeticItems.Add(handle.Result);
+                var item = Addressables.LoadAssetAsync<Item>(cosmeticRef).WaitForCompletion();
+                if (item != null)
+                    inventory._cosmeticPreset._cosmeticItems.Add(item);
             }
         }
     }

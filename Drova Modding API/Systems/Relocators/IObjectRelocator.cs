@@ -9,16 +9,13 @@
         /// <summary>
         /// Serializes the object to a JSON string.
         /// </summary>
-        /// <param name="objectToSerialize"></param>
-        /// <returns></returns>
         string SerializeObjectToJson(T objectToSerialize);
 
         /// <summary>
         /// Deserializes the object from a JSON string.
         /// </summary>
-        /// <param name="json"></param>
-        /// <returns></returns>
-        T DeserializeObjectFromJson(string json);
+        /// <returns>The object, or null when it is not found.</returns>
+        T? DeserializeObjectFromJson(string json);
 
         /// <summary>
         /// The key for the relocator.

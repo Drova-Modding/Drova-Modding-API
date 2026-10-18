@@ -33,7 +33,7 @@ namespace Drova_Modding_API.Systems
          * The event that is called when the player enters or leaves a region.
          */
         [HideFromIl2Cpp]
-        public event RegionChanged OnRegionChanged;
+        public event RegionChanged? OnRegionChanged;
 
         /**
          * The instance of the AreaNameSystem.
@@ -57,6 +57,11 @@ namespace Drova_Modding_API.Systems
                 return;
             }
             _instance = this;
+
+            // A new system is built on every gameplay load, so the API rebinds here rather than at
+            // subscribe time. Otherwise a mod that subscribed in a previous session holds a handler on a
+            // destroyed object.
+            Access.RegionAccess.Attach(this);
         }
 
         /// <summary>
@@ -90,7 +95,6 @@ namespace Drova_Modding_API.Systems
         /// <summary>
         /// Checks if the player is currently in a cave. This is determined by checking if any of the current Regions are caves.
         /// </summary>
-        /// <returns></returns>
         [HideFromIl2Cpp]
         public bool IsInCave()
         {

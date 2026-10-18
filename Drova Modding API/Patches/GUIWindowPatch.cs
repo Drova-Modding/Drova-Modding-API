@@ -23,7 +23,18 @@ static class GUIWindowPatchOpen
     {
         if (__instance.name == WindowName)
             OptionMenuAccess.OnOptionOpen();
+
+        PauseMenuAccess.OnWindowShown(__instance);
     }
 }
 
 
+
+[HarmonyPatch(typeof(GUI_Window_PauseMenu), nameof(GUI_Window_PauseMenu.Hide))]
+static class PauseMenuHidePatch
+{
+    private static void Postfix(GUI_Window_PauseMenu __instance, bool hide)
+    {
+        PauseMenuAccess.OnPauseMenuHidden(__instance, hide);
+    }
+}

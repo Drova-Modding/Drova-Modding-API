@@ -5,7 +5,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     internal class DS_DebugNodeEditor : DrawNodeEditor
     {
-        private DS_DebugNode _castedNode;
+        private DS_DebugNode? _castedNode;
 
         public DS_DebugNodeEditor()
         {
@@ -19,7 +19,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         public override void DrawNode(Vector2 position)
         {
-
             if (_castedNode == null)
             {
                 return;

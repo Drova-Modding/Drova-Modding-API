@@ -10,7 +10,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class CS_CutsceneActionNodeEditor : DrawNodeEditor
     {
-        private CS_CutsceneActionNode _castedNode;
+        private CS_CutsceneActionNode? _castedNode;
         private CS_CutsceneData[] _cutsceneDatas;
         private ICutsceneAction[] _cutsceneActions;
         private GUIDropdownWithFilter _cutsceneDropdown;
@@ -24,10 +24,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         public override void Init()
         {
             _castedNode ??= Node.TryCast<CS_CutsceneActionNode>();
+            if (_castedNode == null) return;
             _cutsceneDatas = Resources.FindObjectsOfTypeAll<CS_CutsceneData>();
 
             string[] cutsceneNames = _cutsceneDatas.Select(e => e.name).ToArray();
-            int cutsceneIndex = Array.FindIndex(_cutsceneDatas, cutscene => cutscene.name == _castedNode.cutscene?.name);
+            string? currentName = _castedNode.cutscene == null ? null : _castedNode.cutscene.name;
+            int cutsceneIndex = Array.FindIndex(_cutsceneDatas, cutscene => cutscene.name == currentName);
             _cutsceneDropdown = new GUIDropdownWithFilter(cutsceneNames, cutsceneIndex, 20);
 
             if (_castedNode.cutsceneActionID >= 0 && _castedNode.cutscene != null)
@@ -38,6 +40,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             else
             {
+                _cutsceneActions = _castedNode.cutscene != null ? _castedNode.cutscene.GetCutsceneActions().ToArray() : [];
                 _actionIdDropdown = new GUIDropdownWithFilter([.. _cutsceneActions.Select((act) => act.Name)], -1, 20);
 
             }

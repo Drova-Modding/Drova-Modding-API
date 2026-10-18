@@ -22,7 +22,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             if (dialogueTreeController == null)
                 return;
 
-            if (!DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue) || loadedDialogue == null)
+            if (!DialogueStore.TryLoadDialogue(dialogueId, out DialogueTree? loadedDialogue))
                 return;
 
             loadedDialogue.Serialize(null);

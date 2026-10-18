@@ -1,68 +1,86 @@
 # Audio
 
 **What it does:** provides **spoken dialogue audio** for dialogue lines. The API routes each
-dialogue statement/choice to an `IAudioProvider`, which returns an `AudioClip`. Two providers ship
-in the box: one that reads loose `.ogg` files, and one that reads per-actor AssetBundles. You can
-swap in your own provider or handler.
+dialogue statement/choice to an `IAudioProvider`, which returns an `AudioClip`. One provider ships
+in the box — `AssetBundleAudioProvider`, reading per-actor AssetBundles — and you can swap in your
+own provider or handler.
 
 Entry points:
 - `Drova_Modding_API.Systems.Audio.AudioManager` (static) — swap the provider/handler, compute clip IDs.
-- `IAudioProvider` — supplies clips. Built-ins: `FileAudioProvider`, `AssetBundleAudioProvider`.
+- `IAudioProvider` — supplies clips. Built-in: `AssetBundleAudioProvider`.
 - `IAudioConnector` / `IAudioHandler` — lower-level hooks the manager uses.
 
-> By default, the manager uses an AssetBundle-backed connector. Whether any audio plays at all is
-> gated by the mod's **"enable dialogue audio"** option (see [Config](./config.md)).
+> The AssetBundle-backed connector is already installed, so shipping audio needs no registration
+> code at all. Whether any audio plays is gated by the mod's **"enable dialogue audio"** option
+> (see [Config](./config.md)).
 
-## Quick example — ship loose `.ogg` files
+## Quick example — ship per-actor AssetBundles
 
-The simplest setup: use `FileAudioProvider` and drop `.ogg` files into the audio folder.
+`AssetBundleAudioProvider` loads clips from per-actor bundles under `Audio/bundles/`, named after
+the lower-cased actor (e.g. `jendrik`, `player`). Each bundle holds that actor's clips, addressed by
+the key the dialogue system builds for the line, without a file extension.
+
+```
+…/Drova - Forsaken Kin/Mods/Modding_API/Audio/bundles/
+  player        ← AssetBundle of the player's clips
+  jendrik       ← AssetBundle of Jendrik's clips
+  narrator      ← AssetBundle of the narrator's clips (see below)
+```
+
+Inside a bundle, the clip names follow the same scheme:
+
+```
+<dialogName>_<locaKey>_<filePath>_<actorName>
+<dialogName>_<locaKey>_<filePath>            ← fallback without actor
+<…>_CAVE                                     ← optional cave-specific variant
+```
+
+The provider builds that key from the dialogue tree name, the line's loca key, its file path, and
+the actor. When the player is in a [cave](./area-region.md), a `_CAVE` variant is preferred if
+present. Any audio format Unity can import works — the format is baked into the bundle, so nothing
+is decoded at runtime by the API.
+
+This is the default connector. Register it explicitly only to get back to it after swapping in
+another provider:
 
 ```csharp
 using Drova_Modding_API.Systems.Audio;
 
-// Register once during mod init (e.g. on gameplay load):
-AudioManager.ReplaceDialogueAudioConnector(
-    new DefaultDialogueAudioConnector(new FileAudioProvider()));
-```
-
-Files live under:
-
-```
-…/Drova - Forsaken Kin/Mods/Modding_API/Audio/
-  <dialogName>_<locaKey>_<filePath>_<actorName>.ogg
-  <dialogName>_<locaKey>_<filePath>.ogg            ← fallback without actor
-  <…>_CAVE.ogg                                     ← optional cave-specific variant
-```
-
-The provider builds the file name from the dialogue tree name, the line's loca key, its file path,
-and the actor, then loads the matching `.ogg`. When the player is in a [cave](./area-region.md), a
-`_CAVE` variant is preferred if present.
-
-## How do I…?
-
-### Use AssetBundles instead of loose files
-
-`AssetBundleAudioProvider` loads clips from per-actor bundles under `Audio/bundles/`, named after
-the lower-cased actor (e.g. `jendrik`, `player`). Each bundle holds that actor's clips, addressed by
-the same key the file provider uses (minus the `.ogg`).
-
-```csharp
 AudioManager.ReplaceDialogueAudioConnector(
     new DefaultDialogueAudioConnector(new AssetBundleAudioProvider()));
 ```
 
-```
-…/Modding_API/Audio/bundles/
-  player        ← AssetBundle of the player's clips
-  jendrik       ← AssetBundle of Jendrik's clips
-```
+## The narrator bundle
+
+Drova has no narrator actor parameter. Narration is authored under the name of whatever prop or
+placeholder holds the dialogue tree (`EntityInfo_MysteriousLantern`, `Table_Brutus`, `WRONG`, …),
+and a normally voiced actor also delivers narrated lines whenever the text is wrapped in asterisks
+or parentheses. Ship those clips in a single `narrator` bundle.
+
+`AssetBundleAudioProvider` probes **two** bundles for every line — the node's own actor and
+`narrator` — because which of the two voices recorded a line cannot be decided from the actor alone.
+Order is narrator-first for the ~48 known narration actor names, actor-first otherwise. Clip keys are
+built from the node's own actor either way, so the second probe cannot cross-match another line.
+
+Practically: put a clip in whichever bundle its voice belongs to, keep the key unchanged, and the
+provider finds it.
+
+## Bundles grouped by voice, not actor
+
+Ship the `<bundle>.manifest` files Unity writes next to each bundle. At startup the provider reads
+their asset lists into a clip → bundle index and looks every key up there first, so a clip is found
+whatever bundle holds it. This matters when the game renames an NPC: the tree's actor slot says
+`Idefix`, the speaker is `Venia`, and the clips sit in the `idefix` bundle. Without manifests the
+provider falls back to probing the actor's bundle and `narrator`.
+
+## How do I…?
 
 #### Keep bundle loading off the main thread
 
 `AssetBundleAudioProvider` resolves clips **synchronously on the main thread** when a dialogue tree
-loads (Unity's `AssetBundle` APIs are main-thread-only under Il2Cpp, so this can't be moved to a
-background thread the way the `.ogg` provider does). How the clips were imported into the bundle
-therefore decides whether opening a dialogue stutters:
+loads — Unity's `AssetBundle` APIs are main-thread-only under Il2Cpp, so the work cannot be moved
+to a background thread. How the clips were imported into the bundle therefore decides whether
+opening a dialogue stutters:
 
 - **Set the clips' load type to `Compressed In Memory`** (or `Streaming`) and enable **Load In
   Background** when building the bundle. `LoadAsset` then only pulls the compressed bytes into memory
@@ -131,8 +149,7 @@ AudioManager.ReplaceAudioHandler(new MyAudioHandler());
 |----------------------------------------------------------------------------------------------------------------------|----------------------------------------|
 | `Task<AudioClip> GetAudioClip(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId)` | Return the clip for a line, or `null`. |
 
-Built-ins: `FileAudioProvider` (loose `.ogg`), `AssetBundleAudioProvider` (per-actor bundles;
-`UnloadAll()` frees cached bundles).
+Built-in: `AssetBundleAudioProvider` (per-actor bundles; `UnloadAll()` frees cached bundles).
 
 ### `IAudioHandler`
 
@@ -150,15 +167,19 @@ Built-ins: `FileAudioProvider` (loose `.ogg`), `AssetBundleAudioProvider` (per-a
 
 ## Notes & gotchas
 
-- **Audio is opt-in at runtime.** Both built-in providers return `null` (silent) unless the mod's
+- **Audio is opt-in at runtime.** The built-in provider returns `null` (silent) unless the mod's
   "enable dialogue audio" option is on — see [Config](./config.md).
 - **Clip IDs are derived from the dialogue tree + node** (tree name, loca key, file path, actor). The
   file/bundle name must match that key. Use `AudioManager.GetUniqueID*` to compute them.
+- **Narration lives in a `narrator` bundle**, probed alongside the actor's bundle for every line —
+  see [The narrator bundle](#the-narrator-bundle).
 - **AssetBundles can't be loaded twice from the same file** — `AssetBundleAudioProvider` caches them;
   call `UnloadAll()` if you need to free them.
 - **Bundle clip import settings drive dialogue-open performance.** Use `Compressed In Memory` /
   `Streaming` + Load In Background, not `Decompress On Load` — see
   [Keep bundle loading off the main thread](#keep-bundle-loading-off-the-main-thread).
-- **`.ogg` only** for the file provider (decoded via NVorbis). Cave variants use the `_CAVE` suffix.
-- Register your provider during gameplay init; the providers read the [AreaNameSystem](./area-region.md)
-  to pick cave variants, which only exist in gameplay.
+- **Loose `.ogg` files are no longer supported.** `FileAudioProvider` and its NVorbis decoder were
+  removed in 0.6.0; pack the clips into a per-actor bundle instead. Cave variants keep the `_CAVE`
+  suffix, now on the clip name rather than the file name.
+- Register a custom provider during gameplay init; the built-in provider reads the
+  [AreaNameSystem](./area-region.md) to pick cave variants, which only exists in gameplay.

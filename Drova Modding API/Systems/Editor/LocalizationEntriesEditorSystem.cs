@@ -65,7 +65,7 @@ namespace Drova_Modding_API.Systems.Editor
         public static void Show()
         {
             EnsureInitialized();
-            _ui?.SetVisible(true);
+            if (_ui != null) _ui.SetVisible(true);
         }
 
         public static void RequestSelection(string ownerToken)
@@ -75,8 +75,8 @@ namespace Drova_Modding_API.Systems.Editor
 
             EnsureInitialized();
             _requestedSelectionOwner = ownerToken;
-            _ui?.SetVisible(true);
-            _ui?.SetStatus($"Select a localization entry for '{ownerToken}'.");
+            if (_ui != null) _ui.SetVisible(true);
+            if (_ui != null) _ui.SetStatus($"Select a localization entry for '{ownerToken}'.");
         }
 
         public static bool TryConsumeSelection(string ownerToken, out string locaPath, out string locaKey)
@@ -630,8 +630,15 @@ namespace Drova_Modding_API.Systems.Editor
             if (string.IsNullOrWhiteSpace(_selectedFilePath))
                 return null;
 
-            return _files.FirstOrDefault(file =>
-                string.Equals(file.AbsolutePath, _selectedFilePath, StringComparison.OrdinalIgnoreCase));
+            // A capturing lambda here would be emitted as an instance method on this
+            // injected MonoBehaviour and rejected by Il2CppInterop registration.
+            for (int i = 0; i < _files.Count; i++)
+            {
+                if (string.Equals(_files[i].AbsolutePath, _selectedFilePath, StringComparison.OrdinalIgnoreCase))
+                    return _files[i];
+            }
+
+            return null;
         }
 
         [HideFromIl2Cpp]

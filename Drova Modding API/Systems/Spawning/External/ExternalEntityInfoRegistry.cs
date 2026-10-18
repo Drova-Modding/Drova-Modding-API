@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Il2CppDrova;
 using MelonLoader;
 using System.Text.Json;
@@ -86,7 +87,7 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         /// <param name="definitionId">The stable definition id set in the placement JSON (e.g. <c>"my_custom_npc"</c>).</param>
         /// <param name="entityInfo">The pre-created instance, or <see langword="null"/>.</param>
-        public static bool TryGetByDefinitionId(string? definitionId, out EntityInfo? entityInfo)
+        public static bool TryGetByDefinitionId(string? definitionId, [NotNullWhen(true)] out EntityInfo? entityInfo)
         {
             entityInfo = null;
             if (string.IsNullOrWhiteSpace(definitionId))
@@ -101,7 +102,7 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         /// <param name="guid">The GUID string stored in the definition's <c>entityInfo.Guid</c> field.</param>
         /// <param name="entityInfo">The pre-created instance, or <see langword="null"/>.</param>
-        public static bool TryGetByGuid(string? guid, out EntityInfo? entityInfo)
+        public static bool TryGetByGuid(string? guid, [NotNullWhen(true)] out EntityInfo? entityInfo)
         {
             entityInfo = null;
             if (string.IsNullOrWhiteSpace(guid))

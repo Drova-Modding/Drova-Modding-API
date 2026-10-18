@@ -14,10 +14,10 @@ namespace Drova_Modding_API.Access
     public class OptionMenuAccess
     {
         private OptionMenuAccess() { }
-        private GUI_Window _guiWindow;
+        private GUI_Window? _guiWindow;
         private Transform? _moddingPanel;
         private readonly List<string> _idsAdded = [];
-        private GUI_Window_ATabManager.GUI_TabPanel _guiPanel;
+        private GUI_Window_ATabManager.GUI_TabPanel? _guiPanel;
         private const string ScrollBarName = "ScrollRectView";
         /// <summary>
         /// Obsolete and will be replaced later on
@@ -37,12 +37,12 @@ namespace Drova_Modding_API.Access
         /**
         * This event is used to react on option menu open, this can happen from the pause menu and the game main menu.
         */
-        public event OptionMenuAction OnOptionMenuOpen;
+        public event OptionMenuAction? OnOptionMenuOpen;
 
         /**
         * This event is used to react on option menu close, you can use this Event to save your configs globally.
         */
-        public event OptionMenuAction OnOptionMenuClose;
+        public event OptionMenuAction? OnOptionMenuClose;
 
         /**
          * Returns true if the option menu is open.
@@ -57,7 +57,7 @@ namespace Drova_Modding_API.Access
                 return;
             }
             Instance.IsMenuOpen = true;
-            Instance.OnOptionMenuOpen.Invoke();
+            Instance.OnOptionMenuOpen?.Invoke();
             GUI_Window_Options manager = guiWindow.GetComponent<GUI_Window_Options>();
             // Workaround for Update 1.0.2.1 where the modded panel is not activated for whatever reason.
             if (manager._currentPanelIndex == -1 || manager._currentPanelIndex >= 5)
@@ -79,7 +79,7 @@ namespace Drova_Modding_API.Access
             {
                 Instance.IsMenuOpen = false;
                 window.GetComponent<GUI_Window_Options>()._currentPanelIndex = 0;
-                Instance.OnOptionMenuClose.Invoke();
+                Instance.OnOptionMenuClose?.Invoke();
             }
         }
 
@@ -131,12 +131,12 @@ namespace Drova_Modding_API.Access
 
                 Transform layoutGroup = scrollbar.transform.GetChild(0);
                 if (!layoutGroup) MelonLogger.Error("Failed to get LayoutGroup");
-                layoutGroup?.DestroyAllChildren();
+                if (layoutGroup != null) layoutGroup.DestroyAllChildren();
                 ClearClonedPanelRowState(panel);
 
                 GUI_ButtonNavigationAnimation navigation = root.GetComponent<GUI_ButtonNavigationAnimation>();
                 if (!navigation) MelonLogger.Error("Failed to get GUI_ButtonNavigationAnimation");
-                navigation?.AddElement(componentToRegister);
+                if (navigation != null) navigation.AddElement(componentToRegister);
 
                 GameObject window = GetGUIWindow();
                 if (window)
@@ -156,7 +156,8 @@ namespace Drova_Modding_API.Access
 
         private static GameObject? GetScrollBar(GameObject panel)
         {
-            return panel.transform.GetChild(1)?.gameObject;
+            Transform? child = panel.transform.GetChild(1);
+            return child == null ? null : child.gameObject;
         }
 
         /// <summary>
@@ -186,7 +187,8 @@ namespace Drova_Modding_API.Access
          */
         private void OverrideNavigation(GameObject header, GameObject panel)
         {
-            GUI_Window_Options manager = GetGUIWindow()?.GetComponent<GUI_Window_Options>();
+            GameObject? window = GetGUIWindow();
+            GUI_Window_Options? manager = window == null ? null : window.GetComponent<GUI_Window_Options>();
             if (!manager) { MelonLogger.Error("Failed to get manager to override the navigation"); return; }
             _guiPanel = new GUI_Window_ATabManager.GUI_TabPanel
             {
@@ -235,7 +237,6 @@ namespace Drova_Modding_API.Access
         /// Create your Options in the general modding panel
         /// </summary>
         /// <param name="id">Unique identifier for your mod</param>
-        /// <returns></returns>
         public OptionUIBuilder? GetBuilder(string id)
         {
             if (!_moddingPanel)

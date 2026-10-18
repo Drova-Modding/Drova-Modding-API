@@ -12,7 +12,7 @@ namespace Drova_Modding_API.Systems.Editor
         /// Delegate for when an NPC is selected
         /// </summary>
         /// <param name="actor">The Npc</param>
-        public delegate void NpcSelected(Actor actor);
+        public delegate void NpcSelected(Actor? actor);
         /// <summary>
         /// Event that is triggered when an NPC is selected
         /// </summary>
@@ -21,7 +21,7 @@ namespace Drova_Modding_API.Systems.Editor
         /// <summary>
         /// The last NPC that was invoked
         /// </summary>
-        private static Actor _lastInvoked;
+        private static Actor? _lastInvoked;
 
         /// <summary>
         /// Allow the selection of NPCs/Creatures
@@ -37,7 +37,7 @@ namespace Drova_Modding_API.Systems.Editor
         /// Trigger the event for when an NPC is selected
         /// </summary>
         /// <param name="actor">Npc to trigger</param>
-        internal static void TriggerNpcSelected(Actor actor)
+        internal static void TriggerNpcSelected(Actor? actor)
         {
             if (!AllowNpcSelection)
             {

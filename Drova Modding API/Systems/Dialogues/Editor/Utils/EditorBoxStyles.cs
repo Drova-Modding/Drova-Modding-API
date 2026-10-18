@@ -6,16 +6,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
     /// Opaque, category-tinted <see cref="GUIStyle"/> boxes for the dialogue graph editor.
     /// Default <c>GUI.skin.box</c> has a translucent border texture that disappears against
     /// the in-game backdrop, so each category gets its own solid background here.
-    /// Lazily initialized — must be touched first from inside <c>OnGUI</c>.
+    /// Lazily initialized, so the first access must happen inside <c>OnGUI</c>.
     /// </summary>
     public static class EditorBoxStyles
     {
-        private static GUIStyle _hubNode;
-        private static GUIStyle _multipleChoice;
-        private static GUIStyle _statementNode;
-        private static GUIStyle _genericNode;
-        private static GUIStyle _choice;
-        private static GUIStyle _task;
+        private static GUIStyle? _hubNode;
+        private static GUIStyle? _multipleChoice;
+        private static GUIStyle? _statementNode;
+        private static GUIStyle? _genericNode;
+        private static GUIStyle? _choice;
+        private static GUIStyle? _task;
 
         /// <summary>Outer wrapper for hub-style nodes.</summary>
         public static GUIStyle HubNode => _hubNode ??= Build(new Color(0.10f, 0.28f, 0.14f, 0.94f), new Color(0.55f, 1f, 0.55f));

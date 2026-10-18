@@ -41,8 +41,8 @@ namespace Drova_Modding_API.Systems.Spawning
         #region State Proxies
         private ExternalNpcPlacementSystem.ExternalNpcDefinition Definition
         {
-            get => _state.Definition;
-            set => _state.Definition = value;
+            [HideFromIl2Cpp] get => _state.Definition;
+            [HideFromIl2Cpp] set => _state.Definition = value;
         }
 
         private string Status
@@ -487,7 +487,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (GUILayout.Button("Load By Id"))
             {
                 CancelPendingRespawn();
-                if (ExternalNpcPlacementSystem.TryGetDefinition(Definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? found) && found != null)
+                if (ExternalNpcPlacementSystem.TryGetDefinition(Definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? found))
                 {
                     Definition = found;
                     ExternalNpcModuleRegistry.EnsureDefaults(Definition);
@@ -840,7 +840,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (string.IsNullOrWhiteSpace(Definition.Id))
                 return false;
 
-            if (!ExternalNpcPlacementSystem.TryGetDefinition(Definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? existingDefinition) || existingDefinition == null)
+            if (!ExternalNpcPlacementSystem.TryGetDefinition(Definition.Id, out _))
                 return false;
 
             return !_state.IsDefinitionLoadedFromCurrentSession();
@@ -943,7 +943,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!TryReadLastLoadedDefinitionId(out string definitionId))
                 return false;
 
-            if (!ExternalNpcPlacementSystem.TryGetDefinition(definitionId, out ExternalNpcPlacementSystem.ExternalNpcDefinition? found) || found == null)
+            if (!ExternalNpcPlacementSystem.TryGetDefinition(definitionId, out ExternalNpcPlacementSystem.ExternalNpcDefinition? found))
             {
                 Status = $"Last loaded NPC '{definitionId}' was not found. Showing a fresh template.";
                 return false;
@@ -1012,7 +1012,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (_initialPlayerPositionApplied)
                 return;
 
-            if (!PlayerAccess.TryGetPlayer(out Actor player) || player == null)
+            if (!PlayerAccess.TryGetPlayer(out Actor? player))
                 return;
 
             Vector3 playerPosition = player.transform.position;
@@ -1024,7 +1024,7 @@ namespace Drova_Modding_API.Systems.Spawning
         [HideFromIl2Cpp]
         private void ApplyPlayerPositionToDefinition()
         {
-            if (!PlayerAccess.TryGetPlayer(out Actor player) || player == null)
+            if (!PlayerAccess.TryGetPlayer(out Actor? player))
             {
                 Status = "Player actor is not available right now.";
                 return;

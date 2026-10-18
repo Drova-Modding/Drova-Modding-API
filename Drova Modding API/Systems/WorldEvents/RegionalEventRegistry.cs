@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Systems.WorldEvents.Regional;
 
 namespace Drova_Modding_API.Systems.WorldEvents
@@ -6,7 +7,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
     {
         private static readonly Dictionary<Region, List<ARegionalEvent>> RegionEvents = [];
 
-        public static bool TryGetEvents(Region region, out List<ARegionalEvent>? regionalEvents)
+        public static bool TryGetEvents(Region region, [NotNullWhen(true)] out List<ARegionalEvent>? regionalEvents)
         {
             return RegionEvents.TryGetValue(region, out regionalEvents);
         }

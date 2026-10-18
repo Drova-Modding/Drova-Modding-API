@@ -1,5 +1,4 @@
-﻿using Drova_Modding_API.Systems.SaveGame;
-using Drova_Modding_API.Systems.SaveGame.Store;
+﻿using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.Spawning;
 
 namespace Drova_Modding_API.Systems.WorldEvents
@@ -26,14 +25,14 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <inheritdoc/>
         public virtual void StartEvent()
         {
-            LazyActorStore ??= SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            LazyActorStore ??= SystemInit.LazyActors;
             for (int i = 0; i < persistentEncounters.Count; i++)
             {
                 LazyActorCreator.LazyActorParams encounter = persistentEncounters[i];
                 Il2CppDrova.Utilities.LazyLoading.LazyActor lazyActor = LazyActorCreator.CreateLazyActorCreature(encounter);
                 LazyActorStore.Add(new LazyActorSaveData(LazyActorCreator.LazyActorName, encounter.AssetReference.AssetGUID, encounter.EntityInfo.AssetGUID, lazyActor._guidstring));
             }
-            WorldEventSystemManager.Instance?.EndEvent();
+            if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
         }
     }
 }

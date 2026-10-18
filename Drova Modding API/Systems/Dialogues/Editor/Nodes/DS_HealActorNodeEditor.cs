@@ -10,9 +10,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
     /// </summary>
     internal class DS_HealActorNodeEditor : DrawNodeEditor
     {
-        private DS_HealActor _castedNode;
-        private EntityInfo[] _entityInfos;
-        private GUIDropdownWithFilter _entityInfoDropdown;
+        private DS_HealActor? _castedNode;
+        private EntityInfo[] _entityInfos = [];
+        private GUIDropdownWithFilter _entityInfoDropdown = null!;
 
         public DS_HealActorNodeEditor()
         {
