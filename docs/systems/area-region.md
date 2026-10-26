@@ -122,14 +122,14 @@ private void OnRegionChanged(Region region, bool hasEntered)
 
 ### `RegionAccess` (static)
 
-| Member                                                        | Description                                                                                       |
-|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| Member                                                        | Description                                                                                        |
+|---------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
 | `event RegionChanged? OnRegionChanged`                        | Enter/leave, forwarded from `AreaNameSystem`. Safe to subscribe at any time, and survives reloads. |
-| `bool TryGetCurrentRegion(out Region region)`                 | The region the player is most specifically in. `false` in menus and before they're placed.        |
-| `void GetCurrentRegions(List<Region> buffer)`                 | Every region the player is inside, unresolved. Cleared first, and reusing one allocates nothing.  |
-| `bool IsInRegion(Region region)`                              | Whether the player is inside it, most specific or not.                                            |
-| `bool IsInCave()`                                             | Whether the player is underground. `false` in menus and outdoors.                                 |
-| `bool TryGetRegionByName(string? areaKey, out Region region)` | Name → region, with an unrecognized name answered by `false` rather than the catch-all.           |
+| `bool TryGetCurrentRegion(out Region region)`                 | The region the player is most specifically in. `false` in menus and before they're placed.         |
+| `void GetCurrentRegions(List<Region> buffer)`                 | Every region the player is inside, unresolved. Cleared first, and reusing one allocates nothing.   |
+| `bool IsInRegion(Region region)`                              | Whether the player is inside it, most specific or not.                                             |
+| `bool IsInCave()`                                             | Whether the player is underground. `false` in menus and outdoors.                                  |
+| `bool TryGetRegionByName(string? areaKey, out Region region)` | Name → region, with an unrecognized name answered by `false` rather than the catch-all.            |
 
 ### `AreaNameSystem` (singleton: `AreaNameSystem.Instance`)
 

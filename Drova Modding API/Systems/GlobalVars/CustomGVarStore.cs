@@ -100,7 +100,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             try
             {
                 string folderPath = GetStoreFolderPath();
-                EnsureStoreFolder(folderPath);
+                CreateStoreFolder(folderPath);
 
                 string[] files = Directory.GetFiles(folderPath, "*.json");
                 if (files.Length == 0)
@@ -210,6 +210,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 list._guid = Guid.NewGuid().ToString();
             }
 
+            AddQuestStateVar(list);
             bool added = database.TryAddNewGVarList(ProviderAccess.GetGameDatabase(), list);
             if (!added)
             {
@@ -399,6 +400,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                     list._guid = listData.Guid;
                 }
 
+                AddQuestStateVar(list);
                 if (!database.TryAddNewGVarList(ProviderAccess.GetGameDatabase(), list))
                 {
                     return;
@@ -422,6 +424,23 @@ namespace Drova_Modding_API.Systems.GlobalVars
             {
                 ApplyVarDefinition(list, listData.Vars[i]);
             }
+        }
+
+        /// <summary>
+        /// Gives a runtime quest list its <c>QuestState</c> variable. The game only creates it in the editor's
+        /// <c>OnValidate</c>, so <see cref="GVarList.GetQuestState"/> is null on lists made at runtime.
+        /// The fixed id keeps the state loadable from the save.
+        /// </summary>
+        private static void AddQuestStateVar(GVarList list)
+        {
+            if (!list.IsQuestVarList || list._questState != null)
+            {
+                return;
+            }
+
+            AGVarBase gvar = list.AddNewGVar(Il2CppType.Of<GQuestState>(), GVarList.QUESTSTATE_VARNAME, false);
+            gvar._id = GVarList.QUESTSTATE_VARNAME;
+            list._questState = gvar.Cast<GQuestState>();
         }
 
         private static void ApplyVarDefinition(GVarList list, CustomGVarData varData)
@@ -465,7 +484,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 }
 
                 string folderPath = GetStoreFolderPath();
-                EnsureStoreFolder(folderPath);
+                CreateStoreFolder(folderPath);
 
                 Dictionary<string, CustomGVarStoreData> dataByFile = new(StringComparer.OrdinalIgnoreCase);
                 for (int i = 0; i < database.AllGVars.Count; i++)
@@ -875,7 +894,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
             return Path.Combine(GetStoreFolderPath(), DefaultFileName);
         }
 
-        private static void EnsureStoreFolder(string folderPath)
+        private static void CreateStoreFolder(string folderPath)
         {
             if (!Directory.Exists(folderPath))
             {

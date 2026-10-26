@@ -8,8 +8,8 @@
         <IsPackable>false</IsPackable>
         <!-- Binding identity baked into every mod ever compiled against the API. Frozen; bump Version instead. -->
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <Version>0.6.0</Version>
-        <FileVersion>0.6.0.0</FileVersion>
+        <Version>0.7.0</Version>
+        <FileVersion>0.7.0.0</FileVersion>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Drova_Modding_API</AssemblyName>
     </PropertyGroup>
@@ -426,9 +426,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Access\AbilityDataAccess.cs" />
+        <Compile Include="Access\ModContentAccess.cs" />
+        <Compile Include="Access\ActorBuffAccess.cs"/>
         <Compile Include="Access\ActorSpawnAccess.cs"/>
         <Compile Include="Access\AddressableAccess.cs"/>
         <Compile Include="Access\CheatMenuAccess.cs"/>
+        <Compile Include="Access\ToastAccess.cs"/>
         <Compile Include="Access\ConfigAccessor.cs"/>
         <Compile Include="Access\CoopAccess.cs"/>
         <Compile Include="Systems\Coop\CoopTypes.cs"/>
@@ -436,9 +440,9 @@
         <Compile Include="Systems\Coop\NullCoopProvider.cs"/>
         <Compile Include="Access\CutsceneSyncAccess.cs"/>
         <Compile Include="Systems\Testing\LaunchProfile.cs"/>
-        <Compile Include="Systems\Testing\TestAgent.cs"/>
-        <Compile Include="Systems\Testing\TestAgent.Actions.cs"/>
         <Compile Include="Access\DamageAccess.cs"/>
+        <Compile Include="Access\EnemyAccess.cs"/>
+        <Compile Include="Access\StatusEffectAccess.cs"/>
         <Compile Include="Access\DifficultyAccess.cs"/>
         <Compile Include="Access\GameEvents.cs"/>
         <Compile Include="Access\GVarSyncAccess.cs"/>
@@ -461,14 +465,18 @@
         <Compile Include="GlobalFields\InputActionFields.cs" />
         <Compile Include="GlobalFields\ItemReadableIds.cs" />
         <Compile Include="Extensions\ActorExtension.cs" />
+        <Compile Include="Extensions\Il2CppObjectExtensions.cs" />
         <Compile Include="Generation\AddressableGeneration.cs" />
         <Compile Include="GlobalFields\SceneNames.cs" />
         <Compile Include="GlobalFields\TalentReadableIds.cs" />
         <Compile Include="GlobalFields\StatReadableIds.cs" />
+        <Compile Include="GlobalFields\StatusEffectGuids.cs" />
         <Compile Include="Patches\ActorAddLoadingCompPatch.cs" />
         <Compile Include="Patches\ActorRoutineModulePatch.cs" />
         <Compile Include="Patches\ActorStartInitAsyncPatch.cs" />
         <Compile Include="Patches\AGvarBoolPatch.cs" />
+        <Compile Include="Patches\RoutinePlaceAIGraphPatch.cs" />
+        <Compile Include="Patches\RoutineGatePointPatch.cs" />
         <Compile Include="Patches\AreaNamePatch.cs" />
         <Compile Include="Patches\ASaveRootLoadStatePatch.cs" />
         <Compile Include="Patches\ASaveRootSaveStatePatch.cs" />
@@ -481,7 +489,10 @@
         <Compile Include="Patches\DS_StatementNodePatch.cs" />
         <Compile Include="Patches\GUIWindowOptions.cs" />
         <Compile Include="Patches\GUIWindowPatch.cs" />
+        <Compile Include="Patches\GetAllSubdirectoryNamesPatch.cs" />
         <Compile Include="Patches\LazyActorPatch.cs" />
+        <Compile Include="Patches\ABIBhvrMorphActorPatch.cs" />
+        <Compile Include="Patches\IsEntityInRangeCommandPatch.cs" />
         <Compile Include="Patches\ModuleOpenDoorsMovementPatch.cs" />
         <Compile Include="Patches\SaveableHealthPatch.cs" />
         <Compile Include="Patches\SaveableStatusEffectHandlerPatch.cs" />
@@ -501,12 +512,16 @@
         <Compile Include="Systems\Audio\AudioLog.cs" />
         <Compile Include="Systems\Audio\AudioManager.cs" />
         <Compile Include="Systems\Dialogues\Store\DialogueStore.cs" />
+        <Compile Include="Systems\Dialogues\Store\GraphStore.cs" />
         <Compile Include="Systems\Editor\EditorManager.cs" />
         <Compile Include="Systems\Editor\NpcMouseRaycast.cs" />
         <Compile Include="Systems\GlobalVars\CustomGVarStore.cs" />
         <Compile Include="Systems\GlobalVars\GBoolReference.cs" />
         <Compile Include="Systems\GlobalVars\GvarBusSystem.cs" />
         <Compile Include="Systems\ModdingUI\ModdingUI.cs" />
+        <Compile Include="Systems\ModdingUI\ModdingTools.cs" />
+        <Compile Include="Systems\ModdingUI\FlatGuiStyles.cs" />
+        <Compile Include="Systems\ModdingUI\ModdingTool.cs" />
         <Compile Include="Systems\Morphing\MorphManager.cs" />
         <Compile Include="Systems\Region.cs" />
         <Compile Include="Systems\Relocators\DialogueTreeRelocator.cs" />
@@ -520,6 +535,9 @@
         <Compile Include="Systems\Relocators\ObjectRelocatorFactory.cs" />
         <Compile Include="Systems\Relocators\RelocatorSaveData.cs" />
         <Compile Include="Systems\Routines\RoutineSystem.cs" />
+        <Compile Include="Systems\Routines\RoutineGraphAccess.cs" />
+        <Compile Include="Systems\Routines\Store\BehaviourTreeStore.cs" />
+        <Compile Include="Systems\Routines\Store\RoutineOverrideStore.cs" />
         <Compile Include="Systems\SaveGame\NoSaveGuidRegistry.cs" />
         <Compile Include="Systems\SaveGame\Store\IStorable.cs" />
         <Compile Include="Systems\SaveGame\Store\IStore.cs" />
@@ -527,6 +545,12 @@
         <Compile Include="Systems\Dialogues\ActorParameterHelper.cs" />
         <Compile Include="Systems\Dialogues\DialogGraph.cs" />
         <Compile Include="Systems\Dialogues\DialogueNodeCreator.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalCreaturePlacementSystem.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalCreatureConfigFile.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalCreatureDefinition.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalItemConfigFile.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalItemDefinition.cs" />
+        <Compile Include="Systems\Spawning\External\ExternalItemPlacementSystem.cs" />
         <Compile Include="Systems\Spawning\External\ExternalAlignmentContainerModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalCosmeticsModule.cs" />
         <Compile Include="Systems\Spawning\External\ExternalDialogueModule.cs" />
@@ -565,6 +589,33 @@
         <Compile Include="Systems\Spawning\Modules\TeacherModule.cs" />
         <Compile Include="Systems\Spawning\Modules\TraderModule.cs" />
         <Compile Include="Systems\Spawning\NpcCreator.cs" />
+        <Compile Include="Systems\Items\CustomItemSystem.cs" />
+        <Compile Include="Systems\MapEditor\MapPrefabCatalog.g.cs" />
+        <Compile Include="Systems\MapEditor\MapScenePropCatalog.g.cs" />
+        <Compile Include="Systems\MapEditor\MapPrefabCatalog.cs" />
+        <Compile Include="Systems\MapEditor\MapObjectDefinition.cs" />
+        <Compile Include="Systems\MapEditor\MapLayoutFile.cs" />
+        <Compile Include="Systems\MapEditor\MapRemovalDefinition.cs" />
+        <Compile Include="Systems\MapEditor\MapLootDefinition.cs" />
+        <Compile Include="Systems\MapEditor\MapSceneTemplates.cs" />
+        <Compile Include="Systems\MapEditor\MapStamps.cs" />
+        <Compile Include="Systems\MapEditor\MapAreas.cs" />
+        <Compile Include="Systems\MapEditor\MapAreaDefinition.cs" />
+        <Compile Include="Systems\MapEditor\MapLayoutSystem.cs" />
+        <Compile Include="Systems\Items\CustomItemConfigFile.cs" />
+        <Compile Include="Systems\Items\CustomItemDefinition.cs" />
+        <Compile Include="Systems\Items\CustomLetterDefinition.cs" />
+        <Compile Include="Systems\Items\CustomMorphDefinition.cs" />
+        <Compile Include="Systems\Quests\QuestDefinition.cs" />
+        <Compile Include="Systems\Quests\GVarConditions.cs" />
+        <Compile Include="Systems\Quests\QuestAreaDefinition.cs" />
+        <Compile Include="Systems\Quests\QuestConfigFile.cs" />
+        <Compile Include="Systems\Quests\QuestEntryDefinition.cs" />
+        <Compile Include="Systems\Quests\QuestKillDefinition.cs" />
+        <Compile Include="Systems\Quests\QuestTopicDefinition.cs" />
+        <Compile Include="Systems\Quests\QuestSystem.cs" />
+        <Compile Include="Systems\Quests\QuestAreas.cs" />
+        <Compile Include="Systems\Quests\GVarCondition.cs" />
         <Compile Include="Systems\Spawning\Templates\BanditCreator.cs" />
         <Compile Include="Systems\Talents\TalentContainerDatabase.cs" />
         <Compile Include="Systems\MainThreadDispatcher.cs" />
@@ -614,10 +665,15 @@
     <ItemGroup Condition="'$(Configuration)'=='Debug'">
         <Compile Include="Systems\Networking\Diagnostics\NetworkStatsView.cs" />
         <Compile Include="Systems\Debugging\NearbyDumper.cs" />
+        <Compile Include="Systems\Testing\TestAgent.cs"/>
+        <Compile Include="Systems\Testing\TestAgent.Actions.cs"/>
         <Compile Include="Systems\Editor\EditorUI.cs" />
         <Compile Include="Systems\Editor\LocalizationEntriesEditorSystem.cs" />
         <Compile Include="Systems\Editor\ModCreationContext.cs" />
         <Compile Include="Systems\ModdingUI\MainMenuModdingUI.cs" />
+        <Compile Include="Systems\ModdingUI\BuiltInModdingTools.cs" />
+        <Compile Include="Systems\MapEditor\MapEditorWindow.cs" />
+        <Compile Include="Systems\Testing\TestGuiInput.cs" />
         <Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.cs" />
         <Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.ReadView.cs" />
         <Compile Include="Systems\GlobalVars\GlobalVarInspectorSystem.WriteView.cs" />
@@ -667,6 +723,13 @@
         <Compile Include="Systems\Dialogues\Editor\DrawTaskEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\Factories\DrawTaskEditorFactory.cs" />
         <Compile Include="Systems\Dialogues\Editor\GraphEditorManager.cs" />
+        <Compile Include="Systems\Routines\Editor\BehaviourTreeNodeEditorFactory.cs" />
+        <Compile Include="Systems\Routines\Editor\BTActionNodeEditor.cs" />
+        <Compile Include="Systems\Routines\Editor\BTConditionNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\GenericTaskEditor.cs" />
+        <Compile Include="Systems\Routines\Editor\GenericNodeEditor.cs" />
+        <Compile Include="Systems\Routines\Editor\RoutineEditorWindow.cs" />
+        <Compile Include="Systems\Routines\Editor\RoutineTestCommands.cs" />
         <Compile Include="Systems\Dialogues\Editor\ActionStrategies\CreateNodeActionStrategy.cs" />
         <Compile Include="Systems\Dialogues\Editor\ActionStrategies\DeleteNodeActionStrategy.cs" />
         <Compile Include="Systems\Dialogues\Editor\ActionStrategies\DuplicateNodeActionStrategy.cs" />
@@ -753,10 +816,13 @@
         <Compile Include="Systems\Dialogues\Editor\ActionStrategies\ConnectActionStrategy.cs" />
         <Compile Include="Systems\Dialogues\Editor\ActionStrategies\IActionStrategy.cs" />
         <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetGIntNodeEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Nodes\DS_SetQuestStateNodeEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\Nodes\ProbabilitySelectorNodeEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\Tasks\ConditionListTaskEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\Tasks\DS_IsUniqueConditionTaskEditor.cs" />
         <Compile Include="Systems\Dialogues\Editor\Tasks\GQuestStateConditionTaskEditor.cs" />
+        <Compile Include="Systems\Dialogues\Editor\Tasks\TriggerJournalTaskEditor.cs" />
+        <Compile Include="Systems\Quests\QuestShowcaseBuilder.cs" />
         <Compile Include="Systems\Spawning\Wizard\NpcWizardWindowLayout.cs" />
         <Compile Include="Systems\Spawning\Wizard\DialogueEditorLifecycleWatcher.cs" />
         <Compile Include="Systems\Spawning\Wizard\NpcWizardDefinitionHelpers.cs" />
@@ -845,4 +911,4 @@
 
         <Message Importance="high" Text="Packaged the test runner -&gt; $(DistDir)\Drova_TestRunner_*.zip"/>
     </Target>
-</Project>
+</Project>

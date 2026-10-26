@@ -80,7 +80,6 @@ namespace Drova_Modding_API.Systems.SaveGame
         /// <summary>
         /// Register a new store to the save game system
         /// </summary>
-        /// <param name="store">The store</param>
         public void AddStore(IStorable store)
         {
             Stores.Add(store);
@@ -89,8 +88,6 @@ namespace Drova_Modding_API.Systems.SaveGame
         /// <summary>
         /// Get a store by type from the save game system
         /// </summary>
-        /// <typeparam name="T">The store to get</typeparam>
-        /// <returns>Your store or default</returns>
         public IStore<T>? GetStore<T>()
         {
             return Stores.OfType<IStore<T>>().FirstOrDefault();
@@ -99,7 +96,6 @@ namespace Drova_Modding_API.Systems.SaveGame
         /// <summary>
         /// Get a store by save game key from the save game system
         /// </summary>
-        /// <param name="saveGameKey">The key of the Store</param>
         public IStorable? GetStore(string saveGameKey)
         {
             return Stores.FirstOrDefault(x => x.SaveGameKey == saveGameKey);

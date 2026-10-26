@@ -7,10 +7,8 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
     /// anybody saw them, and how the typed-message budget is spent per message id. LiteNetLib's
     /// <c>NetStatistics</c> already counts packets, bytes and reliable loss, so nothing here repeats it.
     ///
-    /// Counting restarts whenever a session does, so a number read here belongs to the session in front
-    /// of the reader rather than to a run of them; the counters outlive the session ending, which is
-    /// usually the moment somebody wants to look at them. Every write happens on the Unity main thread
-    /// the transport is polled from, so none of this synchronizes.
+    /// Counting restarts when a session starts and survives it ending. Every write happens on the main
+    /// thread the transport is polled from, so none of this synchronizes.
     /// </summary>
     internal static class NetworkDiagnostics
     {
@@ -106,8 +104,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         /// every peer counts once, because that is how often it was built - what the fan-out costs on the
         /// wire shows up in LiteNetLib's byte counters instead.
         /// </summary>
-        /// <param name="id">The registered message id.</param>
-        /// <param name="bytes">Serialized length of the message.</param>
         internal static void RecordSent(ushort id, int bytes)
         {
             if (id >= Dispatcher.MaxMessageTypes) return;
@@ -121,8 +117,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         /// Counted before delivery, so a message refused for a NaN is counted here and again under
         /// <see cref="RefusedMessages"/>.
         /// </summary>
-        /// <param name="id">The registered message id.</param>
-        /// <param name="bytes">Length of the message in the packet.</param>
         internal static void RecordReceived(ushort id, int bytes)
         {
             if (id >= Dispatcher.MaxMessageTypes) return;

@@ -1,0 +1,43 @@
+{
+  "Version": 1,
+  "Lists": [
+    {
+      "Guid": "6f1d2c5e-8a3b-4c7d-9e21-0b5a4f3c2d10",
+      "Name": "Q_Showcase_RipperHunt",
+      "IsQuestVarList": true,
+      "Vars": [
+        {
+          "Id": "RipperDead",
+          "Name": "RipperDead",
+          "Type": "GBool",
+          "InitialValue": "false"
+        }
+      ]
+    },
+    {
+      "Guid": "0c9e7b41-2f6a-4d58-b3e1-7a4d2c9f8e65",
+      "Name": "Q_Showcase_Apples",
+      "IsQuestVarList": true,
+      "Vars": []
+    },
+    {
+      "Guid": "b7e2f1a4-3c5d-4e6f-8a9b-0c1d2e3f4a5b",
+      "Name": "Q_Showcase_Tracks",
+      "IsQuestVarList": true,
+      "Vars": [
+        {
+          "Id": "ShrineReached",
+          "Name": "ShrineReached",
+          "Type": "GBool",
+          "InitialValue": "false"
+        },
+        {
+          "Id": "SuppliesTaken",
+          "Name": "SuppliesTaken",
+          "Type": "GBool",
+          "InitialValue": "false"
+        }
+      ]
+    }
+  ]
+}

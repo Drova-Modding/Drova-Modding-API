@@ -6,8 +6,7 @@ namespace Drova.TestRunner;
 /// <summary>
 /// Records every instance while a scenario runs: a screenshot and the agent's <c>state</c> every 2 s, and each tracked
 /// actor's <c>ai</c> readout (from every instance) every 4 s. Kept with the failure logs when a run fails; the last
-/// few passed runs' are kept in <c>recordings/&lt;scenario&gt;</c>. Intermittent sync bugs - an NPC walking off in one world, a body missing in the other - leave nothing
-/// in the logs; these recordings are what found them.
+/// few passed runs' are kept in <c>recordings/&lt;scenario&gt;</c>. Intermittent sync bugs leave nothing in the logs.
 ///
 /// Its own connection per question, so it never interleaves with the steps' connection.
 /// </summary>

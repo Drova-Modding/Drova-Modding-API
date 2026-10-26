@@ -13,7 +13,6 @@ internal static class ActorRoutineModulePatch
             return true;
         }
 
-        // Safe short-circuit: return an already completed task instead of interrupting MoveNext.
         __result = UniTask.CompletedTask;
         return false;
     }

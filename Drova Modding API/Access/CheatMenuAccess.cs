@@ -29,9 +29,6 @@ namespace Drova_Modding_API.Access
         // What the private shell FireCommand runs already holds, so a cheat is added to it once.
         private static readonly HashSet<string> FiredShellNames = new(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// Raised when cheat mode is enabled. Internal use only – the patch calls this.
-        /// </summary>
         internal static event Action? OnCheatModeEnabled;
 
         static CheatMenuAccess()
@@ -66,10 +63,8 @@ namespace Drova_Modding_API.Access
         /// <c>false</c> if it was queued for later registration.
         /// </returns>
         /// <remarks>
-        /// This never throws, whatever state the game is in. Calling it from
-        /// <c>OnInitializeMelon</c>, from a loading scene, or before the terminal exists is
-        /// supported: the command is queued and registered on the next cheat mode change or
-        /// scene load. Callers do not need their own try/catch or retry loop.
+        /// Never throws. Calling it before the terminal exists, even from <c>OnInitializeMelon</c>, is supported:
+        /// the command is queued and registered on the next cheat mode change or scene load.
         /// </remarks>
         public static bool RegisterCheat(string name, Action<Il2CppReferenceArray<CommandArg>> action, int minArgs, int maxArgs, string help = "", string hint = "")
         {
@@ -83,19 +78,14 @@ namespace Drova_Modding_API.Access
             return false;
         }
 
-        /// <summary>
-        /// Called by the <see cref="Patches.CheatGameHandlerPatch"/> when cheat mode is turned on.
-        /// </summary>
         internal static void NotifyCheatModeEnabled()
         {
             OnCheatModeEnabled?.Invoke();
         }
 
         /// <summary>
-        /// Retries queued registrations. Called by <see cref="Core.OnSceneWasLoaded"/> because a
-        /// cheat can be queued while cheat mode is already on - the terminal itself only exists
-        /// once the scene carrying it has loaded, and nothing raises
-        /// <see cref="OnCheatModeEnabled"/> in that case.
+        /// A cheat queued while cheat mode is already on waits for the terminal's scene, and nothing raises
+        /// <see cref="OnCheatModeEnabled"/> then, so queued registrations are retried on every scene load.
         /// </summary>
         internal static void NotifySceneLoaded()
         {
@@ -179,8 +169,7 @@ namespace Drova_Modding_API.Access
                 _commandShell.RegisterCommands();
             }
 
-            // A mod's cheats reach the game's terminal only once cheat mode is on, but this shell is private: a
-            // command fired from code (the test agent's "run") ran nothing, silently, until somebody pressed F7.
+            // Queued cheats reach the game's terminal only once cheat mode is on, but this private shell runs before that.
             foreach (PendingCheat cheat in PendingCheats)
             {
                 if (FiredShellNames.Add(cheat.Name)) _commandShell.AddCommand(cheat.Name, InfoOf(cheat.Action, cheat.MinArgs, cheat.MaxArgs, cheat.Help, cheat.Hint, cheat.Name));

@@ -36,8 +36,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Handles player transitions for a region and updates event lifecycle accordingly.
         /// </summary>
-        /// <param name="region">The region that changed state.</param>
-        /// <param name="hasEntered"><see langword="true"/> when entering; <see langword="false"/> when leaving.</param>
         public void OnRegionChanged(Region region, bool hasEntered)
         {
             Change(LocalKey, region, hasEntered);
@@ -49,7 +47,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <param name="player">The teammate's id; anything but -1.</param>
         /// <param name="region">The region.</param>
         /// <param name="hasEntered"><see langword="true"/> when entering; <see langword="false"/> when leaving.</param>
-        /// <param name="position">Where the teammate stands now, or null when unknown - what their ambush spawns around.</param>
+        /// <param name="position">The teammate's current position their ambush spawns around, or null when unknown.</param>
         public void OnRemoteRegionChanged(int player, Region region, bool hasEntered, Func<Vector2?> position)
         {
             if (player == LocalKey) return;
@@ -137,7 +135,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Adds a region to the blocked list used by <see cref="IsPlayerInBlockedRegion"/>.
         /// </summary>
-        /// <param name="region">Region to block.</param>
         public void AddBlockedRegion(Region region)
         {
             _blockedRegions.Add(region);
@@ -146,7 +143,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Removes a region from the blocked list.
         /// </summary>
-        /// <param name="region">Region to unblock.</param>
         public void RemoveBlockedRegion(Region region)
         {
             _blockedRegions.Remove(region);
@@ -155,8 +151,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Checks whether the player is currently in any blocked region.
         /// </summary>
-        /// <param name="areaNameSystem">Area system used to read active player regions.</param>
-        /// <returns><see langword="true"/> when any current region is blocked; otherwise <see langword="false"/>.</returns>
         public bool IsPlayerInBlockedRegion(AreaNameSystem? areaNameSystem)
         {
             if (areaNameSystem == null)
@@ -186,9 +180,8 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     ARegionalEvent randomEvent = regionalEvents[UnityEngine.Random.Range(0, regionalEvents.Count)];
                     if (!randomEvent.IsRunning)
                     {
-                        // Only one that is still running after its start counts: an event may end itself on the spot (a
-                        // skip roll, a co-op client that does not own the world), and counting that one put its region on
-                        // cooldown and ended it again on leave - stamping the event's own cooldown it had just declined.
+                        // An event may end itself on the spot (a skip roll, a co-op client that does not own the world),
+                        // so only one still running after its start counts as started.
                         randomEvent.StartEvent();
                         if (randomEvent.IsRunning)
                         {
@@ -238,9 +231,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
             }
         }
 
-        /// <summary>
-        /// Dispatches enter/leave notifications to all registered regional events for the region.
-        /// </summary>
         private static void HandleRegionChange(Region region, bool hasEntered)
         {
             if (hasEntered && RegionalEventRegistry.TryGetEvents(region, out List<ARegionalEvent>? enteredEvents))
@@ -264,17 +254,11 @@ namespace Drova_Modding_API.Systems.WorldEvents
             }
         }
 
-        /// <summary>
-        /// Returns whether the region is still inside its cooldown window.
-        /// </summary>
         private bool IsRegionOnCooldown(Region region)
         {
             return _regionCooldowns.TryGetValue(region, out float cooldownEnd) && Time.realtimeSinceStartup < cooldownEnd;
         }
 
-        /// <summary>
-        /// Sets or refreshes the cooldown end timestamp for a region.
-        /// </summary>
         private void SetRegionCooldown(Region region, float cooldownInSeconds)
         {
             _regionCooldowns[region] = Time.realtimeSinceStartup + cooldownInSeconds;

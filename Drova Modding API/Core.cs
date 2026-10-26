@@ -5,7 +5,11 @@ using Drova_Modding_API.Register;
 using Drova_Modding_API.Systems;
 using Drova_Modding_API.Systems.GlobalVars;
 using Drova_Modding_API.Systems.Dialogues.Store;
+using Drova_Modding_API.Systems.Routines.Store;
 using Drova_Modding_API.Systems.ModdingUI;
+using Drova_Modding_API.Systems.Items;
+using Drova_Modding_API.Systems.MapEditor;
+using Drova_Modding_API.Systems.Quests;
 using Drova_Modding_API.Systems.Spawning;
 using MelonLoader;
 using Drova_Modding_API.Systems.Networking.Impl;
@@ -16,7 +20,7 @@ using Drova_Modding_API.Systems.Networking.Diagnostics;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.6.0", "Drova Modding")]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.7.0", "Drova Modding")]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 3, true)]
 [assembly: MelonPriority(-1)]
@@ -28,8 +32,7 @@ namespace Drova_Modding_API
     public class Core : MelonMod
     {
         internal static string? AssemblyLocation;
-        /// <summary>The API melon's Harmony instance, for lazily applied hooks
-        /// (<see cref="Access.TeleporterAccess"/>, <see cref="Access.WindowContentAccess"/>).</summary>
+        /// <summary>The API melon's Harmony instance, for lazily applied hooks.</summary>
         internal static HarmonyLib.Harmony SharedHarmony = null!;
         internal bool InMainMenu;
 #if DEBUG
@@ -49,8 +52,21 @@ namespace Drova_Modding_API
 #endif
             SystemInit.RegisterStores();
             GameEvents.Initialize(HarmonyInstance);
+            QuestSystem.Initialize(HarmonyInstance);
+            MapStamps.Initialize(HarmonyInstance);
+            ModdingTools.Initialize();
+            Systems.Testing.LaunchProfile.Initialize(HarmonyInstance);
+#if DEBUG
             Systems.Testing.TestAgent.Initialize(HarmonyInstance);
-            LoggerInstance.Msg("Initialized Modding API.");
+            Systems.Routines.Editor.RoutineTestCommands.Register();
+            QuestShowcaseBuilder.Register();
+            BuiltInModdingTools.Register();
+            Systems.Testing.TestAgent.RegisterCommand("export_dialogues", _ => Systems.Audio.Dialogue.CreateTTSDialogueFile.Export() + " lines");
+            Systems.Testing.TestAgent.RegisterCommand("voice", guid =>
+                Il2CppDrova.EntityGameHandler.TryGet(out Il2CppDrova.EntityGameHandler handler) && handler.GetActorFromGuid(guid.Trim()) is { } actor
+                    ? Systems.Audio.DefaultDialogueAudioConnector.VoiceName(actor.DialogueModule.GetDialogueActor().Cast<Il2CppNodeCanvas.DialogueTrees.IDialogueActor>()) ?? "none"
+                    : "not loaded");
+#endif
             OptionMenuAccess.Instance.OnOptionMenuClose += () =>
             {
                 if (!InMainMenu) InputActionRegister.Instance.EnableGameplayActions();
@@ -67,10 +83,11 @@ namespace Drova_Modding_API
         public override void OnSceneWasLoaded(int buildIndex, string sceneName)
         {
             base.OnSceneWasLoaded(buildIndex, sceneName);
+#if DEBUG
             Systems.Testing.TestAgent.OnSceneLoaded(sceneName);
+#endif
 
-            // Streamed chunk scenes load continuously while the player travels; this must stay
-            // cheap for scenes nobody registered for (one dictionary lookup).
+            // Streamed chunk scenes load continuously, so this must stay cheap.
             SceneStreamAccess.NotifySceneLoaded(sceneName);
 
             if (sceneName == SceneNames.MainMenu)
@@ -79,14 +96,15 @@ namespace Drova_Modding_API
                 // Retrigger it to make sure that the close call is registered
                 OptionMenuAccess.OnOptionClose();
                 ModdingUI.RegisterLocalization();
+                ToastAccess.ReadSettings();
                 LocalizationAccess.CreateLocalizationEntriesFromFolder();
                 CustomGVarStore.LoadIntoDatabaseOnce();
-                // Pre-create EntityInfo objects from external NPC definitions so that
-                // external mods can cross-reference them before any NPC is spawned.
+                CustomItemSystem.Reload();
+                QuestSystem.LoadDefinitions();
                 ExternalEntityInfoRegistry.Initialize();
-                // One-time pass: re-apply any user-saved dialogue bytes onto the live
-                // ScriptableObject instances that are now in memory.
                 DialogueStore.PatchAllSavedDialogues();
+                BehaviourTreeStore.RepatchAllSavedBehaviourTrees();
+                RoutineOverrideStore.Load();
 #if DEBUG
                 if (!_registeredLogCallback)
                 {
@@ -148,9 +166,11 @@ namespace Drova_Modding_API
         {
             base.OnUpdate();
             MainThreadDispatcher.Drain();
+            GVarConditions.Tick();
+            MapLayoutSystem.Tick();
             NetworkSystem.Poll();
-            Systems.Testing.TestAgent.Update();
 #if DEBUG
+            Systems.Testing.TestAgent.Update();
             if (_consoleAction.WasReleasedThisFrame())
             {
                 var cheatHandler = ProviderAccess.GetCheatGameHandler();
@@ -158,6 +178,28 @@ namespace Drova_Modding_API
                 cheatHandler.EnableCheatMode(!cheatHandler.IsCheatModeEnabled);
             }
 #endif
+        }
+
+        /// <inheritdoc/>
+        public override void OnGUI()
+        {
+            base.OnGUI();
+#if DEBUG
+            if (Systems.Testing.TestGuiInput.TryReplay(DrawWindows))
+            {
+                return;
+            }
+#endif
+            DrawWindows();
+        }
+
+        private static void DrawWindows()
+        {
+            ToastAccess.Draw();
+#if DEBUG
+            MapEditorWindow.Draw();
+#endif
+            ModdingTools.Draw();
         }
 
         /// <inheritdoc/>

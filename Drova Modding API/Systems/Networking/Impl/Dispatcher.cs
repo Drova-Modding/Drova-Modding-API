@@ -53,7 +53,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             RequireRegistered<T>();
             LiteWriter writer = SharedWriter;
             writer.Reset();
-            // One byte: ids are below MaxMessageTypes. Two cost a byte on every message, about 30 a second each way.
+            // Sent as one byte: every id is below MaxMessageTypes.
             writer.Put((byte)MessageType<T>.Id);
             message.Write(writer);
             NetworkDiagnostics.RecordSent(MessageType<T>.Id, writer.Native.Length);
@@ -70,9 +70,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal static void OnTypedReceived(INetPeer peer, NetDataReader packet)
         {
-            // A typed packet too short to hold its own id is not a message. Without this the read runs off
-            // the end of the buffer, and the receive path's catch turns every one of them into a logged
-            // stack trace - a flood anyone with the port can start.
+            // Otherwise anyone with the port could flood the log with a stack trace per short packet.
             if (packet.AvailableBytes < sizeof(byte))
             {
                 NetworkDiagnostics.CountMalformedPacket();
@@ -131,11 +129,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         }
     }
 
-    /// <summary>
-    /// Per-type cache of the id a message was registered under. A generic static field gives an
-    /// O(1) field read on the send path instead of a dictionary lookup keyed by <c>Type</c>.
-    /// </summary>
-    /// <typeparam name="T">The message struct type.</typeparam>
+    /// <summary>Per-type cache of the id a message was registered under.</summary>
     internal static class MessageType<T> where T : struct, INetMessage
     {
         internal static ushort Id;

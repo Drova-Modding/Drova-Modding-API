@@ -11,14 +11,8 @@ using System.Runtime.InteropServices;
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// Reads a <see cref="QuestState"/> without ever touching a closed-generic non-virtual body.
-    ///
-    /// Background: <c>AGVar&lt;QuestState&gt;</c> is a closed generic whose typed members may have
-    /// no AOT-compiled native body. <c>AGVarBase.GetGenericValue</c> is abstract, so IL2CPP must
-    /// fill the vtable slot on the concrete <c>GQuestState</c> class - virtual dispatch lands on a
-    /// body that is guaranteed to exist. Never touch <c>AGEnum&lt;T&gt;.Comparer</c> /
-    /// <c>._operator</c> / <c>._compare</c>: they are enums nested in an open generic, and the
-    /// late-bound static field read throws.
+    /// Reads a <see cref="QuestState"/> through virtual dispatch, since the typed members of <c>AGVar&lt;QuestState&gt;</c>
+    /// may have no AOT-compiled body. Reading <c>AGEnum&lt;T&gt;.Comparer</c>, <c>_operator</c> or <c>_compare</c> throws.
     /// </summary>
     public static class QuestStateReader
     {
@@ -50,7 +44,6 @@ namespace Drova_Modding_API.Access
                     return false;
                 }
 
-                // QuestState.value__ is System.Int32.
                 state = (QuestState)Marshal.ReadInt32(data);
                 return true;
             }
@@ -62,12 +55,8 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Preflight for patching or invoking a closed-generic proxy method.
-        ///
-        /// <c>IL2CPP.GetIl2CppMethodByToken</c> does not throw on a body that was never
-        /// AOT-compiled: it hands back a fabricated dummy MethodInfo with MethodPointer == 0, and
-        /// invoking or Harmony-patching that can hard-crash the game instead of raising an
-        /// exception. Run any non-virtual closed-generic proxy method through this first.
+        /// Preflight for patching or invoking a closed-generic proxy method. A body that was never AOT-compiled
+        /// comes back as a dummy with a null method pointer, and patching or invoking it hard-crashes the game.
         /// </summary>
         /// <param name="proxyMethod">The interop proxy method to check.</param>
         /// <param name="detail">Diagnostic detail for the log, filled either way.</param>

@@ -62,6 +62,136 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             return Resources.FindObjectsOfTypeAll<DialogueTree>();
         }
 
+        /// <summary>
+        /// Runs the full export in German, the language the voice lines are recorded in, and writes the
+        /// dialogue files next to the mod.
+        /// </summary>
+        /// <returns>Line count of the main dialogue file</returns>
+        internal static int Export()
+        {
+            Il2CppCustomFramework.Localization.LocalizationDB.ELanguage previous = Il2CppCustomFramework.Localization.LocalizationDB.Instance.CurrentLanguage;
+            Access.LocalizationAccess.SetLanguage(Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de);
+            try
+            {
+                CreateTTSDialogueFile file = new();
+                file.Init();
+                file.CreateDialogueFile();
+                file.Save();
+                DumpAllNodes();
+                return file._sb.ToString().Split('\n').Length - 1;
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("Dialogue export failed: " + e);
+                throw;
+            }
+            finally
+            {
+                Access.LocalizationAccess.SetLanguage(previous);
+            }
+        }
+
+        /// <summary>
+        /// Writes every statement and choice of every tree without the export's filters, plus a census of
+        /// node types, so lines the export skips can be found by diffing against the dialogue file.
+        /// Columns: tree|testFlag|nodeId|actor|connected|locaPath|locaKey|text.
+        /// </summary>
+        private static void DumpAllNodes()
+        {
+            StringBuilder raw = new();
+            Dictionary<string, int> nodeTypes = [];
+            foreach (DialogueTree tree in GatherAllDialogueTrees())
+            {
+                tree.SelfDeserialize();
+                tree.DeserializeIfNotDoneYet(true);
+                for (int i = 0; i < tree.allNodes.Count; i++)
+                {
+                    Node node = tree.allNodes[i];
+                    string typeName = node.GetIl2CppType().Name;
+                    nodeTypes[typeName] = nodeTypes.GetValueOrDefault(typeName) + 1;
+                    bool connected = node.inConnections.Count > 0 || node.outConnections.Count > 0;
+                    DS_StatementNode statement = node.TryCast<DS_StatementNode>();
+                    if (statement != null)
+                    {
+                        string path = statement.statement.useGlobalLoca ? statement.statement.GlobalLocaPath : tree.LocaPath;
+                        raw.Append(tree.name).Append('|').Append(tree.IsTestOrDebugDialogue).Append('|').Append(node.ID).Append('|')
+                            .Append(statement.actorName).Append('|').Append(connected).Append('|').Append(path).Append('|')
+                            .Append(statement.statement.locaKey).Append('|').Append(statement.GetLocalizedString().Replace('\n', ' ')).AppendLine();
+                        continue;
+                    }
+                    DS_MultipleChoiceNode choices = node.TryCast<DS_MultipleChoiceNode>();
+                    if (choices == null) continue;
+                    for (int k = 0; k < choices.availableChoices.Count; k++)
+                    {
+                        DS_MultipleChoiceNode.Choice choice = choices.availableChoices[k];
+                        string path = choice.statement.useGlobalLoca ? choice.statement.GlobalLocaPath : tree.LocaPath;
+                        raw.Append(tree.name).Append('|').Append(tree.IsTestOrDebugDialogue).Append('|').Append(node.ID).Append('|')
+                            .Append(choices.actorName).Append('|').Append(connected).Append('|').Append(path).Append('|')
+                            .Append(choice.statement.locaKey).Append('|').Append(choices.GetLocalizedString(choice.statement).Replace('\n', ' ')).AppendLine();
+                    }
+                }
+            }
+            File.WriteAllText(Path.Combine(Utils.SavePath, "RawDialogueNodes.txt"), raw.ToString());
+
+            // A talent taught non-explicitly teaches its first unlearned prerequisite instead (LearnUtil.SelectTeachableTalent),
+            // and the teacher speaks the feedback of the talent actually learned, so prerequisites count as taught too. A talent
+            // missing from the talent graph can never be learned (TalentGraph.CanLearnTalent).
+            Il2CppDrova.Talent.Graphs.TalentGraph? talentGraph = Access.ProviderAccess.GetGameDatabase()?.TalentGraph;
+            if (talentGraph != null)
+            {
+                talentGraph.SelfDeserialize();
+                talentGraph.DeserializeIfNotDoneYet(true);
+            }
+            StringBuilder teach = new();
+            foreach (Il2CppDrova.GUI.LearnGUI.TeacherConfig config in Resources.FindObjectsOfTypeAll<Il2CppDrova.GUI.LearnGUI.TeacherConfig>())
+            {
+                for (int i = 0; i < config._stats.Count; i++)
+                {
+                    teach.Append(config.name).Append("|stat|").Append(config._stats[i].ToString()).Append("|||").AppendLine();
+                }
+                for (int i = 0; i < config._talents.Count; i++)
+                {
+                    Il2CppDrova.Talent.TalentContainer root = config._talents[i].GetTalent();
+                    if (root == null) continue;
+                    List<Il2CppDrova.Talent.TalentContainer> taught = [root];
+                    if (!config._talents[i].IsExplicitTalent() && talentGraph != null)
+                    {
+                        Il2CppSystem.Collections.Generic.List<Il2CppDrova.Talent.TalentContainer> dependencies = talentGraph.GetAllDependenciesOfTalent(root);
+                        for (int d = 0; d < dependencies.Count; d++) taught.Add(dependencies[d]);
+                    }
+                    foreach (Il2CppDrova.Talent.TalentContainer talent in taught)
+                    {
+                        if (talent._feedbackData == null || talentGraph?.GetNodeFromGuid(talent.GUID) == null) continue;
+                        for (int k = 0; k < talent._feedbackData.Count; k++)
+                        {
+                            Il2CppDrova.GUI.LearnGUI.TeachedFeedbackData? feedback = talent._feedbackData[k].TryCast<Il2CppDrova.GUI.LearnGUI.TeachedFeedbackData>();
+                            if (feedback?._text == null) continue;
+                            teach.Append(config.name).Append("|talent|").Append(talent.name).Append('|').Append(feedback._text.Path).Append('|')
+                                .Append(feedback._text.Key).Append('|').Append(feedback._text.GetLocalizedString(null).Replace('\n', ' ')).AppendLine();
+                        }
+                    }
+                }
+            }
+            File.WriteAllText(Path.Combine(Utils.SavePath, "TeacherFeedback.txt"), teach.ToString());
+
+            StringBuilder entities = new();
+            foreach (Il2CppDrova.EntityInfo info in Resources.FindObjectsOfTypeAll<Il2CppDrova.EntityInfo>())
+            {
+                entities.Append(info.name).Append('|').Append(info.GetLocaKey()).Append('|').Append(info._locaName?.GetLocalizedString(null)).AppendLine();
+            }
+            File.WriteAllText(Path.Combine(Utils.SavePath, "EntityInfoNames.txt"), entities.ToString());
+            File.WriteAllLines(Path.Combine(Utils.SavePath, "DialogueNodeTypes.txt"), nodeTypes.OrderByDescending(p => p.Value).Select(p => p.Key + "|" + p.Value));
+        }
+
+        /// <summary>
+        /// A node without connections is a leftover, unless it is the start node of a one statement tree
+        /// (comments such as <c>DT_Comment_GettingInvolved_AxeRequired</c>).
+        /// </summary>
+        private static bool IsUnused(Node node)
+        {
+            return node.inConnections.Count == 0 && node.outConnections.Count == 0 && node != node.graph.primeNode;
+        }
+
         private readonly StringBuilder _sb = new();
         private readonly StringBuilder _sbGeneric = new();
         private readonly StringBuilder _sbGenericTreeNames = new();
@@ -111,9 +241,8 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             genericDialogues.TryAdd(dialogueTree.name, dialogueTree);
                             break;
                         }
-                        if (node.inConnections.Count == 0 && node.outConnections.Count == 0)
+                        if (IsUnused(node))
                         {
-                            MelonLogger.Msg("Skipping node without connections in " + dialogueTree.name);
                             continue;
                         }
                         string loca = statement.GetLocalizedString();
@@ -137,9 +266,8 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     DS_MultipleChoiceNode multipleChoice = node.TryCast<DS_MultipleChoiceNode>();
                     if (multipleChoice != null)
                     {
-                        if (node.inConnections.Count == 0 && node.outConnections.Count == 0)
+                        if (IsUnused(node))
                         {
-                            MelonLogger.Msg("Skipping node without connections in " + dialogueTree.name);
                             continue;
                         }
                         for (int k = 0; k < multipleChoice.availableChoices.Count; k++)
@@ -169,7 +297,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     if (subTreeSub != null && subTreeSub.subGraph != null)
                     {
                         ProcessSubDialogueTree(subTreeSub, _actorMapping, _sb, dialogueTree.actorParameters[0].name , playerGeneratedDialogues, handledGenerics);
-                        MelonLogger.Msg("Found subgraph " + subTreeSub.subGraph.name + " in " + dialogueTree.name + "with name" + dialogueTree.actorParameters[0].name );
                     }
 
                     
@@ -196,19 +323,15 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     SubDialogueTree subTree = node.TryCast<SubDialogueTree>();
                     if (subTree != null && subTree.subGraph != null && genericDialogues.ContainsKey(subTree.subGraph.name))
                     {
-                        // prevent duplicate handling
                         if (!handledSubdialogues.Add(subTree.subGraph.name) && !_ignoreDuplicateTrees.Contains(subTree.subGraph.name))
                         {
-                            MelonLogger.Msg("Skipping subgraph " + subTree.subGraph.name + " in " + tree.name);
                             continue;
                         }
-                        MelonLogger.Msg("Found generic Dialog " + subTree.subGraph.name + " in " + tree.name);
                         subTree.SetParametersMap();
                         subTree.currentInstance = subTree.TryCast<IGraphAssignable>().CheckInstance().TryCast<DialogueTree>();
                         subTree.TryWriteMappedActorParameters();
                         string genericName = "";
                         genericName = GetGenericName(subTree.DLGTree, subTree, genericName);
-                        // first check try to recover at this point by searching the main graph
                         if (genericName.Length == 0)
                         {
                             DialogueTree holdingTree = dialogueTrees
@@ -242,7 +365,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             if (statement != null)
                             {
                                 string actorName = statement.actorName;
-                                // Skip already player generated dialogues
                                 if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                                 {
                                     continue;
@@ -253,9 +375,8 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                                     if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                                         continue;
                                 }
-                                if (subGraphNode.inConnections.Count == 0 && subGraphNode.outConnections.Count == 0)
+                                if (IsUnused(subGraphNode))
                                 {
-                                    MelonLogger.Msg("Skipping node without connections in " + subTree.subGraph.name);
                                     continue;
                                 }
 
@@ -294,7 +415,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                 KeyValuePair<string, DialogueTree> keyValue = genericDialogues.ElementAt(i);
                 if (handledGenerics.Contains(keyValue.Key))
                 {
-                    MelonLogger.Msg("Skipping generic dialog for " + keyValue.Key + " because it was already generated");
                     continue;
                 }
                 bool isHandledByGenericHandler = false;
@@ -419,10 +539,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         {
             if (subTree.subGraph != null)
             {
-                if (_ignoreDuplicateTrees.Contains(subTree.subGraph.name))
-                {
-                    MelonLogger.Msg("Handling " + subTree.subGraph.name + " with " + genericName);
-                }
                 for (int i = 0; i < subTree.subGraph.allNodes.Count; i++)
                 {
                     Node subGraphNode = subTree.subGraph.allNodes[i];
@@ -431,7 +547,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                     if (statement != null)
                     {
                         string actorName = statement.actorName;
-                        // Skip already player generated dialogues
                         if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                         {
                             continue;
@@ -443,9 +558,8 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
                             if (actorName.Contains("Player", StringComparison.OrdinalIgnoreCase) && (playerGeneratedDialogues.Contains(subTree.subGraph.name) || subTree.subGraph.name.Contains("DT_Teach_Generic") || subTree.subGraph.name.Contains("DT_Quest_Generic_Teach") || subTree.subGraph.name.Contains("DT_Dialogue_AfterCombat")))
                                 continue;
                         }
-                        if (subGraphNode.inConnections.Count == 0 && subGraphNode.outConnections.Count == 0)
+                        if (IsUnused(subGraphNode))
                         {
-                            MelonLogger.Msg("Skipping node without connections in " + subTree.subGraph.name);
                             continue;
                         }
                         string loca = statement.GetLocalizedString();
@@ -481,7 +595,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         {
             foreach (Il2CppSystem.Collections.Generic.KeyValuePair<string, string> item in subTree.GetParametersMap())
             {
-                //ActorParameter parameterById1 = subTree.currentInstance.GetParameterByID(item.key);
                 ActorParameter parameterById2 = dLGTree.GetParameterByID(item.Value);
                 if (!GENERICS_NAMES.Any(n => n.Contains(parameterById2.name, StringComparison.OrdinalIgnoreCase)))
                 {

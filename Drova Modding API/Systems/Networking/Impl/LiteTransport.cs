@@ -155,8 +155,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal void StartHost(int port, string? key)
         {
             Stop();
-            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
-            // which is when somebody usually wants to look at them.
+            // Reset on start rather than in Stop, so an ended session's numbers stay readable.
             NetworkDiagnostics.Reset();
             _mode = TransportMode.Direct;
             _connectKey = key;
@@ -177,8 +176,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal void Connect(string address, int port, string? key)
         {
             Stop();
-            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
-            // which is when somebody usually wants to look at them.
+            // Reset on start rather than in Stop, so an ended session's numbers stay readable.
             NetworkDiagnostics.Reset();
             _mode = TransportMode.Direct;
             _connectKey = key;
@@ -246,7 +244,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             if (_manager == null) return;
 
-            // The manager's enumerator is a struct, so walking connected peers does not allocate.
             foreach (NetPeer peer in _manager)
             {
                 buffer.Add(PeerWrapper.Of(peer));
@@ -288,7 +285,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 NetworkDiagnostics.CountSendWithoutSession();
                 return;
             }
-            // Serialised once and fanned out by the manager, unlike a per-peer loop.
             NetDataWriter writer = Dispatcher.BuildTyped(message);
             _manager.SendToAll(writer, TypedChannel, Map(delivery));
         }
@@ -328,7 +324,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 return;
             }
             DeliveryMethod method = Map(delivery);
-            // The manager's enumerator is a struct, so iterating connected peers does not allocate.
             foreach (NetPeer peer in _manager)
             {
                 peer.Send(data, channel, method);
@@ -361,8 +356,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private void ConnectToRelay(string address, int port, byte role, string? sessionCode, string? password, NetRole localRole)
         {
             Stop();
-            // Restarted here rather than in Stop, so the numbers of a session that ended survive it -
-            // which is when somebody usually wants to look at them.
+            // Reset on start rather than in Stop, so an ended session's numbers stay readable.
             NetworkDiagnostics.Reset();
             _mode = TransportMode.Relay;
             _connectKey = null;
@@ -370,9 +364,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             _manager = NewManager();
             _manager.Start();
 
-            // Derived here rather than in the link, because it has to exist before the connect data does
-            // and it is the only half of the password the relay is ever allowed to see. Deliberately not
-            // dependent on the session code: a host asking the relay to pick one does not know it yet.
             Role = localRole;
 
             if (string.IsNullOrEmpty(password))
@@ -381,9 +372,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 return;
             }
 
-            // Derived on a thread pool thread and connected from a later poll, because this is a tenth of
-            // a second of PBKDF2 and the caller is the thread the game renders from. Nothing can arrive
-            // before the connect, so there is nothing to hold back in the meantime.
+            // PBKDF2 takes about a tenth of a second, so it runs off the render thread and a later poll connects.
             _pendingConnect = new PendingConnect(address, port, role, sessionCode,
                 Task.Run(() => SessionCrypto.DeriveJoinToken(password!)));
         }
@@ -413,8 +402,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         private void SendTypedViaRelay<T>(byte target, in T message, Delivery delivery) where T : struct, INetMessage
         {
-            // Serialised into the shared writer exactly as a direct send would be, then framed - and
-            // sealed, when the session has a key - on its way into the relay's envelope.
             NetDataWriter plaintext = Dispatcher.BuildTyped(message);
             SendFramed(target, TypedChannel, new ReadOnlySpan<byte>(plaintext.Data, 0, plaintext.Length), delivery);
         }
@@ -426,9 +413,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         private void SendFramed(byte target, byte channel, ReadOnlySpan<byte> payload, Delivery delivery)
         {
-            // Refused here rather than sent and dropped at the relay. The relay counts an oversized packet
-            // against the peer that sent it and answers nothing, so a mod over the limit would see its
-            // messages vanish with the only record of why sitting in someone else's log.
+            // Refused here because the relay drops an oversized packet silently.
             if (payload.Length > MaxPayloadSize)
             {
                 NetworkDiagnostics.CountOversizedSend();
@@ -491,26 +476,15 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 AutoRecycle = false,
                 ChannelsCount = ChannelCount,
 
-                // Packet, byte and reliable-loss counters for the manager and every peer under it. They
-                // cost a handful of interlocked adds per packet, which is worth paying unconditionally:
-                // the build somebody is running when coop misbehaves is the one whose numbers are needed,
-                // and a build without them can only report that something felt slow.
+                // Always on: the build running when coop misbehaves is the one whose numbers are needed.
                 EnableStatistics = true,
 
-                // How often queued sends are actually flushed. The default is 15 ms, and that delay is
-                // added to every message this transport carries. Measured end to end through a relay,
-                // where a round trip crosses four such queues, it accounted for most of a 50 ms round trip
-                // between two peers running on the same machine.
-                //
-                // For a game sending player state every frame that wait buys nothing: the packet is
-                // complete and held back for a timer. One millisecond spends a little more CPU on smaller,
-                // more frequent flushes, which is the right trade for traffic made of small messages that
-                // are worthless as soon as the next one supersedes them.
+                // The 15 ms default flush delay is paid four times per relay round trip, and per-frame state
+                // gains nothing from waiting.
                 UpdateTime = 1,
 
-                // How long a silent peer is kept. LiteNetLib's 5 s default dropped co-op sessions whenever a story
-                // teleport loaded a big area: the whole process stalls for longer than that (a 15 s frame measured
-                // on entering the Red Tower), and both ends then time each other out at the same instant.
+                // A story teleport into a big area stalls the process for well over the 5 s default, and both
+                // ends would time each other out.
                 DisconnectTimeout = 30_000,
             };
         }
@@ -524,7 +498,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 return;
             }
 
-            // No key means an open host; otherwise the client must present the matching key.
             if (string.IsNullOrEmpty(_connectKey))
             {
                 request.Accept();
@@ -546,8 +519,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             }
 
             PeerWrapper wrapper = PeerWrapper.Of(peer);
-            // On a client, the first (and only) peer is the host; announce that before the generic
-            // peer-connected event so a subscriber can special-case the host.
+            // Before the generic event, so a subscriber can special-case the host.
             if (Role == NetRole.Client)
             {
                 NetworkEvents.RaiseConnectedToHost();
@@ -678,7 +650,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             // Channels are independent, so a payload can outrun the control message announcing its
             // sender. Whoever the relay stamped is a peer, whether we have been told about them yet.
-            RelayPeer relayPeer = _link.EnsurePeer(this, sender, out bool created);
+            RelayPeer relayPeer = _link.GetOrAddPeer(this, sender, out bool created);
             if (created) NetworkEvents.RaisePeerConnected(relayPeer);
 
             if (!_link.IsEncrypted)
@@ -697,8 +669,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             if (!_link.TryOpen(sender, channel, reader.GetRemainingBytesSpan(), out int length))
             {
-                // Either the password differs from the host's or something rewrote the packet. Both are
-                // indistinguishable here and both mean the same thing: it is not ours.
+                // A different password or a rewritten packet: indistinguishable here, and dropped either way.
                 NetworkDiagnostics.CountUndecryptablePacket();
                 return;
             }
@@ -738,7 +709,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                     OnRelayWelcome(argument);
                     break;
                 case RelayProtocol.ControlPeerJoined:
-                    RelayPeer joined = _link.EnsurePeer(this, argument, out bool created);
+                    RelayPeer joined = _link.GetOrAddPeer(this, argument, out bool created);
                     if (created) NetworkEvents.RaisePeerConnected(joined);
                     break;
                 case RelayProtocol.ControlPeerLeft:
@@ -750,19 +721,13 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         /// <summary>
         /// Summarizes messages the dispatcher refused for carrying a NaN, an infinity, or a length prefix
-        /// the packet could not back.
-        ///
-        /// Worth saying out loud rather than dropping in silence: a mod whose messages stop arriving with
-        /// no explanation is a bug hunt in the wrong repository, and the honest answer - somebody is
-        /// sending numbers no game can use - is only visible here.
+        /// the packet could not back. Otherwise a mod's messages would stop arriving with no explanation.
         /// </summary>
         private void FlushRefusedLog()
         {
             long total = NetworkDiagnostics.RefusedMessages;
 
-            // The counter is restarted by a new session and by the stats view's reset button, so it can
-            // move backwards under this. Re-baselining rather than subtracting is what keeps a reset from
-            // being announced as a negative number of drops.
+            // A new session or the stats view's reset moves the counter backwards, so it is re-baselined.
             if (total <= _loggedRefused)
             {
                 _loggedRefused = total;
@@ -793,14 +758,11 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             long now = Environment.TickCount64;
             if (now - _lastDropLogMs < DropLogIntervalMs) return;
 
-            // What has been logged is recorded before the log call, not after: if logging itself fails, the
-            // retry would otherwise repeat on every single poll.
             long dropped = total - _loggedUndecryptable;
             _loggedUndecryptable = total;
             _lastDropLogMs = now;
 
-            // Summarised rather than logged per packet: a mismatched password makes every single packet
-            // fail, and that must not turn into a log flood on top of a session that already will not work.
+            // Summarized, since a mismatched password fails every single packet.
             MelonLogger.Error("[Networking] dropped " + dropped + " packets that failed to decrypt; do both sides use the same session password?");
         }
 
@@ -863,7 +825,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             }
 
             NetworkEvents.RaiseConnectedToHost();
-            RelayPeer host = _link.EnsurePeer(this, RelayProtocol.HostVirtualId, out bool created);
+            RelayPeer host = _link.GetOrAddPeer(this, RelayProtocol.HostVirtualId, out bool created);
             if (created) NetworkEvents.RaisePeerConnected(host);
         }
 
@@ -939,7 +901,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             };
         }
 
-        // Said once with LiteNetLib's own name: "Unknown" alone left a relay that dropped both peers unexplained.
+        // Logged with LiteNetLib's own name, since Unknown alone explains nothing.
         private static DisconnectReason Unmapped(LiteNetLib.DisconnectReason reason)
         {
             MelonLogger.Warning($"[Networking] a peer left for a reason this API does not name: {reason}.");

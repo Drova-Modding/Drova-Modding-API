@@ -18,7 +18,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <summary>
         /// Sets the health for the NPC.
         /// </summary>
-        /// <param name="health">The health value to set</param>
         /// <returns>This preset for chaining</returns>
         public HealthPresetModule With(int health)
         {
@@ -38,7 +37,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             var inventory = context.GetComponentInChildren<Inventory_StartupEquipSettings>();
             if (inventory == null) return;
 
-            var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
+            var equipPreset = EquipPresetHelper.GetOrCreatePreset(inventory);
             equipPreset._health = _health;
         }
     }

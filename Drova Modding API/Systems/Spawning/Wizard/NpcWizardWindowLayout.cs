@@ -45,7 +45,7 @@ internal sealed class NpcWizardWindowLayout
     internal void SetDefinitionsWindowRect(Rect rect)
         => DefinitionsWindowRect = rect;
 
-    internal void EnsureMainWindowRectFitsScreen()
+    internal void ClampMainWindowToScreen()
     {
         TryLoadMainWindowLayoutFromDisk();
 
@@ -94,7 +94,7 @@ internal sealed class NpcWizardWindowLayout
         if (_usingCompactDialogueLayout)
             return;
 
-        EnsureMainWindowRectFitsScreen();
+        ClampMainWindowToScreen();
         _preDialogueMainWindowRect = MainWindowRect;
 
         float availableWidth = Mathf.Max(360f, Screen.width - (ScreenPadding * 2f));
@@ -115,10 +115,10 @@ internal sealed class NpcWizardWindowLayout
 
         _usingCompactDialogueLayout = false;
         MainWindowRect = _preDialogueMainWindowRect;
-        EnsureMainWindowRectFitsScreen();
+        ClampMainWindowToScreen();
     }
 
-    internal void EnsureDefinitionsWindowRectFitsScreen()
+    internal void ClampDefinitionsWindowToScreen()
     {
         if (!_definitionsWindowRectInitialized)
         {

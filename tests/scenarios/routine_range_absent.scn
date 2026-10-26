@@ -1,0 +1,35 @@
+# Cengiz's Woodcamp routine must not greet Larea while she is not there. His AllDay place walks 17 points; point 12
+# (Pos_14, at the campfire) is a dialogue point that waits for Larea and says WoodcampWorldDialogue Plh_6
+# "Ah, Larea, schön, dass du zurück bist". The game's range check skipped NPCs that are not spawned, so he said it to
+# nobody; the API's IsEntityInRangeCommandPatch makes an absent NPC count as out of range.
+# Debug build only (the `inrange`, `heard` and `routine` agent commands).
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/routine_range_absent.scn
+
+default hero 5
+default slot 0
+set cengiz 2a21bdef-5ade-4ef6-8a58-a45adb6a7464
+set larea 02463a12-ab5a-4b25-8ed7-6ae0a5706b8e
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+# The player stands still southwest of the camp: Cengiz's chunk is loaded, Larea's (about 2800 away) is not, and
+# no walk-up talk starts. Closer to the campfire her chunk loads now and then and she is spawned far off, which the
+# vanilla check already answered with "out".
+A tp 3500 -700
+A expect near $cengiz 1000 contains "loaded" timeout=30
+A expect ai $cengiz contains "routine=R_Cengiz Normal/AllDay" timeout=30
+A expect inrange $larea 90 contains "spawned=0"
+A heard clear
+
+# He reaches the campfire point, waits there and walks on. `heard` records every line handed to the subtitle and
+# voice audio (DS_DialogueUGUI.OnSubtitlesRequest), so his greeting must never show up there. A started greeting
+# would also spawn Larea: the dialogue loads all its actors.
+A expect routine dist $cengiz 12 <= 40 timeout=300
+A expect routine dist $cengiz 12 >= 100 timeout=60
+A expect heard Cengiz:Plh_6 == none
+A expect inrange $larea 90 == "out spawned=0"

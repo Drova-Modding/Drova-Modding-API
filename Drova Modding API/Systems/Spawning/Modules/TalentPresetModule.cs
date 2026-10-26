@@ -44,7 +44,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             var inventory = context.GetComponentInChildren<Inventory_StartupEquipSettings>();
             if (inventory == null) return;
 
-            var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
+            var equipPreset = EquipPresetHelper.GetOrCreatePreset(inventory);
 
             foreach (var readableId in _readableIds)
             {

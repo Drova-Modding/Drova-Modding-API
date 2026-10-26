@@ -3,25 +3,12 @@
 The **Drova Modding API** is an unofficial, community-maintained convenience layer for
 modding [Drova – Forsaken Kin](https://www.nexusmods.com/drovaforsakenkin). It runs on
 [MelonLoader](https://melonwiki.xyz) and sits on top of the game's IL2CPP types, so you can
-build menus, spawn NPCs, write dialogue, react to game events, and persist data without
-fighting the engine internals yourself.
+build menus, spawn NPCs, write dialogue, react to game events, and save data.
 
-> **New here?** Start with **[Getting Started](./getting-started.md)** to set up a mod
-> project, then skim **[Core Concepts](./concepts.md)** to understand the mod lifecycle and
-> where files live. After that, jump to whichever system you need below.
+> **New here?** Read **[Getting Started](./getting-started.md)**, then
+> **[Core Concepts](./concepts.md)**, then the system you need.
 
-## How these docs are organized
-
-Every system page follows the same shape so you can scan quickly:
-
-1. **What it does** — one or two sentences and when to use it.
-2. **Quick example** — a minimal, copy-paste `MelonMod` snippet.
-3. **How do I…?** — short recipes for common tasks.
-4. **API reference** — a table of the public methods/properties.
-5. **Notes & gotchas** — lifecycle timing, IL2CPP gotchas, persistence behavior.
-
-All code samples are C# targeting the IL2CPP build of the game. Unless noted, calls happen
-from your `MelonMod` subclass.
+All examples are C# for the IL2CPP build and run from your `MelonMod` subclass unless noted.
 
 ## Foundations
 
@@ -50,6 +37,8 @@ from your `MelonMod` subclass.
 | [Addressables](./systems/addressables.md) | Load game assets (creatures, items, UI prefabs, entity infos) by reference.                  |
 | [Difficulty](./systems/difficulty.md)     | Read the savegame's game mode (Classic, Insane, …) and insane/permadeath checks.             |
 | [Damage](./systems/damage.md)             | Damage or heal an actor through the game's own health calculation.                           |
+| [Actor Buffs](./systems/actor-buffs.md)   | Buff an actor's health, damage and resistances, and find the nearest enemy of a player.      |
+| [Status Effects](./systems/status-effects.md) | Apply food, potion and other status effects by GUID, and make an actor bleed.            |
 
 ### NPCs & spawning
 
@@ -73,9 +62,11 @@ from your `MelonMod` subclass.
 | [Audio](./systems/audio.md)                  | Provide spoken dialogue audio from loose files or AssetBundles.             |
 | [World Events](./systems/world-events.md)    | Register global and region-triggered world events.                          |
 | [Areas & Regions](./systems/area-region.md)  | Read which region the player is in and react to entering/leaving.           |
-| [Routines](./systems/routines.md)            | Give NPCs waypoint routines.                                                |
+| [Routines](./systems/routines.md)            | Waypoint routines, own routine graphs, replacing vanilla routines.          |
 | [Global Variables](./systems/global-vars.md) | React to gvar changes and register custom global variables.                 |
+| [Quests](./systems/quests.md)                | Custom quests, items, journal entries and world placements from JSON.       |
 | [Talents](./systems/talents.md)              | Register custom talents into the talent graph.                              |
+| [Map Editor](./systems/map-editor.md)        | Place props and invisible walls, hide vanilla objects, from JSON or in game. |
 
 ### Multiplayer
 
@@ -92,6 +83,5 @@ from your `MelonMod` subclass.
 
 ## Contributing to the docs
 
-These pages live in `/docs` as plain Markdown — no build step. Edit a file, open a PR.
-Keep examples runnable and verified against the current source. If you add a new public
-system, add a page here and link it from this index.
+Plain Markdown in `/docs`, no build step. Keep examples verified against the source, and link
+every new system page from this index.

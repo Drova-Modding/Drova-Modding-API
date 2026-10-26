@@ -71,8 +71,7 @@ namespace Drova_Modding_API.Systems.Testing
             }
         }
 
-        // A plain string __result: this Harmony refuses the IntPtr form for a string return ("Cannot assign
-        // method return type System.String to __result type System.IntPtr"), and the string one works here.
+        // A string __result: this Harmony refuses the IntPtr form for a string return.
         private static void GetPathPostfix(SpecialPathType pathType, ref string __result)
         {
             if (pathType != SpecialPathType.Savegames && pathType != SpecialPathType.Config_Settings) return;
@@ -89,7 +88,7 @@ namespace Drova_Modding_API.Systems.Testing
             }
             catch
             {
-                // The ordinary path stands: sharing saves is the pre-existing behaviour, not a new fault.
+                // The ordinary path stands, so the instance shares saves as it would without a profile.
             }
         }
     }

@@ -8,7 +8,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 {
     internal static class EquipPresetHelper
     {
-        public static ActorEquipPreset EnsureInitialized(Inventory_StartupEquipSettings inventory)
+        public static ActorEquipPreset GetOrCreatePreset(Inventory_StartupEquipSettings inventory)
         {
             inventory._equipPreset ??= ScriptableObject.CreateInstance<ActorEquipPreset>();
 

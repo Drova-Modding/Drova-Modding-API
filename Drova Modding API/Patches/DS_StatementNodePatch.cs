@@ -11,14 +11,13 @@ internal static class DS_StatementNodePatch
 {
     private static void Prefix(Component agent, DS_StatementNode __instance)
     {
-        if (__instance.statement.audio != null) return;
         if (__instance.finalActor == null)
         {
             DS_DialogueTreeController component = agent.GetComponent<DS_DialogueTreeController>();
             DS_StatementNode.LoadActorIfNecessary(__instance.DLGTree, __instance.actorName, __instance.finalActor, component);
         }
-        // A lazy speaker (not loaded here - common for a teammate's scene in co-op) has no body, and the game's
-        // IsDead dereferences it: the null check comes first, and TryCast because not every speaker is a DS_DialogueActor.
+        if (__instance.statement.audio != null && !DefaultDialogueAudioConnector.HasOwnVoice(__instance.finalActor)) return;
+        // A lazy speaker, common for a teammate's scene in co-op, has no body, and the game's IsDead dereferences it.
         DS_DialogueActor? dialogueActor = __instance.finalActor?.TryCast<DS_DialogueActor>();
         Actor? speaker = dialogueActor != null ? dialogueActor.Actor : null;
         if (speaker == null || speaker.IsDead())

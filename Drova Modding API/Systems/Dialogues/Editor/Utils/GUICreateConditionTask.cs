@@ -97,7 +97,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Draw the condition task selection
         /// </summary>
-        /// <param name="position">position of the selection</param>
         public ConditionTask? Draw(Vector2 position)
         {
             ConditionTask? selectedTask = _selectedTaskThisFlush;
@@ -130,8 +129,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Create a condition task by name
         /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
         protected virtual ConditionTask? CreateConditionTask(string name)
         {
             try
@@ -148,7 +145,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             }
             catch (Exception e)
             {
-                MelonLogger.Error("Error creating DrawNodeEditor from type: " + e);
+                MelonLogger.Error("Error creating condition task " + name + ": " + e);
                 return null;
             }
         }

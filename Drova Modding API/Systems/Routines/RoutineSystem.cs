@@ -18,19 +18,19 @@ namespace Drova_Modding_API.Systems.Routines
         public static GameObject? RoutineRoot { get; internal set; }
 
         /// <summary>
+        /// Where the gate points made by <see cref="AddGatePoint"/> put the NPC, by point.
+        /// </summary>
+        internal static readonly Dictionary<IntPtr, Vector2> GateTargets = [];
+
+        /// <summary>
         /// Creates a routine place for the provided lazy actor and fills it with wait points.
         /// </summary>
-        /// <param name="lazyActor">Owner actor used by the routine place; must not be null.</param>
+        /// <param name="lazyActor">Owner actor used by the routine place. When null, the place resolves it from <paramref name="entityInfo"/> once it runs.</param>
         /// <param name="entityInfo">Entity info used to initialize routine ownership metadata.</param>
         /// <param name="points">Point positions used to generate child <see cref="WaitRoutinePoint"/> objects.</param>
         /// <returns>The created routine place, or null when creation cannot proceed.</returns>
         public static DefaultRoutinePlace? CreateRoutinePlace(LazyActor? lazyActor, EntityInfo entityInfo, params Vector2[] points)
         {
-            if (lazyActor == null)
-            {
-                MelonLogger.Warning("Attempted to create a routine place for a null lazy actor.");
-                return null;
-            }
             if (RoutineRoot == null)
             {
                 MelonLogger.Warning("RoutineRoot is null, cannot create routine place.");
@@ -66,5 +66,22 @@ namespace Drova_Modding_API.Systems.Routines
             return defaultRoutinePlace;
         }
 
+        /// <summary>
+        /// Puts a gate in front of the place's points: an NPC elsewhere walks to <paramref name="gate"/>, fades out and
+        /// appears at <paramref name="target"/>, as vanilla NPCs use a door. Skipped while the NPC already stands in the
+        /// target's region, the overworld or one map editor area.
+        /// </summary>
+        public static TeleportRoutinePoint AddGatePoint(BaseRoutinePlace place, Vector2 gate, Vector2 target)
+        {
+            GameObject gameObject = new("Gate");
+            gameObject.transform.SetParent(place.transform);
+            gameObject.transform.SetAsFirstSibling();
+            TeleportRoutinePoint point = gameObject.AddComponent<TeleportRoutinePoint>();
+            point.SetPosition(gate);
+            GateTargets[point.Pointer] = target;
+            place.SynchronizeAllSubRoutinePoints();
+            return point;
+        }
+
     }
-}
+}

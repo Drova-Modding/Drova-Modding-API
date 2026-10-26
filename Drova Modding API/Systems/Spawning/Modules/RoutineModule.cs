@@ -11,6 +11,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
     public class RoutineModule : INpcModule
     {
         private readonly List<Vector2> _positions = [];
+        private string? _graphId;
         private readonly Dictionary<IntPtr, List<GameObject>> _routineObjectsByLazyActor = [];
 
         /// <summary>
@@ -21,6 +22,18 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         public RoutineModule With(params Vector2[] positions)
         {
             _positions.AddRange(positions);
+            return this;
+        }
+
+        /// <summary>
+        /// Runs the NPC's routine on a tree from <see cref="Routines.Store.BehaviourTreeStore"/> instead of the shared one.
+        /// The tree is assigned to the NPC's <see cref="EntityInfo"/> (see <see cref="RoutineGraphAccess"/>).
+        /// </summary>
+        /// <param name="treeId">The stored tree id; null keeps the shared tree.</param>
+        /// <returns>This module instance for fluent chaining.</returns>
+        public RoutineModule WithGraph(string? treeId)
+        {
+            _graphId = string.IsNullOrWhiteSpace(treeId) ? null : treeId;
             return this;
         }
 
@@ -50,6 +63,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             }
             
             var routinePlace = RoutineSystem.CreateRoutinePlace(context.LazyActor, actor._entityInfo, [.. _positions]);
+            if (_graphId != null && actor._entityInfo != null) RoutineGraphAccess.Assign(actor._entityInfo.GUID, _graphId);
             if (routinePlace != null && context.LazyActor != null)
             {
                 IntPtr key = context.LazyActor.Pointer;
@@ -85,4 +99,4 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             _routineObjectsByLazyActor.Remove(key);
         }
     }
-}
+}

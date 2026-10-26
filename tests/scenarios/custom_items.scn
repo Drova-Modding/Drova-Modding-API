@@ -1,0 +1,93 @@
+# Custom items from samples/QuestShowcase/Modding_API/Items: the Spezi is a copy of the healing ointment with its own
+# id, guid, texts, prices and icon. It heals 3 instead of 4 per tick (its own copy of the ability) and ten times instead
+# of eleven (EffectStacks 9: once when applied, once per stack), 30 health against the ointment's 44 and the potion's 20.
+# Two Spezi lie in the world as a placed pickup, and the item stays in a save.
+# Needs samples/QuestShowcase/Modding_API copied into the game's Mods/Modding_API. Debug build only.
+# Writes hero 5 slot 66 of profile A.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/custom_items.scn
+
+default hero 5
+default slot 0
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+A expect questshowcase item showcase_spezi contains "name=Spezi guid=fd8bd808-f923-3fcf-51c7-430fa3b593f4 buy=60 sell=12"
+A expect questshowcase item item_salve_healing contains "name=Healing Ointment"
+A expect questshowcase item item_salve_healing contains "custom=False"
+A expect questshowcase item item_salve_healing contains "ABI_HealthValue=4,"
+A expect questshowcase item showcase_spezi contains "ABI_HealthValue=3,"
+A expect questshowcase item showcase_spezi contains "icon=showcase_spezi 26x26"
+
+# The Spezi heals ten times 3, from 6 to 36, and stops there.
+A expect health me == 40/40
+A hit me 34 pure nosource
+A expect health me == 6/40
+A give showcase_spezi 1
+A useitem showcase_spezi
+A expect health me == 36/40 timeout=15
+sleep 4
+A expect health me == 36/40
+A expect items showcase_spezi == 0
+
+# Placed in the world like any vanilla item.
+A use Modding_API_Pickup_showcase_spezi_crate 3000
+A expect items showcase_spezi == 2 timeout=10
+
+# The ointment itself still heals all 10 ticks.
+A hit me 30 pure nosource
+A expect health me == 6/40
+A give item_salve_healing 1
+A useitem item_salve_healing
+A expect health me == 40/40 timeout=14
+
+# A running effect is saved by its guid: the Spezi's copy has its own, so it comes back as the Spezi's after loading.
+A expect questshowcase item showcase_spezi contains "effect=StatusEffect_Buff_HealingSalve_Saturated_showcase_spezi"
+A expect questshowcase item showcase_spezi contains "saved=StatusEffect_Buff_HealingSalve_Saturated_showcase_spezi"
+A expect questshowcase item item_salve_healing contains "saved=StatusEffect_Buff_HealingSalve_Saturated;"
+
+# A custom letter: its own text on a vanilla letter's paper, shown when it is first taken and listed with the letters.
+A expect questshowcase letters !contains "showcase_letter"
+A give showcase_letter 1
+A expect questshowcase letterwindow contains "the ripper in the woods" timeout=10
+A expect questshowcase letters contains "Modding_API/Letters/showcase_letter"
+
+# A custom spell and its recipe: holding the recipe and a runestone teaches the spell, and the spell's missile flies
+# 6 seconds instead of the vanilla 4.5 it copies.
+A give item_runestone 2
+A give showcase_recipe_swift_missile 1
+A expect items showcase_swift_missile == 1 timeout=5
+A give recipe_flow_energyProjectile 1
+A expect items flow_energyProjectile == 1 timeout=5
+A give item_potion_flow_1 4
+A useitem item_potion_flow_1
+sleep 3
+A stance combat
+sleep 2
+A useitem showcase_swift_missile 0.3
+sleep 5
+A expect objects HitTrigger_RangeProjectile list contains "=1"
+sleep 2
+A useitem item_potion_flow_1
+sleep 3
+A useitem flow_energyProjectile 0.3
+sleep 5
+A expect objects HitTrigger_RangeProjectile == 0
+A stance normal
+
+# The spell's hit, an ability its missile spawns, deals 500 instead of the vanilla 250; the vanilla hit is untouched.
+A expect questshowcase abi ABI_EnergyProjectile_Explosion_showcase_swift_missile contains "Stat_DamageType_Magical:500"
+A expect questshowcase abi ABI_EnergyProjectile_Explosion contains "Stat_DamageType_Magical:250"
+
+# Saved by guid: the two Spezi from the pickup survive a save and reload, and the letter stays in the journal.
+A save 66
+A load $hero 66
+A wait world=1 timeout=240
+A expect items showcase_spezi == 2 timeout=20
+A expect questshowcase letters contains "Modding_API/Letters/showcase_letter" timeout=20
+A expect items showcase_letter == 1
+A expect items showcase_swift_missile == 1

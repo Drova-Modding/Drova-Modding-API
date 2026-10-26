@@ -18,7 +18,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <summary>
         /// Adds a cosmetic item to the preset.
         /// </summary>
-        /// <param name="item">The cosmetic item reference to add</param>
         /// <returns>This preset for chaining</returns>
         public CosmeticsPresetModule With(AssetReferenceT<Item> item)
         {

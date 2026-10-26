@@ -8,14 +8,9 @@ using MelonLoader;
 namespace Drova_Modding_API.Systems.Spawning.Modules
 {
     /// <summary>
-    /// Turns a spawned NPC into a trader by constructing a <see cref="Trader"/>, stocking it with
-    /// configurable items (with per-item amounts) and money, and assigning it to
-    /// <see cref="Actor._tradeActor"/>.
+    /// Turns a spawned NPC into a <see cref="Trader"/> with configurable stock and money.
+    /// The trade window still needs a trade-window node in the NPC's dialogue.
     /// </summary>
-    /// <remarks>
-    /// Setting up the trader only populates <see cref="Actor._tradeActor"/>. To actually open the
-    /// trade window in-game the NPC's dialogue still needs a trade-window node.
-    /// </remarks>
     public class TraderModule : INpcModule
     {
         private string? _name;
@@ -25,7 +20,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <summary>
         /// Sets the trader display name. When left blank, the NPC's name is used at apply time.
         /// </summary>
-        /// <param name="name">Trader display name</param>
         /// <returns>This module for chaining</returns>
         public TraderModule WithName(string name)
         {
@@ -36,7 +30,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <summary>
         /// Sets the amount of money the trader has available.
         /// </summary>
-        /// <param name="money">Trader money</param>
         /// <returns>This module for chaining</returns>
         public TraderModule WithMoney(float money)
         {

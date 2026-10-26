@@ -73,20 +73,16 @@ namespace Drova_Modding_API.Systems.Networking
         /// <summary>
         /// Read a length-prefixed string, refusing one longer than <paramref name="maxBytes"/> instead of
         /// decoding it. Use this for any field with a known bound: the packet size is the only limit the
-        /// unbounded overload can apply, and a fragmented reliable packet is allowed to be large.
-        ///
-        /// A value over the cap is not truncated. It yields an empty string and the message is dropped,
-        /// because a credential silently shortened to nothing is worse than a field that never arrived.
+        /// unbounded overload can apply, and a fragmented reliable packet is allowed to be large. A value
+        /// over the cap is not truncated: it yields an empty string and the message is dropped.
         /// </summary>
         /// <param name="maxBytes">Longest value to accept, in UTF-8 bytes.</param>
         string GetString(int maxBytes);
 
         /// <summary>
         /// Read a length-prefixed byte array written by <see cref="INetWriter.Put(byte[])"/>. This
-        /// allocates the returned array; fixed-layout messages that avoid it stay allocation-free.
-        ///
-        /// The length is bounded by what the packet actually holds, so a prefix that lies yields an empty
-        /// array and drops the message rather than asking for the allocation it names.
+        /// allocates the returned array. A prefix naming more than the packet holds yields an empty array
+        /// and drops the message.
         /// </summary>
         byte[] GetBytes();
 

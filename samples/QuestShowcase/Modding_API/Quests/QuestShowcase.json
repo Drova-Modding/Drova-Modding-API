@@ -1,0 +1,111 @@
+{
+  "Version": 1,
+  "Quests": [
+    {
+      "Id": "showcase_ripper_hunt",
+      "GVarList": "Q_Showcase_RipperHunt",
+      "Topic": {
+        "LocaPath": "QuestShowcase",
+        "LocaKey": "RipperHunt_Title",
+        "Group": "TopicGroup_World"
+      },
+      "Entries": [
+        {
+          "Id": "start",
+          "LocaKey": "RipperHunt_Start",
+          "OnState": "IsRunning"
+        },
+        {
+          "Id": "killed",
+          "LocaKey": "RipperHunt_Killed",
+          "OnGBool": "RipperDead"
+        },
+        {
+          "Id": "done",
+          "LocaKey": "RipperHunt_Done",
+          "Exp": 200,
+          "OnState": "IsCompleted"
+        }
+      ],
+      "Kills": [
+        {
+          "Id": "ripper",
+          "Actors": [
+            "showcase_ripper"
+          ],
+          "SetGBool": "RipperDead"
+        }
+      ]
+    },
+    {
+      "Id": "showcase_apples",
+      "GVarList": "Q_Showcase_Apples",
+      "Topic": {
+        "LocaPath": "QuestShowcase",
+        "LocaKey": "Apples_Title",
+        "Group": "TopicGroup_World"
+      },
+      "Entries": [
+        {
+          "Id": "start",
+          "LocaKey": "Apples_Start",
+          "OnState": "IsRunning"
+        },
+        {
+          "Id": "done",
+          "LocaKey": "Apples_Done",
+          "Exp": 50,
+          "OnState": "IsCompleted"
+        }
+      ]
+    },
+    {
+      "Id": "showcase_tracks",
+      "GVarList": "Q_Showcase_Tracks",
+      "Topic": {
+        "LocaPath": "QuestShowcase",
+        "LocaKey": "Tracks_Title",
+        "Group": "TopicGroup_World"
+      },
+      "Entries": [
+        {
+          "Id": "start",
+          "LocaKey": "Tracks_Start",
+          "OnState": "IsRunning"
+        },
+        {
+          "Id": "shrine",
+          "LocaKey": "Tracks_Shrine",
+          "OnGBool": "ShrineReached"
+        },
+        {
+          "Id": "supplies",
+          "LocaKey": "Tracks_Supplies",
+          "OnGBool": "SuppliesTaken"
+        },
+        {
+          "Id": "done",
+          "LocaKey": "Tracks_Done",
+          "Exp": 100,
+          "OnState": "IsCompleted"
+        }
+      ],
+      "Areas": [
+        {
+          "Id": "shrine",
+          "X": -2132,
+          "Y": -5600,
+          "Radius": 80,
+          "SetGBool": "ShrineReached",
+          "Conditions": [
+            {
+              "GVarList": "Q_Showcase_Tracks",
+              "Var": "QuestState",
+              "Value": "IsRunning"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

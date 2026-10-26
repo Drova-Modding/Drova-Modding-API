@@ -11,10 +11,8 @@ namespace Drova_Modding_API.Systems.WorldEvents
         private IWorldEvent? _lastWorldEvent;
 
         /// <summary>
-        /// Picks one event from <paramref name="worldEvents"/>.
-        /// Returns <see langword="null"/> when no events are available.
+        /// Picks one of the currently eligible events.
         /// </summary>
-        /// <param name="worldEvents">The currently eligible events.</param>
         /// <returns>A selected event, or <see langword="null"/> if none exist.</returns>
         public IWorldEvent? Pick(List<IWorldEvent> worldEvents)
         {
@@ -60,7 +58,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Rebuilds the internal index bag to contain each event index exactly once.
         /// </summary>
-        /// <param name="worldEventCount">Number of available events in the source list.</param>
         private void RebuildBag(int worldEventCount)
         {
             _worldEventBag.Clear();

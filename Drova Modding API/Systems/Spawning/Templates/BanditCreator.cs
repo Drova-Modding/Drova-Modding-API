@@ -29,9 +29,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
     /// </summary>
     public static class BanditCreator
     {
-        // ── Weapon tables (indexed by BanditDifficulty) ────────────────────────
-
-        // Daggers: crude knife → iron dagger → heart-seeker
         private static readonly string[] DaggerByDifficulty =
         [
             ItemReadableIds.Weapon.DaggerGroup.CoarseDaggerId,
@@ -39,7 +36,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Weapon.DaggerGroup.HeartSeekerId
         ];
 
-        // Swords: coarse broadsword → broadsword → longsword
         private static readonly string[] SwordByDifficulty =
         [
             ItemReadableIds.Weapon.SwordGroup.CoarseBroadswordId,
@@ -47,7 +43,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Weapon.SwordGroup.LongswordId
         ];
 
-        // Axes: old axe → war axe → great axe
         private static readonly string[] AxeByDifficulty =
         [
             ItemReadableIds.Weapon.AxeGroup.OldAxeId,
@@ -55,7 +50,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Weapon.AxeGroup.GreatAxeId
         ];
 
-        // Spears: wooden spear → spear → hunting spear
         private static readonly string[] SpearByDifficulty =
         [
             ItemReadableIds.Weapon.SpearGroup.WoodenSpearId,
@@ -63,7 +57,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Weapon.SpearGroup.PartisanId
         ];
 
-        // Bows: simple bow → hunting bow → battle bow
         private static readonly string[] BowByDifficulty =
         [
             ItemReadableIds.Weapon.BowGroup.SimpleBowId,
@@ -71,7 +64,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Weapon.BowGroup.BattleBowId
         ];
 
-        // Shields: small wooden → round shield → bronze shield
         private static readonly string[] ShieldByDifficulty =
         [
             ItemReadableIds.Weapon.ShieldGroup.SmallWoodenShieldId,
@@ -79,7 +71,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Weapon.ShieldGroup.TheWallId
         ];
 
-        // Slingshots: coarse sling → simple slingshot → battle slingshot
         private static readonly string[] SlingshotByDifficulty =
         [
             ItemReadableIds.Weapon.SlingGroup.CoarseSlingId,
@@ -182,8 +173,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             TalentReadableIds.Sling.Concussion
         ];
 
-        // ── Armor pools (indexed by BanditDifficulty) ─────────────────────────
-
         private static readonly string[][] ChestByDifficulty =
         [
             // Easy — rags
@@ -194,13 +183,11 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             [ItemReadableIds.Armor.ChestGroup.BanditT4Id]
         ];
 
-        // ── Cosmetic pools (shared across all difficulties) ────────────────────
-
         private static readonly string[] HoodPool =
         [
             ItemReadableIds.Helmet.HoodGroup.BanditNameId,
             ItemReadableIds.Helmet.HoodGroup.BanditT4NameId,
-            ItemReadableIds.Helmet.GeneralGroup.NoneId, // some bandits go bare-headed
+            ItemReadableIds.Helmet.GeneralGroup.NoneId,
             ItemReadableIds.Helmet.LeathercapGroup.NameId,
             ItemReadableIds.Helmet.BarbarianGroup.NameId
         ];
@@ -229,7 +216,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Beard.GeneralGroup.EmptyId
         ];
 
-        // Deco slot 0 — face marks
         private static readonly string[] Deco0Pool =
         [
             ItemReadableIds.Deco.ScarGroup.CheekLeftId,
@@ -243,7 +229,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Deco.DirtGroup.N1Id
         ];
 
-        // Deco slot 1 — extra grime / scars
         private static readonly string[] Deco1Pool =
         [
             ItemReadableIds.Deco1.ScarGroup.CheekLeftId,
@@ -252,8 +237,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Deco1.DirtGroup.N1Id,
             ItemReadableIds.Deco1.GeneralGroup.NoneId
         ];
-
-        // ── Helpers ────────────────────────────────────────────────────────────
 
         private static string Pick(string[] pool, Random rng) => pool[rng.Next(pool.Length)];
 
@@ -339,7 +322,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 creator = creator.WithHardOnlyTalents(difficulty, hardBonusTalents);
             }
 
-            // All bandits use the default spell preset template as baseline.
             return creator.WithModule(new FlowPresetModule().UseDefaultPresetTemplate());
         }
 
@@ -381,15 +363,9 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 .WithCustomEntityInfo()
                 .WithBanditCosmetics(difficulty, rng);
 
-        // ── Public factory methods ─────────────────────────────────────────────
-
         /// <summary>
         /// Lazy bandit armed with a dagger. Difficulty controls the blade quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateDaggerBanditLazy(
             string name,
             Vector2 position,
@@ -409,10 +385,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// <summary>
         /// Lazy bandit armed with a sword. Difficulty controls the blade quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateSwordBanditLazy(
             string name,
             Vector2 position,
@@ -432,10 +404,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// <summary>
         /// Lazy bandit armed with an axe. Difficulty controls the axe quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateAxeBanditLazy(
             string name,
             Vector2 position,
@@ -455,10 +423,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// <summary>
         /// Lazy bandit armed with a sword and shield. Difficulty controls equipment quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateSwordShieldBanditLazy(
             string name,
             Vector2 position,
@@ -480,10 +444,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// <summary>
         /// Lazy bandit armed with a spear. Difficulty controls the spear quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateSpearBanditLazy(
             string name,
             Vector2 position,
@@ -503,10 +463,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// <summary>
         /// Lazy bandit armed with a spear and shield. Difficulty controls equipment quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateSpearShieldBanditLazy(
             string name,
             Vector2 position,
@@ -528,10 +484,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// <summary>
         /// Lazy bandit armed with a bow and quiver. Difficulty controls bow quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateBowBanditLazy(
             string name,
             Vector2 position,
@@ -553,10 +505,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// Lazy bandit carrying a spear and a slingshot (mixed melee/ranged).
         /// Difficulty controls weapon quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateSpearSlingshotBanditLazy(
             string name,
             Vector2 position,
@@ -579,10 +527,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// Lazy bandit carrying a sword and a slingshot (mixed melee/ranged).
         /// Difficulty controls weapon quality.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateSwordSlingshotBanditLazy(
             string name,
             Vector2 position,
@@ -604,10 +548,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// <summary>
         /// Spawns a lazy bandit with a randomly chosen loadout from all available variants.
         /// </summary>
-        /// <param name="name">NPC display name.</param>
-        /// <param name="position">World spawn position.</param>
-        /// <param name="difficulty">Equipment quality tier applied to all weapon choices.</param>
-        /// <param name="saveToLazyActorStore">If true, saves lazy actor metadata for restore.</param>
         public static LazyActor CreateRandomBanditLazy(
             string name,
             Vector2 position,

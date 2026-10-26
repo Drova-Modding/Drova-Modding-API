@@ -9,7 +9,6 @@ namespace Drova_Modding_API.Systems.Coop
     /// </summary>
     internal sealed class NullCoopProvider : ICoopProvider
     {
-        /// <summary>The one instance. Stateless apart from the seed, so there is no reason for more.</summary>
         internal static readonly NullCoopProvider Instance = new();
 
         private readonly ulong _seed;

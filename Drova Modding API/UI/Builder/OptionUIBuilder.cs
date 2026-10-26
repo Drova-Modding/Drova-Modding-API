@@ -60,9 +60,8 @@ namespace Drova_Modding_API.UI.Builder
         }
 
         /// <summary>
-        /// The shipped option row prefabs carry an <c>ActivateByInputDevice</c> whose object lists were
-        /// authored with null entries. The component logs one warning per null every time it is enabled
-        /// or the input device changes, so the nulls are stripped off our own clones.
+        /// The shipped row prefabs' <c>ActivateByInputDevice</c> lists hold null entries that log a warning on every
+        /// enable or device change, so the nulls are stripped from our clones.
         /// </summary>
         private static GameObject InstantiateRow(GameObject prefab, Transform parent)
         {
@@ -85,11 +84,8 @@ namespace Drova_Modding_API.UI.Builder
         }
 
         /// <summary>
-        /// <c>GUI_OptionPanel_Generic</c> fills its row list once in <c>InitRows</c> and skips that work
-        /// whenever the list is non-null. The cloned panel already ran it against the template rows that
-        /// <see cref="OptionMenuAccess.AddPanel(Sprite?, string)"/> destroys, so without refilling the list
-        /// from the row root the panel has no rows to build explicit up/down links for and controller
-        /// navigation never reaches a modded row.
+        /// The cloned panel filled its row list once, from the template rows <see cref="OptionMenuAccess.AddPanel(Sprite?, string)"/>
+        /// destroys, so it is refilled here or controller navigation never reaches a modded row.
         /// </summary>
         private void RefreshPanelNavigation()
         {

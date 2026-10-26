@@ -5,16 +5,11 @@ using MelonLoader;
 namespace Drova_Modding_API.Systems.Spawning
 {
     /// <summary>
-    /// Registry that allows running callbacks on a lazy-controlled <see cref="Actor"/>
-    /// <b>before</b> <c>Actor.StartInitAsync</c> is called (i.e. before the actor is fully
-    /// initialized). This is the hook point that replaces the unusable
-    /// <c>LazyActor.ActorSpawnEvent</c>, whose <c>SpawnArgs</c> non-blittable struct causes
-    /// Il2CppInterop to throw when converting managed delegates.
+    /// Runs callbacks on a lazy-controlled <see cref="Actor"/> right before <c>Actor.StartInitAsync</c>.
+    /// Replaces <c>LazyActor.ActorSpawnEvent</c>, whose non-blittable <c>SpawnArgs</c> Il2CppInterop cannot marshal.
     /// </summary>
     public static class LazyActorPreInitRegistry
     {
-        // Keyed by the LazyActor's native Il2Cpp pointer so that GC / equality issues
-        // with managed wrappers are avoided.
         private static readonly Dictionary<IntPtr, List<Action<Actor, LazyActor>>> Callbacks = [];
 
         /// <summary>
@@ -30,7 +25,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 list = [];
                 Callbacks[key] = list;
 
-                // Auto-clean up when the LazyActor scene object is destroyed.
                 lazyActor.LazyActorDestroyedEvent.AddEventListener(
                     new Action<LazyActor>(Unregister));
             }

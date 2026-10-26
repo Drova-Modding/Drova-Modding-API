@@ -75,8 +75,7 @@ namespace Drova_Modding_API.Systems.Networking
         /// <summary>
         /// The session has no password and one was given. Worth telling apart from
         /// <see cref="WrongPassword"/> because the fix is the opposite: the field has to be emptied, not
-        /// corrected. A relay that admitted this would leave the client encrypting under a key the host
-        /// does not have, which is a session that connects and then carries nothing.
+        /// corrected.
         /// </summary>
         PasswordNotRequired,
     }

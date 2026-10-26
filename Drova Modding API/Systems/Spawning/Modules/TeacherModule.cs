@@ -78,7 +78,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                 var teacherProvider = actor._teacherProvider.TryCast<TeacherConfigProvider>();
                 if (teacherProvider == null)
                 {
-                    MelonLogger.Error("Teacher provider is  not of type TeacherConfigProvider");
+                    MelonLogger.Error("Teacher provider is not of type TeacherConfigProvider");
                     return;
                 }
 
@@ -97,4 +97,4 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             }
         }
     }
-}
+}

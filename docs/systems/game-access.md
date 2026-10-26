@@ -132,40 +132,40 @@ if (ProviderAccess.TryGetGameManager(out GameManager? gm))
 
 ### `PlayerAccess` (static)
 
-| Member                                                   | Description                                                                                                          |
-|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| `event Action<Actor>? OnPlayerFound`                     | Raised once the player actor exists and is initialized. Fires on every load.                                         |
-| `Actor? GetPlayer()`                                     | The player actor, or `null` in menus / before ready.                                                                 |
-| `bool TryGetPlayer(out Actor? player)`                   | Null-safe player getter.                                                                                             |
-| `void StartWaitForPlayerCoroutine()`                     | Begin polling for the player; fires `OnPlayerFound` when ready. (The API starts this for you on gameplay/save load.) |
-| `ActorEquipSlot? GetPrimarySlot()` / `GetSecondarySlot()`| Primary / secondary weapon slot.                                                                                     |
-| `ActorEquipSlot? GetBowSlot()` / `GetSlingshotSlot()`    | Bow / slingshot ammo slot.                                                                                           |
-| `PlayerAttributeStats? GetPlayerAttributeStats()`        | The player's attribute stat container.                                                                               |
-| `bool TryGetLevel(out int level)`                        | The local player's character level. `false` in menus, during a load, and for the first frames of a world.            |
-| `bool TryGetLevel(Actor? actor, out int level)`          | Any actor's level. `false` when the actor is null or its stats haven't loaded.                                       |
+| Member                                                    | Description                                                                                                          |
+|-----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| `event Action<Actor>? OnPlayerFound`                      | Raised once the player actor exists and is initialized. Fires on every load.                                         |
+| `Actor? GetPlayer()`                                      | The player actor, or `null` in menus / before ready.                                                                 |
+| `bool TryGetPlayer(out Actor? player)`                    | Null-safe player getter.                                                                                             |
+| `void StartWaitForPlayerCoroutine()`                      | Begin polling for the player; fires `OnPlayerFound` when ready. (The API starts this for you on gameplay/save load.) |
+| `ActorEquipSlot? GetPrimarySlot()` / `GetSecondarySlot()` | Primary / secondary weapon slot.                                                                                     |
+| `ActorEquipSlot? GetBowSlot()` / `GetSlingshotSlot()`     | Bow / slingshot ammo slot.                                                                                           |
+| `PlayerAttributeStats? GetPlayerAttributeStats()`         | The player's attribute stat container.                                                                               |
+| `bool TryGetLevel(out int level)`                         | The local player's character level. `false` in menus, during a load, and for the first frames of a world.            |
+| `bool TryGetLevel(Actor? actor, out int level)`           | Any actor's level. `false` when the actor is null or its stats haven't loaded.                                       |
 
 ### `ProviderAccess` (static) — selected members
 
-| Member                                                                             | Description                                          |
-|------------------------------------------------------------------------------------|------------------------------------------------------|
-| `DrovaResourceProvider? GetDrovaResourceProvider()`                                | The main resource provider (cached).                 |
-| `GameDatabase? GetGameDatabase()`                                                  | Aggregate game database. Null before it has loaded.  |
-| `SubDatabase_Item? ItemDatabase` / `SubDatabase_Recipe? RecipeDatabase`            | Item / recipe databases.                             |
+| Member                                                                               | Description                                          |
+|--------------------------------------------------------------------------------------|------------------------------------------------------|
+| `DrovaResourceProvider? GetDrovaResourceProvider()`                                  | The main resource provider (cached).                 |
+| `GameDatabase? GetGameDatabase()`                                                    | Aggregate game database. Null before it has loaded.  |
+| `SubDatabase_Item? ItemDatabase` / `SubDatabase_Recipe? RecipeDatabase`              | Item / recipe databases.                             |
 | `SubDatabase_GVars? GVarDatabase` / `SubDatabase_StatusEffect? StatusEffectDatabase` | Global-var / status-effect databases.                |
-| `AIDatabase? GetAIDatabase()`                                                      | Behaviour trees / AI graphs.                         |
-| `bool TryGetGameManager(out GameManager?)`                                         | The `GameManager` (cached).                          |
-| `EntityGameHandler? GetEntityGameHandler()`                                        | Player object + entity spawn/despawn events.         |
-| `DialogueSystemGameHandler? GetDialogueSystemGameHandler()`                        | Active dialogues / dialogue system.                  |
-| `SavegameGameHandler? GetSaveGameHandler()`                                        | Save game data and events.                           |
-| `SceneGameHandler? GetSceneGameHandler()`                                          | Scene transitions, fading, teleport state.           |
-| `ConfigGameHandler? GetConfigGameHandler()`                                        | Config/options bridge (used by the options builder). |
-| `CheatGameHandler? GetCheatGameHandler()`                                          | Cheat system (spawnables, cheat mode).               |
-| `AudioGameHandler? GetAudioGameHandler()`                                          | SFX playback for actors.                             |
-| `bool TryGetWeatherGameHandler(out …)` / `TryGetDaytimeGameHandler(out …)`         | Weather / day-night handlers.                        |
-| `bool TryGetGameStateGameHandler(out …)`                                           | Time scale / game state.                             |
-| `bool TryGetPlayerMetaDataGameHandler(out …)`                                      | Journal, map collection, crafting.                   |
-| `bool TryGetLazyManager(out …)`                                                    | Lazy-loading manager.                                |
-| `AstarPath? GetAstarPath()`                                                        | Pathfinding (`AstarPath.active`).                    |
+| `AIDatabase? GetAIDatabase()`                                                        | Behaviour trees / AI graphs.                         |
+| `bool TryGetGameManager(out GameManager?)`                                           | The `GameManager` (cached).                          |
+| `EntityGameHandler? GetEntityGameHandler()`                                          | Player object + entity spawn/despawn events.         |
+| `DialogueSystemGameHandler? GetDialogueSystemGameHandler()`                          | Active dialogues / dialogue system.                  |
+| `SavegameGameHandler? GetSaveGameHandler()`                                          | Save game data and events.                           |
+| `SceneGameHandler? GetSceneGameHandler()`                                            | Scene transitions, fading, teleport state.           |
+| `ConfigGameHandler? GetConfigGameHandler()`                                          | Config/options bridge (used by the options builder). |
+| `CheatGameHandler? GetCheatGameHandler()`                                            | Cheat system (spawnables, cheat mode).               |
+| `AudioGameHandler? GetAudioGameHandler()`                                            | SFX playback for actors.                             |
+| `bool TryGetWeatherGameHandler(out …)` / `TryGetDaytimeGameHandler(out …)`           | Weather / day-night handlers.                        |
+| `bool TryGetGameStateGameHandler(out …)`                                             | Time scale / game state.                             |
+| `bool TryGetPlayerMetaDataGameHandler(out …)`                                        | Journal, map collection, crafting.                   |
+| `bool TryGetLazyManager(out …)`                                                      | Lazy-loading manager.                                |
+| `AstarPath? GetAstarPath()`                                                          | Pathfinding (`AstarPath.active`).                    |
 
 > `ProviderAccess` has many more `Get…GameHandler()` / `TryGet…` methods than listed here — one
 > per game subsystem (achievements, analytics, camera, GUI, map, object pooler, quests, tutorial,

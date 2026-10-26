@@ -41,13 +41,13 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public static IReadOnlyList<string> Search(string? query, string? categoryFilter, int maxResults)
         {
-            EnsureCacheUpToDate();
+            LoadCache();
             return Search(_defaultDataSource, query, categoryFilter, maxResults);
         }
 
         public static void WarmUpCache()
         {
-            EnsureCacheUpToDate();
+            LoadCache();
         }
 
         private static IReadOnlyList<string> CollectMatches(IReadOnlyList<string> sourceIds, string query, int maxResults)
@@ -86,7 +86,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public static IReadOnlyList<string> GetCategories()
         {
-            EnsureCacheUpToDate();
+            LoadCache();
             return _defaultDataSource.Categories;
         }
 
@@ -275,7 +275,7 @@ namespace Drova_Modding_API.Systems.Spawning
             return CollectMatches(sourceIds, normalizedQuery, maxResults);
         }
 
-        private static void EnsureCacheUpToDate()
+        private static void LoadCache()
         {
             if (_cacheInitialized)
                 return;

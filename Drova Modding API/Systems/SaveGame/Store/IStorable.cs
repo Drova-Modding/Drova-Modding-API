@@ -12,9 +12,8 @@
 
         /// <summary>
         /// Called when the savegame is saved.
-        /// Override this method to add custom save logic.
         /// </summary>
-        /// <returns>The json converted string</returns>
+        /// <returns>The JSON to store under <see cref="SaveGameKey"/>.</returns>
         string Save();
 
         /// <summary>

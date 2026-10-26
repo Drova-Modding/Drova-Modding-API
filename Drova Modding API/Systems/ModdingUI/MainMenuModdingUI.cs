@@ -33,7 +33,7 @@ namespace Drova_Modding_API.Systems.ModdingUI
         
         private static IEnumerator PrepareCheatModeCoroutine()
         {
-            yield return new WaitForSeconds(5f); // Wait for the loading screen to appear and initialize
+            yield return new WaitForSeconds(5f);
             var instance = LoadingScreenHandler.Instance;
             while (!instance.IsWorldReady())
             {

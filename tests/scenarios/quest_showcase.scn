@@ -1,0 +1,134 @@
+# Custom quests from samples/QuestShowcase: a JSON NPC gives a kill quest for a placed creature, the kill counts
+# even when it happened before the quest and survives a reload, and a vanilla NPC's dialogue gets an item quest
+# whose apples lie in the world as a placed pickup. Placed pickups and JSON NPCs keep their state in the save.
+# A third quest uses a conditional NPC, a quest area (the game's own trigger volume) and an item that sets a bool.
+# Needs samples/QuestShowcase/Modding_API copied into the game's Mods/Modding_API. Debug build only (the
+# `questshowcase` agent command). Writes hero 5 slots 61 to 64 of profile A.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/quest_showcase.scn
+
+default hero 5
+default slot 0
+set olaf 52b3d368-a4c0-4a62-9542-1f597c3e669b
+set ripper e21c7be8-4fae-39a9-3bf5-229e201899e7
+set hunter Template_Human_NPC
+set hunterguid 4624f132-f15c-04e2-4c86-023c26a1775d
+set scout 1816e513-24f7-33b3-217b-5d65b2dd9959
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+# The hunter gives the quest, the placed ripper dies, the hunter pays and the topic moves to the finished quests.
+A expect gvar Q_Showcase_RipperHunt QuestState == 0
+A expect find Scout == none
+A expect near $hunterguid 3000 contains "loaded" timeout=30
+A tpnear $hunterguid 80
+sleep 3
+A talk $hunter
+A skip
+A expect dialogue contains "choices=0:I will do it." timeout=30
+A choose 0
+A expect gvar Q_Showcase_RipperHunt QuestState == 2 timeout=10
+A expect journal showcase_ripper_hunt == Modding_API/Quests/showcase_ripper_hunt/start timeout=10
+A expect near $ripper 3000 contains "loaded" timeout=30
+A kill $ripper
+A expect gvar Q_Showcase_RipperHunt RipperDead == 1 timeout=10
+A expect journal showcase_ripper_hunt contains "showcase_ripper_hunt/killed" timeout=10
+A tpnear $hunterguid 80
+sleep 3
+A talk $hunter
+A skip
+A expect gvar Q_Showcase_RipperHunt QuestState == 3 timeout=30
+A expect journal showcase_ripper_hunt contains "showcase_ripper_hunt/done" timeout=10
+A expect questshowcase category showcase_ripper_hunt done == FinishedQuests timeout=10
+
+# Tracks in the Ash: the scout appears once the hunt is done, the shrine area and the supplies once his quest runs.
+A expect find Scout contains "$scout" timeout=20
+A expect interactables Modding_API_Pickup_showcase_supplies 3000 == none
+A expect near $scout 3000 contains "loaded" timeout=30
+A talk $scout
+A skip
+A expect dialogue contains "choices=0:I will do it." timeout=30
+A choose 0
+A expect gvar Q_Showcase_Tracks QuestState == 2 timeout=10
+A expect interactables Modding_API_Pickup_showcase_supplies 3000 contains "supplies" timeout=10
+A tp -2132 -5600
+A expect gvar Q_Showcase_Tracks ShrineReached == 1 timeout=20
+A expect journal showcase_tracks contains "showcase_tracks/shrine" timeout=10
+A use Modding_API_Pickup_showcase_supplies 3000
+A expect gvar Q_Showcase_Tracks SuppliesTaken == 1 timeout=10
+A talk $scout
+A skip
+A expect gvar Q_Showcase_Tracks QuestState == 3 timeout=30
+A expect journal showcase_tracks contains "showcase_tracks/done" timeout=10
+
+# Killed before the quest: no journal line yet, the creature stays dead after a reload, the hunter pays at once.
+A load $hero $slot
+A wait world=1 timeout=240
+A expect gvar Q_Showcase_RipperHunt QuestState == 0
+A expect near $ripper 3000 contains "loaded" timeout=30
+A kill $ripper
+A expect gvar Q_Showcase_RipperHunt RipperDead == 1 timeout=10
+A expect journal showcase_ripper_hunt == none
+A save 61
+A load $hero 61
+A wait world=1 timeout=240
+A expect gvar Q_Showcase_RipperHunt RipperDead == 1 timeout=20
+A expect find Modding_API_Lazy_Actor == none
+
+# The death alone, as the save keeps it under the creature's guid, sets the bool again.
+A setgvar Q_Showcase_RipperHunt RipperDead 0
+A save 62
+A load $hero 62
+A wait world=1 timeout=240
+A expect gvar Q_Showcase_RipperHunt RipperDead == 1 timeout=20
+A tpnear $hunterguid 80
+sleep 3
+A talk $hunter
+A skip
+A expect gvar Q_Showcase_RipperHunt QuestState == 3 timeout=30
+A expect journal showcase_ripper_hunt == Modding_API/Quests/showcase_ripper_hunt/done timeout=10
+
+# Olaf's vanilla dialogue, overridden from NpcDialogues, asks for three apples.
+A tp -2132 -5262
+A expect near $olaf 3000 contains "loaded" timeout=30
+sleep 3
+A talk $olaf
+A skip
+A expect dialogue contains "5:Do you need help with anything?" timeout=40
+A choose 5
+A skip
+A expect gvar Q_Showcase_Apples QuestState == 2 timeout=20
+A expect journal showcase_apples == Modding_API/Quests/showcase_apples/start timeout=10
+A bye
+sleep 3
+A use Modding_API_Pickup_showcase_apples 3000
+A expect items item_apple == 3 timeout=10
+A talk $olaf
+A skip
+A expect dialogue contains "5:Do you need help with anything?" timeout=40
+A choose 5
+A skip
+A expect gvar Q_Showcase_Apples QuestState == 3 timeout=20
+A expect items item_apple == 0 timeout=10
+A expect journal showcase_apples contains "showcase_apples/done" timeout=10
+A bye
+
+# The picked pickup stays gone after a reload, and so does a killed JSON NPC: both carry a stable guid the save keys.
+A expect interactables Modding_API_Pickup_showcase_apples 3000 == none
+A expect near $hunterguid 3000 contains "loaded" timeout=30
+A kill $hunterguid
+A save 63
+A load $hero 63
+A wait world=1 timeout=240
+A expect interactables Modding_API_Pickup_showcase_apples 3000 == none timeout=20
+A expect dead $hunterguid contains "1 " timeout=30
+
+# Control: in a save where nobody picked them, the apples lie there.
+A load $hero $slot
+A wait world=1 timeout=240
+A expect interactables Modding_API_Pickup 3000 contains "showcase_apples" timeout=20
+A expect find Scout == none

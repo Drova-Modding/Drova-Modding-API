@@ -5,21 +5,15 @@ using MelonLoader;
 namespace Drova_Modding_API
 {
     /// <summary>
-    /// Applies Harmony patches by hand, one target at a time, with per-hook logging.
-    ///
-    /// Prefer this over <c>[HarmonyPatch]</c> attributes whenever a hook target might not
-    /// exist (game updates, stripped IL2CPP bodies) or needs a runtime preflight: MelonLoader
-    /// applies attribute patches in bulk at melon registration, so one bad target can take the
-    /// whole set down and cannot be gated on a runtime check. Manual application isolates each
-    /// failure to its own hook and leaves an honest line in the log either way.
+    /// Applies Harmony patches one target at a time with per-hook logging, so one missing target
+    /// does not take down the whole attribute-patch set.
     /// </summary>
     public static class Hooking
     {
         private const BindingFlags Declared = BindingFlags.Public | BindingFlags.NonPublic
             | BindingFlags.Static | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
-        // Calls per patched target, counted by one shared prefix so a hook that applied but never runs shows up.
-        // ponytail: unsynchronized, assumes hooked methods run on the main thread.
+        // Locked because some hooked methods run on the thread pool (graph deserialization).
         private static readonly Dictionary<MethodBase, int> CallsByTarget = new();
         private static readonly List<(string Label, MethodBase Target)> Applied = new();
 
@@ -57,9 +51,7 @@ namespace Drova_Modding_API
         }
 
         /// <summary>
-        /// Postfix overload for targets the caller already resolved (e.g. a specific overload via
-        /// <see cref="AccessTools.Method(Type, string, Type[], Type[])"/>, or a method that needed
-        /// a preflight such as <see cref="Access.QuestStateReader.HasNativeBody"/>).
+        /// Postfix overload for targets the caller already resolved, such as a specific overload.
         /// </summary>
         /// <param name="harmony">The Harmony instance of your melon.</param>
         /// <param name="target">The resolved target method, may be null.</param>
@@ -95,8 +87,7 @@ namespace Drova_Modding_API
         {
             try
             {
-                // A name-only lookup prefers an inherited public method to the type's own private one
-                // (DS_DialogueUGUI.Finalize resolved to Il2CppSystem.Object.Finalize).
+                // A name-only lookup prefers an inherited public method over the type's own private one.
                 if (targetType.GetMember(targetMethod, MemberTypes.Method, Declared).Length > 0)
                 {
                     return FindDeclaredTarget(targetType, targetMethod);
@@ -115,7 +106,6 @@ namespace Drova_Modding_API
             }
             catch (Exception e) when (e.InnerException is AmbiguousMatchException)
             {
-                // Harmony wraps it. Unwrapped here rather than matched on the message, which is localized.
                 return FindDeclaredTarget(targetType, targetMethod);
             }
             catch (Exception e)
@@ -125,8 +115,7 @@ namespace Drova_Modding_API
             }
         }
 
-        // A caller who names a derived type means the method that type declares, not an inherited one of the same name.
-        // Several overloads on the type itself are refused: guessing would patch the wrong method and report success.
+        // Several overloads are refused, since guessing would patch the wrong method and report success.
         private static MethodInfo? FindDeclaredTarget(Type targetType, string targetMethod)
         {
             MethodInfo[] declared = targetType.GetMethods(Declared);
@@ -176,9 +165,14 @@ namespace Drova_Modding_API
                 }
 
                 Applied.Add((label + (asPrefix ? " prefix" : " postfix"), target));
-                if (!CallsByTarget.ContainsKey(target))
+                bool counted;
+                lock (CallsByTarget)
                 {
-                    CallsByTarget[target] = 0;
+                    counted = !CallsByTarget.TryAdd(target, 0);
+                }
+
+                if (!counted)
+                {
                     harmony.Patch(target, prefix: new HarmonyMethod(AccessTools.Method(typeof(Hooking), nameof(CountPrefix))) { priority = Priority.First });
                 }
                 return true;
@@ -191,20 +185,23 @@ namespace Drova_Modding_API
         }
 
         /// <summary>
-        /// How often each hook applied through this class has fired, by its label (e.g. "Health.CheckEvents postfix").
-        /// Counts calls of the target, so a prefix and a postfix on one method share a count.
+        /// How often each hook applied through this class has fired, by label.
+        /// A prefix and a postfix on one method share a count.
         /// </summary>
         public static IReadOnlyList<(string Label, int Calls)> FiredCounts()
         {
             List<(string Label, int Calls)> counts = new(Applied.Count);
             foreach ((string label, MethodBase target) in Applied)
             {
-                counts.Add((label, CallsByTarget.GetValueOrDefault(target)));
+                lock (CallsByTarget)
+                {
+                    counts.Add((label, CallsByTarget.GetValueOrDefault(target)));
+                }
             }
             return counts;
         }
 
-        /// <summary>Labels of applied hooks that have not fired yet, which after exercising them usually means an inlined target.</summary>
+        /// <summary>Labels of applied hooks that have not fired yet, often an inlined target.</summary>
         public static IReadOnlyList<string> NeverFired()
         {
             return FiredCounts().Where(c => c.Calls == 0).Select(c => c.Label).ToList();
@@ -212,9 +209,17 @@ namespace Drova_Modding_API
 
         private static void CountPrefix(MethodBase __originalMethod)
         {
-            if (__originalMethod != null && CallsByTarget.TryGetValue(__originalMethod, out int calls))
+            if (__originalMethod == null)
             {
-                CallsByTarget[__originalMethod] = calls + 1;
+                return;
+            }
+
+            lock (CallsByTarget)
+            {
+                if (CallsByTarget.TryGetValue(__originalMethod, out int calls))
+                {
+                    CallsByTarget[__originalMethod] = calls + 1;
+                }
             }
         }
 

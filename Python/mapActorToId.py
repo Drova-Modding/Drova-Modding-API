@@ -1,7 +1,6 @@
 import sys
-### This file is to create a mapping file and with this mapping file creating a TTS yaml file
+# Builds a name|id mapping file from a dialogue export, then a TTS yaml from that mapping.
 
-# Check if a filename was provided as an argument
 if len(sys.argv) < 2:
     print(f"Usage: python {sys.argv[0]} dialogueFile.txt")
     sys.exit(1)

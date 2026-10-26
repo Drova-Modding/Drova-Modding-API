@@ -24,7 +24,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public string DrawWizardUiAndSerialize(string payload)
         {
-            EnsureUiState(payload);
+            SyncUiState(payload);
 
             bool changed = false;
             GUILayout.Label("EntityInfo GUID (read-only)");
@@ -173,8 +173,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 entityInfo._aliasNameModule = new AliasNameModule();
             }
 
-            // The Unity object name is independent of the localized display name; apply it
-            // whenever one was configured so the ScriptableObject is identifiable in-game.
             if (!string.IsNullOrWhiteSpace(state.UnityPropertyName))
                 entityInfo.name = state.UnityPropertyName;
 
@@ -197,7 +195,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private void EnsureUiState(string? payload)
+        private void SyncUiState(string? payload)
         {
             string normalizedPayload = payload ?? string.Empty;
             if (string.Equals(_lastPayload, normalizedPayload, StringComparison.Ordinal))

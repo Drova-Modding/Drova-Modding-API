@@ -2,9 +2,12 @@ using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Editor;
 using Drova_Modding_API.Systems.Routines;
+using Drova_Modding_API.Systems.Routines.Store;
 #if DEBUG
 using Drova_Modding_API.Systems.GlobalVars;
 #endif
+using Drova_Modding_API.Systems.MapEditor;
+using Drova_Modding_API.Systems.Quests;
 using Drova_Modding_API.Systems.SaveGame;
 using Drova_Modding_API.Systems.SaveGame.Store;
 using Drova_Modding_API.Systems.Spawning;
@@ -44,7 +47,6 @@ namespace Drova_Modding_API.Systems
 #endif
             TalentContainerDatabase.Init();
 #if DEBUG
-            // Modder diagnostics only - not part of the release surface.
             Debugging.NearbyDumper.Register();
 #endif
             PlayerAccess.StartWaitForPlayerCoroutine();
@@ -66,6 +68,10 @@ namespace Drova_Modding_API.Systems
             GameObject moddingAPIAiLogicSystemRoot = new("ModdingAPI_AILogic");
             SceneManager.MoveGameObjectToScene(moddingAPIAiLogicSystemRoot, scene);
             RoutineSystem.RoutineRoot = moddingAPIAiLogicSystemRoot;
+            RoutineSystem.GateTargets.Clear();
+            BehaviourTreeStore.PatchAllSavedBehaviourTrees();
+            RoutineGraphAccess.OnWorldLoaded();
+            RoutineOverrideStore.ApplyPlaces();
         }
 
         internal static void ActorInit(Scene scene)
@@ -75,9 +81,15 @@ namespace Drova_Modding_API.Systems
                 actorSpawnRoot = new GameObject(ActorSpawnRootName);
 
             SceneManager.MoveGameObjectToScene(actorSpawnRoot, scene);
+            ActorSpawnAccess.PruneDestroyed();
+            GVarConditions.BeginWorldLoad();
             NpcCreator.SetSpawnRoot(actorSpawnRoot.transform);
             NpcCreator.CacheAlignments();
             ExternalNpcPlacementSystem.SpawnConfiguredNpcs();
+            ExternalCreaturePlacementSystem.SpawnConfiguredCreatures();
+            ExternalItemPlacementSystem.SpawnConfiguredItems(scene);
+            QuestAreas.Spawn(scene);
+            MapLayoutSystem.BeginWorld(scene);
         }
     }
 }

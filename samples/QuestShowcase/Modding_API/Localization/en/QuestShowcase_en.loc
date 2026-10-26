@@ -1,0 +1,81 @@
+RipperHunt_Title { The Ripper of the Woods }
+
+RipperHunt_Start { A big ripper prowls the woods near the tavern. The hunter wants it dead. }
+
+RipperHunt_Killed { The ripper is dead. I should tell the hunter. }
+
+RipperHunt_Done { The hunter paid me for the ripper. }
+
+Apples_Title { Apples for the Stew }
+
+Apples_Start { Olaf needs three apples for his stew. }
+
+Apples_Done { I brought Olaf the apples. }
+
+Hunter_Name { Hunter }
+
+Hunter_Offer { A ripper hunts in the woods south of here. Kill it and I will pay you. }
+
+Hunter_Waiting { The ripper is still out there. }
+
+Hunter_Reward { You killed the ripper! Here is your pay. }
+
+Hunter_AlreadyDone { The ripper south of here? You already killed it? Then you have earned this. }
+
+Hunter_Thanks { Thanks again for the ripper. }
+
+Player_Accept { I will do it. }
+
+Player_Decline { Not now. }
+
+Player_AskHelp { Do you need help with anything? }
+
+Npc_WantsApples { My stew needs apples. Bring me three and I will make it worth your while. }
+
+Npc_NoApplesYet { Three apples, that is all I ask. }
+
+Npc_ApplesThanks { Perfect, the stew is saved! }
+
+Scout_Name { Scout }
+
+Scout_Offer { Someone harvests the sacred grove. Look at the shrine south of here and take what they left behind. }
+
+Scout_Waiting { Have you been to the shrine yet? }
+
+Scout_Reward { So it is true. Take this for your trouble. }
+
+Scout_AlreadyDone { You already found their supplies at the shrine? Then you are one step ahead of me. }
+
+Scout_Thanks { The grove owes you. }
+
+Tracks_Title { Tracks in the Ash }
+
+Tracks_Start { A scout asked me to look at the shrine south of the tavern. }
+
+Tracks_Shrine { I found the damaged shrine. }
+
+Tracks_Supplies { I took the harvesters' supplies. }
+
+Tracks_Done { The scout knows now who harvests the grove. }
+
+showcase_spezi_name { Spezi }
+
+showcase_spezi_description { Cola and orange lemonade. Heals 30 health over ten seconds. }
+
+showcase_letter_name { A Hunter's Note }
+
+showcase_letter_description { A folded note, smelling of smoke. }
+
+showcase_letter_text { Traveller, the ripper in the woods took two of my sheep. Whoever brings me its hide gets a fair reward. - The Hunter }
+
+showcase_swift_missile_name { Swift Missile }
+
+showcase_swift_missile_description { A magic missile twice as fast and twice as strong, flying a third longer. }
+
+showcase_recipe_swift_missile_name { Recipe: Swift Missile }
+
+showcase_recipe_swift_missile_description { Teaches Swift Missile. Needs a runestone. }
+
+showcase_ripper_form_name { Ripper Form }
+
+showcase_ripper_form_description { Become a ripper for half a minute. }

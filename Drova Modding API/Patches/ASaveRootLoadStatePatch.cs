@@ -10,7 +10,6 @@ namespace Drova_Modding_API.Patches
     {
         static bool Prefix(ASaveRoot __instance)
         {
-            // Check if the instance key (GUID) is registered in the no-save registry
             string instanceKey = __instance.GetGameObjectInstanceKey();
             if (NoSaveGuidRegistry.IsRegistered(instanceKey))
             {
@@ -26,7 +25,6 @@ namespace Drova_Modding_API.Patches
     {
         static bool Prefix(ASaveRoot __instance, ref UniTask __result)
         {
-            // Check if the instance key (GUID) is registered in the no-save registry
             string instanceKey = __instance.GetGameObjectInstanceKey();
             if (NoSaveGuidRegistry.IsRegistered(instanceKey))
             {
@@ -39,11 +37,6 @@ namespace Drova_Modding_API.Patches
         }
     }
 
-    /// <summary>
-    /// Patches the static <c>ASaveRoot.GetGameObjectData</c> so that any instance key
-    /// registered in <see cref="NoSaveGuidRegistry"/> returns <c>null</c> instead of
-    /// looking up persisted save data.
-    /// </summary>
     [HarmonyPatch(typeof(ASaveRoot), nameof(ASaveRoot.GetGameObjectData))]
     internal static class ASaveRootGetGameObjectDataPatch
     {

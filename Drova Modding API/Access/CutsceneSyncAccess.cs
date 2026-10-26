@@ -1,26 +1,17 @@
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// Where a mod declares cutscenes that belong to the world rather than to one player.
-    ///
-    /// A coop session replays a declared cutscene on every machine, so a story transition that moves
-    /// one player moves all of them. Undeclared cutscenes stay where they were triggered, which is
-    /// right for almost all of them: dialogue staging like camera focuses, black blends and stage
-    /// teleports would hijack the screen of a player who is not in the conversation.
-    ///
-    /// Names are the <c>CS_CutsceneData</c> asset names. Declare during melon initialization.
+    /// Declares cutscenes that belong to the world rather than to one player. A co-op session replays a declared
+    /// cutscene on every machine. Undeclared ones, like dialogue staging, stay with the player who triggered them.
+    /// Names are <c>CS_CutsceneData</c> asset names. Declare during melon initialization.
     /// </summary>
     public static class CutsceneSyncAccess
     {
         private static readonly Dictionary<string, string> SharedCutscenes = new(StringComparer.Ordinal);
 
         /// <summary>
-        /// Declares one cutscene as shared by every player in a session.
-        ///
-        /// The addressable guid is optional but load-bearing when the far machine has not streamed
-        /// the asset: cutscene data rides in with the dialogue graph that uses it, so a player far
-        /// from the speaker may hold nothing to replay. With the guid the asset can be loaded on
-        /// demand instead.
+        /// Declares one cutscene as shared by every player in a session. The addressable guid lets a machine far from
+        /// the speaker, which has not streamed the cutscene data, load it on demand.
         /// </summary>
         /// <param name="cutsceneDataName">The cutscene data asset's name.</param>
         /// <param name="addressableGuid">The asset's addressable guid, when known.</param>

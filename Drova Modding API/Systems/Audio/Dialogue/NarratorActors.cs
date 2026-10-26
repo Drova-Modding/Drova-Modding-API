@@ -26,6 +26,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             "BrokenFence",
             "BrokenPlant",
             "Canary",
+            "Cay",
             "Critter_Cat_01",
             "Critter_Dog_01",
             "EntityInfo_Corpse_Citydungeon_0",
@@ -52,6 +53,7 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             "LeynasTable",
             "Mikesch",
             "MineCookingFire",
+            "Object",
             "Oskar",
             "PigletAtRoot",
             "Piglet_Cay",
@@ -72,12 +74,13 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
         };
 
         /// <summary>
-        /// Whether every line of this actor is narration.
+        /// Whether every line of this actor is narration. Any <c>EntityInfo_</c> actor is a world object
+        /// (signposts, menhirs, corpses), so it counts without being listed.
         /// </summary>
         /// <param name="actorName">Actor name of the node, may be null</param>
         public static bool IsNarratorActor(string? actorName)
         {
-            return actorName != null && NarratorActorNames.Contains(actorName);
+            return actorName != null && (NarratorActorNames.Contains(actorName) || actorName.StartsWith("EntityInfo_", StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

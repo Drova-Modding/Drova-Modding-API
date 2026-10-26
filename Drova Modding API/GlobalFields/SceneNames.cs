@@ -21,12 +21,12 @@
         public const string AILogic = "Scene_AILogic";
         
         /**
-        * The name of the Creates scene where all predefined Creatures live.
+        * The name of the scene where all predefined creatures live.
         */
         public const string Creatures = "Scene_Creatures";
         
         /**
-        * The name of the Creates scene where some predefined Creatures live.
+        * The name of the scene where some predefined creatures live.
         */
         public const string CreaturesStandard = "Scene_CreaturesStandard";
 
@@ -35,7 +35,7 @@
          */
         public const string Actor = "Scene_Actors";
         /**
-        * The name of the scene where the option menu is located. And other GUIS like Cheats and Player HUD
+        * The name of the scene holding the option menu and other GUIs like cheats and the player HUD.
         */
         public const string OptionSceneName = "RuntimeScene_GUI";
     }

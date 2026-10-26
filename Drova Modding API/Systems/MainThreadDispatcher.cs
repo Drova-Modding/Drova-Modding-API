@@ -4,12 +4,8 @@ using System.Collections.Concurrent;
 namespace Drova_Modding_API.Systems
 {
     /// <summary>
-    /// Marshals work onto the Unity main thread. Needed because Drova deserializes dialogue
-    /// graphs on a UniTask thread-pool thread (<c>DS_DialogueTreeController.StartGraphAsync</c>),
-    /// so Harmony patches on <c>Graph.SelfDeserialize</c> can run off the main thread. Unity APIs
-    /// (AssetBundle loading, AudioClip creation) called there fail natively with
-    /// "Graphics device is null" because IL2CPP release builds strip the managed thread guards.
-    /// The queue is drained once per frame from <c>Core.OnUpdate</c>.
+    /// Marshals work onto the Unity main thread, drained once per frame from <c>Core.OnUpdate</c>. Drova deserializes
+    /// dialogue graphs on a thread-pool thread, where Unity calls fail natively with "Graphics device is null".
     /// </summary>
     public static class MainThreadDispatcher
     {
@@ -35,7 +31,6 @@ namespace Drova_Modding_API.Systems
         /// <summary>
         /// Queue an action to run on the main thread during the next frame's update.
         /// </summary>
-        /// <param name="action">The action to run on the main thread</param>
         public static void Enqueue(Action action)
         {
             PendingActions.Enqueue(action);
@@ -45,9 +40,6 @@ namespace Drova_Modding_API.Systems
         /// Run a function on the main thread and get its result as a task. Executes inline when
         /// already on the main thread; otherwise it is queued for the next frame.
         /// </summary>
-        /// <typeparam name="T">Result type</typeparam>
-        /// <param name="func">The function to run on the main thread</param>
-        /// <returns>Task that completes once the function ran</returns>
         public static Task<T> RunOnMainThread<T>(Func<T> func)
         {
             if (IsMainThread)
@@ -81,7 +73,6 @@ namespace Drova_Modding_API.Systems
         /// queue. Use this instead of <see cref="Task.WaitAll(Task[])"/> when the awaited tasks may
         /// themselves need the main thread (e.g. AudioClip creation), which would otherwise deadlock.
         /// </summary>
-        /// <param name="tasks">The tasks to wait for</param>
         public static void WaitForTasks(params Task[] tasks)
         {
             if (!IsMainThread)

@@ -64,14 +64,10 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     Vector2? randomPosition = WorldLocator.GetRandomFreePosition(new Vector2(position.x, position.y));
                     if (randomPosition.HasValue)
                     {
-                        // TODO: Rewrite when il2cpp is on Version 2, than we can finally use EVENTS WOHOOOOOOOO
                         GameObject spawned = encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity).WaitForCompletion();
                         _spawnedEncounters.Add(spawned);
 
-                        // Announced with the asset it came from. A creature put into the world at runtime
-                        // carries no identity anything else can resolve, so without this it exists for
-                        // whoever spawned it and for nobody else - which in a shared session is one player
-                        // fighting a camp their friend is standing in the middle of and cannot see.
+                        // A creature spawned at runtime has no identity a co-op peer can resolve, so it is announced with its asset.
                         if (spawned != null)
                         {
                             ActorSpawnAccess.RecordSpawn(spawned.GetComponent<Actor>(), encounter.Key.AssetGUID);

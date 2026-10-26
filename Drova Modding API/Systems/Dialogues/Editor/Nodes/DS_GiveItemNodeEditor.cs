@@ -144,8 +144,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     itemStack.UseContainer,
                     "Use Container");
 
-                // Todo: Implement container selection
-
                 GUI.Label(new Rect(position.x + 10, useContainerYOffset + 20, 100, 20), "Direction:");
 
                 if (itemDropdown.Draw(new Rect(position.x + 120, yOffset, 300, 20)))

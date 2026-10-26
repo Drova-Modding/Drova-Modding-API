@@ -1,0 +1,78 @@
+# Morph spells: showcase_ripper_form (samples/QuestShowcase/Modding_API/Items) turns the player into a ripper for 30 s.
+# The ripper takes the controls, the hidden player body is carried along, and the player comes back on the end command,
+# when the ripper dies (the player dies too) and after the duration. The ripper bites with its own weapon, other rippers
+# leave it alone, and biting one turns the pack on it.
+# Needs samples/QuestShowcase/Modding_API copied into the game's Mods/Modding_API. Debug build only.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/morph.scn
+
+default hero 5
+default slot 0
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+A expect morph == morphed=0
+A give showcase_ripper_form 1
+A give item_potion_flow_1 6
+# A runestone unlocks magical spells.
+A give item_runestone 1
+
+# Cast: the ripper is the player now, walks, and the hidden body follows it.
+A expect useitem item_potion_flow_1 0.05 idle contains "used item_potion_flow_1" timeout=5
+A stance combat
+A expect useitem showcase_ripper_form 0.3 idle contains "used showcase_ripper_form" timeout=20
+A expect morph contains "morphed=1 body=Ripper" timeout=5
+A expect health me == 420/420
+A expect morph contains "player=1"
+# The creature's weapon binds its attacks to the attack keys: bite and charge.
+A expect equipped contains "weapon_ripper" timeout=3
+A expect press PrimaryAttack 0.2 == ActionStarted
+A walk 1 0 3
+A expect walked >= 50 timeout=6
+A expect morph trail <= 1
+A morph end
+A expect morph == morphed=0 timeout=5
+A expect health me == 40/40
+A stance normal
+
+# The duration runs out.
+A expect useitem item_potion_flow_1 0.05 idle contains "used item_potion_flow_1" timeout=5
+A stance combat
+A expect useitem showcase_ripper_form 0.3 idle contains "used showcase_ripper_form" timeout=20
+A expect morph contains "morphed=1" timeout=5
+sleep 25
+A expect morph contains "morphed=1"
+A expect morph == morphed=0 timeout=15
+A expect health me == 40/40
+
+# Rippers leave a morphed ripper alone; biting one turns its pack on the player.
+set ripper 6be18490-966b-47a5-bb24-f587c154aa28
+set ripper2 53307ce2-1d1e-4f7c-aac3-b8524391212c
+A expect useitem item_potion_flow_1 0.05 idle contains "used item_potion_flow_1" timeout=5
+A stance combat
+A expect useitem showcase_ripper_form 0.3 idle contains "used showcase_ripper_form" timeout=20
+A expect morph contains "morphed=1" timeout=5
+A tpnear $ripper 60 0
+A expect near $ripper 500 contains "loaded" timeout=15
+sleep 3
+A expect ai $ripper contains "target=-"
+A tpnear $ripper 8 0
+A look $ripper
+A press PrimaryAttack 0.2
+sleep 1.5
+A tpnear $ripper 8 0
+A look $ripper
+A press PrimaryAttack 0.2
+sleep 1.5
+A expect health $ripper !contains "420/420"
+A expect ai $ripper contains "target=Ripper(Clone)" timeout=10
+A expect ai $ripper2 contains "target=Ripper(Clone)" timeout=10
+
+# The ripper dies, and the player dies with it.
+A hit me 9999 pure nosource
+A expect morph == morphed=0 timeout=5
+A expect health me contains "dead" timeout=5

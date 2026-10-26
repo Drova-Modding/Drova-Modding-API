@@ -7,18 +7,8 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Audio
 {
     /// <summary>
-    /// Provides dialogue audio clips from per-actor AssetBundles. Bundles live under
-    /// &lt;SavePath&gt;/Audio/bundles/ and are named after the lower-cased actor (e.g. "jendrik").
-    /// Each bundle holds the AudioClips for that actor, addressed by the key the dialogue system
-    /// builds for a line, without a file extension. Narration lives in a "narrator" bundle, which is
-    /// probed alongside the actor's own bundle for every line (see <see cref="NarratorActors"/>).
-    ///
-    /// This is the provider <see cref="AudioManager"/> starts with, so it needs no registration.
-    /// Re-register it explicitly only to get back to it after swapping in another provider:
-    /// <code>
-    /// AudioManager.ReplaceDialogueAudioConnector(
-    ///     new DefaultDialogueAudioConnector(new AssetBundleAudioProvider()));
-    /// </code>
+    /// The default <see cref="AudioManager"/> provider: dialogue clips from per-actor AssetBundles under
+    /// &lt;SavePath&gt;/Audio/bundles/, named after the lower-cased actor, with narration in a "narrator" bundle.
     /// </summary>
     public class AssetBundleAudioProvider : IAudioProvider
     {                   
@@ -26,50 +16,39 @@ namespace Drova_Modding_API.Systems.Audio
         const string BundleSubFolder = "bundles";
         const string PlayerBundle = "player";
 
-        // Audio extensions a clip may have been imported from; stripped from the bundle's asset names
-        // so the membership set can be compared against the extension-less clip keys.
         private static readonly string[] AudioExtensions = [".ogg", ".wav", ".mp3", ".aiff", ".aif"];
 
-        private AreaNameSystem _areaNameSystem;
-        // Cached, lazily loaded bundles keyed by lower-cased actor name. AssetBundle.LoadFromFile must
-        // not be called twice for the same file, so caching is required, not just an optimization.
+        private AreaNameSystem? _areaNameSystem;
+        // AssetBundle.LoadFromFile must not be called twice for the same file, so this cache is required.
         private readonly Dictionary<string, ActorBundle> _bundleCache = [];
 
-        // Bundle files Unity could not read. Not tried again: a failed LoadFromFile logs an engine error, and every line
-        // of a conversation asks for its speaker's bundle - one unreadable file was hundreds of errors per talk.
+        // Never retried, since every line asks for its bundle and each failed load logs an engine error.
         private readonly HashSet<string> _unreadable = [];
 
-        // Lower-cased clip key -> bundle that holds it, read from the bundles' .manifest files. Bundles are grouped by voice,
-        // which the actor name does not always tell: the game renames NPCs (Venia speaks lines exported under "Idefix").
+        // Clip key to bundle, from the .manifest files. The game renames NPCs, so the actor name does not always name the bundle.
         private readonly Dictionary<string, string> _clipBundles = [];
 
         /// <summary>
-        /// A loaded actor bundle together with the cheap lookups that keep dialogue loading off the
-        /// main-thread hot path: a set of the contained clip names (so misses cost a hash lookup
-        /// instead of an Il2Cpp <c>LoadAsset</c> round-trip) and a cache of already-decoded clips.
+        /// A loaded bundle with its lower-cased clip names, so misses skip <c>LoadAsset</c>, and its decoded clips.
         /// </summary>
         private sealed class ActorBundle(AssetBundle bundle, HashSet<string> assetNames)
         {
             public readonly AssetBundle Bundle = bundle;
-            // Lower-cased, extension-less names of every asset in the bundle.
             public readonly HashSet<string> AssetNames = assetNames;
-            // Resolved clips keyed by the lower-cased candidate key that produced them.
             public readonly Dictionary<string, AudioClip> ClipCache = [];
         }
 
         /// <summary>
-        /// Initialises a new instance of the AssetBundleAudioProvider class and caches the AreaNameSystem.
+        /// Indexes the bundle manifests and preloads the player bundle.
         /// </summary>
         public AssetBundleAudioProvider()
         {
-            _areaNameSystem = WorldEventSystemManager.Instance!.AreaNameSystem;
             IndexManifests();
-            GetActorBundle("player"); // Preload player bundle, as it's used for most generic lines and thus more likely to be needed
+            GetActorBundle("player");
         }
 
         /// <summary>
-        /// Fills <see cref="_clipBundles"/> from the text manifests Unity writes next to each bundle, which list its assets as
-        /// <c>- Assets/.../&lt;key&gt;.wav</c>. Without manifests the index stays empty and clips are found by actor name only.
+        /// Fills <see cref="_clipBundles"/> from the bundle manifests. Without them clips are found by actor name only.
         /// </summary>
         private void IndexManifests()
         {
@@ -90,9 +69,8 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// Returns the first candidate key whose bundle, as named by the manifest index, resolves it to a clip, or null.
-        /// The player's bundle answers for the player only: comment trees such as <c>DT_Comment_DrinkWater</c> are
-        /// authored for a "Player" slot that any actor fills at runtime, and an NPC must not borrow the player's voice.
+        /// Returns the first candidate clip found through the manifest index, or null.
+        /// The player bundle answers only for the player, since comment trees use a "Player" slot any actor can fill.
         /// </summary>
         private AudioClip? TryIndexedClip(List<string> candidateKeys, string actorName)
         {
@@ -117,11 +95,11 @@ namespace Drova_Modding_API.Systems.Audio
             }
 
             string normalizedPath = filePath.Replace('/', '_');
-            if(!_areaNameSystem)
+            if (!_areaNameSystem && WorldEventSystemManager.Instance != null)
             {
-                _areaNameSystem = WorldEventSystemManager.Instance!.AreaNameSystem;
+                _areaNameSystem = WorldEventSystemManager.Instance.AreaNameSystem;
             }
-            var isInCave = _areaNameSystem.IsInCave();
+            bool isInCave = _areaNameSystem != null && _areaNameSystem.IsInCave();
             List<string> candidateKeys = [.. GetCandidateKeys(dialogeName, normalizedPath, locaKey, actorName, choiceId, isInCave)];
 
             AudioClip? indexed = TryIndexedClip(candidateKeys, actorName);
@@ -157,12 +135,9 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// A clip by its own name - the key it was found under, which a clip loaded from a bundle carries as its name - looked
-        /// for in the actor's bundle and the narrator's, then in every bundle already loaded. For a machine that did not run
-        /// the line itself (a co-op teammate's conversation): it knows which clip was played, not the dialogue it came from.
+        /// Finds a clip by its name in the actor's and narrator's bundles, then in every loaded bundle.
+        /// For callers that know the clip but not the dialogue line, such as a co-op teammate's conversation.
         /// </summary>
-        /// <param name="actorName">The speaking actor, whose bundle is tried first.</param>
-        /// <param name="clipName">The clip's name.</param>
         /// <returns>The clip, or null when no bundle has it or dialogue audio is switched off.</returns>
         public AudioClip? GetClipByName(string actorName, string clipName)
         {
@@ -190,11 +165,8 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// Yields the actors whose bundles may hold the line, most likely first. The narrator bundle
-        /// is always probed as well: narration is authored under the prop name that happens to hold
-        /// the tree, and a normally voiced actor also delivers narrated lines, so which of the two
-        /// voices recorded a given line cannot be decided from the actor alone. Clip keys are built
-        /// from the node's own actor either way, so probing the second bundle cannot cross-match.
+        /// Yields the actors whose bundles may hold the line, most likely first.
+        /// The narrator is always included, since the actor alone does not tell which voice recorded a line.
         /// </summary>
         private static IEnumerable<string> GetBundleActors(string actorName)
         {
@@ -217,29 +189,16 @@ namespace Drova_Modding_API.Systems.Audio
             for (int i = 0; i < candidateKeys.Count; i++)
             {
                 string key = candidateKeys[i];
-
-                // AssetBundle assets are addressed by their (case-insensitive) name without extension,
-                // which is exactly the clip key the dialogue system builds.
                 string lowerKey = key.ToLowerInvariant();
-
-                // Most candidate keys miss. Skip the ones the bundle doesn't contain so we never pay
-                // for an Il2Cpp LoadAsset round-trip on a miss — this is the bulk of the per-node cost
-                // when a dialogue tree is loaded.
                 if (!actorBundle.AssetNames.Contains(lowerKey)) continue;
 
-                // Reuse an already-decoded clip so a re-loaded tree (or a repeated line) doesn't
-                // decompress the same audio on the main thread again. Unity unloads a clip nothing references
-                // any more (Resources.UnloadUnusedAssets on scene changes); a destroyed one compares equal to null
-                // and is loaded again from the bundle, which stays loaded.
+                // UnloadUnusedAssets on scene changes destroys cached clips, so a destroyed one is loaded again.
                 if (actorBundle.ClipCache.TryGetValue(lowerKey, out var cachedClip) && cachedClip != null)
                 {
                     return cachedClip;
                 }
 
-                // Use the non-generic LoadAsset(name, type) overload rather than LoadAsset<AudioClip>:
-                // Il2CppInterop's generic version Cast<T>()s the result internally, and a missing key
-                // returns a null pointer, so the Cast throws a NullReferenceException in get_Pointer()
-                // instead of returning null. The non-generic overload returns null cleanly.
+                // The generic LoadAsset<T> throws instead of returning null for a missing key.
                 var asset = actorBundle.Bundle.LoadAsset(key, Il2CppType.Of<AudioClip>());
                 var clip = asset?.TryCast<AudioClip>();
                 if (clip != null)
@@ -253,9 +212,8 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// Returns the cached bundle for the actor, loading it from disk on first use. Returns null
-        /// (without caching) when no bundle file exists, so a bundle added later in the session is
-        /// still picked up.
+        /// Returns the cached bundle for the actor, loading it on first use.
+        /// A missing file is not cached, so a bundle added later in the session is still picked up.
         /// </summary>
         private ActorBundle? GetActorBundle(string actorName)
         {
@@ -285,8 +243,7 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// Why a bundle file may be unreadable, when it can be told: a UnityFS header records the file's whole size, and a
-        /// file longer than that went through a text-mode transfer (FTP in ASCII mode turns every line feed into two bytes).
+        /// Hints at a text-mode copy when the file is longer than the size its UnityFS header records.
         /// </summary>
         private static string DamageHint(string path)
         {
@@ -295,8 +252,9 @@ namespace Drova_Modding_API.Systems.Audio
                 using FileStream file = File.OpenRead(path);
                 byte[] head = new byte[128];
                 int read = file.Read(head, 0, head.Length);
-                int at = Array.IndexOf(head, (byte)0) + 1 + 4;                 // "UnityFS ", format version
-                for (int text = 0; text < 2; text++) at = Array.IndexOf(head, (byte)0, at) + 1; // engine versions
+                // Skips the signature, format version and two engine version strings to reach the file size.
+                int at = Array.IndexOf(head, (byte)0) + 1 + 4;
+                for (int text = 0; text < 2; text++) at = Array.IndexOf(head, (byte)0, at) + 1;
                 if (at <= 0 || at + 8 > read) return string.Empty;
                 long declared = 0;
                 for (int index = 0; index < 8; index++) declared = (declared << 8) | head[at + index];
@@ -310,10 +268,7 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// Builds the set of contained clip names (lower-cased, without directory or audio extension)
-        /// so candidate keys can be membership-tested cheaply. <see cref="AssetBundle.GetAllAssetNames"/>
-        /// returns lower-cased asset paths such as <c>assets/audio/&lt;key&gt;.ogg</c>; the file base name
-        /// equals the clip key the dialogue system builds.
+        /// Builds the set of clip names in the bundle, lower-cased and without directory or extension.
         /// </summary>
         private static HashSet<string> BuildAssetNameSet(AssetBundle bundle)
         {
@@ -340,8 +295,7 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
-        /// Yields the candidate clip keys to try, most specific first: cave variants, then the
-        /// choice/actor variants, then the bare tree-and-line key.
+        /// Yields the candidate clip keys, most specific first.
         /// </summary>
         private static IEnumerable<string> GetCandidateKeys(string dialogeName, string filePath, string locaKey, string actorName, int? choiceId, bool isInCave)
         {

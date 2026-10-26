@@ -1,0 +1,109 @@
+# The map editor window driven like a player would, through synthetic IMGUI input (TestAgent "gui"): place a blocker,
+# widen it, drag it, search the list and place a world copy, hide a vanilla object and restore it, draw an area, widen,
+# move and mark it indoor, undo the move, close the window.
+# Positions are GUI coordinates for the runner's 1280x720 window. Debug build only. Starts from an empty map_editor.json.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/map_editor_ui.scn
+
+default hero 5
+default slot 0
+
+copy fixtures/empty_map.json Mods/Modding_API/MapEditor/map_editor.json
+copy fixtures/empty_undo.txt Mods/Modding_API/MapEditor/map_editor.undo
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+A expect questshowcase mapids == " hidden=0 areas=0"
+
+# Blocker entry, then a click in the world places one and selects it.
+A questshowcase mapeditor
+A gui click 84 164
+A gui click 900 360
+A expect questshowcase mapids == "Blocker_1 hidden=0 areas=0" timeout=5
+
+# Undo takes the placement back, a second placement brings it again.
+A gui click 262 84
+A expect questshowcase mapids == " hidden=0 areas=0" timeout=5
+A gui click 84 164
+A gui click 900 360
+A expect questshowcase mapids == "Blocker_1 hidden=0 areas=0" timeout=5
+
+# W+ of the selected blocker widens it by 16.
+A gui click 133 190
+A expect questshowcase mapdef Blocker_1 contains Width":80 timeout=5
+
+# Right click cancels; a drag on the blocker moves it.
+A gui rclick 700 500
+A gui down 900 360
+A gui drag 950 380
+A gui drag 1000 400
+A gui up 1000 400
+A expect questshowcase mapdef Blocker_1 contains X":-200 timeout=5
+
+# The search narrows the list; the first match is placed as a copy of the world object.
+A gui rclick 700 500
+A gui click 200 192
+A gui type Container_Bag_Satchel_05
+A gui click 200 220
+A expect objects Map_Ghost == 1 timeout=20
+A gui click 700 450
+A expect questshowcase mapids == "Blocker_1,Container_Bag_Satchel_05_1 hidden=0 areas=0" timeout=5
+A expect objects Map_Container_Bag_Satchel_05_1 list contains "=1" timeout=20
+
+# Hide mode: pick a vanilla object, hide it, restore it.
+A gui rclick 700 500
+A gui click 116 136
+A gui click 1185 470
+A gui click 297 214
+A expect questshowcase mapids contains "hidden=1" timeout=5
+A gui click 297 136
+A expect questshowcase mapids contains "hidden=0" timeout=5
+
+# Area tool: drag a rectangle to make an area. Its selection widens it (W+), marks it indoor, and a drag inside moves it.
+A gui click 116 136
+A gui click 327 164
+A gui down 600 250
+A gui drag 800 380
+A gui up 1000 500
+A expect questshowcase mapids contains "areas=1" timeout=5
+capture drawn A questshowcase maparea Area_1
+A gui click 160 190
+A expect questshowcase maparea Area_1 != $drawn timeout=5
+A gui click 115 218
+A expect questshowcase maparea Area_1 contains "Indoor":true timeout=5
+capture placed A questshowcase maparea Area_1
+A gui down 850 290
+A gui drag 870 300
+A gui drag 900 320
+A gui up 900 320
+A expect questshowcase maparea Area_1 != $placed timeout=5
+
+# Undo takes the move back; the area is selected again and deleted.
+A gui click 262 84
+A expect questshowcase maparea Area_1 == $placed timeout=5
+A gui click 850 290
+A gui click 297 218
+A expect questshowcase mapids contains "areas=0" timeout=5
+
+# Close, and the layout loses the test's objects again.
+A gui click 346 84
+A expect objects Map_Ghost == 0 timeout=5
+A questshowcase mapremove Blocker_1
+A questshowcase mapremove Container_Bag_Satchel_05_1
+A expect questshowcase mapids == " hidden=0 areas=0"
+
+# The undo history survives a restart: the last removal comes back.
+stop A
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+A questshowcase mapeditor
+A gui click 262 84
+A expect questshowcase mapids contains "Container_Bag_Satchel_05_1" timeout=5
+A questshowcase mapremove Container_Bag_Satchel_05_1
+copy fixtures/empty_map.json Mods/Modding_API/MapEditor/map_editor.json
+copy fixtures/empty_undo.txt Mods/Modding_API/MapEditor/map_editor.undo

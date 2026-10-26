@@ -24,7 +24,6 @@ def generate_asset_references(input_text):
 
     return asset_references
 
-# Example usage:
 with open("addressables.txt", "r") as f:
     output_lines = generate_asset_references(f.read())
     for line in output_lines:

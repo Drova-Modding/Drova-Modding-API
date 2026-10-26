@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using Drova_Modding_API.Extensions;
 using Il2CppDrova;
 using Il2CppDrova.LoadingScreenHandles;
+using Il2CppDrova.Stats;
 using MelonLoader;
 using UnityEngine;
 
@@ -43,6 +45,27 @@ namespace Drova_Modding_API.Access
         {
             player = GetPlayer();
             return player != null;
+        }
+
+        /// <summary>
+        /// Whether the player is alive, not knocked out, not in a dialogue or cutscene, not teleporting and no loading screen is up.
+        /// </summary>
+        public static bool IsFree(Actor? player)
+        {
+            if (player == null || !player._isInitialized || SceneGameHandler.IsLoadingScreenActive)
+            {
+                return false;
+            }
+
+            LoadingScreenHandler? loading = LoadingScreenHandler.Instance;
+            Health health = player.GetHealth();
+            if (loading == null || !loading.IsWorldReady() || health == null || health.IsDead)
+            {
+                return false;
+            }
+
+            ICustomStats stats = player.CustomStats;
+            return (stats == null || !stats.IsKnockout) && !player.IsInDialogue() && !player.IsPlayerTeleporting();
         }
 
         /// <summary>
@@ -155,10 +178,8 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Reads the local player's character level. The stats miss for a frame or two after a world loads, so
-        /// handle false instead of defaulting to level one.
+        /// Reads the local player's character level.
         /// </summary>
-        /// <param name="level">The player's level, when there is a player whose stats have loaded.</param>
         /// <returns>False in menus, during a load, and for the first frames of a world.</returns>
         public static bool TryGetLevel(out int level)
         {
@@ -172,11 +193,8 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Reads any actor's character level, e.g. a co-op teammate's. See <see cref="TryGetLevel(out int)"/>.
+        /// Reads any actor's character level. False when the actor is null or its stats have not loaded.
         /// </summary>
-        /// <param name="actor">Whose level to read. Can be null.</param>
-        /// <param name="level">Their level, when the actor has stats.</param>
-        /// <returns>False when the actor is null or its stats have not loaded.</returns>
         public static bool TryGetLevel(Actor? actor, out int level)
         {
             level = 0;

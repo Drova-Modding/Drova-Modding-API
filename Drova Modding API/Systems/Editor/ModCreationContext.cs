@@ -32,7 +32,7 @@ namespace Drova_Modding_API.Systems.Editor
 
         public static string GetCurrentModFileStem()
         {
-            EnsureLoaded();
+            LoadOnce();
             return _currentModFileStem;
         }
 
@@ -44,7 +44,7 @@ namespace Drova_Modding_API.Systems.Editor
 
         public static void SetCurrentModFileStem(string rawValue)
         {
-            EnsureLoaded();
+            LoadOnce();
             string sanitized = SanitizeFileStem(rawValue);
             if (string.Equals(_currentModFileStem, sanitized, StringComparison.Ordinal))
                 return;
@@ -66,7 +66,7 @@ namespace Drova_Modding_API.Systems.Editor
             return sanitized;
         }
 
-        private static void EnsureLoaded()
+        private static void LoadOnce()
         {
             if (_loaded)
                 return;

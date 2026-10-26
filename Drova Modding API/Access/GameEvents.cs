@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using HarmonyLib;
 using Il2CppDrova;
 using Il2CppDrova.Crafting;
@@ -15,157 +15,109 @@ using MelonLogger = MelonLoader.MelonLogger;
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// Gameplay events bridged out of Drova via Harmony chokepoints, so mods can subscribe to
-    /// plain C# events instead of re-discovering (and re-patching) the same game methods.
-    ///
-    /// All events fire on the main thread. Subscribe from anywhere; the hooks are applied once
-    /// at melon init. Each event's XML doc states which method it hooks and why that method is
-    /// the right chokepoint, since most are not the obvious candidate.
+    /// Gameplay events bridged out of Drova via Harmony hooks, so mods subscribe instead of re-patching.
+    /// All events fire on the main thread.
     /// </summary>
     public static class GameEvents
     {
-        // ------------------------------------------------------------------ combat
-
         /// <summary>
-        /// An entity killed another. Raised from <c>Entity.OnKilledOther</c>, the game's
-        /// once-per-kill callback on the KILLER (its only caller is the _isDead-guarded death
-        /// block in Health.CheckEvents). The killer is the first argument; the victim is
-        /// reachable via <c>args.TargetHealth</c>.
+        /// An entity killed another. Raised from <c>Entity.OnKilledOther</c>, the once-per-kill callback on the killer.
+        /// The victim is <c>args.TargetHealth</c>.
         /// </summary>
         public static event Action<Entity, HealthChangeArgs>? OnEntityKilled;
 
         /// <summary>
-        /// The player killed an actor (not a destructible prop, not themselves). Kills dealt
-        /// indirectly (summons, damage-over-time, environment) carry a non-player source and do
-        /// not fire; that undercounts rather than misattributes.
+        /// An entity died, with or without a killer. Raised after <c>Health.CheckEvents</c>, the one place that sets <c>_isDead</c>,
+        /// once it really flipped, so a patch keeping the entity alive in between is no death.
+        /// </summary>
+        public static event Action<Entity>? OnEntityDied;
+
+        /// <summary>
+        /// The player killed an actor (not a prop, not themselves). Indirect kills (summons, damage over time) do not fire.
         /// </summary>
         public static event Action<Actor>? OnPlayerKilledActor;
 
         /// <summary>
-        /// The player died. Raised from a postfix on
-        /// <c>EntityGameHandler.PlayerActorDiedListener</c>. Subscribing to the game's
-        /// PlayerActorDiedEvent directly is NOT possible: its argument
-        /// <c>EntityGameHandler.EventArgs&lt;Actor&gt;</c> is a non-blittable struct, and
-        /// Il2CppInterop's delegate marshaling rejects those outright (verified at runtime).
-        /// The postfix needs no delegate marshaling, so it works where the event cannot.
+        /// The player died. Hooks <c>EntityGameHandler.PlayerActorDiedListener</c> because the game's
+        /// PlayerActorDiedEvent passes a non-blittable struct that Il2CppInterop cannot marshal. Only the body the player
+        /// controls counts, so a dying morph creature is no player death.
         /// </summary>
         public static event Action? OnPlayerDied;
 
-        // ------------------------------------------------------------------ learning
-
         /// <summary>
-        /// The player bought attribute points at a teacher. Raised from
-        /// <c>LearnService.ApplyData</c>, the teacher menu's single commit point; the int is the
-        /// net points bought in that session (undo clicks inside the menu cancel out). The
-        /// sleep-menu level-up allocation and perma-potions go through other paths and never fire.
+        /// The player bought attribute points at a teacher. The int is the net points of that session.
+        /// Level-up allocation and perma-potions do not fire.
         /// </summary>
         public static event Action<LearnService, int>? OnAttributePointsLearned;
 
         /// <summary>
-        /// An actor genuinely learned a talent it did not know. Raised around
-        /// <c>TalentActorModule.LearnTalent</c>, whose only callers are the teacher menu,
-        /// dialogue-taught talents and LearnUtil. <c>ForceLearnTalent</c> (used by mods granting
-        /// talents directly) never fires. LearnTalent silently no-ops on an already-known talent;
-        /// a prefix snapshot of CanLearnTalent filters those out.
+        /// An actor learned a talent it did not know, via teacher, dialogue or LearnUtil.
+        /// <c>ForceLearnTalent</c> does not fire.
         /// </summary>
         public static event Action<Actor, TalentContainer>? OnTalentLearned;
 
-        // ------------------------------------------------------------------ quests
-
         /// <summary>
         /// A quest's state variable changed. The string is the owning GVarList's name.
-        /// Primary detector: postfix on <c>AGVar&lt;QuestState&gt;.SetValue</c>, gated on a
-        /// preflight (<see cref="QuestStateReader.HasNativeBody"/>) that proves the closed-generic
-        /// body was AOT-compiled - patching a body-less generic hard-crashes instead of throwing.
-        /// When the preflight fails, the concrete <c>GQuestStateOperation.OperateIntern</c> is
-        /// hooked instead, which catches quest-graph and dialogue driven writes.
         /// </summary>
         public static event Action<string, QuestState>? OnQuestStateChanged;
 
         /// <summary>
-        /// A quest reached <see cref="QuestState.IsCompleted"/>. Convenience filter over
-        /// <see cref="OnQuestStateChanged"/>; the string is the owning GVarList's name.
+        /// A quest reached <see cref="QuestState.IsCompleted"/>. The string is the owning GVarList's name.
         /// </summary>
         public static event Action<string>? OnQuestCompleted;
 
         /// <summary>
-        /// True when <see cref="OnQuestStateChanged"/> is driven by the primary
-        /// <c>AGVar&lt;QuestState&gt;.SetValue</c> hook; false when the AOT preflight failed and it
-        /// falls back to <c>GQuestStateOperation.OperateIntern</c> (quest-graph and dialogue writes
-        /// only). Set once at melon init.
+        /// True when <see cref="OnQuestStateChanged"/> hooks <c>AGVar&lt;QuestState&gt;.SetValue</c>.
+        /// False when that generic has no AOT body and the fallback <c>GQuestStateOperation.OperateIntern</c>
+        /// only sees quest-graph and dialogue writes.
         /// </summary>
         public static bool QuestSetValueHookActive { get; private set; }
 
-        // ------------------------------------------------------------------ looting
-
         /// <summary>
-        /// A loot inventory (chest, container, corpse) was opened. Raised from
-        /// <c>Interact_Bhvr_LootInventory.InventoryOpened</c>; the bool is true when an NPC
-        /// opened it. <c>Interact_Bhvr_LootKnockout</c> (knocked-out NPC loot) inherits this
-        /// method and overrides nothing, so corpse loot funnels through the same event.
+        /// A loot inventory (chest, container, knocked-out NPC) was opened. The bool is true when an NPC opened it.
         /// </summary>
         public static event Action<Interact_Bhvr_LootInventory, bool>? OnLootInventoryOpened;
 
         /// <summary>
-        /// A runtime-dropped ground pickup (currency, ore) was collected. Raised from
-        /// <c>PickupInteraction.InteractionEndedEventListener</c>. Scene-placed pickups such as
-        /// plants never reach this path - subscribe to <see cref="OnPickUpOnceLooted"/> for those.
+        /// A runtime-dropped ground pickup (currency, ore) was collected.
+        /// Scene-placed pickups fire <see cref="OnPickUpOnceLooted"/> instead.
         /// </summary>
         public static event Action<PickupInteraction>? OnPickupCollected;
 
         /// <summary>
-        /// A scene-placed pick-once object (berries, mushrooms, loose world items) was collected.
-        /// Raised from <c>Saveable_PickUp_Once.LootAllListener</c> - the component that writes
-        /// the persistent "WasPicked" record.
+        /// A scene-placed pick-once object (berries, mushrooms, loose items) was collected.
         /// </summary>
         public static event Action<Saveable_PickUp_Once>? OnPickUpOnceLooted;
 
         /// <summary>
-        /// A loot-all interaction ran (the generic "take everything" interaction on world
-        /// objects). Raised from <c>Interact_Bhvr_LootAll.LootAll</c>.
+        /// A generic loot-all interaction on a world object ran.
         /// </summary>
         public static event Action<Interact_Bhvr_LootAll>? OnLootedAll;
 
         /// <summary>
-        /// A loot-table cache (breakable, hidden stash) dropped its loot for the player. Raised
-        /// from <c>SpawnFromLootTable.OnInteractionUsedEventListener</c>. The spawner sits on the
-        /// same GameObject as the cache's GuidComponent; the spawned pickups carry runtime
-        /// SaveRoot_Dynamic ids, so persist against the SPAWNER's guid, never the pickups'.
+        /// A loot-table cache (breakable, hidden stash) dropped its loot.
+        /// The spawned pickups get runtime ids, so persist against the spawner's guid.
         /// </summary>
         public static event Action<SpawnFromLootTable>? OnCacheLooted;
 
         /// <summary>
-        /// The player finished a resource-spot minigame (mining vein, fishing spot). Raised from
-        /// <c>Interact_Bhvr_ResourceSpot.MinigameFinishedEventListener</c>.
-        /// <c>Interact_Bhvr_ResourceSpot_AI</c> is a separate class on a separate subtree, so NPC
-        /// harvesting can never fire this.
+        /// The player finished a resource-spot minigame (mining vein, fishing spot). NPC harvesting never fires this.
         /// </summary>
         public static event Action<Interact_Bhvr_ResourceSpot, MinigameFinishedArgs>? OnResourceMinigameFinished;
 
-        // ------------------------------------------------------------------ trading
-
         /// <summary>
-        /// An item stack left a trader's inventory. Raised from
-        /// <c>TraderActorAdapter.RemoveItemFromTrader</c>, which fires exactly once per bought
-        /// stack inside MarketPlace.CompleteTrading and never on hover/preview/drag. The same
-        /// method also fires on the PLAYER-side adapter when the player sells - distinguish a
-        /// purchase by the adapter's actor not being the player.
+        /// An item stack left a trader adapter's inventory, once per traded stack.
+        /// Also fires on the player-side adapter when the player sells.
         /// </summary>
         public static event Action<TraderActorAdapter, ItemTraderStack>? OnTraderItemRemoved;
 
-        // ------------------------------------------------------------------ wiring
-
         private static bool _initialized;
 
-        // Set by the LearnTalent prefix when the call will actually learn something; consumed by
-        // the postfix. Main-thread only, no reentry: LearnTalent does not call itself.
         private static bool _pendingTalentLearn;
         private static Actor? _pendingTalentActor;
         private static TalentContainer? _pendingTalentContainer;
 
-        // ApplyData can fire more than once for a single confirm on the same service instance.
-        // Dedup only within the same frame, so repeat purchases on later teacher visits (a new
-        // frame, possibly the same reused instance) still register.
+        // ApplyData can fire twice for one confirm, so dedup within the same frame only.
         private static IntPtr _lastLearnServiceHandled = IntPtr.Zero;
         private static int _lastLearnServiceFrame = -1;
 
@@ -179,6 +131,10 @@ namespace Drova_Modding_API.Access
 
             Hooking.TryPostfix(harmony, typeof(Entity), nameof(Entity.OnKilledOther),
                 typeof(GameEvents), nameof(OnKilledOtherPostfix));
+            Hooking.TryPrefix(harmony, typeof(Health), nameof(Health.CheckEvents),
+                typeof(GameEvents), nameof(CheckEventsPrefix));
+            Hooking.TryPostfix(harmony, typeof(Health), nameof(Health.CheckEvents),
+                typeof(GameEvents), nameof(CheckEventsPostfix));
             Hooking.TryPostfix(harmony, typeof(EntityGameHandler), nameof(EntityGameHandler.PlayerActorDiedListener),
                 typeof(GameEvents), nameof(PlayerActorDiedListenerPostfix));
 
@@ -208,11 +164,7 @@ namespace Drova_Modding_API.Access
                 typeof(GameEvents), nameof(TraderItemRemovedPostfix));
         }
 
-        /// <summary>
-        /// The quest state chokepoint is a closed generic; patch it only when its native body
-        /// provably exists, otherwise fall back to the concrete operation node (which covers
-        /// quest-graph and dialogue writes - the overwhelming majority).
-        /// </summary>
+        // Patching a closed generic without an AOT body hard-crashes, so check first and fall back otherwise.
         private static void InitializeQuestHook(HarmonyLib.Harmony harmony)
         {
             MethodBase? setValue = null;
@@ -240,7 +192,24 @@ namespace Drova_Modding_API.Access
             }
         }
 
-        // ------------------------------------------------------------------ patch bodies
+        private static void CheckEventsPrefix(Health __instance, out bool __state)
+        {
+            __state = OnEntityDied != null && __instance != null && !__instance._isDead;
+        }
+
+        private static void CheckEventsPostfix(Health __instance, bool __state)
+        {
+            try
+            {
+                if (!__state || !__instance._isDead || __instance.OwnerEntity == null) return;
+
+                OnEntityDied?.Invoke(__instance.OwnerEntity);
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("[GameEvents] Health.CheckEvents postfix failed: " + e);
+            }
+        }
 
         private static void OnKilledOtherPostfix(Entity __instance, HealthChangeArgs changeArgs)
         {
@@ -266,7 +235,6 @@ namespace Drova_Modding_API.Access
                 {
                     return;
                 }
-                // A real actor, not a destructible prop, and not the player killing themselves.
                 Entity ownerEntity = victimHealth.OwnerEntity;
                 Actor? victim = ownerEntity ? ownerEntity.TryCast<Actor>() : null;
                 if (victim == null || victim.IsPlayer)
@@ -281,10 +249,15 @@ namespace Drova_Modding_API.Access
             }
         }
 
-        private static void PlayerActorDiedListenerPostfix()
+        private static void PlayerActorDiedListenerPostfix(EntityGameHandler __instance, HealthChangeArgs __0)
         {
             try
             {
+                if (__0?.TargetHealth == null || __0.TargetHealth.OwnerEntity != __instance.PlayerActor)
+                {
+                    return;
+                }
+
                 OnPlayerDied?.Invoke();
             }
             catch (Exception e)
@@ -382,8 +355,7 @@ namespace Drova_Modding_API.Access
                 {
                     return;
                 }
-                // Only handle QuestState variables; the shared generic body can be hit by other
-                // enum instantiations, so confirm the concrete type before raising.
+                // The shared generic body is also hit by other enum instantiations.
                 if (__instance.TryCast<GQuestState>() == null)
                 {
                     return;
@@ -414,7 +386,6 @@ namespace Drova_Modding_API.Access
 
         private static void RaiseQuestChanged(AGVarBase gvar, QuestState state)
         {
-            // Through UnityEngine.Object, so a destroyed or foreign parent list degrades to "no event" instead of throwing.
             GVarList? list = gvar.GetParent();
             UnityEngine.Object? parent = list == null ? null : list.TryCast<UnityEngine.Object>();
             if (!parent)

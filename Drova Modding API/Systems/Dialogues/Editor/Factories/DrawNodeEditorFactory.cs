@@ -1,7 +1,10 @@
 ﻿using Drova_Modding_API.Systems.Dialogues.Editor.Nodes;
+using Drova_Modding_API.Systems.Routines.Editor;
 using Il2CppDrova.Cutscenes;
 using Il2CppDrova.DialogueNew;
+using Il2CppDrova.DialogueSystem.DialogueTrees;
 using Il2CppDrova.GlobalVarSystem;
+using Il2CppDrova.QuestSystem;
 using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.DialogueTrees.UI;
 using Il2CppNodeCanvas.Framework;
@@ -107,7 +110,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
                 "DS_SetSpellToActiveAbiSlot", typeof(DS_SetSpellToActiveAbiSlotNodeEditor)
             },
             {
-                "DS_UnEquipNodeEditor", typeof(DS_UnEquipNodeEditor)
+                "DS_UnEquipNode", typeof(DS_UnEquipNodeEditor)
             },
             {
                 "DS_KatsaSilverMine", typeof(DS_KatsaSilverMineNodeEditor)
@@ -150,173 +153,209 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             {
                 "DS_SetGIntNode", typeof(DS_SetGIntNodeEditor)
             },
+            {
+                "DS_SetQuestStateNode", typeof(DS_SetQuestStateNodeEditor)
+            },
+            {
+                "ActionNode", typeof(BTActionNodeEditor)
+            },
         };
 
-        private readonly Dictionary<string, Func<DialogueTree, DTNode>> _nodeCreators = new()
+        private readonly Dictionary<string, Func<Graph, Node>> _nodeCreators = new()
         {
             {
-                "DS_StatementNode", tree => CreateNode<DS_StatementNode>(tree)
+                "DS_StatementNode", graph => CreateNode<DS_StatementNode>(graph)
             },
             {
-                "DS_MultipleChoiceNode", tree => CreateNode<DS_MultipleChoiceNode>(tree)
+                "DS_MultipleChoiceNode", graph => CreateNode<DS_MultipleChoiceNode>(graph)
             },
             {
-                "DS_GiveExp", tree => CreateNode<DS_GiveExp>(tree)
+                "DS_GiveExp", graph => CreateNode<DS_GiveExp>(graph)
             },
             {
-                "DS_ChangeStanceNode", tree => CreateNode<DS_ChangeStanceNode>(tree)
+                "DS_ChangeStanceNode", graph => CreateNode<DS_ChangeStanceNode>(graph)
             },
             {
-                "DS_DebugNode", tree => CreateNode<DS_DebugNode>(tree)
+                "DS_DebugNode", graph => CreateNode<DS_DebugNode>(graph)
             },
             {
-                "DS_HideDialogWindow", tree => CreateNode<DS_HideDialogWindow>(tree)
+                "DS_HideDialogWindow", graph => CreateNode<DS_HideDialogWindow>(graph)
             },
             {
-                "DS_SetFactionNode", tree => CreateNode<DS_SetFactionNode>(tree)
+                "DS_SetFactionNode", graph => CreateNode<DS_SetFactionNode>(graph)
             },
             {
-                "DS_SetFirstChapter", tree => CreateNode<DS_SetFirstChapter>(tree)
+                "DS_SetFirstChapter", graph => CreateNode<DS_SetFirstChapter>(graph)
             },
             {
-                "DS_InteractAABaseNode", tree => CreateNode<DS_InteractAABaseNode>(tree)
+                "DS_InteractAABaseNode", graph => CreateNode<DS_InteractAABaseNode>(graph)
             },
             {
-                "DS_GiveItemNode", tree => CreateNode<DS_GiveItemNode>(tree)
+                "DS_GiveItemNode", graph => CreateNode<DS_GiveItemNode>(graph)
             },
             {
-                "DS_RevisitMultipleChoiceNode", tree => CreateNode<DS_RevisitMultipleChoiceNode>(tree)
+                "DS_RevisitMultipleChoiceNode", graph => CreateNode<DS_RevisitMultipleChoiceNode>(graph)
             },
             {
-                "DS_DefineActiveActors", tree => CreateNode<DS_DefineActiveActors>(tree)
+                "DS_DefineActiveActors", graph => CreateNode<DS_DefineActiveActors>(graph)
             },
             {
-                "MultipleConditionNode", tree => CreateNode<MultipleConditionNode>(tree)
+                "MultipleConditionNode", graph => CreateNode<MultipleConditionNode>(graph)
             },
             {
-                "DS_SetGBoolNode", tree => CreateGBoolNode(tree)
+                "DS_SetGBoolNode", graph => CreateGBoolNode(graph)
             },
             {
-                "ConditionNode", tree => CreateNode<ConditionNode>(tree)
+                "ConditionNode", graph => CreateNode<ConditionNode>(graph)
             },
             {
-                "DS_HubNode", tree => CreateNode<DS_HubNode>(tree)
+                "DS_HubNode", graph => CreateNode<DS_HubNode>(graph)
             },
             {
-                "DS_HubJumpNode", tree => CreateNode<DS_HubJumpNode>(tree)
+                "DS_HubJumpNode", graph => CreateNode<DS_HubJumpNode>(graph)
             },
             {
-                "FinishNode", tree => CreateNode<FinishNode>(tree)
+                "FinishNode", graph => CreateNode<FinishNode>(graph)
             },
             {
-                "SubDialogueTree", tree => CreateNode<SubDialogueTree>(tree)
+                "SubDialogueTree", graph => CreateNode<SubDialogueTree>(graph)
             },
             {
-                "DS_OverrideLookAtSpeaker", tree => CreateNode<DS_OverrideLookAtSpeaker>(tree)
+                "DS_OverrideLookAtSpeaker", graph => CreateNode<DS_OverrideLookAtSpeaker>(graph)
             },
             {
-                "DS_OverrideFixCamPos", tree => CreateNode<DS_OverrideFixCamPos>(tree)
+                "DS_OverrideFixCamPos", graph => CreateNode<DS_OverrideFixCamPos>(graph)
             },
             {
-                "CS_CutsceneActionNode", tree => CreateNode<CS_CutsceneActionNode>(tree)
+                "CS_CutsceneActionNode", graph => CreateNode<CS_CutsceneActionNode>(graph)
             },
             {
-                "DS_SetDialogueRequirementsNode", tree => CreateNode<DS_SetDialogueRequirementsNode>(tree)
+                "DS_SetDialogueRequirementsNode", graph => CreateNode<DS_SetDialogueRequirementsNode>(graph)
             },
             {
-                "DS_OpenTradeWindowNode", tree => CreateNode<DS_OpenTradeWindowNode>(tree)
+                "DS_OpenTradeWindowNode", graph => CreateNode<DS_OpenTradeWindowNode>(graph)
             },
             {
-                "DS_SetTextSpeedNode", tree => CreateNode<DS_SetTextSpeedNode>(tree)
+                "DS_SetTextSpeedNode", graph => CreateNode<DS_SetTextSpeedNode>(graph)
             },
             {
-                "DS_CanTeachAnything", tree => CreateNode<DS_CanTeachAnything>(tree)
+                "DS_CanTeachAnything", graph => CreateNode<DS_CanTeachAnything>(graph)
             },
             {
-                "DS_HealActor", tree => CreateNode<DS_HealActor>(tree)
+                "DS_HealActor", graph => CreateNode<DS_HealActor>(graph)
             },
             {
-                "DS_EquipNode", tree => CreateNode<DS_EquipNode>(tree)
+                "DS_EquipNode", graph => CreateNode<DS_EquipNode>(graph)
             },
             {
-                "DS_UseItem", tree => CreateNode<DS_UseItem>(tree)
+                "DS_UseItem", graph => CreateNode<DS_UseItem>(graph)
             },
             {
-                "DS_SetSpellToActiveAbiSlot", tree => CreateNode<DS_SetSpellToActiveAbiSlot>(tree)
+                "DS_SetSpellToActiveAbiSlot", graph => CreateNode<DS_SetSpellToActiveAbiSlot>(graph)
             },
             {
-                "DS_UnEquipNodeEditor", tree => CreateNode<DS_UnEquipNode>(tree)
+                "DS_UnEquipNode", graph => CreateNode<DS_UnEquipNode>(graph)
             },
             {
-                "DS_KatsaSilverMine", tree => CreateNode<DS_KatsaSilverMine>(tree)
+                "DS_KatsaSilverMine", graph => CreateNode<DS_KatsaSilverMine>(graph)
             },
             {
-                "DS_LearnStatNode", tree => CreateNode<DS_LearnStatNode>(tree)
+                "DS_LearnStatNode", graph => CreateNode<DS_LearnStatNode>(graph)
             },
             {
-                "DS_LearnTalentNode", tree => CreateNode<DS_LearnTalentNode>(tree)
+                "DS_LearnTalentNode", graph => CreateNode<DS_LearnTalentNode>(graph)
             },
             {
-                "DS_ReleaseActiveActors", tree => CreateNode<DS_ReleaseActiveActors>(tree)
+                "DS_ReleaseActiveActors", graph => CreateNode<DS_ReleaseActiveActors>(graph)
             },
             {
-                "DS_RestartNode", tree => CreateNode<DS_RestartNode>(tree)
+                "DS_RestartNode", graph => CreateNode<DS_RestartNode>(graph)
             },
             {
-                "DS_LearnAttributeNode_Single", tree => CreateNode<DS_LearnAttributeNode_Single>(tree)
+                "DS_LearnAttributeNode_Single", graph => CreateNode<DS_LearnAttributeNode_Single>(graph)
             },
             {
-                "DS_TeachStatsNode", tree => CreateNode<DS_TeachStatsNode>(tree)
+                "DS_TeachStatsNode", graph => CreateNode<DS_TeachStatsNode>(graph)
             },
             {
-                "DS_PlaySfx", tree => CreateNode<DS_PlaySfx>(tree)
+                "DS_PlaySfx", graph => CreateNode<DS_PlaySfx>(graph)
             },
             {
-                "DS_DelayedTeach_Statement", tree => CreateNode<DS_DelayedTeach_Statement>(tree)
+                "DS_DelayedTeach_Statement", graph => CreateNode<DS_DelayedTeach_Statement>(graph)
             },
             {
-                "ProbabilitySelector", tree => CreateNode<ProbabilitySelector>(tree)
+                "ProbabilitySelector", graph => CreateNode<ProbabilitySelector>(graph)
             },
             {
-                "DS_SetGIntNode", tree => CreateNode<DS_SetGIntNode>(tree)
+                "DS_SetGIntNode", graph => CreateNode<DS_SetGIntNode>(graph)
+            },
+            {
+                "DS_SetQuestStateNode", graph => CreateQuestStateNode(graph)
+            },
+            {
+                "ActionNode", graph => CreateNode<ActionNode>(graph)
             },
 #if DEBUG
             {
-                "DS_TeachTalentNode", tree => CreateNode<DS_TeachTalentNode>(tree)
+                "DS_TeachTalentNode", graph => CreateNode<DS_TeachTalentNode>(graph)
             },
 #endif
         };
-#region Creation of Nodes
-        private static DTNode CreateNode<T>(DialogueTree tree) where T : DTNode
+        /// <summary>
+        /// Creates the factory for dialogue trees.
+        /// </summary>
+        public DrawNodeEditorFactory() { }
+
+        /// <summary>
+        /// Creates a factory for another graph type, replacing the dialogue node set.
+        /// </summary>
+        /// <param name="editors">Il2cpp node type name to <see cref="DrawNodeEditor"/> type</param>
+        /// <param name="creators">Node name shown in the create menu to the function adding that node to a graph</param>
+        protected DrawNodeEditorFactory(Dictionary<string, Type> editors, Dictionary<string, Func<Graph, Node>> creators)
         {
-            T node = tree.AddNode<T>();
+            nameToNodeMap = editors;
+            _nodeCreators = creators;
+        }
+
+#region Creation of Nodes
+        /// <summary>
+        /// Adds a node of type <typeparamref name="T"/> to <paramref name="graph"/> and gives it a UID.
+        /// </summary>
+        protected static Node CreateNode<T>(Graph graph) where T : Node
+        {
+            T node = graph.AddNode<T>();
             node.TryGenerateUID();
             return node;
         }
 
-        private static DS_SetGBoolNode CreateGBoolNode(DialogueTree tree)
+        private static DS_SetGBoolNode CreateGBoolNode(Graph graph)
         {
-            var node = CreateNode<DS_SetGBoolNode>(tree).Cast<DS_SetGBoolNode>();
+            var node = CreateNode<DS_SetGBoolNode>(graph).Cast<DS_SetGBoolNode>();
             node.Variable = new BBParameter<GBool>();
             node.Value = new BBParameter<bool>();
+            return node;
+        }
+
+        private static DS_SetQuestStateNode CreateQuestStateNode(Graph graph)
+        {
+            var node = CreateNode<DS_SetQuestStateNode>(graph).Cast<DS_SetQuestStateNode>();
+            node.QuestState = new BBParameter<GQuestState>();
+            node.Value = new BBParameter<QuestState>();
             return node;
         }
 #endregion
 
         /// <summary>
-        /// Get all the node names
+        /// Get the names of all nodes this factory can create
         /// </summary>
-        /// <returns></returns>
         public string[] GetNodeNames()
         {
-            return [.. nameToNodeMap.Keys];
+            return [.. _nodeCreators.Keys];
         }
 
         /// <summary>
-        /// Add a <see cref="DrawNodeEditor"/> type to the factory
+        /// Registers a <see cref="DrawNodeEditor"/> type for the il2cpp node type named <paramref name="name"/>.
         /// </summary>
-        /// <param name="name">Name of the il2cpp type<see cref="Il2CppSystem.Reflection.MemberInfo.Name"/></param>
-        /// <param name="type">DrawNodEditor type</param>
         public void AddNodeEditorType(string name, Type type)
         {
             if (type.IsSubclassOf(typeof(DrawNodeEditor)))
@@ -332,8 +371,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
         /// <summary>
         /// Get a DrawNodeEditor by name
         /// </summary>
-        /// <param name="name">The Name of the Node</param>
-        /// <returns></returns>
         public DrawNodeEditor? GetDrawNodeEditorByName(string name)
         {
             try
@@ -355,18 +392,18 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
         }
 
         /// <summary>
-        /// Creates a new dialogue node from a known node name.
+        /// Creates a new node from a known node name.
         /// </summary>
-        public DTNode? CreateNodeByName(DialogueTree tree, string name)
+        public Node? CreateNodeByName(Graph graph, string name)
         {
-            if (!_nodeCreators.TryGetValue(name, out Func<DialogueTree, DTNode> creator))
+            if (!_nodeCreators.TryGetValue(name, out Func<Graph, Node> creator))
             {
                 return null;
             }
 
             try
             {
-                return creator.Invoke(tree);
+                return creator.Invoke(graph);
             }
             catch (Exception e)
             {
@@ -376,28 +413,21 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
         }
 
         /// <summary>
-        /// Get a DrawNodeEditor by type
+        /// Get a DrawNodeEditor by type. Nodes without a dedicated editor get a <see cref="GenericNodeEditor"/>.
         /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
         public virtual DrawNodeEditor? GetDrawNodeEditorFromType(Il2CppSystem.Type type)
         {
             try
             {
-                if (nameToNodeMap.TryGetValue(type.Name, out Type v))
-                {
-                    return (DrawNodeEditor)Activator.CreateInstance(v);
-                }
-                else
-                {
-                    return null;
-                }
+                return nameToNodeMap.TryGetValue(type.Name, out Type v)
+                    ? (DrawNodeEditor)Activator.CreateInstance(v)
+                    : new GenericNodeEditor();
             }
             catch (Exception e)
             {
                 MelonLogger.Error("Error creating DrawNodeEditor from type: " + e);
-                return null;
+                return new GenericNodeEditor();
             }
         }
     }
-}
+}

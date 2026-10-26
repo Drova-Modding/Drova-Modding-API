@@ -1,0 +1,6 @@
+{
+  "Version": 1,
+  "Creatures": [
+    { "Id": "showcase_ripper", "Creature": "Ripper", "EntityInfo": "EntityInfo_NPC_Ripper", "X": -2132, "Y": -5900 }
+  ]
+}

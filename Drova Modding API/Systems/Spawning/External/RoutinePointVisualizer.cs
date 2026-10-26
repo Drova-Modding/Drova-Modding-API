@@ -25,8 +25,6 @@ namespace Drova_Modding_API.Systems.Spawning
         private static GUIStyle? _labelStyle;
         private static GUIStyle? _shadowLabelStyle;
 
-        // Texture2D is safe to create outside OnGUI; GUIStyles require GUI.skin
-        // and must be initialized lazily inside an OnGUI callback.
         internal void Awake()
         {
             _markerTexture = new Texture2D(1, 1);
@@ -62,7 +60,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (mainCamera == null)
                 return;
 
-            EnsureStyles();
+            CreateStyles();
 
             for (int i = 0; i < _points.Count; i++)
             {
@@ -73,7 +71,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 if (screenPos.z < 0f)
                     continue;
 
-                // Convert from Unity screen space (bottom-left) to IMGUI space (top-left).
                 float guiX = screenPos.x - MarkerHalf;
                 float guiY = Screen.height - screenPos.y - MarkerHalf;
 
@@ -82,16 +79,14 @@ namespace Drova_Modding_API.Systems.Spawning
 
                 GUI.Box(markerRect, GUIContent.none, _markerStyle!);
 
-                // Shadow pass for readability.
                 Rect shadowRect = new(guiX + 1f, guiY + 1f, MarkerSize, MarkerSize);
                 GUI.Label(shadowRect, label, _shadowLabelStyle!);
 
-                // Main label.
                 GUI.Label(markerRect, label, _labelStyle!);
             }
         }
 
-        private static void EnsureStyles()
+        private static void CreateStyles()
         {
             if (_markerStyle == null)
             {

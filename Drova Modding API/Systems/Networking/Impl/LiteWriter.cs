@@ -5,8 +5,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     /// <summary>
     /// Adapts an <see cref="INetWriter"/> onto LiteNetLib's <see cref="NetDataWriter"/> so a
     /// message never sees the transport type. A single instance is reused for every send on the main
-    /// thread; call <see cref="Reset"/> before building each packet. Being a class, passing it as
-    /// <see cref="INetWriter"/> does not box.
+    /// thread; call <see cref="Reset"/> before building each packet.
     /// </summary>
     internal sealed class LiteWriter : INetWriter
     {
@@ -79,8 +78,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         public void Put(byte[] value)
         {
-            // Length-prefixed so the reader knows how many bytes to pull back; the matching read is
-            // INetReader.GetBytes.
+            // Int length prefix, matching INetReader.GetBytes.
             Native.Put(value.Length);
             Native.Put(value);
         }

@@ -8,9 +8,14 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
         {
             GraphEditorManager editorManager = context.Manager;
             DrawNodeEditor? selection = context.Selection;
-            if (editorManager.DialogueTree == null || selection == null) return;
+            if (editorManager.Graph == null || selection == null) return;
 
-            editorManager.DialogueTree.RemoveNode(selection.Node.Cast<Node>());
+            bool wasStartNode = editorManager.Graph.primeNode == selection.Node;
+            editorManager.Graph.RemoveNode(selection.Node);
+            if (wasStartNode)
+            {
+                editorManager.ShowStatus("You deleted the start node. Pick a new one with 'MainNode' before saving.", true);
+            }
             editorManager.DrawNodeEditors.Remove(selection.Node.UID);
 
             foreach (DrawNodeEditor editor in editorManager.DrawNodeEditors.Values)

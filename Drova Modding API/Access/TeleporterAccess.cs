@@ -6,19 +6,10 @@ using UnityEngine;
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// Access to Drova's area-transition gates. There are no doors between areas - every
-    /// transition is an <see cref="OW_Teleporter"/> whose serialized <c>_targetPos</c> /
-    /// <c>_targetMoveDir</c> is an authored arrival anchor a few units beside its partner gate,
-    /// and vanilla links are strict bidirectional pairs.
-    ///
-    /// Overrides registered here are enforced persistently: immediately on every gate that
-    /// already exists, again when a gate's chunk streams in (OnEnable), and re-applied when the
-    /// world becomes ready (a sweep can run before Scene_Teleporters has instantiated its gates).
-    /// Writes are idempotent absolute assignments, so re-registering simply overwrites.
-    ///
-    /// SAFETY: if you rewire gate destinations, rewire whole PAIRS (swap the interiors of two
-    /// mouths and point both interiors back), never single directions - one-way rewires can
-    /// strand the player.
+    /// Access to Drova's area-transition gates. Every transition is an <see cref="OW_Teleporter"/> whose
+    /// <c>_targetPos</c> and <c>_targetMoveDir</c> are an arrival anchor beside its partner gate, and vanilla
+    /// links are bidirectional pairs. Overrides are enforced on existing gates, when a gate streams in, and
+    /// when the world becomes ready. Rewire whole pairs, never single directions, or the player can be stranded.
     /// </summary>
     public static class TeleporterAccess
     {
@@ -35,9 +26,7 @@ namespace Drova_Modding_API.Access
         private static bool _hooked;
 
         /// <summary>
-        /// Snapshot of every gate currently in memory, including ones whose streaming chunk is
-        /// inactive. Prefab assets are filtered out. This is a heap sweep - do not call it per
-        /// frame or per scene load.
+        /// Every gate in memory, including ones in inactive chunks. A heap sweep, so not for every frame or scene load.
         /// </summary>
         /// <returns>All scene gates.</returns>
         public static List<OW_Teleporter> GetAllGates()
@@ -81,7 +70,7 @@ namespace Drova_Modding_API.Access
         /// <param name="destination">The arrival anchor to enforce.</param>
         public static void SetDestinationOverride(string gateName, GateDestination destination)
         {
-            EnsureHooked();
+            HookOnce();
             Overrides[gateName] = destination;
             ApplyOverrides();
         }
@@ -94,7 +83,7 @@ namespace Drova_Modding_API.Access
         /// <param name="destinations">Gate name to arrival anchor.</param>
         public static void SetDestinationOverrides(IEnumerable<KeyValuePair<string, GateDestination>> destinations)
         {
-            EnsureHooked();
+            HookOnce();
             foreach (KeyValuePair<string, GateDestination> destination in destinations)
             {
                 Overrides[destination.Key] = destination.Value;
@@ -134,19 +123,16 @@ namespace Drova_Modding_API.Access
             }
             try
             {
-                int applied = 0;
                 UnityEngine.Object[] all = Resources.FindObjectsOfTypeAll(Il2CppType.Of<OW_Teleporter>());
                 foreach (UnityEngine.Object obj in all)
                 {
                     OW_Teleporter? teleporter = obj == null ? null : obj.TryCast<OW_Teleporter>();
-                    // Skip prefab assets (scene not valid) - mutating a prefab leaks the override
-                    // to every future instance and cannot be undone for the session.
-                    if (teleporter != null && teleporter.gameObject.scene.IsValid() && Apply(teleporter))
+                    // A prefab asset has no valid scene, and mutating it leaks the override to every future instance.
+                    if (teleporter != null && teleporter.gameObject.scene.IsValid())
                     {
-                        applied++;
+                        Apply(teleporter);
                     }
                 }
-                MelonLogger.Msg("[TeleporterAccess] destination overrides applied to " + applied + " gate(s).");
             }
             catch (Exception e)
             {
@@ -169,7 +155,7 @@ namespace Drova_Modding_API.Access
         /// Lazy: the OnEnable patch and the world-ready re-sweep only exist once the first
         /// override is registered, so mods that never touch teleporters pay nothing.
         /// </summary>
-        private static void EnsureHooked()
+        private static void HookOnce()
         {
             if (_hooked)
             {

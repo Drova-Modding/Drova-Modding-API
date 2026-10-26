@@ -1,0 +1,11 @@
+# Frame time and memory with a dense map layout: 60 world copies from 20 different chunks, 3000 units south of the
+# start. The same route runs twice, with an empty layout and with the dense one; read the `frames` answers in the
+# output (idle at the start, the jump into the layout, walking in it, standing in it). Debug build only.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/map_perf.scn
+
+copy fixtures/empty_map.json Mods/Modding_API/MapEditor/map_editor.json
+include map_perf.part
+copy fixtures/map_perf.json Mods/Modding_API/MapEditor/map_editor.json
+include map_perf.part
+copy fixtures/empty_map.json Mods/Modding_API/MapEditor/map_editor.json

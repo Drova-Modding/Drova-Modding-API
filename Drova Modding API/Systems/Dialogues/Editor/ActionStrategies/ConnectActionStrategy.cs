@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Il2CppNodeCanvas.Framework;
+using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 {
@@ -20,17 +21,22 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
             GraphEditorManager editorManager = context.Manager;
             Vector2 clickPosition = context.PointerPosition;
             DrawNodeEditor? selection = _sourceNode ?? context.Selection;
-            if (selection == null || editorManager.DialogueTree == null) return;
+            if (selection == null || editorManager.Graph == null) return;
 
             foreach (KeyValuePair<string, DrawNodeEditor> editor in editorManager.DrawNodeEditors)
             {
                 Rect nodeRect = new(editor.Value.Position, editor.Value.NodeSize);
                 if (nodeRect.Contains(clickPosition))
                 {
-                    if (editor.Value != selection && selection.Node.CanConnectToTarget(editor.Value.Node))
+                    if (editor.Value == selection) break;
+                    if (selection.Node.CanConnectToTarget(editor.Value.Node)
+                        && editorManager.Graph.ConnectNodes(selection.Node, editor.Value.Node) != null)
                     {
-                        editorManager.DialogueTree.ConnectNodes(selection.Node, editor.Value.Node);
                         selection.ConnectedWith.Add(editor.Value);
+                    }
+                    else
+                    {
+                        editorManager.ShowStatus(GetRefusalReason(selection.Node, editor.Value.Node), true);
                     }
                     break;
                 }
@@ -38,6 +44,19 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 
             _sourceNode = null;
             context.SetHint(null);
+        }
+
+        private static string GetRefusalReason(Node source, Node target)
+        {
+            string sourceName = source.GetIl2CppType().Name;
+            string targetName = target.GetIl2CppType().Name;
+            if (source.maxOutConnections == 0)
+                return $"Not connected: {sourceName} cannot have nodes after it.";
+            if (source.maxOutConnections > 0 && source.outConnections.Count >= source.maxOutConnections)
+                return $"Not connected: {sourceName} already has its {source.maxOutConnections} allowed connection(s). Delete one first.";
+            if (target.maxInConnections > 0 && target.inConnections.Count >= target.maxInConnections)
+                return $"Not connected: {targetName} already has a node before it. Each node here can only have one.";
+            return $"Not connected: {sourceName} cannot connect to {targetName}.";
         }
 
         public void OnGui(GraphEditorActionContext context)
@@ -53,8 +72,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
             Vector2 nodeCenter = selection.Position + (selection.NodeSize / 2);
             Vector2 nodeEdge = GraphEditorManager.GetEdgePoint(nodeCenter, selection.NodeSize, mousePosition);
             Vector2 nodeEdgeScreen = editorManager.GraphToScreen(nodeEdge);
-            
-            // Reset GUI.matrix to screen space before drawing the line
+
             Matrix4x4 previousMatrix = GUI.matrix;
             GUI.matrix = Matrix4x4.identity;
             GraphEditorManager.DrawLineScreenSpace(nodeEdgeScreen, mouseScreen, Color.magenta);

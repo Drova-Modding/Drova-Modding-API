@@ -22,7 +22,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<GIntConditionTask>();
             if (_castedTask == null) return;
 
-            var allpParams = GraphEditorManager.DialogueTree!.allParameters;
+            var allpParams = GraphEditorManager.Graph!.allParameters;
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
                 GraphGIntCompService task = _castedTask.Conditions[i];
@@ -67,10 +67,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
                 if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
                 {
-                    GraphEditorManager.DialogueTree!.allParameters.Remove(condition.Variable);
-                    GraphEditorManager.DialogueTree.allParameters.Remove(condition.GIntValue);
-                    GraphEditorManager.DialogueTree.allParameters.Remove(condition.Comparison);
-                    GraphEditorManager.DialogueTree.allParameters.Remove(condition.Value);
+                    GraphEditorManager.Graph!.allParameters.Remove(condition.Variable);
+                    GraphEditorManager.Graph!.allParameters.Remove(condition.GIntValue);
+                    GraphEditorManager.Graph!.allParameters.Remove(condition.Comparison);
+                    GraphEditorManager.Graph!.allParameters.Remove(condition.Value);
                     _castedTask.Conditions.RemoveAt(i);
                     _comparerDropdowns.RemoveAt(i);
                     _gvarEditors.RemoveAt(i);
@@ -112,7 +112,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 {
                     Value = new BBParameter<int>(), Comparison = new BBParameter<GInt.Comparer>(GInt.Comparer.Equals), GIntValue = new BBParameter<GInt>(), Variable = new BBParameter<GInt>()
                 };
-                var allpParams = GraphEditorManager.DialogueTree!.allParameters;
+                var allpParams = GraphEditorManager.Graph!.allParameters;
                 allpParams.Add(service.Comparison);
                 allpParams.Add(service.Value);
                 allpParams.Add(service.GIntValue);

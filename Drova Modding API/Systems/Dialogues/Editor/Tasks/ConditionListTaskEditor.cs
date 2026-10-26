@@ -65,10 +65,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             }
 
             ConditionTask? task = _createConditionTask.Draw(new Vector2(position.x, position.y + yOffset));
-            Il2CppNodeCanvas.DialogueTrees.DialogueTree? dialogueTree = GraphEditorManager.DialogueTree;
-            if (task != null && dialogueTree != null)
+            Il2CppNodeCanvas.Framework.Graph? graph = GraphEditorManager.Graph;
+            if (task != null && graph != null)
             {
-                dialogueTree.allTasks.Add(task);
+                graph.allTasks.Add(task);
                 DrawTaskEditor? editor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(task.GetIl2CppType());
                 if (editor != null)
                 {

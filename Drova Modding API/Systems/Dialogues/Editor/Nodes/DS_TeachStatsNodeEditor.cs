@@ -69,8 +69,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             for (int i = 0; i < _castedNode._availableStats.Count; i++)
             {
                 var choice = _castedNode._availableStats[i];
-                // statID in TeachableStatChoice matches statID in TeachableStat
-                // Finding the name based on statID
                 string currentStatName = "";
                 var statInfo = _castedNode._stats.ToArray().FirstOrDefault(s => s.statID == choice.statID);
                 if (statInfo != null && statInfo.statDesc != null)

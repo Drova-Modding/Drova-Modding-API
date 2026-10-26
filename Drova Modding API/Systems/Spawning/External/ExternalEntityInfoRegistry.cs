@@ -7,20 +7,8 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Spawning
 {
     /// <summary>
-    /// Pre-creates and caches <see cref="EntityInfo"/> objects for all external NPC definitions
-    /// so they are available for cross-references before any NPC is actually spawned.
-    /// <para>
-    /// Call <see cref="Initialize"/> once at main-menu load (before gameplay starts).
-    /// External mods that need to reference a custom NPC's <see cref="EntityInfo"/> inside
-    /// dialogue graphs, quest conditions, or other cross-references can look it up by
-    /// definition id (<see cref="TryGetByDefinitionId"/>) or by GUID (<see cref="TryGetByGuid"/>)
-    /// immediately after the menu has loaded, without waiting for the NPC to spawn.
-    /// </para>
-    /// <para>
-    /// When the NPC eventually spawns, <see cref="ExternalEntityInfoModule"/> reuses the
-    /// same <see cref="EntityInfo"/> instance from this registry so all previously captured
-    /// references to remain valid.
-    /// </para>
+    /// Pre-creates the <see cref="EntityInfo"/> of every external NPC definition at main-menu load, so dialogues and
+    /// quests can reference it before the NPC spawns. <see cref="ExternalEntityInfoModule"/> reuses the same instance.
     /// </summary>
     public static class ExternalEntityInfoRegistry
     {
@@ -37,9 +25,7 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         public static void Initialize()
         {
-            // Previously registered instances are HideAndDontSave, so Unity will not unload
-            // them on its own. Destroy the still-living ones before dropping our references to
-            // avoid leaking a ScriptableObject per main-menu visit.
+            // HideAndDontSave instances are never unloaded by Unity, so they would leak once per main-menu visit.
             foreach (EntityInfo previous in ByGuid.Values)
             {
                 if (previous != null)
@@ -112,16 +98,10 @@ namespace Drova_Modding_API.Systems.Spawning
         }
 
         /// <summary>
-        /// Returns the pre-created <see cref="EntityInfo"/> for <paramref name="guid"/> if one
-        /// already exists in the registry. Otherwise, creates a new bare instance (GUID only),
-        /// registers it, and returns it. Used internally by <see cref="ExternalEntityInfoModule"/>
-        /// to guarantee a single consistent instance per GUID.
+        /// Returns the registered <see cref="EntityInfo"/> for <paramref name="guid"/>, creating a GUID-only one if missing.
         /// </summary>
         internal static EntityInfo GetOrCreate(string guid)
         {
-            // A cached wrapper whose underlying ScriptableObject has been unloaded by Unity
-            // (e.g. Resources.UnloadUnusedAssets during a scene transition) compares == null.
-            // Treat that as a miss and recreate so callers never receive a destroyed instance.
             if (ByGuid.TryGetValue(guid, out EntityInfo existing) && existing != null)
                 return existing;
 
@@ -130,14 +110,9 @@ namespace Drova_Modding_API.Systems.Spawning
             return entityInfo;
         }
 
-        // ── Helpers ──────────────────────────────────────────────────────────────
-
         /// <summary>
-        /// Creates a minimal <see cref="EntityInfo"/> (GUID only) and marks it
-        /// <see cref="HideFlags.HideAndDontSave"/> so Unity does not unload it via
-        /// <c>Resources.UnloadUnusedAssets</c> during scene transitions. These instances are
-        /// referenced only by this registry's managed dictionaries until an NPC spawns, and a
-        /// managed reference alone does not keep a Unity asset alive.
+        /// Creates a GUID-only <see cref="EntityInfo"/> marked <see cref="HideFlags.HideAndDontSave"/>, since until an NPC
+        /// spawns only managed references hold it and <c>Resources.UnloadUnusedAssets</c> would unload it.
         /// </summary>
         private static EntityInfo CreateBare(string guid, string? name = null)
         {

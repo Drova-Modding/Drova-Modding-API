@@ -13,8 +13,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         private GUIDropdown? _hubRatingDropdown;
 
-        // Outer height from the previous frame so the opaque wrapper can be drawn
-        // before the inner content without occluding it.
+        // Last frame's height, so the opaque wrapper can be drawn before the content without covering it.
         private float _cachedOuterHeight = 230f;
 
         public override void Init()

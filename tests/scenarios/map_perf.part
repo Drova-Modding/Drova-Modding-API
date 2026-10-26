@@ -1,0 +1,23 @@
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load 5 0
+A wait world=1 timeout=240
+sleep 10
+A frames unlock
+sleep 15
+A frames
+A frames reset
+A tp -2132 -8200
+sleep 10
+A frames
+A frames reset
+A walk 1 0 4
+sleep 5
+A walk -1 0 4
+sleep 5
+A frames
+A frames reset
+sleep 15
+A frames
+stop A

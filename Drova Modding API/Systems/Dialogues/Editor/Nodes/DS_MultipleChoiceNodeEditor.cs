@@ -56,8 +56,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
             Color previousColor = GUI.color;
 
-            // Pre-calculate total height using cached DrawTask heights from the previous frame
-            // Per choice: 20 (header) + 35 (UID) + 25 (loca choice) + 35 (loca) + 35 (statement) + 25 (end node) + 25 (condition buttons) + 10 (gap) = 210 base
+            // Uses last frame's task heights. Per choice: 20 header, 35 UID, 25 loca toggle, 35 loca, 35 statement, 25 end node, 25 condition, 10 gap = 210.
             int additionalHeight = 20;
             for (int i = 0; i < _castedNode.availableChoices.Count; i++)
             {
@@ -81,7 +80,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             {
                 DS_MultipleChoiceNode.Choice choice = _castedNode.availableChoices[i];
 
-                // Calculate per-choice box height (base + optional task height from cache)
                 int choiceBoxHeight = 210;
                 if (_taskHeights.TryGetValue(i, out float prevTaskHeight))
                     choiceBoxHeight += (int)prevTaskHeight + 10;
@@ -121,7 +119,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 {
                     if (GUI.Button(new Rect(position.x + 5, position.y + step, 150, 20), "Add Condition"))
                     {
-                        // Cancel if already requesting
                         _choiceIndexRequestingCondition = _choiceIndexRequestingCondition == i
                             ? -1
                             : 
@@ -171,7 +168,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                     step += (int)size.height + 10;
                 }
 
-                // Ensure value-type choices persist modified primitive fields like isEndNode.
+                // Choice is a struct, so the edited copy has to be written back.
                 _castedNode.availableChoices[i] = choice;
                 step += 10;
             }
@@ -181,7 +178,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 DeleteChoiceAtIndex(_choiceIndexRequestingDelete);
             }
 
-            // Add choice button if there are less than 8 choices
             if (_castedNode.availableChoices.Count < 8)
             {
                 if (GUI.Button(new Rect(position.x, position.y + step, 200, 20), "Add Choice"))

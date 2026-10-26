@@ -3,10 +3,8 @@ using Drova_Modding_API.Systems.Networking;
 namespace EchoCoopMod
 {
     /// <summary>
-    /// The one message this sample sends. A struct implementing <see cref="INetMessage"/> is
-    /// serialised without boxing and without a per-packet allocation, which is why messages are
-    /// structs and not classes. Keep the fields to blittable types for that to hold - adding a
-    /// <c>string</c> field would allocate on every receive.
+    /// The one message this sample sends. Messages are structs so they serialize without boxing or a
+    /// per-packet allocation; a <c>string</c> field would allocate on every receive.
     /// </summary>
     public struct EchoMessage : INetMessage
     {

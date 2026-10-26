@@ -1,0 +1,46 @@
+# A new map area from a layout file: an empty rectangle far from the map gets a grass chunk's floor, its own navmesh,
+# a wall and a gate pair. The player walks in, walks the area, saves there, loads, and walks out again.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/map_area.scn
+
+default hero 5
+default slot 0
+
+copy fixtures/map_area.json Mods/Modding_API/MapEditor/map_editor.json
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+# The area has a navmesh once the world's navmesh cache is up.
+A expect questshowcase mapgap 80800 -79200 == 0 timeout=20
+
+# In through the gate on the overworld.
+A tp -2132 -5262
+A expect objects Map_test_glade_enter list contains "=1" timeout=15
+sleep 2
+A walk 0 1 2
+A expect state contains "pos=80800," timeout=15
+A expect objects Map_test_glade_floor list contains "=1" timeout=15
+A expect questshowcase mapterrain 80800 -79200 == Grass
+A expect questshowcase weatherarea == Indoor timeout=5
+# The wall, placed now that a player is near, is cut out of the area's navmesh.
+A expect questshowcase mapgap 80800 -79000 >= 10 timeout=10
+
+# Saved inside the area, loaded again: the player is still there, the area with them.
+A save 67
+A load $hero 67
+A wait world=1 timeout=240
+A expect state contains "pos=80800," timeout=5
+A expect objects Map_test_glade_floor list contains "=1" timeout=15
+A expect questshowcase mapgap 80800 -79200 == 0 timeout=20
+
+# Out through the exit gate, back to the overworld.
+A expect objects Map_test_glade_exit list contains "=1" timeout=15
+sleep 2
+A walk 0 -1 4
+A expect state contains "pos=-2132," timeout=15
+A expect questshowcase weatherarea == Outdoor timeout=5
+
+copy fixtures/empty_map.json Mods/Modding_API/MapEditor/map_editor.json

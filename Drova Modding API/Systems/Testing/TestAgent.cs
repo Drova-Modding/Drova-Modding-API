@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.GlobalFields;
+using Drova_Modding_API.Systems.MapEditor;
 using Il2CppDrova;
 using Il2CppDrova.GlobalVarSystem;
 using Il2CppDrova.HitSystem;
@@ -21,19 +22,12 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Testing
 {
     /// <summary>
-    /// Lets a test runner drive this game instance: load a save, walk, teleport, read and set global
-    /// variables, kill creatures, ask what the world holds. Inert unless the game was started with
-    /// <c>--agent-port N</c>; pair it with <c>--profile X</c> (<see cref="LaunchProfile"/>) so several
-    /// instances keep their own saves. The runner is <c>tools/Drova.TestRunner</c> in this repository.
-    ///
-    /// Listens on 127.0.0.1 only. One request per line, one answer per line: <c>ok &lt;text&gt;</c> or
-    /// <c>err &lt;text&gt;</c>. Requests arrive on a socket thread and run on the Unity main thread.
-    ///
-    /// Built in: <c>ping, state, run, load, gvar, setgvar, tp, tpnear, near, walk, walked, dead, kill,
-    /// counters, inside, ai, find, journal, give, items, inventory, equipped, chest, hit, use, takeall, camera, interactables, colliders, talk, time,
-    /// scenes, dialogue, choose, next, skip, bye, log</c>. A mod adds its own with <see cref="RegisterCommand"/>, adds fields to
-    /// <c>state</c> with <see cref="RegisterState"/>, and makes its console output readable by <c>run</c>
-    /// with <see cref="Report"/>.
+    /// Lets a test runner (<c>tools/Drova.TestRunner</c>) drive this game instance over a local socket. Debug builds
+    /// only, and inert unless the game was started with <c>--agent-port N</c>. Pair it with <c>--profile X</c>
+    /// (<see cref="LaunchProfile"/>) so several instances keep their own saves.
+    /// One request per line, answered by <c>ok &lt;text&gt;</c> or <c>err &lt;text&gt;</c>, run on the main thread.
+    /// Mods add commands with <see cref="RegisterCommand"/>, <c>state</c> fields with <see cref="RegisterState"/>,
+    /// and output readable by <c>run</c> with <see cref="Report"/>.
     /// </summary>
     public static partial class TestAgent
     {
@@ -45,20 +39,19 @@ namespace Drova_Modding_API.Systems.Testing
         private static List<string>? _capture;
         private static bool _inGameplay;
 
-        /// <summary>
-        /// Since when the world has been finished and the player in it, or null. The gameplay scene loads
-        /// long before that, and a save load passes through scene changes, so "the scene exists" is not
-        /// "the world is up".
-        /// </summary>
+        /// <summary>Since when the world has been up with the player in it, or null. The gameplay scene loads long before that.</summary>
         private static float? _worldSince;
 
         /// <summary>Since when the main menu has been up with no loading screen over it, or null.</summary>
         private static float? _menuSince;
+
+        /// <summary>Frame times in milliseconds since the last <c>frames reset</c>, for <c>frames</c>.</summary>
+        private static readonly List<float> FrameTimes = [];
         private static bool _menuLoaded;
 
         /// <summary>
-        /// A load asked for, repeated until the world is really up: the game builds its main menu twice
-        /// while starting, passing through gameplay in between, and silently drops a load asked across it.
+        /// A load asked for, retried until the world is up. The game builds its main menu twice at startup and drops a
+        /// load asked in between.
         /// </summary>
         private static (int Hero, int Slot, float LastTry)? _pendingLoad;
         private static AudioClip? _lastClip;
@@ -70,19 +63,15 @@ namespace Drova_Modding_API.Systems.Testing
         private static (MultipleChoiceRequestInfo Info, DS_DialogueUGUI Window)? _choices;
 
         /// <summary>
-        /// The dialogue node that asked for <see cref="_line"/> and for <see cref="_choices"/>. The tree continues
-        /// from whatever node is current, not from the one that asked: continuing a line the game's own UI already
-        /// continued (autoplay) moves the dialogue one extra step - answering the next question with its first
-        /// answer, or ending the conversation when a stale answer index lands on a node with fewer exits.
+        /// The dialogue node that asked for <see cref="_line"/> and <see cref="_choices"/>. The tree continues from the
+        /// current node, so acting on a request that is no longer current moves the dialogue one step too far.
         /// </summary>
         private static IntPtr _lineNode;
         private static IntPtr _choicesNode;
 
         /// <summary>
-        /// A press of the dialogue's skip input, waiting for the window to read it. Lines are moved on through the
-        /// window's own input check rather than by calling their continue callback: an auto-advancing line would
-        /// otherwise be continued twice - once here, once by the window - and the second step lands on whatever
-        /// node is current by then.
+        /// A press of the dialogue's skip input, waiting for the window to read it. Lines move on through the window's own
+        /// input check, so an auto-advancing line is never continued twice.
         /// </summary>
         private static bool _pressSkip;
 
@@ -109,9 +98,8 @@ namespace Drova_Modding_API.Systems.Testing
         public static bool IsActive => _listener != null;
 
         /// <summary>
-        /// Adds a command. The handler gets the rest of the request line after the command word and
-        /// returns the answer text; throw to answer <c>err</c> with the exception's message. Runs on the
-        /// main thread. Registering is harmless when the agent is off.
+        /// Adds a command. The handler gets the request line after the command word and returns the answer. A thrown
+        /// exception answers <c>err</c>. Runs on the main thread.
         /// </summary>
         public static void RegisterCommand(string name, Func<string, string> handler)
         {
@@ -124,10 +112,7 @@ namespace Drova_Modding_API.Systems.Testing
             StateProviders.Add(contributor);
         }
 
-        /// <summary>
-        /// Records one line of console output while a <c>run</c> request is executing, so the runner can read
-        /// what a command said. A no-op otherwise.
-        /// </summary>
+        /// <summary>Records a line of console output for the <c>run</c> request in progress. A no-op otherwise.</summary>
         public static void Report(string line)
         {
             _capture?.Add(line);
@@ -135,29 +120,21 @@ namespace Drova_Modding_API.Systems.Testing
 
         internal static void Initialize(HarmonyLib.Harmony harmony)
         {
-            LaunchProfile.Initialize(harmony);
-
             string? value = LaunchProfile.ReadArgument("--agent-port");
             if (value == null || !int.TryParse(value, out int port) || port <= 0 || port > 65535) return;
 
-            // A scripted walk goes in where a held key would: the movement input's own update, a virtual
-            // call. Setting the direction from outside, switching the input controller off, or a cutscene
-            // style SetTarget all left the player standing - measured.
+            // A scripted walk goes in where a held key would. Setting the direction from outside leaves the player standing.
             Hooking.TryPrefix(harmony, typeof(Il2CppDrova.InputModules.PlayerInput_Movement), "UpdateInput",
                 typeof(TestAgent), nameof(MovementInputPrefix));
 
-            // What the dialogue window is asked to show, read where it is handed over: both are the window's
-            // event handlers, reached through delegates.
             Hooking.TryPrefix(harmony, typeof(DS_DialogueUGUI), "OnSubtitlesRequest", typeof(TestAgent), nameof(SubtitlesPrefix));
             Hooking.TryPrefix(harmony, typeof(DS_DialogueUGUI), "OnMultipleChoiceRequest", typeof(TestAgent), nameof(ChoicesPrefix));
+            Hooking.TryPrefix(harmony, typeof(DS_DialogueUGUI._HandleAudio_d__50), "MoveNext", typeof(TestAgent), nameof(AudioPrefix));
             Hooking.TryPrefix(harmony, typeof(Il2CppDrova.GUI.Dialogue.GUI_DialogueInputHandler), "CheckShouldSkipDialog",
                 typeof(TestAgent), nameof(SkipInputPrefix));
 
-            // The camera leads ahead of the player, up to its full reach: toward the mouse (in an unfocused test
-            // instance, wherever the desktop cursor is) or, in the controller modes, along a remembered offset.
-            // A camera ~600 units off the player leaves trigger volumes near the player unloaded (they load by
-            // camera distance) - the host walked through a dead mine exit. The camera stays on the player instead. After
-            // LateUpdate: the private movement methods are inlined into it, and a patch on them never fires - measured.
+            // Keeps the camera on the player. Its lead of up to ~600 units unloads the camera-gated trigger volumes near
+            // the player. Postfix on LateUpdate because the movement methods are inlined into it.
             Hooking.TryPostfix(harmony, typeof(SmoothCameraTarget), "LateUpdate", typeof(TestAgent), nameof(CameraLeadPostfix));
 
             // `press <bind> <hold>` holds: the combat input releases every button not physically down.
@@ -167,6 +144,9 @@ namespace Drova_Modding_API.Systems.Testing
             // `look`: aim the player at a point - the facing, and the mouse point spells and shots aim at.
             Hooking.TryPrefix(harmony, typeof(Il2CppDrova.InputModules.PlayerInput_LookDir), "UpdateInput", typeof(TestAgent), nameof(LookInputPrefix));
             Hooking.TryPostfix(harmony, typeof(CameraGameHandler), "UpdateGameHandler", typeof(TestAgent), nameof(MousePointPostfix));
+
+            // The mouse wheel scrolls the selected spell through Unity's legacy Input, which the Rewired switch does not cover.
+            Hooking.TryPrefix(harmony, typeof(Il2CppDrova.InputModules.PlayerInput_CombatActions), "CheckQuickSpells", typeof(TestAgent), nameof(QuickSpellsPrefix));
 
             _listener = new TcpListener(IPAddress.Loopback, port);
             _listener.Start();
@@ -186,8 +166,32 @@ namespace Drova_Modding_API.Systems.Testing
                 _inGameplay = false;
                 _menuLoaded = true;
                 _menuSince = null;
-                MelonLogger.Msg("[Agent] main menu scene loaded.");
             }
+        }
+
+        private static string Frames(string option)
+        {
+            if (option == "unlock")
+            {
+                QualitySettings.vSyncCount = 0;
+                Application.targetFrameRate = -1;
+                option = "reset";
+            }
+
+            if (option == "reset")
+            {
+                FrameTimes.Clear();
+                return "reset";
+            }
+
+            if (FrameTimes.Count == 0) return "n=0";
+
+            List<float> sorted = [.. FrameTimes];
+            sorted.Sort();
+            float p99 = sorted[Math.Min(sorted.Count - 1, (int)(sorted.Count * 0.99f))];
+            long memory = System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64 / (1024 * 1024);
+            return "n=" + sorted.Count + " avg=" + Format(sorted.Average()) + " p99=" + Format(p99) + " max=" + Format(sorted[^1])
+                + " mem=" + memory + " held=" + MapSceneTemplates.HeldScenes;
         }
 
         internal static void Update()
@@ -195,18 +199,16 @@ namespace Drova_Modding_API.Systems.Testing
             if (_listener == null) return;
 
             _worldSince = IsWorldUp() ? _worldSince ?? Time.realtimeSinceStartup : null;
+            if (FrameTimes.Count < 200000) FrameTimes.Add(Time.unscaledDeltaTime * 1000f);
             // A frame stall is the menu still being built (it is built twice at startup): idle starts over.
             _menuSince = IsMenuUp() && Time.unscaledDeltaTime < 0.5f ? _menuSince ?? Time.realtimeSinceStartup : null;
 
-            // Two instances side by side: Unity stops ticking a window that lost focus, and a game that
-            // does not tick answers nothing - measured as a single 101-second frame. Asserted every frame
-            // because the game writes the flag back from its own settings after start.
+            // Unity stops ticking an unfocused window, so a second instance would answer nothing. Set every frame because
+            // the game writes it back from its settings.
             Application.runInBackground = true;
 
-            // The game's own "deactivate minigames" option, so work spots and locks resolve without a minigame
-            // a script cannot play. Written into this instance's profile config only.
-            // Only once the world is up: before the game's managers exist, ConfigGameHandler.TryGet throws inside the
-            // game - which, asked every frame, filled each start-up log with hundreds of errors.
+            // The game's own "deactivate minigames" option, written into this profile's config only. Waits for the world
+            // because ConfigGameHandler.TryGet throws inside the game before its managers exist.
             if (!_minigamesOff && _worldSince != null && ConfigGameHandler.TryGet(out ConfigGameHandler config) && config != null && config.GameplayConfig != null)
             {
                 config.GameplayConfig.DeactivateMinigames.SetValue(true);
@@ -247,8 +249,7 @@ namespace Drova_Modding_API.Systems.Testing
             {
                 try
                 {
-                    // A thread per connection: a runner holds its connection for the whole scenario, and a second
-                    // one (a person poking at a running test) used to wait behind it until the run ended.
+                    // A thread per connection, so a second client does not wait behind a running scenario.
                     TcpClient accepted = _listener.AcceptTcpClient();
                     new Thread(() => Serve(accepted)) { IsBackground = true, Name = "TestAgent client" }.Start();
                 }
@@ -317,6 +318,7 @@ namespace Drova_Modding_API.Systems.Testing
 
                 case "tpnear": return TeleportNear(Arg(parts, 1), Float(parts, 2), parts.Length > 3 ? Float(parts, 3) : 0f);
                 case "near": return Near(Arg(parts, 1), Float(parts, 2));
+                case "inrange": return InRange(Arg(parts, 1), Float(parts, 2));
                 case "walk": return Walk(Float(parts, 1), Float(parts, 2), Float(parts, 3));
                 case "walked": return Format(_walkedDistance);
                 case "realinput": _realInput = Arg(parts, 1) == "on"; HoldRealInput(); return "real input " + (_realInput ? "on" : "off");
@@ -335,20 +337,22 @@ namespace Drova_Modding_API.Systems.Testing
                 case "give": return Give(Arg(parts, 1), parts.Length > 2 ? Int(parts, 2) : 1);
                 case "items": return Items(Arg(parts, 1));
                 case "inventory": return Inventory(parts.Length > 1 ? parts[1] : string.Empty);
-                case "equipped": return Equipped();
+                case "equipped": return Equipped(parts.Length > 1 ? parts[1] : null);
                 case "press": return Press(Arg(parts, 1), parts.Length > 2 ? Float(parts, 2) : 0.05f, parts.Length > 3 ? Float(parts, 3) : 0f);
                 case "stance": return Stance(Arg(parts, 1));
-                case "useitem": return UseItem(Arg(parts, 1), parts.Length > 2 ? Float(parts, 2) : 0.05f);
+                case "useitem": return UseItem(Arg(parts, 1), parts.Length > 2 ? Float(parts, 2) : 0.05f, parts.Length > 3 && parts[3] == "idle");
+                case "morph": return Morph(parts.Length > 1 ? parts[1] : string.Empty);
                 case "equip": return Equip(Arg(parts, 1));
                 case "unequip": return Unequip();
                 case "itemsearch": return ItemSearch(Arg(parts, 1));
                 case "health": return ActorHealth(Arg(parts, 1), parts.Length > 2 ? parts[2] : string.Empty);
                 case "effects": return Effects(Arg(parts, 1));
                 case "talents": return Talents(Arg(parts, 1), parts.Length > 2 ? parts[2] : string.Empty);
-                case "talent": return Talent(Arg(parts, 1), Arg(parts, 2));
+                case "talent": return Talent(Arg(parts, 1), parts.Length > 2 ? parts[2] : string.Empty);
                 case "effect": return Effect(Arg(parts, 1), Arg(parts, 2));
                 case "objects": return Objects(Arg(parts, 1), parts.Length > 2 && parts[2] == "list");
-                case "actors": return Actors(parts.Length > 1 ? Float(parts, 1) : 600f);
+                case "gui": return TestGuiInput.Command(parts);
+                case "actors": return Actors(parts.Length > 1 ? Float(parts, 1) : 600f, parts.Length > 2 ? parts[2] : null);
                 case "look": return Look(Arg(parts, 1));
                 case "actlog": return ActLog(Arg(parts, 1), parts.Length > 2 ? parts[2] : "me");
                 case "chest": return Chest(Arg(parts, 1));
@@ -358,7 +362,54 @@ namespace Drova_Modding_API.Systems.Testing
                 case "weather": return Weather();
                 case "merchant": return Merchant(parts.Length > 1 ? parts[1] : string.Empty, parts.Length > 2 ? parts[2] : string.Empty, parts.Length > 3 ? Int(parts, 3) : 1);
                 case "foglets": return Foglets(parts.Length > 1 ? Float(parts, 1) : 1500f);
+                // "gameplayinput": whether the keyboard maps InputAccess.ToggleGameplayActionMaps switches are on, as
+                // "category=1|0|-" (- when this player has no map there). What a mod window that blocks input must turn off.
+                case "gameplayinput":
+                {
+                    if (!Il2CppRewired.ReInput.isReady) return "not ready";
+                    Il2CppRewired.Player.ControllerHelper.MapHelper maps = Il2CppRewired.ReInput.players.GetPlayer(0).controllers.maps;
+                    return string.Join(" ", new[] { 0, 2, 3 }.Select(category =>
+                    {
+                        Il2CppRewired.ControllerMap? map = maps.GetFirstMapInCategory(Il2CppRewired.ControllerType.Keyboard, 0, category);
+                        return category + "=" + (map == null ? "-" : map.enabled ? "1" : "0");
+                    }));
+                }
+
+                // Back to the main menu the way the pause menu does, without its autosave (main-menu-only commands).
+                case "mainmenu":
+                    (Access.ProviderAccess.GetSceneGameHandler() ?? throw new InvalidOperationException("no scene handler")).LoadMainMenuScene();
+                    return "leaving";
                 case "worldevent": return WorldEvent(parts);
+
+                // "minigames on|off": the game's minigames (lockpicking, fishing) played, or skipped as the agent sets them.
+                case "minigames":
+                    if (!ConfigGameHandler.TryGet(out ConfigGameHandler minigameConfig) || minigameConfig?.GameplayConfig == null) throw new InvalidOperationException("no config yet");
+                    minigameConfig.GameplayConfig.DeactivateMinigames.SetValue(Arg(parts, 1) != "on");
+                    return "minigames " + Arg(parts, 1);
+
+                // "minigame": whether a slider minigame (a lockpick) is open. "minigame win": its success bar filled on
+                // its last round, so its next frame pays the reward as a played win would. "minigame read": its explanation
+                // clicked away. "minigame unread <name>": that minigame's explanation (Lockpicking, Fishing_1, TimedClick)
+                // counts as never read, so its next opening shows it.
+                case "minigame":
+                    if (parts.Length > 2 && parts[1] == "unread")
+                    {
+                        return Il2CppDrova.Saveables.Savegame.Current.Data._objectDict.Remove("Minigame_Tutorial_Read_" + parts[2]) ? "unread " + parts[2] : "never read " + parts[2];
+                    }
+
+                    Il2CppDrova.GUI.GUI_SliderGame? slider = UnityEngine.Object.FindObjectOfType<Il2CppDrova.GUI.GUI_SliderGame>();
+                    if (slider == null) return "none";
+                    if (parts.Length > 1 && parts[1] == "win")
+                    {
+                        slider._curPhase = slider._repeats;
+                        slider._curSuccessTime = slider._settings.SuccessTime;
+                    }
+
+                    Il2CppDrova.GUI.GUI_Minigame_Explanation_Handler? explanation = slider._minigameExplanationHandler;
+                    if (parts.Length > 1 && parts[1] == "read" && explanation != null) explanation.OnClickListener();
+
+                    return "open success=" + slider._curSuccessTime.ToString("0.00", CultureInfo.InvariantCulture) + " fail=" + slider._curFailTime.ToString("0.00", CultureInfo.InvariantCulture)
+                        + " explaining=" + (explanation != null && explanation.IsPaused ? 1 : 0);
                 case "pause": return GUIGameHandler.TryGet(out GUIGameHandler gui) && gui != null ? Opened(gui) : "no gui handler";
                 case "camera": return CameraTarget(parts.Length > 1 && parts[1] == "reset");
                 case "hit": return Hit(Arg(parts, 1), Int(parts, 2), parts.Length > 3 ? parts[3] : "pure", parts.Length > 4 ? parts[4] : null);
@@ -369,6 +420,7 @@ namespace Drova_Modding_API.Systems.Testing
                 case "time": return GameTime();
                 case "scenes": return Scenes(parts.Length > 1 ? parts[1] : string.Empty, parts.Length > 2 && parts[2] == "rearm");
                 case "dialogue": return Dialogue();
+                case "heard": return HeardLines(rest);
                 case "choose": return Choose(rest);
                 case "next": return Next();
                 case "bye": return Bye();
@@ -390,17 +442,44 @@ namespace Drova_Modding_API.Systems.Testing
                     ScreenCapture.CaptureScreenshot(rest);
                     return "shot " + rest;
 
+                // "screen <target>": where that actor's feet are on screen, as "x,y" in pixels from the top left - to label a shot.
+                case "screen":
+                    return ScreenPosition(Arg(parts, 1));
+
+                // "show <target>": activates a spawned body its routine keeps hidden - to look at an NPC out of its quest.
+                case "show":
+                    ResolveActor(Arg(parts, 1)).gameObject.SetActive(true);
+                    return "shown";
+
                 // "critstop on|off": the game's own no-crits cheat, for blows of a known size (a crit downs a lightly armored
                 // player outright).
                 case "critstop":
                     Il2CppDrova.Cheat.Cheat_CritStop.CritStop = rest == "on";
                     return "critstop " + (Il2CppDrova.Cheat.Cheat_CritStop.CritStop ? "on" : "off");
 
-                // "netstats": what went out this session - "out=packets:bytes" on the wire (headers included), then
+                // "invincible on|off": this player takes no damage - to walk among hostiles without dying. The cheat flag
+                // too, since an action's immunity (a dodge, standing up) clears the plain one when it ends.
+                case "invincible":
+                    ResolveActor("me").GetHealth().SetInvinciblity(rest == "on");
+                    ResolveActor("me").GetHealth().SetCheatInvi(rest == "on");
+                    return "invincible " + (ResolveActor("me").GetHealth().CheatInvincible ? "on" : "off");
+
+                // "frames [reset|unlock]": frame times since the last reset as "n= avg= p99= max=" in ms, private memory in MB
+                // and the chunk scenes the map layout holds. "unlock" lifts vsync and the frame cap.
+                case "frames":
+                    return Frames(rest);
+
+                // "netstats": first the net stats view's fault counters (a session must never send too early or too big),
+                // then what went out this session - "out=packets:bytes" on the wire (headers included), then
                 // "id:count:bytes" of message payload per typed message id that sent any.
                 case "netstats":
                 {
                     StringBuilder stats = new();
+                    stats.Append("encrypted=").Append(Networking.Impl.NetworkSystem.IsEncrypted ? 1 : 0)
+                        .Append(" oversized=").Append(Networking.Diagnostics.NetworkDiagnostics.OversizedSends)
+                        .Append(" nosession=").Append(Networking.Diagnostics.NetworkDiagnostics.SendsWithoutSession)
+                        .Append(" undecryptable=").Append(Networking.Diagnostics.NetworkDiagnostics.UndecryptablePackets)
+                        .Append(" malformed=").Append(Networking.Diagnostics.NetworkDiagnostics.MalformedPackets).Append(' ');
                     LiteNetLib.NetStatistics? wire = Networking.Impl.NetworkSystem.Transport?.Manager?.Statistics;
                     if (wire != null) stats.Append("out=").Append(wire.PacketsSent).Append(':').Append(wire.BytesSent).Append(' ');
                     for (int id = 0; id < Networking.Impl.Dispatcher.MaxMessageTypes; id++)
@@ -409,7 +488,7 @@ namespace Drova_Modding_API.Systems.Testing
                         if (count > 0) stats.Append(id).Append(':').Append(count).Append(':').Append(Networking.Diagnostics.NetworkDiagnostics.SentBytes(id)).Append(' ');
                     }
 
-                    return stats.Length == 0 ? "none" : stats.ToString().TrimEnd();
+                    return stats.ToString().TrimEnd();
                 }
 
                 // "audioclip <actor> <clip>": a dialogue clip by name from the default provider's bundles, as a co-op peer
@@ -423,6 +502,37 @@ namespace Drova_Modding_API.Systems.Testing
                 case "unloadassets":
                     Resources.UnloadUnusedAssets();
                     return "unloading";
+
+                // "sources <clip frag>": every AudioSource holding a clip whose name contains the fragment - who plays a voice line.
+                case "sources":
+                    StringBuilder sources = new();
+                    foreach (AudioSource source in UnityEngine.Object.FindObjectsOfType<AudioSource>(true))
+                    {
+                        if (source.clip == null || !source.clip.name.Contains(rest, StringComparison.Ordinal)) continue;
+                        sources.Append(source.transform.parent != null ? source.transform.parent.name + "/" : "").Append(source.name)
+                            .Append(" playing=").Append(source.isPlaying ? 1 : 0).Append(" awake=").Append(source.playOnAwake ? 1 : 0)
+                            .Append(" active=").Append(source.isActiveAndEnabled ? 1 : 0).Append(" blend=").Append(Format(source.spatialBlend))
+                            .Append(" vol=").Append(Format(source.volume)).Append(" clip=").Append(source.clip.name).Append("; ");
+                    }
+                    return sources.Length == 0 ? "none" : sources.ToString().TrimEnd();
+
+                // "bubbles": each dialogue UI with a current window - its window manager, the window's owner, and what its
+                // speech line shows ("shown/total" characters) - to catch a voiced bubble left empty.
+                case "bubbles":
+                    StringBuilder bubbles = new();
+                    foreach (DS_DialogueUGUI ui in UnityEngine.Object.FindObjectsOfType<DS_DialogueUGUI>())
+                    {
+                        Il2CppDrova.GUI.Dialogue.DS_DialogueWindow? window = ui._windowMgr != null ? ui._windowMgr.GetCurrentWindow() : null;
+                        if (window == null) continue;
+                        Il2CppTMPro.TextMeshProUGUI speech = window.SubtitlesGroup.ActorSpeech;
+                        bubbles.Append(ui.transform.parent != null ? ui.transform.parent.name : ui.name)
+                            .Append(" mgr=").Append(ui._windowMgr!.Pointer.ToString("x"))
+                            .Append(" window=").Append(window.transform.parent != null ? window.transform.parent.name : window.name)
+                            .Append(" fading=").Append(window.IsFadingOut ? 1 : 0)
+                            .Append(" shown=").Append(Math.Min(speech.maxVisibleCharacters, speech.text.Length)).Append('/').Append(speech.text.Length)
+                            .Append(" text=").Append(speech.text.Length > 30 ? speech.text[..30] : speech.text).Append("; ");
+                    }
+                    return bubbles.Length == 0 ? "none" : bubbles.ToString().TrimEnd();
 
                 default:
                     throw new InvalidOperationException("unknown command " + parts[0]);
@@ -439,8 +549,7 @@ namespace Drova_Modding_API.Systems.Testing
                 ? Format(player.GetFeetPosition().x) + "," + Format(player.GetFeetPosition().y)
                 : "-";
 
-            // A load taken between the two menu builds came up half-loaded: the save loader failed on the quickbar
-            // and ten thousand errors followed. Hence the menu scene, no stall and a longer quiet.
+            // A load taken between the two startup menu builds comes up half-loaded, hence the long quiet.
             bool ready = _menuSince != null && Time.realtimeSinceStartup - _menuSince > 6f;
             bool world = _worldSince != null && Time.realtimeSinceStartup - _worldSince > 2f;
 
@@ -512,9 +621,8 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// <c>save &lt;slot&gt;</c>: saves the running game into that slot of the current hero - a fixture save for a
-        /// later scenario, taken after its preconditions were set and reloaded so routines and scenery rebuild from them.
-        /// Only in a profile of its own: never into the player's real savegames.
+        /// <c>save &lt;slot&gt;</c>: saves the running game into that slot of the current hero, as a fixture for later
+        /// scenarios. Only in a profile of its own, never into the player's real savegames.
         /// </summary>
         private static string Save(int slot)
         {
@@ -570,10 +678,8 @@ namespace Drova_Modding_API.Systems.Testing
         {
             if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
 
-            // A player cannot walk away from a conversation, but a teleport can: the scene's NPCs then unload while the
-            // conversation still speaks through them, and the dialogue window breaks on the next line - for good.
-            // So a running conversation is ended first, the way the game ends one - for a jump far enough to unload the
-            // scene; a step next to the speaker keeps it.
+            // A far teleport unloads the speaker's scene and breaks the dialogue window for good, so a running
+            // conversation is ended first.
             if ((new Vector2(x, y) - player.GetFeetPosition()).magnitude > 1000f
                 && Il2CppDrova.DialogueNew.DialogueSystemGameHandler.TryGet(out Il2CppDrova.DialogueNew.DialogueSystemGameHandler dialogues)
                 && dialogues != null && dialogues.ActivePlayerDialogue != null && dialogues.ActivePlayerDialogue.isRunning)
@@ -627,9 +733,28 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// <c>walk &lt;dx&gt; &lt;dy&gt; &lt;seconds&gt;</c>: walks this player in that direction for that long at the game's
-        /// own speed, turning 45 degrees whenever it stops making progress. Answers at once; check how far it
-        /// really got with <c>walked</c> - a walk into a fence goes nowhere without complaint.
+        /// <c>inrange &lt;guid&gt; &lt;range&gt;</c>: the game's own routine range check (<c>IsEntityInRangeCommand</c>, what a
+        /// routine dialogue waiting for an NPC asks) from this player to that lazy actor's NPC. "in" or "out", and whether
+        /// the NPC is spawned here.
+        /// </summary>
+        private static string InRange(string guid, float range)
+        {
+            if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
+            LazyActor lazy = Entities().GetLazyActorFromGuid(guid) ?? throw new InvalidOperationException("no lazy actor " + guid);
+
+            Il2CppSystem.Collections.Generic.List<EntityInfo> entities = new();
+            entities.Add(lazy._entityInfo);
+            Il2CppDrova.Routine.IsEntityInRangeCommand check = new(range, entities,
+                new Il2CppDrova.Routine.DummyRoutineCommand(true, null).Cast<Il2CppDrova.Routine.IRoutineCommand>(),
+                new Il2CppDrova.Routine.WaitTimeRoutineCommand(float.MaxValue, null).Cast<Il2CppDrova.Routine.IRoutineCommand>(), null);
+            bool inRange = check.ExecuteCommand(new Il2CppDrova.Routine.RoutineCommandArgs(player._aiModule.GetIAIFactory().GetActor(), 0f));
+
+            return (inRange ? "in" : "out") + " spawned=" + (Entities().GetFirstEntityByInfo(lazy._entityInfo) != null ? 1 : 0);
+        }
+
+        /// <summary>
+        /// <c>walk &lt;dx&gt; &lt;dy&gt; &lt;seconds&gt;</c>: walks this player in that direction at the game's own speed,
+        /// turning 45 degrees whenever it stops making progress. Answers at once. <c>walked</c> tells how far it got.
         /// </summary>
         private static string Walk(float dx, float dy, float seconds)
         {
@@ -743,12 +868,9 @@ namespace Drova_Modding_API.Systems.Testing
         private static bool _realInput;
 
         /// <summary>
-        /// Keeps the keyboard and mouse switched off at the device while a script drives the game. A launched
-        /// instance takes the desktop's focus, and somebody playing in another window then swung, drank and
-        /// sheathed on the scripted player - indistinguishable from a sync fault. Off at the device rather
-        /// than by skipping the game's input modules: those also let go of every button that is not held,
-        /// each frame, and skipping them changed how attacks and walks behave. Asserted every frame, because
-        /// the game can switch controllers back on.
+        /// Keeps the keyboard and mouse off at the device while a script drives the game, so input meant for another
+        /// window cannot act on the focused test instance. Skipping the game's input modules instead changes how attacks
+        /// and walks behave. Asserted every frame because the game switches controllers back on.
         /// </summary>
         private static void HoldRealInput()
         {
@@ -758,6 +880,8 @@ namespace Drova_Modding_API.Systems.Testing
             if (controllers.Keyboard != null && controllers.Keyboard.enabled != _realInput) controllers.Keyboard.enabled = _realInput;
             if (controllers.Mouse != null && controllers.Mouse.enabled != _realInput) controllers.Mouse.enabled = _realInput;
         }
+
+        private static bool QuickSpellsPrefix() => _realInput;
 
         private static bool MovementInputPrefix(Il2CppDrova.InputModules.PlayerInput_Movement __instance)
         {
@@ -821,10 +945,14 @@ namespace Drova_Modding_API.Systems.Testing
             return text.Length == 0 ? "none" : text.ToString();
         }
 
-        /// <summary>
-        /// <c>inside &lt;name fragment&gt;</c>: 1 when this player is in that trigger volume by the game's own
-        /// flag, then the collider overlap, whether the volume is active, and its full name.
-        /// </summary>
+        /// <summary>Whether a volume's name, or its "parent/name" path, contains the fragment. Many volumes share a name.</summary>
+        private static bool NamedLike(HitReceiveHandler handler, string fragment)
+        {
+            Transform? parent = handler.transform.parent;
+            string path = (parent != null ? parent.name + "/" : "") + handler.gameObject.name;
+            return path.Contains(fragment, StringComparison.OrdinalIgnoreCase);
+        }
+
         /// <summary>
         /// <c>tpinto &lt;volume name fragment&gt;</c>: teleports the player to a point inside that trigger volume's shape - the
         /// middle of its bounds if that is inside, else the first point of a grid over the bounds that is. A volume's own
@@ -833,8 +961,7 @@ namespace Drova_Modding_API.Systems.Testing
         private static string TeleportInto(string fragment)
         {
             HitReceiveHandler handler = Resources.FindObjectsOfTypeAll<HitReceiveHandler>()
-                .FirstOrDefault(candidate => candidate != null && candidate.gameObject.scene.IsValid()
-                    && candidate.gameObject.name.Contains(fragment, StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault(candidate => candidate != null && candidate.gameObject.scene.IsValid() && NamedLike(candidate, fragment))
                 ?? throw new InvalidOperationException("no volume named like " + fragment);
 
             Collider2D receive = handler.GetReceiveCollider() ?? throw new InvalidOperationException("the volume has no collider");
@@ -851,6 +978,10 @@ namespace Drova_Modding_API.Systems.Testing
             return Teleport(at.x, at.y);
         }
 
+        /// <summary>
+        /// <c>inside &lt;name fragment&gt;</c>: 1 when this player is in that trigger volume by the game's own
+        /// flag, then the collider overlap, whether the volume is active, and its full name.
+        /// </summary>
         private static string Inside(string fragment)
         {
             if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
@@ -860,7 +991,7 @@ namespace Drova_Modding_API.Systems.Testing
             foreach (HitReceiveHandler candidate in Resources.FindObjectsOfTypeAll<HitReceiveHandler>())
             {
                 if (candidate == null || !candidate.gameObject.scene.IsValid()) continue;
-                if (!candidate.gameObject.name.Contains(fragment, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!NamedLike(candidate, fragment)) continue;
 
                 handler = candidate;
                 break;
@@ -876,16 +1007,26 @@ namespace Drova_Modding_API.Systems.Testing
             string bound = !handler._hasPlayerActor ? "none"
                 : handler._playerActor != null && handler._playerActor.Pointer == player.Pointer ? "local" : "other";
 
+            // Each behaviour, and each filter with its verdict on this player: a volume overlapped but never entered fails one.
+            HitTriggerArgs args = new() { Entity = player };
+            args.Flags.Add(HitTriggerFlag.Entity);
+            StringBuilder parts = new();
+            foreach (AHitReceiveBhvr bhvr in handler._receiveBhvrs)
+            {
+                if (bhvr == null) continue;
+                parts.Append(' ').Append(bhvr.GetIl2CppType().Name);
+                foreach (IHitFilter filter in handler._filters)
+                {
+                    if (filter == null) continue;
+                    parts.Append(':').Append(filter.Cast<Il2CppSystem.Object>().GetIl2CppType().Name)
+                        .Append(!filter.IsEnabled ? "=off" : filter.Check(args, bhvr) ? "=1" : "=0");
+                }
+            }
+
             return $"{(handler._isInCollider ? 1 : 0)} overlap={(overlaps ? 1 : 0)} active={(handler.isActiveAndEnabled ? 1 : 0)} " +
-                $"loaded={(handler.IsLoaded ? 1 : 0)} player={bound} name={handler.gameObject.name}";
+                $"loaded={(handler.IsLoaded ? 1 : 0)} player={bound} name={handler.gameObject.name} bhvrs={parts}";
         }
 
-        /// <summary><c>ai &lt;guid&gt;</c>: whether that actor's AI runs here and which routine place it is on.</summary>
-        /// <summary>
-        /// <c>port &lt;guid&gt;</c>: sends an NPC to its current routine place the way the game's story observers do
-        /// (<c>LazyActor.ForceActorToPortToNextRoutine</c>). A fixture that sets story flags gets the right routines,
-        /// but the bodies stay where the older routine left them until something ports them.
-        /// </summary>
         /// <summary>
         /// <c>perceive &lt;fragment|*&gt; [range]</c>: what a player's perception does to hidden objects near them - a wall
         /// switch, a pedestal with a relic - once the investigation timer has run out: they become investigable, and
@@ -955,6 +1096,10 @@ namespace Drova_Modding_API.Systems.Testing
             return $"placed on {(nearest.transform.parent != null ? nearest.transform.parent.name : nearest.name)}; {Items(readableId)} left";
         }
 
+        /// <summary>
+        /// <c>port &lt;guid&gt;</c>: sends an NPC to its current routine place the way the game's story observers do.
+        /// A fixture's story flags pick the right routine, but bodies stay where the older one left them until ported.
+        /// </summary>
         private static string PortToRoutine(string guid)
         {
             LazyActor lazy = Entities().GetLazyActorFromGuid(guid)
@@ -964,6 +1109,7 @@ namespace Drova_Modding_API.Systems.Testing
             return "porting " + lazy.name;
         }
 
+        /// <summary><c>ai &lt;guid&gt;</c>: whether that actor's AI runs here and which routine place it is on.</summary>
         private static string Brain(string guid)
         {
             Actor actor = Entities().GetActorFromGuid(guid);
@@ -990,9 +1136,7 @@ namespace Drova_Modding_API.Systems.Testing
 
         private static void SubtitlesPrefix(SubtitlesRequestInfo info)
         {
-            // A line continued from here keeps its window routine running, which continues it again once done - and
-            // the tree continues whatever node is current by then: a question was skipped past unanswered, and the
-            // routine's leftover text broke on a window already gone. A line moves the tree on once, whoever is first.
+            // A line moves the tree on once, whoever is first. Continued twice, the second step skips a question unanswered.
             Il2CppSystem.Action? original = info.Continue;
             if (original != null)
             {
@@ -1008,6 +1152,30 @@ namespace Drova_Modding_API.Systems.Testing
             _line = info;
             _lineNode = CurrentNode();
             _lineSince = Time.unscaledTime;
+            Heard.Add((info.actor?.name ?? "-") + ":" + (info.statement?.TryCast<DS_Statement>()?.locaKey ?? "-"));
+        }
+
+        private static void AudioPrefix(DS_DialogueUGUI._HandleAudio_d__50 __instance)
+        {
+            if (__instance.__1__state != 0) return;
+            Heard.Add("voice:" + (DSDialogueUGUIHandleAudioPatch.BubbleShown(__instance.__4__this) ? "played:" : "muted:") + __instance.audio.name);
+        }
+
+        /// <summary>Every line any dialogue spoke here, world dialogues included, as "speaker:locaKey", and each voice clip
+        /// as "voice:played|muted:text".</summary>
+        private static readonly List<string> Heard = new();
+
+        /// <summary><c>heard [fragment|clear]</c>: the spoken lines containing the fragment, oldest first, or "none".</summary>
+        private static string HeardLines(string fragment)
+        {
+            if (fragment == "clear")
+            {
+                Heard.Clear();
+                return "cleared";
+            }
+
+            List<string> lines = Heard.FindAll(line => line.Contains(fragment, StringComparison.Ordinal));
+            return lines.Count == 0 ? "none" : string.Join(" ", lines);
         }
 
         private static void ChoicesPrefix(DS_DialogueUGUI __instance, MultipleChoiceRequestInfo info)
@@ -1018,13 +1186,10 @@ namespace Drova_Modding_API.Systems.Testing
             // A press still waiting would be read by the answer window as picking the highlighted answer.
             _pressSkip = false;
 
-            // Some answer windows count down and then take the last answer themselves. A player sees the timer
-            // fade; a scripted "choose" polling a moment later finds the question already answered, or a stale
-            // answer list. The prefix runs before the window reads the time, so a test run gets no countdown.
+            // No countdown: a timed answer window would take an answer itself before a scripted "choose" arrives.
             info.availableTime = 0f;
 
-            // The line before the answers is over. Continuing it later would land on the answers and pick
-            // the first one - a "skip" right after a "choose" did exactly that.
+            // The line before the answers is over. Continuing it later would pick the first answer.
             _line = null;
         }
 
@@ -1139,12 +1304,14 @@ namespace Drova_Modding_API.Systems.Testing
             return text.Length == 0 ? "none" : text.ToString();
         }
 
-        /// <summary><c>equipped</c>: what this player wears and holds, by readable id, placeholders left out.</summary>
-        private static string Equipped()
+        /// <summary><c>equipped [guid|name]</c>: what this player (or that body) wears and holds, by readable id, placeholders left out, sorted so two bodies compare.</summary>
+        private static string Equipped(string? target)
         {
             if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
 
-            Actor.EquipmentModule equipment = player.GetEquipmentModule() ?? throw new InvalidOperationException("no equipment yet");
+            // Another body by guid or name: a co-op copy of a teammate shows what this machine dressed it in.
+            Actor actor = target == null ? player : ResolveActor(target);
+            Actor.EquipmentModule equipment = actor.GetEquipmentModule() ?? throw new InvalidOperationException("no equipment yet");
             List<string> ids = new();
 
             foreach (ActorEquipSlot slot in equipment.AllItemSlotsRef)
@@ -1154,14 +1321,13 @@ namespace Drova_Modding_API.Systems.Testing
                 Il2CppDrova.Items.Item item = slot.GetItemOnSlot();
                 if (item == null) continue;
 
-                // Proxies over native objects: compare pointers, not instances.
                 Il2CppDrova.Items.Item placeholder = equipment.GetEmptyItemForSlot(slot.GetSlotType());
                 if (placeholder != null && placeholder.Pointer == item.Pointer) continue;
 
                 ids.Add(item.ReadableId);
             }
 
-            return ids.Count == 0 ? "none" : string.Join(";", ids);
+            return ids.Count == 0 ? "none" : string.Join(";", ids.OrderBy(id => id, StringComparer.Ordinal));
         }
 
         /// <summary>
@@ -1184,9 +1350,8 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// <c>camera [reset]</c>: what the camera follows and how many temporary shots are stacked on it; "reset"
-        /// drops them all and hands the camera back to the player. A shot a cutscene never released leaves the
-        /// camera away from the player - and camera-loaded volumes around the player switched off.
+        /// <c>camera [reset]</c>: what the camera follows and how many temporary shots are stacked on it. "reset"
+        /// drops them all and hands the camera back to the player, for a shot a cutscene never released.
         /// </summary>
         private static string CameraTarget(bool reset)
         {
@@ -1200,6 +1365,15 @@ namespace Drova_Modding_API.Systems.Testing
             int stacked = camera._previousTargets?.Count ?? -1;
 
             return $"target={name} stacked={stacked} temporary={(camera.HasTemporaryCamTarget ? 1 : 0)}";
+        }
+
+        /// <summary><c>screen &lt;target&gt;</c>: that actor's feet in screen pixels from the top left, and its EntityInfo.</summary>
+        private static string ScreenPosition(string target)
+        {
+            if (!CameraGameHandler.TryGet(out CameraGameHandler camera) || camera == null || camera._activeCamera == null) throw new InvalidOperationException("no camera yet");
+            Actor actor = ResolveActor(target);
+            Vector3 point = camera._activeCamera.WorldToScreenPoint(actor.GetFeetPosition());
+            return Format(point.x) + "," + Format(Screen.height - point.y) + " info=" + (actor.GetEntityInfo()?.name ?? "-");
         }
 
         /// <summary>
@@ -1353,10 +1527,18 @@ namespace Drova_Modding_API.Systems.Testing
         {
             if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
 
-            // A guid or a name, like the other actor commands: a creature placed in the scene without a lazy handle
-            // (an Alraune) has no guid a scenario can know in advance.
+            // A guid or a name: a creature placed without a lazy handle has no guid a scenario can know in advance.
             Actor npc = Entities().GetActorFromGuid(guid) ?? ResolveActor(guid);
             if (!npc.IsInitialized) throw new InvalidOperationException("still initializing: " + guid);
+
+            // The talk's window is built under the controller and finds the dialogue handler in Awake, which an inactive
+            // object skips: a talk started then throws in RegisterDLGTreeEvents and stays half begun.
+            DS_DialogueTreeController? controller = npc.DialogueModule.GetController();
+            if (controller != null && !controller.gameObject.activeInHierarchy)
+            {
+                MelonLogger.Msg("[Agent] talk refused, the dialogue of " + guid + " is not active yet.");
+                throw new InvalidOperationException("not active yet: " + guid);
+            }
 
             DialogueTree? tree = null;
             if (treeName != null)
@@ -1492,10 +1674,8 @@ namespace Drova_Modding_API.Systems.Testing
             _line = null;
             _choices = null;
 
-            // The player's conversation through its controller, the way the game ends one: that also resets the
-            // window and raises GraphFinishedEvent, which is what clears "the player is in a dialogue". Stopping
-            // only the graph left the player stuck in one - the dialogue system kept the camera, and camera-loaded
-            // volumes near the player (the mine exit) never switched on.
+            // Ends it through the controller, as the game does, which raises GraphFinishedEvent and clears "in a dialogue".
+            // Stopping only the graph leaves the player stuck in one.
             string name;
             if (Il2CppDrova.DialogueNew.DialogueSystemGameHandler.TryGet(out Il2CppDrova.DialogueNew.DialogueSystemGameHandler handler)
                 && handler != null && handler.ActivePlayerDialogue != null && handler.ActivePlayerDialogue.isRunning)
@@ -1554,10 +1734,8 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// The player's own conversation. DialogueTree.currentDialogue is whichever tree ran last - often a world
-        /// dialogue nearby (preaching, barks) - so a question the player was asked was filed under that tree's node,
-        /// never counted as current, and its answers were hidden: the Nemeton oath "hung" on its first question.
-        /// Followed down into the running sub-dialogue, so a stuck dialogue names the node it really waits on.
+        /// The player's own conversation, followed down into the running sub-dialogue. DialogueTree.currentDialogue is
+        /// whichever tree ran last, often a nearby world dialogue.
         /// </summary>
         private static DialogueTree? PlayerTree()
         {
@@ -1624,17 +1802,14 @@ namespace Drova_Modding_API.Systems.Testing
                 return;
             }
 
-            // Over only after a moment out of dialogue: a cutscene inside a conversation (the mine's morning call)
-            // briefly leaves the player "not talking", and stopping there left the next line waiting forever. The
-            // conversation itself keeps running through such a cutscene, however long (Bruna's and Hasso's), so it
-            // counts as talking too.
+            // Over only after a moment out of dialogue: a cutscene inside a conversation briefly leaves the player
+            // "not talking". The conversation keeps running through it, so that counts as talking too.
             bool talking = PlayerAccess.TryGetPlayer(out Actor? player) && player.DialogueModule != null && player.DialogueModule.IsInDialogue();
             bool conversing = Il2CppDrova.DialogueNew.DialogueSystemGameHandler.TryGet(out Il2CppDrova.DialogueNew.DialogueSystemGameHandler dialogues)
                 && dialogues != null && dialogues.ActivePlayerDialogue != null && dialogues.ActivePlayerDialogue.isRunning;
             _skipIdle = talking || conversing ? 0f : _skipIdle + Time.unscaledDeltaTime;
 
-            // Answering stops with the conversation it was asked for: still on, it took the first answer of the next
-            // dialogue the player opened (a relic pedestal) before anybody looked at it.
+            // Answering stops with its conversation, or it would answer the next dialogue the player opens.
             if (!talking && !conversing) _skipAnswering = false;
             if (_skipIdle > 10f)
             {
@@ -1642,10 +1817,8 @@ namespace Drova_Modding_API.Systems.Testing
                 return;
             }
 
-            // A line outlives its conversation in this field. Continued after the conversation ended, the game resets
-            // that graph ("cannot continue ... Resetting Graph") - which left a later conversation hanging.
-            // Also while a cutscene inside the conversation holds the player: its lines wait on the cutscene, and one
-            // continued from here stepped the cutscene's own line away from it - the conversation then hung for good.
+            // A line outlives its conversation in this field. Continuing it after the end, or while a cutscene inside the
+            // conversation holds the player, resets or hangs the graph.
             if (!talking)
             {
                 _line = null;
@@ -1657,10 +1830,8 @@ namespace Drova_Modding_API.Systems.Testing
 
             _pressSkip = true;
 
-            // Some lines are not reached by the window's input at all - one from another tree than the one on
-            // screen (the mine's morning call), or a cutscene-driven wake-up. Left standing well past any
-            // auto-advance, the line is continued directly: a line of the current node that is still current has
-            // not been moved on by anything else, so this cannot be a second step.
+            // Some lines never reach the window's input (another tree's line, a cutscene wake-up). One left well past
+            // auto-advance is continued directly. It is still current, so this cannot be a second step.
             float age = Time.unscaledTime - _lineSince;
             if (age > 4f && age < 30f)
             {

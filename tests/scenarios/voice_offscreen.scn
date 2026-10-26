@@ -1,0 +1,36 @@
+# A voiced line plays only while its bubble is on screen (DSDialogueUGUIHandleAudioPatch). Cengiz's Woodcamp routine
+# talks with Bombus at the camp while the player stands about 870 units southwest: the bubbles hang outside the camera
+# view, and their clips played anyway (heard by players walking past, "Ich muss weiter" out of nowhere). Talking to
+# Cengiz up close must still play every voiced line, his and the hero's.
+# Debug build only (the `heard` and `routine` agent commands).
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/voice_offscreen.scn
+
+default hero 5
+default slot 0
+set cengiz 2a21bdef-5ade-4ef6-8a58-a45adb6a7464
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+A tp 3500 -700
+A expect near $cengiz 1000 contains "loaded" timeout=30
+A expect ai $cengiz contains "routine=R_Cengiz Normal/AllDay" timeout=30
+A heard clear
+
+# `heard` records every clip as voice:played|muted:<clip>.
+A expect heard voice:muted:DT_WorldDialogue_Template_WoodcampWorldDialogue_Plh_2_Cengiz contains "Plh_2" timeout=300
+A expect heard voice:played == none
+
+A tpnear $cengiz 40 0
+sleep 3
+A heard clear
+A talk $cengiz
+A expect heard voice:played contains "WhatsUp" timeout=30
+A skip first
+A expect dialogue contains "in=0" timeout=120
+A expect heard voice:played contains "Run_IchBinNochDabei"
+A expect heard voice:muted == none

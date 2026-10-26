@@ -1,0 +1,109 @@
+# Map editor props: two environment prefabs placed through the editor's add path are saved to MapEditor/map_editor.json,
+# released when the player is far away, placed again when the player returns and after a world load, and removed again.
+# Debug build only (the questshowcase agent command). Leaves map_editor.json without these props.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/map_editor.scn
+
+default hero 5
+default slot 0
+set banner 0ae6038fe2f808243af1008a269593c6
+set bag 744224fa8eef8ec4da69aef23df021fb
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+A expect questshowcase mapadd $banner -2132 -5180 == Banner_Ruins_Big_00_1
+A expect questshowcase mapadd $bag -2060 -5230 == Bag_BigLeatherBag_00_1
+A expect objects Map_Ba list contains "Map_Bag_BigLeatherBag_00_1=1" timeout=10
+A expect objects Map_Ba list contains "Map_Banner_Ruins_Big_00_1=1" timeout=10
+
+# Streaming: far away the props are released, back near they are placed again.
+A tp -2132 -9000
+A expect objects Map_Ba == 0 timeout=10
+A tp -2132 -5262
+A expect objects Map_Ba list contains "Map_Banner_Ruins_Big_00_1=1" timeout=10
+
+# The layout file places them in a freshly loaded world.
+A load $hero $slot
+A wait world=1 timeout=240
+A expect objects Map_Ba list contains "Map_Bag_BigLeatherBag_00_1=1" timeout=15
+
+# Removing deletes the prop from the world and the file.
+A questshowcase mapremove Banner_Ruins_Big_00_1
+A questshowcase mapremove Bag_BigLeatherBag_00_1
+A expect objects Map_Ba == 0 timeout=10
+
+# A blocker cuts the navmesh around it, and removing it closes the cut again.
+A expect questshowcase mapgap -2132 -5330 == 0
+A expect questshowcase mapblocker -2132 -5330 == Blocker_1
+A expect questshowcase mapgap -2132 -5330 >= 30 timeout=10
+A questshowcase mapremove Blocker_1
+A expect questshowcase mapgap -2132 -5330 == 0 timeout=10
+
+# Hiding a vanilla object keeps it hidden after a world load; restoring shows it again.
+set heather Scene_Overworld_Deco_Heather_Small_B_Chap4_Untouched_-2_-4|Plants/Default/Plant_Heather_Small_01[35]
+A expect questshowcase maphide -2100 -5200 == $heather
+A expect questshowcase mapactive $heather == 0
+A load $hero $slot
+A wait world=1 timeout=240
+A expect questshowcase mapactive $heather == 0 timeout=15
+A tp -2132 -9000
+A expect questshowcase mapactive $heather == missing timeout=30
+A tp -2132 -5262
+A expect questshowcase mapactive $heather == 0 timeout=30
+A expect questshowcase mapunhide == 0 hidden
+A expect questshowcase mapactive $heather == 1
+
+# Copies of world objects: a locked chest from a chunk that is not loaded, unlocked and filled from the layout, opened and emptied, and the
+# emptied state comes back from the save. A trap from the game's dynamic objects is placed beside it.
+set chest Scene_Overworld_Interaction_-1_1|Object/Default/Container_Chest_Shod_Silver
+set chestguid 80816d45-a8dc-2e41-a97f-5df4a6e61951
+A expect questshowcase mapcopy $chest -2000 -5262 item_potion_health_1:2 item_apple:3 == Container_Chest_Shod_Silver_1
+A expect chest $chestguid == item_potion_health_1:2;item_apple:3; timeout=20
+A expect questshowcase mapcrime Container_Chest_Shod_Silver_1 == off
+A expect questshowcase mapdynamic Trap_BearTrap -2200 -5262 == Trap_BearTrap_1
+A expect objects Map_Trap_BearTrap_1 list contains "Map_Trap_BearTrap_1=1" timeout=15
+A tp -2040 -5262
+sleep 2
+A use Map_Container_Chest_Shod_Silver_1 400
+A expect takeall == taken timeout=10
+A expect chest $chestguid == none
+A save 9
+A load $hero 9
+A wait world=1 timeout=240
+A expect chest $chestguid == none timeout=30
+
+# Far away the copy goes, and 30 s later its chunk's templates and bundles are released. Back near, it is copied again,
+# with its saved state.
+A tp -2132 -9000
+A expect questshowcase maptemplates == 0 timeout=60
+A tp -2040 -5262
+A expect chest $chestguid == none timeout=30
+A expect questshowcase maptemplates == 1
+A questshowcase mapremove Container_Chest_Shod_Silver_1
+A questshowcase mapremove Trap_BearTrap_1
+
+# A placed object the game destroys (a sprung trap, a taken pickup) stays gone in this save, also after loading it again.
+A expect questshowcase mapdynamic Trap_BearTrap -2300 -5200 == Trap_BearTrap_1
+A expect objects Map_Trap_BearTrap_1 list contains "Map_Trap_BearTrap_1=1" timeout=15
+A questshowcase mapdestroy Trap_BearTrap_1
+A expect objects Map_Trap_BearTrap_1 == 0 timeout=5
+sleep 1
+A save 9
+A load $hero 9
+A wait world=1 timeout=240
+sleep 5
+A expect objects Map_Trap_BearTrap_1 == 0
+A questshowcase mapremove Trap_BearTrap_1
+
+# Ground painting: a dirt decal placed as a stamp, whose footsteps sound like sand until it is removed again.
+A tp -2132 -5262
+A expect questshowcase mapterrain -2132 -5330 == Grass timeout=10
+A expect questshowcase mapstamp 8b4897e5d70525e40aad31627c599535 -2132 -5330 Sand == Decals_Dirt_Big_00_1
+A expect questshowcase mapterrain -2132 -5330 == Sand timeout=10
+A expect objects Map_Decals_Dirt_Big_00_1 list contains "=1"
+A questshowcase mapremove Decals_Dirt_Big_00_1
+A expect questshowcase mapterrain -2132 -5330 == Grass timeout=5

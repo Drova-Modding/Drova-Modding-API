@@ -32,19 +32,16 @@ namespace Drova_Modding_API.Systems.Talents
 
             var talentsInDatabase = Resources.FindObjectsOfTypeAll<TalentContainer>();
 
-            // Build grouped dictionary by prefix
             _groupedDatabase = talentsInDatabase
                 .GroupBy(tc => ExtractCategory(tc.name))
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // Build flat cache for fast lookups
             _talentCache = talentsInDatabase.ToDictionary(tc => tc.name);
         }
 
         /// <summary>
         /// Adds a talent to the database and queues it for insertion into the talent graph.
         /// </summary>
-        /// <param name="talent">The talent container to add.</param>
         public static void AddTalent(TalentContainer talent)
         {
             if (_groupedDatabase == null)
@@ -145,9 +142,6 @@ namespace Drova_Modding_API.Systems.Talents
                 : new List<TalentContainer>();
         }
 
-        /// <summary>
-        /// Extracts the category prefix from a talent name.
-        /// </summary>
         private static string ExtractCategory(string talentName)
         {
             if (talentName.StartsWith("TalentBhvr_")) return "TalentBhvr";

@@ -11,11 +11,20 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <inheritdoc />
         public void Apply(ModuleContext context)
         {
-            var actor = context.GetComponent<Actor>();
+            Actor actor = context.GetComponent<Actor>();
+            EntityGameHandler.TryGet(out EntityGameHandler? entityGameHandler);
+
+            // The game looks an entity up under its entity info on destroy, so unregister before the info changes.
+            if (entityGameHandler != null && actor._hasRegistered)
+            {
+                entityGameHandler.UnregisterEntity(actor);
+            }
+
             actor._entityInfo = info;
-            if(EntityGameHandler.TryGet(out var entityGameHandler))
+            if (entityGameHandler != null)
             {
                 entityGameHandler.RegisterEntity(actor);
+                actor._hasRegistered = true;
             }
         }
     }

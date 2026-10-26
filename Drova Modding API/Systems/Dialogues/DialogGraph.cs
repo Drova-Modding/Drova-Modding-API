@@ -42,7 +42,7 @@ namespace Drova_Modding_API.Systems.Dialogues
             endNode._actorParameterID = playerActor.ID;
             endNode.availableChoices = new Il2CppSystem.Collections.Generic.List<Choice>();
             endNode.availableChoices.Add(new Choice { statement = statement, isEndNode = false, UID = Il2CppSystem.Guid.NewGuid().ToString() });
-            endNode.availableChoices.Add(new Choice { statement = statement, isEndNode = true, UID = Il2CppSystem.Guid.NewGuid().ToString() });
+            endNode.availableChoices.Add(new Choice { statement = statement, isEndNode = false, UID = Il2CppSystem.Guid.NewGuid().ToString() });
             endNode.TryGenerateUID();
 
             DS_StatementNode additionalEndNode = dt.AddNode<DS_StatementNode>();

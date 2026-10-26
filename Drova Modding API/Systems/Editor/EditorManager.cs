@@ -11,16 +11,12 @@ namespace Drova_Modding_API.Systems.Editor
         /// <summary>
         /// Delegate for when an NPC is selected
         /// </summary>
-        /// <param name="actor">The Npc</param>
         public delegate void NpcSelected(Actor? actor);
         /// <summary>
         /// Event that is triggered when an NPC is selected
         /// </summary>
         public static event NpcSelected? OnNpcSelected;
 
-        /// <summary>
-        /// The last NPC that was invoked
-        /// </summary>
         private static Actor? _lastInvoked;
 
         /// <summary>
@@ -33,10 +29,6 @@ namespace Drova_Modding_API.Systems.Editor
         /// </summary>
         public static bool InEditor { get; set; } = false;
 
-        /// <summary>
-        /// Trigger the event for when an NPC is selected
-        /// </summary>
-        /// <param name="actor">Npc to trigger</param>
         internal static void TriggerNpcSelected(Actor? actor)
         {
             if (!AllowNpcSelection)

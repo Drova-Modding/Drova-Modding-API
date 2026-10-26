@@ -1,4 +1,4 @@
-﻿using Il2CppNodeCanvas.DialogueTrees;
+﻿using Il2CppNodeCanvas.Framework;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
@@ -6,10 +6,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
     /// <summary>
     /// A snapshot of the graph editor state
     /// </summary>
-    /// <param name="dialogueTree">The last dialogueTree</param>
-    /// <param name="scaleFactor">The last scale factor</param>
-    /// <param name="panOffset">The last offset of the pan</param>
-    public class GraphEditorSnapshot(DialogueTree dialogueTree, float scaleFactor, Vector2 panOffset)
+    public class GraphEditorSnapshot(Graph graph, float scaleFactor, Vector2 panOffset)
     {
         /// <summary>
         /// The scale factor of the graph editor
@@ -20,8 +17,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// </summary>
         public Vector2 PanOffset = panOffset;
         /// <summary>
-        /// The Dialogue tree
+        /// The graph
         /// </summary>
-        public DialogueTree DialogueTree = dialogueTree;
+        public Graph Graph = graph;
     }
 }

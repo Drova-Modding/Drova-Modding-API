@@ -7,12 +7,11 @@ static class GUIWindowOptionsCloseWindowPatch
 {
     static bool Prefix(GUI_Window_Options __instance)
     {
-        // If currently mapping input keys, prevent window from closing
         if (InputActionRegister.isMappingCurrently)
         {
-            return false; // Skip the original method
+            return false;
         }
-        return true; // Allow the original method to execute
+        return true;
     }
 }
 
