@@ -32,7 +32,7 @@ namespace Drova_Modding_API.UI
         private const string KeyboardGroup = "Keyboard;Mouse";
 
         /// <summary>
-        /// OnDestory method.
+        /// Cancels a running rebind and stops listening for device changes.
         /// </summary>
         protected void OnDestroy()
         {
@@ -110,7 +110,7 @@ namespace Drova_Modding_API.UI
             if (bindingIndex == -1)
             {
                 _controllerButton.interactable = false;
-                MelonLogger.Warning($"Binding index not found for action {_actionName} and group {GamePadGroup}. This could be intenional if you don't want this action to be rebindable");
+                MelonLogger.Warning($"Binding index not found for action {_actionName} and group {GamePadGroup}. This could be intentional if you don't want this action to be rebindable");
                 return;
             }
             _controllerKeybindingText.text = action.bindings[bindingIndex].ToDisplayString();
@@ -133,7 +133,7 @@ namespace Drova_Modding_API.UI
             if (bindingIndex == -1)
             {
                 _keybindingButton.interactable = false;
-                MelonLogger.Warning($"Binding index not found for action {_actionName} and group {KeyboardGroup}. This could be intenional if you don't want this action to be rebindable");
+                MelonLogger.Warning($"Binding index not found for action {_actionName} and group {KeyboardGroup}. This could be intentional if you don't want this action to be rebindable");
                 return;
             }
             _keybindingText.text = action.bindings[bindingIndex].ToDisplayString();
@@ -241,17 +241,12 @@ namespace Drova_Modding_API.UI
         }
 
         /// <summary>
-        /// Implements ISelectHandler to ensure that when the row is selected, the appropriate button (controller or keyboard) is also selected for visual feedback.
+        /// Selects the row's active button, so controller navigation highlights it as Drova's own rows do.
         /// </summary>
         public void OnSelect(BaseEventData eventData)
         {
-            // OnSelect is called when the GameObject itself is selected by the EventSystem.
-            // This is primarily used for controller navigation to ensure visual feedback.
-            // In Drova's UI, when a row is selected, it should highlight the interactable button.
-            
             if (Gamepad.current == null) return;
 
-            // Select the appropriate button based on active device group
             if (_controllerButton != null && _controllerButton.gameObject.activeInHierarchy)
             {
                 _controllerButton.Select();
@@ -263,7 +258,7 @@ namespace Drova_Modding_API.UI
         }
 
         /// <summary>
-        /// Implements ISubmitHandler to ensure that when the user presses the submit button (e.g., "A" on a controller), it triggers the rebinding process for the appropriate button.
+        /// Starts rebinding the button of the active device.
         /// </summary>
         public void OnSubmit(BaseEventData eventData)
         {

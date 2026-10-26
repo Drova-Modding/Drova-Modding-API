@@ -19,7 +19,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<GBoolConditionTask>();
             if (_castedTask == null) return;
 
-            var allpParams = GraphEditorManager.DialogueTree!.allParameters;
+            var allpParams = GraphEditorManager.Graph!.allParameters;
             for (int i = 0; i < _castedTask.Conditions.Count; i++)
             {
                 GraphGBoolCompService task = _castedTask.Conditions[i];
@@ -72,9 +72,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
                 if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Remove"))
                 {
-                    GraphEditorManager.DialogueTree!.allParameters.Remove(condition.Variable);
-                    GraphEditorManager.DialogueTree!.allParameters.Remove(condition.Comparison);
-                    GraphEditorManager.DialogueTree!.allParameters.Remove(condition.Value);
+                    GraphEditorManager.Graph!.allParameters.Remove(condition.Variable);
+                    GraphEditorManager.Graph!.allParameters.Remove(condition.Comparison);
+                    GraphEditorManager.Graph!.allParameters.Remove(condition.Value);
                     _castedTask.Conditions.RemoveAt(i);
                     _comparerDropdowns.RemoveAt(i);
                     _gvarEditors.RemoveAt(i);
@@ -105,7 +105,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             {
                 var service = new GraphGBoolCompService();
                 _castedTask.Conditions.Add(service);
-                var allpParams = GraphEditorManager.DialogueTree!.allParameters;
+                var allpParams = GraphEditorManager.Graph!.allParameters;
                 service.Value ??= new BBParameter<bool>();
                 service.Comparison ??= new BBParameter<GBool.Comparer>();
                 service.Variable ??= new BBParameter<GBool>();

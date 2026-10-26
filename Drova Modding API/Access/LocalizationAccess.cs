@@ -29,9 +29,7 @@ namespace Drova_Modding_API.Access
         /// GameObject.GetComponent{LocalizedTextMeshPro}().UpdateLocalizedText();
         /// </code>
         /// </example>
-        /// 
         /// </summary>
-        /// 
         /// <param name="key">The key of the localization.</param>
         /// <param name="modName">The name of the mod.</param>
         public static LocalizedString GetLocalizedString(string modName, string key)
@@ -43,7 +41,7 @@ namespace Drova_Modding_API.Access
         /// Injects a new language enum value into the game.
         /// </summary>
         /// <param name="name">Short name of the language</param>
-        /// <param name="value">Int of the Enum, at the moment of writing this it would be something >35</param>
+        /// <param name="value">Int of the enum, above the game's existing values</param>
         public static void InjectLanguageEnum(string name, int value)
         {
             Dictionary<string, object> injection = new()
@@ -91,21 +89,18 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Creates localization entries for a mod. The entries are grouped by language and copied to the respective language file.
-        /// Copys all content from the folder to the localization folder.
+        /// Copies Modding_API/Localization/&lt;Language&gt; into the game's language folders, injecting unknown languages.
         /// </summary>
         internal static void CreateLocalizationEntriesFromFolder()
         {
             string localizationFolder = Path.Combine(Utils.SavePath, "Localization");
             if (!Directory.Exists(localizationFolder))
             {
-                MelonLogger.Msg("Localization folder not found. Created one for convent reason");
                 try { Directory.CreateDirectory(localizationFolder); }
                 catch (Exception e) { MelonLogger.Error(e.Message); }
                 return;
             }
 
-            // collect all folders
             string[] folders = Directory.GetDirectories(localizationFolder);
             foreach (string folder in folders)
             {
@@ -114,15 +109,12 @@ namespace Drova_Modding_API.Access
                     string language = folder.Split(Path.DirectorySeparatorChar).Last();
                     if (!Enum.TryParse(language, true, out ELanguage _))
                     {
-                        // If language is not found, inject it to the enum
                         int count = Enum.GetValues(typeof(ELanguage)).Length;
                         InjectLanguageEnum(language, ++count);
                     }
-                    // Here we should be safe and the language enum should contain the result
                     if (Enum.TryParse(language, true, out ELanguage result))
                     {
                         string copyPath = LocalizationDB.Instance.GetLanguageFolderPath(result);
-                        // Copy all files and directories recursively
                         CopyFilesRecursively(folder, copyPath);
                     }
                 }

@@ -9,13 +9,8 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Debugging
 {
     /// <summary>
-    /// Registers the <c>api_dumpnearby [radius]</c> cheat command: stand next to a world object
-    /// and dump every renderer around the player (position, GameObject name, sprite name) to the
-    /// MelonLoader log.
-    ///
-    /// Useful for locating world art that is hard to find statically (it can sit far from the
-    /// object it belongs to). Sprite names are the stable key for identifying art; GameObject
-    /// names are often generic.
+    /// Registers the <c>api_dumpnearby [radius]</c> cheat command, which logs every renderer around the player
+    /// (position, GameObject name, sprite name). Sprite names identify art reliably; GameObject names are often generic.
     /// </summary>
     public static class NearbyDumper
     {

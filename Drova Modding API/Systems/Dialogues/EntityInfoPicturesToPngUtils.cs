@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Dialogues
 {
     /**
-     * A class to convert all EntityInfos to PNGs. Not working at the moment tho, its packed image, which isn't readable at runtime
+     * Converts all EntityInfo portraits to PNGs. Does not work: the portraits are packed textures that are not readable at runtime.
      */
     internal static class EntityInfoPicturesToPngUtils
     {

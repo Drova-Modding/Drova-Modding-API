@@ -1,0 +1,486 @@
+{
+  "Version": 1,
+  "Objects": [
+    {
+      "Id": "perf_0",
+      "Scene": "Scene_Overworld_Environment_10_19",
+      "Path": "Object/Default/Roots_Wall_Diagonal_00",
+      "X": -2762,
+      "Y": -8600,
+      "Seed": "perf_0"
+    },
+    {
+      "Id": "perf_1",
+      "Scene": "Scene_Overworld_Environment_10_19",
+      "Path": "Object/Default/Ruins_Shelves_Small_02",
+      "X": -2622,
+      "Y": -8600,
+      "Seed": "perf_1"
+    },
+    {
+      "Id": "perf_2",
+      "Scene": "Scene_Overworld_Environment_10_19",
+      "Path": "Object/Default/Ruins_Shelves_Vertical_00",
+      "X": -2482,
+      "Y": -8600,
+      "Seed": "perf_2"
+    },
+    {
+      "Id": "perf_3",
+      "Scene": "Scene_Overworld_Env_Boulder_2_4",
+      "Path": "Object/Default/Boulder_Glow_Dying_Mid_3",
+      "X": -2342,
+      "Y": -8600,
+      "Seed": "perf_3"
+    },
+    {
+      "Id": "perf_4",
+      "Scene": "Scene_Overworld_Env_Boulder_2_4",
+      "Path": "Object/Default/Boulder_Glow_Dying_Small_1",
+      "X": -2202,
+      "Y": -8600,
+      "Seed": "perf_4"
+    },
+    {
+      "Id": "perf_5",
+      "Scene": "Scene_Overworld_Env_Boulder_2_4",
+      "Path": "Object/Default/Boulder_Glow_Dying_Small_2",
+      "X": -2062,
+      "Y": -8600,
+      "Seed": "perf_5"
+    },
+    {
+      "Id": "perf_6",
+      "Scene": "Scene_Overworld_Environment_1_-3",
+      "Path": "Object/Default/Creature_Idle_BlackGrouse_Female",
+      "X": -1922,
+      "Y": -8600,
+      "Seed": "perf_6"
+    },
+    {
+      "Id": "perf_7",
+      "Scene": "Scene_Overworld_Environment_1_-3",
+      "Path": "Object/Default/Creature_Idle_BlackGrouse_Male",
+      "X": -1782,
+      "Y": -8600,
+      "Seed": "perf_7"
+    },
+    {
+      "Id": "perf_8",
+      "Scene": "Scene_Overworld_Environment_1_-3",
+      "Path": "Object/Default/Creature_Idle_Sheep",
+      "X": -1642,
+      "Y": -8600,
+      "Seed": "perf_8"
+    },
+    {
+      "Id": "perf_9",
+      "Scene": "Scene_Overworld_Interaction_-3_-1",
+      "Path": "Object/Default/Corpse_WaterRat",
+      "X": -1502,
+      "Y": -8600,
+      "Seed": "perf_9"
+    },
+    {
+      "Id": "perf_10",
+      "Scene": "Scene_Overworld_Interaction_-3_-1",
+      "Path": "Object/Default/PickUp_Cons_LuminousTruffle_02",
+      "X": -2762,
+      "Y": -8440,
+      "Seed": "perf_10"
+    },
+    {
+      "Id": "perf_11",
+      "Scene": "Scene_Overworld_Interaction_-3_-1",
+      "Path": "Object/Default/PickUp_Cons_LuminousTruffle_03",
+      "X": -2622,
+      "Y": -8440,
+      "Seed": "perf_11"
+    },
+    {
+      "Id": "perf_12",
+      "Scene": "Scene_Overworld_Deco_-3_0",
+      "Path": "Decals/Default/Deco_Floor_BrokenWood_Mid_00",
+      "X": -2482,
+      "Y": -8440,
+      "Seed": "perf_12"
+    },
+    {
+      "Id": "perf_13",
+      "Scene": "Scene_Overworld_Deco_-3_0",
+      "Path": "Decals/Default/Deco_Floor_BrokenWood_Mid_01",
+      "X": -2342,
+      "Y": -8440,
+      "Seed": "perf_13"
+    },
+    {
+      "Id": "perf_14",
+      "Scene": "Scene_Overworld_Deco_-3_0",
+      "Path": "Decals/Default/Floor_MirrorShards_01",
+      "X": -2202,
+      "Y": -8440,
+      "Seed": "perf_14"
+    },
+    {
+      "Id": "perf_15",
+      "Scene": "Scene_Overworld_Deco_0_2",
+      "Path": "Object/Default/Environment_Deco_Shells_03",
+      "X": -2062,
+      "Y": -8440,
+      "Seed": "perf_15"
+    },
+    {
+      "Id": "perf_16",
+      "Scene": "Scene_Overworld_Deco_0_2",
+      "Path": "Plants/Default/Windflower_00",
+      "X": -1922,
+      "Y": -8440,
+      "Seed": "perf_16"
+    },
+    {
+      "Id": "perf_17",
+      "Scene": "Scene_Overworld_Deco_0_2",
+      "Path": "Decals/Default/Statue_Perception_Sol",
+      "X": -1782,
+      "Y": -8440,
+      "Seed": "perf_17"
+    },
+    {
+      "Id": "perf_18",
+      "Scene": "Scene_Overworld_Interaction_3_-3",
+      "Path": "Creature/Default/Critter_Butterfly_Pickable_24",
+      "X": -1642,
+      "Y": -8440,
+      "Seed": "perf_18"
+    },
+    {
+      "Id": "perf_19",
+      "Scene": "Scene_Overworld_Interaction_3_-3",
+      "Path": "Creature/Default/Critter_Butterfly_Pickable_25",
+      "X": -1502,
+      "Y": -8440,
+      "Seed": "perf_19"
+    },
+    {
+      "Id": "perf_20",
+      "Scene": "Scene_Overworld_Interaction_3_-3",
+      "Path": "Creature/Default/Critter_Butterfly_Pickable_26",
+      "X": -2762,
+      "Y": -8280,
+      "Seed": "perf_20"
+    },
+    {
+      "Id": "perf_21",
+      "Scene": "Scene_Overworld_Environment_4_-5",
+      "Path": "Object/Default/Cutscene_Farlan_Legs_01",
+      "X": -2622,
+      "Y": -8280,
+      "Seed": "perf_21"
+    },
+    {
+      "Id": "perf_22",
+      "Scene": "Scene_Overworld_Environment_4_-5",
+      "Path": "Object/Default/Cutscene_Farlan_Legs_02",
+      "X": -2482,
+      "Y": -8280,
+      "Seed": "perf_22"
+    },
+    {
+      "Id": "perf_23",
+      "Scene": "Scene_Overworld_Environment_4_-5",
+      "Path": "Object/Default/Corpse_Human_2",
+      "X": -2342,
+      "Y": -8280,
+      "Seed": "perf_23"
+    },
+    {
+      "Id": "perf_24",
+      "Scene": "Scene_Overworld_Deco_12_31",
+      "Path": "Object/Default/BrokenMirrors_Wall_Diag_Rect_00",
+      "X": -2202,
+      "Y": -8280,
+      "Seed": "perf_24"
+    },
+    {
+      "Id": "perf_25",
+      "Scene": "Scene_Overworld_Deco_12_31",
+      "Path": "Object/Default/BrokenMirrors_Wall_Diag_Rect_01",
+      "X": -2062,
+      "Y": -8280,
+      "Seed": "perf_25"
+    },
+    {
+      "Id": "perf_26",
+      "Scene": "Scene_Overworld_Deco_12_31",
+      "Path": "Object/Default/Deco_Quill_00",
+      "X": -1922,
+      "Y": -8280,
+      "Seed": "perf_26"
+    },
+    {
+      "Id": "perf_27",
+      "Scene": "Scene_Overworld_Environment_14_4",
+      "Path": "Object/Default/Bed_Tavern_00",
+      "X": -1782,
+      "Y": -8280,
+      "Seed": "perf_27"
+    },
+    {
+      "Id": "perf_28",
+      "Scene": "Scene_Overworld_Environment_14_4",
+      "Path": "Buildings/Default/Houses_Nemeton_Druids_Leader_1F",
+      "X": -1642,
+      "Y": -8280,
+      "Seed": "perf_28"
+    },
+    {
+      "Id": "perf_29",
+      "Scene": "Scene_Overworld_Environment_14_4",
+      "Path": "Object/Default/Shelf_Storage_Horizontal_Small_00",
+      "X": -1502,
+      "Y": -8280,
+      "Seed": "perf_29"
+    },
+    {
+      "Id": "perf_30",
+      "Scene": "Scene_Overworld_Interaction_-1_-1",
+      "Path": "Object/Default/Container_Bag",
+      "X": -2762,
+      "Y": -8120,
+      "Seed": "perf_30"
+    },
+    {
+      "Id": "perf_31",
+      "Scene": "Scene_Overworld_Interaction_-1_-1",
+      "Path": "Object/Default/Container_Chest_Slated_Vertical_Curly_Silver",
+      "X": -2622,
+      "Y": -8120,
+      "Seed": "perf_31"
+    },
+    {
+      "Id": "perf_32",
+      "Scene": "Scene_Overworld_Interaction_-1_-1",
+      "Path": "Object/Default/Container_Chest_Slated_Vertical_Fancy_Silver",
+      "X": -2482,
+      "Y": -8120,
+      "Seed": "perf_32"
+    },
+    {
+      "Id": "perf_33",
+      "Scene": "Scene_Overworld_Deco_-4_-17",
+      "Path": "Object/Default/Dekor_00 1",
+      "X": -2342,
+      "Y": -8120,
+      "Seed": "perf_33"
+    },
+    {
+      "Id": "perf_34",
+      "Scene": "Scene_Overworld_Deco_-4_-17",
+      "Path": "Object/Default/Dekor_01 1",
+      "X": -2202,
+      "Y": -8120,
+      "Seed": "perf_34"
+    },
+    {
+      "Id": "perf_35",
+      "Scene": "Scene_Overworld_Deco_-4_-17",
+      "Path": "Object/Default/StalagtitesMid_Duo_00",
+      "X": -2062,
+      "Y": -8120,
+      "Seed": "perf_35"
+    },
+    {
+      "Id": "perf_36",
+      "Scene": "Scene_Overworld_Environment_3_-3",
+      "Path": "Camp/Default/Log_Horizontal_01",
+      "X": -1922,
+      "Y": -8120,
+      "Seed": "perf_36"
+    },
+    {
+      "Id": "perf_37",
+      "Scene": "Scene_Overworld_Environment_3_-3",
+      "Path": "Object/Default/Druid_Altar",
+      "X": -1782,
+      "Y": -8120,
+      "Seed": "perf_37"
+    },
+    {
+      "Id": "perf_38",
+      "Scene": "Scene_Overworld_Environment_3_-3",
+      "Path": "Buildings/Default/House_Nemeton_Druids_Side",
+      "X": -1642,
+      "Y": -8120,
+      "Seed": "perf_38"
+    },
+    {
+      "Id": "perf_39",
+      "Scene": "Scene_Overworld_Environment_-1_38",
+      "Path": "Object/Default/Light_Crystal_Wall",
+      "X": -1502,
+      "Y": -8120,
+      "Seed": "perf_39"
+    },
+    {
+      "Id": "perf_40",
+      "Scene": "Scene_Overworld_Environment_-1_38",
+      "Path": "Object/Default/WaterRock_Algae_Shallow",
+      "X": -2762,
+      "Y": -7960,
+      "Seed": "perf_40"
+    },
+    {
+      "Id": "perf_41",
+      "Scene": "Scene_Overworld_Environment_-1_38",
+      "Path": "Object/Default/WaterRock_Pebble_Mossy_Shallow",
+      "X": -2622,
+      "Y": -7960,
+      "Seed": "perf_41"
+    },
+    {
+      "Id": "perf_42",
+      "Scene": "Scene_Overworld_Deco_-2_-3",
+      "Path": "Object/Default/Deco_Hanging_Druids_Clay_01",
+      "X": -2482,
+      "Y": -7960,
+      "Seed": "perf_42"
+    },
+    {
+      "Id": "perf_43",
+      "Scene": "Scene_Overworld_Deco_-2_-3",
+      "Path": "Plants/Default/Poppy_Normal_03",
+      "X": -2342,
+      "Y": -7960,
+      "Seed": "perf_43"
+    },
+    {
+      "Id": "perf_44",
+      "Scene": "Scene_Overworld_Deco_-2_-3",
+      "Path": "Decals/Default/Rug_Cow_01",
+      "X": -2202,
+      "Y": -7960,
+      "Seed": "perf_44"
+    },
+    {
+      "Id": "perf_45",
+      "Scene": "Scene_Overworld_Deco_11_19",
+      "Path": "Decals/Default/Deco_Inshelf_Ruins_Weapons_Lying_Swords_00",
+      "X": -2062,
+      "Y": -7960,
+      "Seed": "perf_45"
+    },
+    {
+      "Id": "perf_46",
+      "Scene": "Scene_Overworld_Deco_11_19",
+      "Path": "Decals/Default/Red_Plus_Marble_Slim_00",
+      "X": -1922,
+      "Y": -7960,
+      "Seed": "perf_46"
+    },
+    {
+      "Id": "perf_47",
+      "Scene": "Scene_Overworld_Deco_11_19",
+      "Path": "Decals/Default/Red_Plus_Marble_Slim_01",
+      "X": -1782,
+      "Y": -7960,
+      "Seed": "perf_47"
+    },
+    {
+      "Id": "perf_48",
+      "Scene": "Scene_Overworld_Environment_23_36",
+      "Path": "Environment/Saveable_FallingStones/FallingStones_BlockWay_DeepInTheMine",
+      "X": -1642,
+      "Y": -7960,
+      "Seed": "perf_48"
+    },
+    {
+      "Id": "perf_49",
+      "Scene": "Scene_Overworld_Environment_23_36",
+      "Path": "Environment/Saveable_FallingStones/FallingStones_BlockWay_DeepInTheMine_01",
+      "X": -1502,
+      "Y": -7960,
+      "Seed": "perf_49"
+    },
+    {
+      "Id": "perf_50",
+      "Scene": "Scene_Overworld_Environment_23_36",
+      "Path": "Environment/Saveable_FallingStones/FallingStones_BlockWay_DeepInTheMine_02",
+      "X": -2762,
+      "Y": -7800,
+      "Seed": "perf_50"
+    },
+    {
+      "Id": "perf_51",
+      "Scene": "Scene_Overworld_Environment_1_3",
+      "Path": "Creature/Default/Critter_Frog_05",
+      "X": -2622,
+      "Y": -7800,
+      "Seed": "perf_51"
+    },
+    {
+      "Id": "perf_52",
+      "Scene": "Scene_Overworld_Environment_1_3",
+      "Path": "Buildings/Default/House_Mine_SmithTent",
+      "X": -2482,
+      "Y": -7800,
+      "Seed": "perf_52"
+    },
+    {
+      "Id": "perf_53",
+      "Scene": "Scene_Overworld_Environment_1_3",
+      "Path": "Object/Default/Menhir_Spell_GraspingRoots",
+      "X": -2342,
+      "Y": -7800,
+      "Seed": "perf_53"
+    },
+    {
+      "Id": "perf_54",
+      "Scene": "Scene_Overworld_Deco_0_1",
+      "Path": "Decals/Default/Mosslichen_Bot_Big_1",
+      "X": -2202,
+      "Y": -7800,
+      "Seed": "perf_54"
+    },
+    {
+      "Id": "perf_55",
+      "Scene": "Scene_Overworld_Deco_0_1",
+      "Path": "Decals/Default/Mosslichen_Bot_Big_2",
+      "X": -2062,
+      "Y": -7800,
+      "Seed": "perf_55"
+    },
+    {
+      "Id": "perf_56",
+      "Scene": "Scene_Overworld_Deco_0_1",
+      "Path": "Decals/Default/Mosslichen_Bot_Small_1",
+      "X": -1922,
+      "Y": -7800,
+      "Seed": "perf_56"
+    },
+    {
+      "Id": "perf_57",
+      "Scene": "Scene_Overworld_Environment_-2_1",
+      "Path": "Object/Default/Barrel_Small_02",
+      "X": -1782,
+      "Y": -7800,
+      "Seed": "perf_57"
+    },
+    {
+      "Id": "perf_58",
+      "Scene": "Scene_Overworld_Environment_-2_1",
+      "Path": "Object/Default/Deco_Sticks_Standing_Long",
+      "X": -1642,
+      "Y": -7800,
+      "Seed": "perf_58"
+    },
+    {
+      "Id": "perf_59",
+      "Scene": "Scene_Overworld_Environment_-2_1",
+      "Path": "Object/GATE Expedition Open/StoneGravel_03",
+      "X": -1502,
+      "Y": -7800,
+      "Seed": "perf_59"
+    }
+  ],
+  "Removed": []
+}

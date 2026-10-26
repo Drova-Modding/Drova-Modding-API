@@ -128,11 +128,6 @@ namespace Drova_Modding_API.Systems.Coop
         /// <summary>
         /// Builds a description of a player. Called by a co-op implementation.
         /// </summary>
-        /// <param name="id">Who they are.</param>
-        /// <param name="name">What they are called.</param>
-        /// <param name="isLocal">Whether this is the person at this machine.</param>
-        /// <param name="isAuthority">Whether their machine decides what the shared world contains.</param>
-        /// <param name="level">Their character level, or zero when it is not known yet.</param>
         public CoopPlayer(CoopPlayerId id, string name, bool isLocal, bool isAuthority, int level)
         {
             Id = id;
@@ -182,7 +177,6 @@ namespace Drova_Modding_API.Systems.Coop
         /// Fills the list with everybody in the session. Implementations clear it first and are expected
         /// not to allocate when the caller reuses the list.
         /// </summary>
-        /// <param name="buffer">Filled with the session's players.</param>
         void GetPlayers(List<CoopPlayer> buffer);
 
         /// <summary>
@@ -197,8 +191,6 @@ namespace Drova_Modding_API.Systems.Coop
         /// Whether this entity is a body being shown for somebody playing elsewhere.
         /// Such a body is a clone of the player prefab, so most of the game's "is this the player" tests answer yes.
         /// </summary>
-        /// <param name="entity">What to ask about. Can be null.</param>
-        /// <returns>True when this is somebody else's body.</returns>
         bool IsRemotePlayer(Entity? entity);
 
         /// <summary>
@@ -209,7 +201,6 @@ namespace Drova_Modding_API.Systems.Coop
         /// <summary>
         /// Whether this implementation keeps the named thing in step between machines.
         /// </summary>
-        /// <param name="capability">What the caller needs.</param>
         /// <returns>False for anything this implementation does not synchronize.</returns>
         bool Supports(CoopCapability capability);
     }

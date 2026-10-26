@@ -9,7 +9,6 @@ namespace Drova_Modding_API.Patches
     {
         static bool Prefix(LazyActor __instance)
         {
-            // Skip saving entirely when NoSaveGuidRegistry has the guid
             return !NoSaveGuidRegistry.IsRegistered(__instance.GUID);
         }
     }

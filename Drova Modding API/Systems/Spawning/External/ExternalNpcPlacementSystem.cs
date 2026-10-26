@@ -1,4 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
+using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Quests;
 using Drova_Modding_API.Systems.SaveGame.Store;
 using Il2CppDrova;
 using Il2CppDrova.Utilities.LazyLoading;
@@ -19,6 +21,7 @@ namespace Drova_Modding_API.Systems.Spawning
         private const string WizardFileName = "wizard_placements.json";
         private static readonly Dictionary<string, LazyActor> SpawnedLazyActorsByDefinitionId = new(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<string, string> DefinitionSourceFilesById = new(StringComparer.OrdinalIgnoreCase);
+        private static readonly List<ExternalNpcDefinition> ConditionalDefinitions = [];
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -32,6 +35,11 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         public static string GetNpcPlacementFolderPath()
             => Path.Combine(Utils.SavePath, NpcFolderName);
+
+        /// <summary>
+        /// The actor guid of an NPC definition. It is derived from the id, so the game saves the NPC like a vanilla one.
+        /// </summary>
+        public static string GetActorGuid(string definitionId) => LazyActorCreator.StableGuid("Modding_API.Npc", definitionId);
 
         /// <summary>
         /// Gets the absolute path of the wizard-managed <c>wizard_placements.json</c> file.
@@ -67,8 +75,9 @@ namespace Drova_Modding_API.Systems.Spawning
         /// </summary>
         public static void SpawnConfiguredNpcs()
         {
+            ConditionalDefinitions.Clear();
             string folderPath = GetNpcPlacementFolderPath();
-            EnsureFolder(folderPath);
+            CreateFolder(folderPath);
 
             string[] files;
             try
@@ -98,6 +107,12 @@ namespace Drova_Modding_API.Systems.Spawning
 
                 for (int i = 0; i < config.Npcs.Count; i++)
                 {
+                    if (config.Npcs[i].Conditions is { Count: > 0 })
+                    {
+                        ConditionalDefinitions.Add(config.Npcs[i]);
+                        continue;
+                    }
+
                     if (SpawnDefinition(config.Npcs[i], skipIfAlreadySpawned: true, requireEnabled: true))
                         spawned++;
                 }
@@ -107,11 +122,29 @@ namespace Drova_Modding_API.Systems.Spawning
                 MelonLogger.Msg($"Spawned {spawned} NPC(s) from '{folderPath}'.");
         }
 
+        internal static void Initialize() => GVarConditions.Changed += RefreshConditional;
+
+        /// <summary>
+        /// Spawns or removes the NPCs whose conditions changed. They wait for the world to be ready.
+        /// </summary>
+        private static void RefreshConditional()
+        {
+            foreach (ExternalNpcDefinition definition in ConditionalDefinitions)
+            {
+                bool wanted = definition.Enabled && GVarConditions.AreMetForPlacement(definition.Conditions);
+                bool spawned = IsDefinitionSpawned(definition.Id);
+                if (wanted && !spawned)
+                    SpawnDefinition(definition, skipIfAlreadySpawned: false, requireEnabled: true);
+                else if (!wanted && spawned)
+                    DespawnDefinition(definition.Id);
+            }
+        }
+
         /// <summary>
         /// Spawns a single external NPC definition as a lazy actor.
         /// </summary>
         /// <param name="definition">Definition to spawn.</param>
-        /// <param name="skipIfAlreadySpawned">If true, checks the lazy actor store by definition id and skips duplicates.</param>
+        /// <param name="skipIfAlreadySpawned">If true, a definition already spawned is left as it is; otherwise it is respawned.</param>
         /// <param name="requireEnabled">If true, only spawns definitions where <see cref="ExternalNpcDefinition.Enabled"/> is true.</param>
         /// <returns>True if spawned, false if skipped or invalid.</returns>
         public static bool SpawnDefinition(ExternalNpcDefinition? definition, bool skipIfAlreadySpawned = true, bool requireEnabled = true)
@@ -128,18 +161,14 @@ namespace Drova_Modding_API.Systems.Spawning
                 return false;
             }
 
-            //IStore<LazyActorSaveData> lazyActorStore = SaveGameSystem.Instance.GetStore<LazyActorSaveData>();
+            // The guid is derived from the id, so a second copy would share it with the first.
+            if (IsDefinitionSpawned(definition.Id))
+            {
+                if (skipIfAlreadySpawned) return false;
+                DespawnDefinition(definition.Id);
+            }
 
-            // if (skipIfAlreadySpawned)
-            // {
-            //     foreach (LazyActorSaveData saved in lazyActorStore.GetAll())
-            //     {
-            //         if (string.Equals(saved.ExternalDefinitionId, definition.Id, StringComparison.OrdinalIgnoreCase))
-            //             return false;
-            //     }
-            // }
-
-            ExternalNpcModuleRegistry.EnsureDefaults(definition);
+            ExternalNpcModuleRegistry.AddDefaultPayloads(definition);
             NpcCreator creator = new(definition.Name, new Vector2(definition.PositionX, definition.PositionY));
             ExternalNpcModuleRegistry.ApplyModules(creator, definition);
             LazyActor lazyActor = creator.CreateLazy(saveToLazyActorStore: false, externalDefinitionId: definition.Id);
@@ -201,7 +230,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!SpawnedLazyActorsByDefinitionId.TryGetValue(definitionId, out LazyActor lazyActor) || lazyActor == null || lazyActor.gameObject == null)
                 return false;
 
-            UnityEngine.Object.Destroy(lazyActor.gameObject);
+            ActorSpawnAccess.TryDespawn(lazyActor);
             SpawnedLazyActorsByDefinitionId.Remove(definitionId);
 
             IStore<LazyActorSaveData> lazyActorStore = SystemInit.LazyActors;
@@ -261,7 +290,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 return false;
 
             string folderPath = GetNpcPlacementFolderPath();
-            EnsureFolder(folderPath);
+            CreateFolder(folderPath);
 
             string[] files;
             try { files = Directory.GetFiles(folderPath, "*.json"); }
@@ -316,12 +345,12 @@ namespace Drova_Modding_API.Systems.Spawning
 
         private static bool UpsertDefinitionToFile(ExternalNpcDefinition definition, string filePath)
         {
-            EnsureFolder(GetNpcPlacementFolderPath());
+            CreateFolder(GetNpcPlacementFolderPath());
             DefinitionSourceFilesById.TryGetValue(definition.Id, out string? previousFilePath);
 
             ExternalNpcConfigFile config = ReadConfigInternal(filePath) ?? new ExternalNpcConfigFile();
 
-            ExternalNpcModuleRegistry.EnsureDefaults(definition);
+            ExternalNpcModuleRegistry.AddDefaultPayloads(definition);
             int existingIndex = config.Npcs.FindIndex(n => string.Equals(n.Id, definition.Id, StringComparison.OrdinalIgnoreCase));
             if (existingIndex >= 0)
                 config.Npcs[existingIndex] = definition;
@@ -349,7 +378,7 @@ namespace Drova_Modding_API.Systems.Spawning
         public static List<ExternalNpcDefinition> ReadAllDefinitions()
         {
             string folderPath = GetNpcPlacementFolderPath();
-            EnsureFolder(folderPath);
+            CreateFolder(folderPath);
 
             List<ExternalNpcDefinition> result = [];
             DefinitionSourceFilesById.Clear();
@@ -367,7 +396,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
                 for (int i = 0; i < config.Npcs.Count; i++)
                 {
-                    ExternalNpcModuleRegistry.EnsureDefaults(config.Npcs[i]);
+                    ExternalNpcModuleRegistry.AddDefaultPayloads(config.Npcs[i]);
                     result.Add(config.Npcs[i]);
                 }
             }
@@ -389,7 +418,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
             for (int i = 0; i < config.Npcs.Count; i++)
             {
-                ExternalNpcModuleRegistry.EnsureDefaults(config.Npcs[i]);
+                ExternalNpcModuleRegistry.AddDefaultPayloads(config.Npcs[i]);
                 result.Add(config.Npcs[i]);
             }
 
@@ -409,7 +438,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 PositionY = 0f,
                 Enabled = true
             };
-            ExternalNpcModuleRegistry.EnsureDefaults(definition);
+            ExternalNpcModuleRegistry.AddDefaultPayloads(definition);
             return definition;
         }
 
@@ -418,7 +447,7 @@ namespace Drova_Modding_API.Systems.Spawning
             try
             {
                 for (int i = 0; i < config.Npcs.Count; i++)
-                    ExternalNpcModuleRegistry.EnsureDefaults(config.Npcs[i]);
+                    ExternalNpcModuleRegistry.AddDefaultPayloads(config.Npcs[i]);
 
                 File.WriteAllText(filePath, JsonSerializer.Serialize(config, JsonOptions));
                 return true;
@@ -450,7 +479,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private static void EnsureFolder(string folderPath)
+        private static void CreateFolder(string folderPath)
         {
             if (!Directory.Exists(folderPath))
             {
@@ -568,6 +597,11 @@ namespace Drova_Modding_API.Systems.Spawning
             /// If false, startup spawning skips this definition.
             /// </summary>
             public bool Enabled { get; set; } = true;
+
+            /// <summary>
+            /// The NPC only exists while all of these hold, and leaves again when they stop holding.
+            /// </summary>
+            public List<GVarCondition>? Conditions { get; set; }
         }
     }
 }

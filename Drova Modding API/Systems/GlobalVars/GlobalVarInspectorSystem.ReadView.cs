@@ -50,7 +50,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 _listFilter = updatedFilter;
             }
 
-            EnsureListFilterCache();
+            RefreshListFilterCache();
             _listScroll = GUILayout.BeginScrollView(_listScroll, GUILayout.Height(scrollHeight));
 
             int totalRows = _filteredListRows.Count;
@@ -92,7 +92,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 _varFilter = updatedFilter;
             }
 
-            EnsureVarFilterCache();
+            RefreshVarFilterCache();
             _varsScroll = GUILayout.BeginScrollView(_varsScroll, GUILayout.Height(scrollHeight));
 
             int totalRows = _filteredVarRows.Count;
@@ -227,7 +227,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
 
             _lastAppliedListFilter = string.Empty;
             _lastAppliedCustomOnlyListFilter = !_showOnlyCustom;
-            EnsureListFilterCache(forceRebuild: true);
+            RefreshListFilterCache(forceRebuild: true);
         }
 
         [HideFromIl2Cpp]
@@ -250,11 +250,11 @@ namespace Drova_Modding_API.Systems.GlobalVars
 
             _lastAppliedVarFilter = string.Empty;
             _lastAppliedCustomOnlyVarFilter = !_showOnlyCustom;
-            EnsureVarFilterCache(forceRebuild: true);
+            RefreshVarFilterCache(forceRebuild: true);
         }
 
         [HideFromIl2Cpp]
-        private void EnsureListFilterCache(bool forceRebuild = false)
+        private void RefreshListFilterCache(bool forceRebuild = false)
         {
             if (!forceRebuild
                 && string.Equals(_listFilter, _lastAppliedListFilter, StringComparison.Ordinal)
@@ -283,7 +283,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
         }
 
         [HideFromIl2Cpp]
-        private void EnsureVarFilterCache(bool forceRebuild = false)
+        private void RefreshVarFilterCache(bool forceRebuild = false)
         {
             if (!forceRebuild
                 && string.Equals(_varFilter, _lastAppliedVarFilter, StringComparison.Ordinal)

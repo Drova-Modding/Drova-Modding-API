@@ -42,8 +42,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal bool Welcomed { get; private set; }
 
         /// <summary>
-        /// Whether payloads are sealed end to end. True only for a password-protected session: an open
-        /// session has no key material, and pretending otherwise would be worse than saying so.
+        /// Whether payloads are sealed end to end. True only for a password-protected session, since an
+        /// open session has no key material.
         /// </summary>
         internal bool IsEncrypted => _crypto != null;
 
@@ -89,13 +89,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         /// <summary>
         /// Records the relay's welcome and takes delivery of the session key. The first packet may follow
-        /// the welcome immediately, so the key has to exist by the time this returns.
-        ///
-        /// The derivation itself was started at connect time and has been running on a thread pool thread
-        /// while the relay's handshake crossed the network, so this usually collects a finished result.
-        /// What is waited for here is whatever is left of it, and only a host that asked the relay to pick
-        /// its code waits for much: its key material is not complete until the code arrives, which is one
-        /// packet before this one.
+        /// the welcome immediately, so the key has to exist by the time this returns. Only a host that let
+        /// the relay pick its code usually waits here, since its derivation started one packet earlier.
         /// </summary>
         internal void Welcome(byte localVirtualId)
         {
@@ -129,12 +124,10 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         }
 
         /// <summary>
-        /// The wrapper for a virtual id, creating it if this is the first mention.
+        /// The wrapper for a virtual id, creating it if this is the first mention. <c>created</c> tells the
+        /// caller to announce the peer.
         /// </summary>
-        /// <param name="transport">Owner passed to a newly created wrapper.</param>
-        /// <param name="virtualId">The relay-assigned id.</param>
-        /// <param name="created">True when the peer was not known before, so the caller announces it.</param>
-        internal RelayPeer EnsurePeer(LiteTransport transport, byte virtualId, out bool created)
+        internal RelayPeer GetOrAddPeer(LiteTransport transport, byte virtualId, out bool created)
         {
             RelayPeer? existing = _peers[virtualId];
             if (existing != null)
@@ -279,10 +272,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         }
 
         /// <summary>
-        /// Starts deriving the session key as soon as the password and the code are both known, and does
-        /// nothing on every later call. It costs about a tenth of a second of CPU on purpose, which is a
-        /// visible hitch on the thread the game renders from, so it runs on a thread pool thread instead
-        /// and overlaps the relay handshake rather than following it.
+        /// Starts deriving the session key once the password and the code are both known. It runs on the
+        /// thread pool, overlapping the handshake, because the deliberate tenth of a second would hitch rendering.
         /// </summary>
         private void BeginKeyDerivation()
         {

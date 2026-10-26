@@ -124,7 +124,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     condition.Value = (QuestState)valueDropdown.SelectedIndex;
                 }
             }
-            // Add Button
             if (GUI.Button(new Rect(position.x, rect.y + 100, 120, 20), "Add"))
             {
                 GraphGQuestCompService newCondition = new();

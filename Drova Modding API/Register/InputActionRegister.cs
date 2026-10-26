@@ -29,7 +29,6 @@ namespace Drova_Modding_API.Register
                 return _inputActionRegister;
             }
         }
-        // IL2CPP Magic
 #pragma warning disable CS0649
         private readonly Il2CppReferenceField<InputActionAsset> _inputActionAsset;
 #pragma warning restore CS0649

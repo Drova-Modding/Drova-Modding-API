@@ -1,0 +1,48 @@
+# A routine place behind a gate: Olaf walks to the map area's door on the overworld, fades out, appears inside the
+# area from fixtures/map_area.json and waits at his point there, then leaves again through the exit door.
+# Debug build only (the `routine` agent command).
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/routine_gate.scn
+
+default hero 5
+default slot 0
+set olaf 52b3d368-a4c0-4a62-9542-1f597c3e669b
+
+copy fixtures/map_area.json Mods/Modding_API/MapEditor/map_editor.json
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+A routine shared $olaf
+A expect routine info $olaf contains "running=1" timeout=60
+A routine gate $olaf -2132 -5200 80800 -79200 80900 -79300
+
+# Places are made when the AI logic scene loads.
+A load $hero $slot
+A wait world=1 timeout=240
+A expect routine info $olaf contains "points=-2132;-5200|80900;-79300" timeout=90
+
+# He is let into the area and waits at his point; the player follows through the same door.
+A tp -2132 -5262
+A expect objects Map_test_glade_enter list contains "=1" timeout=15
+sleep 2
+A walk 0 1 2
+A expect state contains "pos=80800," timeout=15
+A expect routine dist $olaf 1 <= 60 timeout=120
+# And stays: the gate is skipped while he is inside.
+sleep 20
+A expect routine dist $olaf 1 <= 60
+
+# The way back: saved inside, his place moves outside behind the area's exit door.
+A save 68
+A routine gate $olaf 80800 -79320 -2132 -5320 -1350 -4430
+A load $hero 68
+A wait world=1 timeout=240
+A expect routine info $olaf contains "points=80800;-79320|-1350;-4430" timeout=90
+A expect routine info $olaf contains "pos=8" timeout=10
+A expect routine dist $olaf 1 <= 60 timeout=180
+
+A routine shared $olaf
+copy fixtures/empty_map.json Mods/Modding_API/MapEditor/map_editor.json

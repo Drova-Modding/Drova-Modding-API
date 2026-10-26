@@ -1,0 +1,42 @@
+{
+  "Version": 1,
+  "Npcs": [
+    {
+      "Id": "showcase_hunter",
+      "Name": "Showcase Hunter",
+      "PositionX": -2132.0,
+      "PositionY": -6300.0,
+      "ModuleConfig": {
+        "friendly": "{\"IsPlayerFriendly\":true}",
+        "equipment": "{\"ItemReadableIds\":[\"weapon_spear_partisan\"]}",
+        "cosmetics": "{\"CosmeticReadableIds\":[\"beard_full_braided_2\",\"hair_short_curvy_2\"]}",
+        "dialogue": "{\"DialogueId\":\"showcase_hunter\"}",
+        "alignment_container": "{\"ContainerName\":\"Alignment_Civ_Human\"}",
+        "entityInfo": "{\"Guid\":\"3b8f7a52-61c4-4f0e-9d2a-5e1c8b7d4a90\",\"UseLocalizedName\":true,\"LocaPath\":\"QuestShowcase\",\"LocaKey\":\"Hunter_Name\",\"UnityPropertyName\":\"EntityInfo_ShowcaseHunter\",\"AlwaysKnown\":true}"
+      },
+      "Enabled": true
+    },
+    {
+      "Id": "showcase_scout",
+      "Name": "Showcase Scout",
+      "PositionX": -2040.0,
+      "PositionY": -6300.0,
+      "ModuleConfig": {
+        "friendly": "{\"IsPlayerFriendly\":true}",
+        "equipment": "{\"ItemReadableIds\":[\"weapon_spear_partisan\"]}",
+        "cosmetics": "{\"CosmeticReadableIds\":[\"hair_short_curvy_2\"]}",
+        "dialogue": "{\"DialogueId\":\"showcase_scout\"}",
+        "alignment_container": "{\"ContainerName\":\"Alignment_Civ_Human\"}",
+        "entityInfo": "{\"Guid\":\"5d1c9e7a-2b4f-4a6e-9c3d-8e7f6a5b4c3d\",\"UseLocalizedName\":true,\"LocaPath\":\"QuestShowcase\",\"LocaKey\":\"Scout_Name\",\"UnityPropertyName\":\"EntityInfo_ShowcaseScout\",\"AlwaysKnown\":true}"
+      },
+      "Enabled": true,
+      "Conditions": [
+        {
+          "GVarList": "Q_Showcase_RipperHunt",
+          "Var": "QuestState",
+          "Value": "IsCompleted"
+        }
+      ]
+    }
+  ]
+}

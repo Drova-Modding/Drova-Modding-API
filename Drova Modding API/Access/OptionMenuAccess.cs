@@ -59,7 +59,7 @@ namespace Drova_Modding_API.Access
             Instance.IsMenuOpen = true;
             Instance.OnOptionMenuOpen?.Invoke();
             GUI_Window_Options manager = guiWindow.GetComponent<GUI_Window_Options>();
-            // Workaround for Update 1.0.2.1 where the modded panel is not activated for whatever reason.
+            // Since game update 1.0.2.1 a modded panel is not activated on open.
             if (manager._currentPanelIndex == -1 || manager._currentPanelIndex >= 5)
             {
                 manager.ChangePanel(0);
@@ -87,7 +87,7 @@ namespace Drova_Modding_API.Access
          * Add a header and panel to the option menu and set a icon. This is not persistent and will be removed when the option menu is closed.
          * @param icon The icon of the header (not the background). If null, a random icon will be used.
          * @param name The name of the header. It needs to be unique and named liked: GUI_Button_OptionTab_YOUROPTION.
-         * @return The created transfrom for the builder or if the Elements already exists null.
+         * @return The created transform for the builder, or null if it already exists.
          */
         public Transform? AddPanel(Sprite? icon, string name)
         {
@@ -161,10 +161,8 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// The cloned panel keeps serialized references to the template rows that were just destroyed
-        /// via DestroyAllChildren. <c>GUI_OptionPanel_Generic.InitRows</c> dereferences them on tab
-        /// activation and throws, which aborts the panel init and can persist wrong values for custom
-        /// option controls.
+        /// The clone still references the destroyed template rows, which <c>InitRows</c> dereferences on tab activation,
+        /// throwing and aborting the panel init.
         /// </summary>
         private static void ClearClonedPanelRowState(GameObject panel)
         {
@@ -180,11 +178,6 @@ namespace Drova_Modding_API.Access
             generic._noSwitchControllerOptions?.Clear();
         }
 
-        /**
-         * Add the header and panel to the navigatio system.
-         * @param header The header to add.
-         * @param panel The panel to add.
-         */
         private void OverrideNavigation(GameObject header, GameObject panel)
         {
             GameObject? window = GetGUIWindow();
@@ -198,15 +191,10 @@ namespace Drova_Modding_API.Access
             };
             manager.GuiPanels.Add(_guiPanel);
             manager.SetupPanelNavigationElements();
-            // Rerender panel, otherwise its empty. 
+            // Otherwise the panel renders empty.
             manager.ChangePanelDefault(0);
         }
 
-        /**
-         * Add a panel to the option menu.
-         * @param header The header to add the panel to. It needs a name with GUI_Button_OptionTab_YOUROPTION
-         * @return The created panel game object.
-         */
         private static GameObject? AddPanel(GameObject header)
         {
             GameObject root = GetRootOfOptionWindow();

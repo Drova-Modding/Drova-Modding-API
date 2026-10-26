@@ -55,7 +55,7 @@ namespace Drova_Modding_API.Systems.Editor
 
         public static void Toggle()
         {
-            EnsureInitialized();
+            InitializeOnce();
             if (_ui == null)
                 return;
 
@@ -64,7 +64,7 @@ namespace Drova_Modding_API.Systems.Editor
 
         public static void Show()
         {
-            EnsureInitialized();
+            InitializeOnce();
             if (_ui != null) _ui.SetVisible(true);
         }
 
@@ -73,7 +73,7 @@ namespace Drova_Modding_API.Systems.Editor
             if (string.IsNullOrWhiteSpace(ownerToken))
                 return;
 
-            EnsureInitialized();
+            InitializeOnce();
             _requestedSelectionOwner = ownerToken;
             if (_ui != null) _ui.SetVisible(true);
             if (_ui != null) _ui.SetStatus($"Select a localization entry for '{ownerToken}'.");
@@ -126,7 +126,7 @@ namespace Drova_Modding_API.Systems.Editor
             return true;
         }
 
-        private static void EnsureInitialized()
+        private static void InitializeOnce()
         {
             if (!_initialized)
                 Initialize();
@@ -197,7 +197,7 @@ namespace Drova_Modding_API.Systems.Editor
             if (!_visible)
                 return;
 
-            EnsureWindowFitsScreen();
+            ClampWindowToScreen();
             _windowRect = GUI.Window(925501, _windowRect, new Action<int>(DrawWindow), "Localization Entries Editor");
         }
 
@@ -491,7 +491,7 @@ namespace Drova_Modding_API.Systems.Editor
             _files.Clear();
 
             string root = GetLocalizationRootPath();
-            EnsureDirectory(root);
+            CreateFolder(root);
 
             string[] files;
             try
@@ -580,7 +580,7 @@ namespace Drova_Modding_API.Systems.Editor
 
             try
             {
-                EnsureDirectory(Path.GetDirectoryName(file.AbsolutePath));
+                CreateFolder(Path.GetDirectoryName(file.AbsolutePath));
                 File.WriteAllText(file.AbsolutePath, sb.ToString());
                 file.Dirty = false;
                 _statusMessage = $"Saved '{file.DisplayName}'.";
@@ -610,7 +610,7 @@ namespace Drova_Modding_API.Systems.Editor
             string targetPath = Path.Combine(GetLocalizationRootPath(), language, fileName);
             try
             {
-                EnsureDirectory(Path.GetDirectoryName(targetPath));
+                CreateFolder(Path.GetDirectoryName(targetPath));
                 if (!File.Exists(targetPath))
                     File.WriteAllText(targetPath, string.Empty);
 
@@ -647,7 +647,7 @@ namespace Drova_Modding_API.Systems.Editor
             if (_gameplayInputBlocked == blocked)
                 return;
 
-            InputAccess.ToggleGameplayActionMaps(!blocked);
+            InputAccess.SetGameplayInputBlocked("LocalizationEditor", blocked);
             _gameplayInputBlocked = blocked;
         }
 
@@ -698,7 +698,7 @@ namespace Drova_Modding_API.Systems.Editor
         }
 
         [HideFromIl2Cpp]
-        private void EnsureWindowFitsScreen()
+        private void ClampWindowToScreen()
         {
             float minWidth = Mathf.Min(760f, Screen.width - 24f);
             float minHeight = Mathf.Min(520f, Screen.height - 24f);
@@ -713,7 +713,7 @@ namespace Drova_Modding_API.Systems.Editor
             => Path.Combine(Utils.SavePath, "Localization");
 
         [HideFromIl2Cpp]
-        private static void EnsureDirectory(string? path)
+        private static void CreateFolder(string? path)
         {
             if (string.IsNullOrWhiteSpace(path))
                 return;

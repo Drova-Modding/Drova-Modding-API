@@ -58,7 +58,6 @@ namespace Drova_Modding_API.Generation
                     case SerializationUtilities.ObjectType.UInt32: return BitConverter.ToUInt32(keyData, dataIndex);
                     case SerializationUtilities.ObjectType.Int32: return BitConverter.ToInt32(keyData, dataIndex);
                     case SerializationUtilities.ObjectType.Hash128: return Hash128.Parse(Encoding.ASCII.GetString(keyData, dataIndex + 1, keyData[dataIndex]));
-                    //case SerializationUtilities.ObjectType.Type: return Type.GetTypeFromCLSID(new Guid(Encoding.ASCII.GetString(keyData, dataIndex + 1, keyData[dataIndex])));
                     case SerializationUtilities.ObjectType.JsonObject:
                         {
                             int assemblyNameLength = keyData[dataIndex];
@@ -80,18 +79,15 @@ namespace Drova_Modding_API.Generation
             }
             catch (Exception ex)
             {
-                MelonLogger.Error("err", ex);
+                MelonLogger.Error("[AddressableGeneration] Failed to read addressable key " + dataIndex, ex);
             }
 
             return null;
         }
 
         /// <summary>
-        /// Generates a file with all addressable assets in the game.
-        /// You can find the file in the Mods/test.txt.
-        /// It uses the catalog.json file from the game.
+        /// Writes every addressable asset in the game's catalog.json to Mods/addressables.txt.
         /// </summary>
-
         public static void CreateAddressableFile(MelonAssembly assembly)
         {
             string jsonPath = Path.Combine(assembly.Location, "..", "..", "Drova_Data", "StreamingAssets", "aa", "catalog.json");
@@ -106,7 +102,6 @@ namespace Drova_Modding_API.Generation
             byte[] entryData = Convert.FromBase64String(data.m_EntryDataString);
             byte[] keyData = Convert.FromBase64String(data.m_KeyDataString);
             int bucketCount = BitConverter.ToInt32(bucketData, 0);
-            MelonLogger.Msg("bucketcount " + bucketCount);
             Bucket[] buckets = new Bucket[bucketCount];
             int bi = 4;
             for (int i = 0; i < bucketCount; i++)
@@ -119,18 +114,16 @@ namespace Drova_Modding_API.Generation
 
                 buckets[i] = new Bucket { dataOffset = index };
             }
-            MelonLogger.Msg("Buckets created");
             int keyCount = BitConverter.ToInt32(keyData, 0);
             object[] keys = new object[keyCount];
             for (int i = 0; i < buckets.Length; i++)
                 keys[i] = ReadObjectFromByteArray(keyData, buckets[i].dataOffset);
-            MelonLogger.Msg("Keys created");
             const int kBytesPerInt32 = 4;
             const int k_EntryDataItemPerEntry = 7;
             int count = SerializationUtilities.ReadInt32FromByteArray(entryData, 0);
             string addressablesPath = Path.Combine(assembly.Location, "..", "addressables.txt");
             using (FileStream stream = File.Create(addressablesPath))
-            {                     //var locations = new IResourceLocation[count];
+            {
                 StringBuilder sb = new();
                 for (int i = 0; i < count; i++)
                 {
@@ -148,7 +141,6 @@ namespace Drova_Modding_API.Generation
                     int primaryKey = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
                     index += kBytesPerInt32;
                     int resourceType = SerializationUtilities.ReadInt32FromByteArray(entryData, index);
-                    //object data = dataIndex < 0 ? null : SerializationUtilities.ReadObjectFromByteArray(extraData, dataIndex);
                     sb.Append("Name/InternalId: " + data.m_InternalIds[internalId] + " Guid: " + keys[primaryKey] + " ressourceType: " + data.m_resourceTypes[resourceType].ClassName + "\n");
 
                 }

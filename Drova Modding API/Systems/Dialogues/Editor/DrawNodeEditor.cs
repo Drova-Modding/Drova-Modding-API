@@ -1,4 +1,4 @@
-﻿using Il2CppNodeCanvas.DialogueTrees;
+﻿using Il2CppNodeCanvas.Framework;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor
@@ -45,7 +45,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// The node that is being drawn
         /// </summary>
-        public DTNode Node;
+        public Node Node = null!;
 
         /// <summary>
         /// The max number of out connections
@@ -55,7 +55,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// Draw the node
         /// </summary>
-        /// <param name="position">Position to add</param>
         public abstract void DrawNode(Vector2 position);
 
         /// <summary>
@@ -66,13 +65,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// Called when the node is double-clicked
         /// </summary>
-        /// <param name="mousePosition">The mousePositíon when it was clicked (translated in gui cords)</param>
+        /// <param name="mousePosition">The mouse position in graph coordinates</param>
         public virtual void OnDoubleClick(Vector2 mousePosition) { }
 
         /// <summary>
         /// Called when the node is right-clicked
         /// </summary>
-        /// <param name="mousePosition">The mousePositíon when it was right clicked (translated in gui cords)</param>
+        /// <param name="mousePosition">The mouse position in graph coordinates</param>
         public virtual void OnRightClick(Vector2 mousePosition) { }
     }
 }

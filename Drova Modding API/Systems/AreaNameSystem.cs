@@ -18,16 +18,9 @@ namespace Drova_Modding_API.Systems
     {
         private static AreaNameSystem? _instance;
 
-        /// <summary>
-        /// The regions the Player is currently in
-        /// </summary>
         internal readonly List<Region> Regions = [];
 
-        /// <summary>
-        /// Cached result of <see cref="IsInCave"/>. Recomputed whenever the current Regions change.
-        /// </summary>
         private bool _isInCave;
-
 
         /**
          * The event that is called when the player enters or leaves a region.
@@ -58,9 +51,7 @@ namespace Drova_Modding_API.Systems
             }
             _instance = this;
 
-            // A new system is built on every gameplay load, so the API rebinds here rather than at
-            // subscribe time. Otherwise a mod that subscribed in a previous session holds a handler on a
-            // destroyed object.
+            // Rebinds on every gameplay load so handlers from an earlier session do not sit on a destroyed system.
             Access.RegionAccess.Attach(this);
         }
 
@@ -98,11 +89,7 @@ namespace Drova_Modding_API.Systems
         [HideFromIl2Cpp]
         public bool IsInCave()
         {
-#if DEBUG
-            MelonLogger.Msg("Checking if player is in a cave. Current Regions: " + string.Join(", ", Regions.Select(r => r.ToString())));
-            MelonLogger.Msg("Is player in cave? " + _isInCave);
-#endif
             return _isInCave;
         }
     }
-}
+}

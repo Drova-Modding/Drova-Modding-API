@@ -20,7 +20,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public string DrawWizardUiAndSerialize(string payload)
         {
-            EnsureUiState(payload);
+            SyncUiState(payload);
 
             GUILayout.Label("Max Health");
             int updatedMaxHealth = Mathf.Max(1, (int)GUILayout.HorizontalSlider(_cachedState.MaxHealth, 1f, 5000f));
@@ -70,7 +70,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private void EnsureUiState(string? payload)
+        private void SyncUiState(string? payload)
         {
             string normalizedPayload = payload ?? string.Empty;
             if (string.Equals(_lastPayload, normalizedPayload, StringComparison.Ordinal))

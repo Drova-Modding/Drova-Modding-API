@@ -17,7 +17,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<DS_CheckAndResetGlobalBBVarTask>();
             if (_castedTask == null) return;
 
-            var allParams = GraphEditorManager.DialogueTree!.allParameters;
+            var allParams = GraphEditorManager.Graph!.allParameters;
             if (!allParams.Contains(_castedTask.IsBoolSet))
             {
                 allParams.Add(_castedTask.IsBoolSet);

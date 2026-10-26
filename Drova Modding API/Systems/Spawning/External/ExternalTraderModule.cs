@@ -27,11 +27,10 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public string DrawWizardUiAndSerialize(string payload)
         {
-            EnsureUiState(payload);
+            SyncUiState(payload);
 
             bool changed = false;
 
-            // ── Trader name ──────────────────────────────────────────────────
             GUILayout.Label("Trader name (blank = NPC name)");
             string updatedName = GUILayout.TextField(_cachedState.Name ?? string.Empty);
             if (!string.Equals(updatedName, _cachedState.Name, StringComparison.Ordinal))
@@ -40,7 +39,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 changed = true;
             }
 
-            // ── Trader money ─────────────────────────────────────────────────
             GUILayout.Space(6f);
             GUILayout.Label("Trader money");
             string previousMoneyInput = _moneyInput;
@@ -63,7 +61,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 }
             }
 
-            // ── Item picker ──────────────────────────────────────────────────
             GUILayout.Space(6f);
             string? rawInput = _rawInput;
             ReadableIdModuleSupport.DrawEditor(
@@ -80,7 +77,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 changed = true;
             }
 
-            // ── Per-item amounts ─────────────────────────────────────────────
             if (_cachedState.Items.Count > 0)
             {
                 GUILayout.Space(6f);
@@ -164,7 +160,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private void EnsureUiState(string? payload)
+        private void SyncUiState(string? payload)
         {
             string normalizedPayload = payload ?? string.Empty;
             if (string.Equals(_lastPayload, normalizedPayload, StringComparison.Ordinal))

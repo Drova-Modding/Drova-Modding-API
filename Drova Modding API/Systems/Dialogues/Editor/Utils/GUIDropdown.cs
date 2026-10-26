@@ -61,13 +61,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         // is on top, so open lists are deferred until every node has been drawn.
         private static readonly List<(GUIDropdown dd, Rect rect)> PendingOverlays = [];
 
-        // Set by FlushOverlays and cleared by the next Draw() call.
         private bool _changedThisFlush;
 
         /// <summary>
-        /// Draws all deferred dropdown overlays.
-        /// Call this once per frame, after all nodes and controls have been drawn,
-        /// so that open dropdowns are always painted on top of everything else.
+        /// Draws all deferred dropdown lists. Call once per frame after everything else is drawn.
         /// </summary>
         public static void FlushOverlays(Rect visibleRect)
         {
@@ -84,10 +81,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         }
 
         /// <summary>
-        /// Initializes a new instance of the GUIDropdown class.
+        /// Creates a dropdown. A <paramref name="selectedIndex"/> of -1 means no selection.
         /// </summary>
-        /// <param name="options">The list of options for the dropdown.</param>
-        /// <param name="selectedIndex">The index of the selected option. Set -1 for no selection</param>
         public GUIDropdown(string[] options, int selectedIndex)
         {
             _options = options;
@@ -97,7 +92,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             Texture2D hoverTexture = CreateTexture(2, 2, new Color(0.15f, 0.15f, 0.15f, 1.0f));
             Texture2D highlightTexture = CreateTexture(2, 2, new Color(0.2f, 0.5f, 0.8f, 1.0f));
 
-            // Initialize default styles
             _defaultStyle = new GUIStyle(GUI.skin.button);
             _defaultStyle.normal.textColor = Color.white;
             _defaultStyle.normal.background = blackTexture;
@@ -109,7 +103,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             _defaultStyle.onActive.background = hoverTexture;
             _defaultStyle.onFocused.background = blackTexture;
 
-            // Highlight style with a different background color
             _highlightStyle = new GUIStyle(GUI.skin.button);
             _highlightStyle.normal.textColor = Color.yellow;
             _highlightStyle.normal.background = highlightTexture;
@@ -125,7 +118,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Sets the selected index of the dropdown.
         /// </summary>
-        /// <param name="index"></param>
         public virtual void SetSelectedIndex(int index)
         {
             if (index >= 0 && index < _options.Length)
@@ -133,24 +125,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         }
 
         /// <summary>
-        /// Draws the dropdown UI and handles interactions.
-        /// The options list is not drawn here. It is registered for <see cref="FlushOverlays"/>
-        /// so it appears on top of all other controls.
+        /// Draws the button. The open list is drawn later by <see cref="FlushOverlays"/> so it is on top.
         /// </summary>
-        /// <param name="dropdownRect">The position and size of the dropdown.</param>
-        /// <returns>
-        /// True if the selected index changed since the last call;
-        /// the result reflects the previous frame's selection (one-frame lag).
-        /// </returns>
+        /// <returns>True if the selection changed, one frame late because the list is drawn after this call.</returns>
         public virtual bool Draw(Rect dropdownRect)
         {
-            // Consume and reset the flag so it only returns true for one frame
             bool changed = _changedThisFlush;
             _changedThisFlush = false;
 
             RenderSelectedOption(dropdownRect);
 
-            // Register for deferred overlay drawing if the list is open
             if (_showDropdown)
                 PendingOverlays.Add((this, dropdownRect));
 
@@ -158,11 +142,8 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         }
 
         /// <summary>
-        /// Renders the selected option.
-        /// If no options are available, a message is shown.
-        /// If no option is selected, then nothing is shown.
+        /// Renders the button showing the selected option.
         /// </summary>
-        /// <param name="dropdownRect"></param>
         public virtual void RenderSelectedOption(Rect dropdownRect)
         {
 
@@ -181,8 +162,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Renders the dropdown options if the dropdown is open.
         /// </summary>
-        /// <param name="dropdownRect"></param>
-        /// <returns></returns>
         public virtual bool DrawOptions(Rect dropdownRect)
         {
             if (_showDropdown)
@@ -195,14 +174,10 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Renders the dropdown options.
         /// </summary>
-        /// <param name="dropdownRect"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
         public virtual bool RenderDropdownOptions(Rect dropdownRect, string[] options)
         {
             Rect backgroundRect = new Rect(dropdownRect.x, dropdownRect.y + dropdownRect.height, dropdownRect.width, dropdownRect.height * options.Length);
 
-            // Close dropdown if clicked outside the dropdown area (main button or options)
             if (_showDropdown && Event.current.type == EventType.MouseDown && !backgroundRect.Contains(Event.current.mousePosition) && !dropdownRect.Contains(Event.current.mousePosition))
             {
                 _showDropdown = false;
@@ -212,7 +187,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             {
                 return false;
             }
-            // Draw a background box for the entire dropdown area to ensure full opacity
             GUI.Box(backgroundRect, "", _defaultStyle);
 
             bool selectionChanged = false;
@@ -234,13 +208,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
             return selectionChanged;
         }
 
-        /// <summary>
-        /// Creates a solid color texture for GUI backgrounds.
-        /// </summary>
-        /// <param name="width">Width of the texture.</param>
-        /// <param name="height">Height of the texture.</param>
-        /// <param name="color">Color of the texture.</param>
-        /// <returns>A Texture2D with the specified color.</returns>
         private static Texture2D CreateTexture(int width, int height, Color color)
         {
             Color[] pixels = new Color[width * height];

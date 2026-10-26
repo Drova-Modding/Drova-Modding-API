@@ -28,8 +28,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor
         /// <summary>
         /// Draw the task
         /// </summary>
-        /// <param name="position">position of the task</param>
-        /// <returns>Rect of its position</returns>
+        /// <returns>The rect the task occupied</returns>
         public abstract Rect DrawTask(Vector2 position);
     }
 }

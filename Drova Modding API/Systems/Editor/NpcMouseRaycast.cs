@@ -14,8 +14,8 @@ namespace Drova_Modding_API.Systems.Editor
     [RegisterTypeInIl2Cpp]
     public class NpcMouseRaycast(IntPtr ptr) : MonoBehaviour(ptr)
     {
-        private readonly Il2CppStructArray<RaycastHit2D> _hits = new RaycastHit2D[10]; // Pre-allocated array for raycast results.
-        private readonly string[] _ignoredLayers = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"]; // Layer to ignore when casting ray.
+        private readonly Il2CppStructArray<RaycastHit2D> _hits = new RaycastHit2D[10];
+        private readonly string[] _ignoredLayers = ["VisibleTrigger", "HitReceiver_CombatMusic", "HitReceiver_GroupEntities"];
         private Camera? _camera;
         
         internal void Awake()
@@ -25,7 +25,6 @@ namespace Drova_Modding_API.Systems.Editor
 
         internal void Update()
         {
-            // Detect left mouse button click.
             if (Input.GetMouseButtonDown(0))
             {
                 CastRayFromMouse();
@@ -37,14 +36,11 @@ namespace Drova_Modding_API.Systems.Editor
         {
             if (!_camera) _camera = Camera.main;
             if (!_camera) return;
-            // Convert mouse position to world coordinates.
             Vector3 mousePosition = _camera.ScreenToWorldPoint(Input.mousePosition);
             Vector2 mousePosition2D = new(mousePosition.x, mousePosition.y);
 
-            // Cast a ray from the mouse position.
             int hitCount = Physics2D.RaycastNonAlloc(mousePosition2D, Vector2.down, _hits, 10f);
 
-            // Check if the ray _hits something.
             if (hitCount > 0)
             {
                 for (int i = 0; i < hitCount; i++)

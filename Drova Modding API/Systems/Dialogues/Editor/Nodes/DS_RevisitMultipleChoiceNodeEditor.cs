@@ -34,10 +34,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.Label(new Rect(position.x + 10, position.y + 30, 130, 20), "Revisit Tag:");
             _castedNode._nodeTag = GUI.TextField(new Rect(position.x + 120, position.y + 30, 200, 20), _castedNode._nodeTag);
 
-            // TODO: Maybe add a dropdown for the revisit type
-
-            // TODO: Check if jumpNode and so on ever get used and if they should be editable
-
             GUI.color = previousColor;
 
         }

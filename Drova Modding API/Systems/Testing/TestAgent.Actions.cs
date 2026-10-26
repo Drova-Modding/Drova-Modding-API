@@ -1,6 +1,7 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 using Drova_Modding_API.Access;
+using Drova_Modding_API.Systems.Morphing;
 using Il2CppDrova;
 using Il2CppDrova.ActorActions;
 using UnityEngine;
@@ -70,10 +71,12 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// <c>useitem &lt;item&gt; [hold]</c>: uses a carried item the way the quick slots do - a spell, a potion,
-        /// food - and ends the use after <c>hold</c> seconds. A spell must be one of this player's abilities.
+        /// <c>useitem &lt;item&gt; [hold] [idle]</c>: uses a carried item the way the quick slots do - a spell, a potion,
+        /// food - and ends the use after <c>hold</c> seconds. A spell must be one of this player's abilities. With
+        /// <c>idle</c> it answers <c>busy</c> while an action or stance change runs, so <c>expect ... contains "used"</c>
+        /// waits for the moment the use can really start.
         /// </summary>
-        private static string UseItem(string id, float hold)
+        private static string UseItem(string id, float hold, bool idle)
         {
             if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
 
@@ -93,9 +96,10 @@ namespace Drova_Modding_API.Systems.Testing
                 abilities.SetSelectedAbility(item);
             }
 
+            if (idle && (player.GetActionModule().HasCurrentAction || player.GetInteractionModule().IsChangingMode || player.GetInteractionModule().HasQueuedChangeMode)) return "busy";
+
             if (!item.CanBeUsedBy(player, false))
             {
-                // Which of the item's conditions said no - flow, stance, a talent - or that the body is busy.
                 StringBuilder why = new("refused:");
                 if (item._conditions != null)
                 {
@@ -110,8 +114,21 @@ namespace Drova_Modding_API.Systems.Testing
             }
 
             item.StartUseItem(player);
+            if (idle && !player.GetActionModule().HasCurrentAction) return "dropped";
             _itemEnds.Add((item, Time.unscaledTime + hold));
             return "used " + item.ReadableId;
+        }
+
+        /// <summary><c>morph [end|trail]</c>: the creature and whether it is the player. <c>trail</c> is the hidden caster's distance to it.</summary>
+        private static string Morph(string verb)
+        {
+            if (verb == "end") return MorphManager.EndMorph() ? "ended" : "not morphed";
+            Actor? body = MorphManager.Body;
+            Actor? caster = MorphManager.Caster;
+            if (!MorphManager.IsMorphed || body == null || caster == null) return "morphed=0";
+            float trail = Vector2.Distance(body.GetFeetPosition(), caster.GetFeetPosition());
+            bool isPlayer = PlayerAccess.TryGetPlayer(out Actor? player) && player.Pointer == body.Pointer;
+            return verb == "trail" ? Format(trail) : $"morphed=1 body={body.name} player={(isPlayer ? 1 : 0)}";
         }
 
         /// <summary><c>equip &lt;item&gt;</c>: gives the item if it is not carried and wears it in the active set, replacing what is there.</summary>
@@ -169,10 +186,10 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// <c>actlog start &lt;me|name fragment&gt;</c> starts recording what that body plays; <c>actlog read</c>
-        /// answers it as tokens joined by " > ": one per action - its bind and combo step ("PrimaryAttack.1:prefab"; no "#", which scenarios read as a comment), "!charged" when the
-        /// heavy override fired, or the action's prefab name for one no button started - and "mode:X" per stance change. A teammate's body is found by
-        /// name, "DrovaCoop.Remote" for the co-op mod's.
+        /// <c>actlog start &lt;me|name fragment&gt;</c> records what that body plays. <c>actlog read</c> answers it as tokens
+        /// joined by " > ": per action its bind and combo step ("PrimaryAttack.1:prefab"), "!charged" when the heavy override
+        /// fired, or the prefab name for one no button started, plus "mode:X" per stance change. No "#", which scenarios read
+        /// as a comment.
         /// </summary>
         private static string ActLog(string verb, string target)
         {
@@ -203,8 +220,8 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// The log without phases and hold times, joined by "&gt;" with no spaces - what is compared across machines:
-        /// hold times differ by a frame or two between a body and its copy, the sequence of actions must not.
+        /// The log without phases and hold times, compared across machines: hold times differ by a frame or two between a
+        /// body and its copy, the sequence of actions must not.
         /// </summary>
         private static string ActLogBrief()
         {
@@ -225,10 +242,10 @@ namespace Drova_Modding_API.Systems.Testing
         /// <summary>Where the player aims while set: facing, and the mouse point spells and shots are aimed at.</summary>
         private static Vector2? _aimAt;
 
-        /// <summary>An actor by "me", guid, or the start of an active object's name (a teammate's copy: DrovaCoop.Remote).</summary>
-        /// <summary>How far a by-name target is looked for: a few screens, short of a Red Tower floor (about 3000 up).</summary>
+        /// <summary>How far a by-name target is looked for, short of the next Red Tower floor (about 3000 up).</summary>
         private const float ByNameRange = 2500f;
 
+        /// <summary>An actor by "me", guid, or the start of an active object's name (a teammate's copy: DrovaCoop.Remote).</summary>
         private static Actor ResolveActor(string target)
         {
             if (target == "me") return PlayerAccess.TryGetPlayer(out Actor? player) ? player : throw new InvalidOperationException("no player yet");
@@ -236,9 +253,7 @@ namespace Drova_Modding_API.Systems.Testing
             Actor? byGuid = Entities().GetActorFromGuid(target);
             if (byGuid != null) return byGuid;
 
-            // By name: the nearest living match - "hit Draugr" means the next one standing, not the corpse beside it
-            // or one across the map. The nearest dead one only when none lives. Within ByNameRange: unbounded, a Red Tower
-            // floor-2 "hit Draugr" struck one still standing on floor 1, 6000 units off, and the party ran to it.
+            // By name: the nearest living match within ByNameRange, and the nearest dead one only when none lives.
             Vector2 origin = PlayerAccess.TryGetPlayer(out Actor? self) ? self.GetFeetPosition() : Vector2.zero;
             Actor? alive = null, dead = null;
             float aliveBest = float.MaxValue, deadBest = float.MaxValue;
@@ -289,8 +304,8 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary><c>actors [range]</c>: the living bodies near the player, nearest first, as "name@distance:health" - to find what a
-        /// summon or a spawn is called before asserting on it.</summary>
-        private static string Actors(float range)
+        /// summon or a spawn is called before asserting on it. <c>actors range name</c> counts the bodies whose name contains it.</summary>
+        private static string Actors(float range, string? countFragment)
         {
             if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
 
@@ -304,6 +319,11 @@ namespace Drova_Modding_API.Systems.Testing
 
                 Health? health = actor.GetHealth();
                 found.Add((distance, actor.name.Replace(" ", "_") + "@" + Format(distance) + ":" + (health == null ? "-" : Format(health.CurHealth))));
+            }
+
+            if (countFragment != null)
+            {
+                return found.Count(entry => entry.Text.Contains(countFragment, StringComparison.OrdinalIgnoreCase)).ToString();
             }
 
             found.Sort((x, y) => x.Distance.CompareTo(y.Distance));
@@ -352,9 +372,8 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// <c>talents &lt;me|guid|name&gt; [fragment]</c>: the talents that body has learned, by asset name (count first);
-        /// <c>talent learn &lt;name&gt;</c> and <c>talent list &lt;fragment&gt;</c> for this player. Skills change combos,
-        /// charges and on-hit effects, and a teammate's copy has to carry its owner's.
+        /// <c>talents &lt;me|guid|name&gt; [fragment]</c>: the talents that body has learned, by asset name (count first).
+        /// <c>talent learn &lt;name&gt;</c> and <c>talent list &lt;fragment&gt;</c> for this player.
         /// </summary>
         private static string Talents(string target, string fragment)
         {
@@ -389,7 +408,14 @@ namespace Drova_Modding_API.Systems.Testing
                 return names.Count == 0 ? "none" : string.Join(";", names);
             }
 
-            if (verb != "learn") throw new InvalidOperationException("talent list <fragment> | talent learn <name>");
+            // The talent the game asks for before a guard may open its perfect-block window.
+            if (verb == "perfect")
+            {
+                Il2CppDrova.Talent.TalentContainer? perfect = Il2CppDrova.GlobalAssetsGameHandler.TryGet()?.PerfectBlockTalent;
+                return perfect == null ? "none" : perfect.name;
+            }
+
+            if (verb != "learn") throw new InvalidOperationException("talent list <fragment> | talent learn <name> | talent perfect");
             if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
 
             foreach (Il2CppDrova.Talent.TalentContainer container in Resources.FindObjectsOfTypeAll<Il2CppDrova.Talent.TalentContainer>())
@@ -469,14 +495,11 @@ namespace Drova_Modding_API.Systems.Testing
             if (_aimAt is { } aim) CameraGameHandler._mouseWorldPos2D = aim;
         }
 
-        /// <summary>Set while the agent itself lets go of a button.</summary>
         private static bool _agentReleasing;
 
         /// <summary>
-        /// Keeps a held button held. The combat input lets go of every button that is not physically down, every
-        /// frame - and with the desktop's keyboard off, none is - so a `press ... hold` was a tap: a shield went up
-        /// and straight back down, and a block never caught a blow. While the agent holds anything, only the
-        /// agent's own release reaches the local player's actions.
+        /// Keeps a held button held. The combat input lets go of every button not physically down each frame, and the
+        /// desktop's keyboard is off. While the agent holds anything, only its own release reaches the player's actions.
         /// </summary>
         private static bool HeldReleasePrefix(AA_ABase __instance)
         {
@@ -603,13 +626,8 @@ namespace Drova_Modding_API.Systems.Testing
         }
 
         /// <summary>
-        /// <c>popup [yes|no]</c>: the open confirm popup's text - or presses its button. Dialogues stop on some (the
-        /// Red Tower's "no going back") until the player answers.
-        /// </summary>
-        /// <summary>
-        /// The weather as the game holds it: the five levels (0-3) in the order the game numbers them, whether the
-        /// updater is running and lerping, how many things lock it, and the fog effect's live percentage - what the
-        /// foglet patches read, and what a fog-clearing death moves without touching the levels.
+        /// The weather as the game holds it: the five levels (0-3), whether the updater runs and lerps, how many things
+        /// lock it, and the fog effect's live percentage.
         /// </summary>
         private static string Weather()
         {
@@ -660,7 +678,6 @@ namespace Drova_Modding_API.Systems.Testing
 
             if (op == "region")
             {
-                // The first of the named regions whose event survives its own start: a pool's skip roll ends it at once.
                 foreach (string name in Arg(parts, 2).Split(','))
                 {
                     if (!Enum.TryParse(name, out Region region) || !WorldEvents.RegionalEventRegistry.TryGetEvents(region, out List<WorldEvents.Regional.ARegionalEvent>? events)) continue;
@@ -710,8 +727,8 @@ namespace Drova_Modding_API.Systems.Testing
                 found++;
                 text.Append(patch.name).Append(" mode=").Append(patch._mode).Append(" defeated=").Append(patch._defeated ? 1 : 0)
                     .Append(" inside=").Append(patch._isPlayerInside ? 1 : 0).Append(" spawned=").Append(spawned)
-                    .Append(" active=").Append(active).Append(" alive=").Append(alive)
-                    .Append(" dist=").Append(Format(Vector2.Distance(patch.transform.position, at))).Append("; ");
+                    .Append(" active=").Append(active).Append(" alive=").Append(alive)                    .Append(" dist=").Append(Format(Vector2.Distance(patch.transform.position, at)))
+                    .Append(" at=").Append(Format(patch.transform.position.x)).Append(',').Append(Format(patch.transform.position.y)).Append("; ");
             }
 
             return found + " patch(es) " + text;
@@ -724,7 +741,7 @@ namespace Drova_Modding_API.Systems.Testing
         /// </summary>
         private static string Merchant(string verb, string readableId, int amount)
         {
-            // Found, not asked for: the handler's getter builds the window when there is none, which is not a question.
+            // Found, not asked for: the handler's getter builds a window when there is none.
             Il2CppDrova.GUI.GUI_Window_Merchant? window = UnityEngine.Object.FindObjectOfType<Il2CppDrova.GUI.GUI_Window_Merchant>();
             if (window == null || !window.IsWindowOpen || window._marketPlace == null) return "open=0";
 
@@ -775,7 +792,6 @@ namespace Drova_Modding_API.Systems.Testing
             }
         }
 
-        /// <summary>Opens the pause menu, as the pause key does.</summary>
         private static string Opened(GUIGameHandler gui)
         {
             gui.ShowPauseMenu();
@@ -794,6 +810,10 @@ namespace Drova_Modding_API.Systems.Testing
             return "clicked " + name;
         }
 
+        /// <summary>
+        /// <c>popup [yes|no]</c>: the open confirm popup's text, or presses its button. Some dialogues wait on one
+        /// (the Red Tower's "no going back").
+        /// </summary>
         private static string Popup(string answer)
         {
             foreach (Il2CppDrova.GUI.GUI_Window_ConfirmPopUp popup in UnityEngine.Object.FindObjectsOfType<Il2CppDrova.GUI.GUI_Window_ConfirmPopUp>())

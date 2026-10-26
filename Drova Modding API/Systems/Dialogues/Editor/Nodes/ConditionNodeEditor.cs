@@ -21,12 +21,38 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             NodeSizeInternal = new Vector2(350, 120);
         }
 
-        public override void Init()
+        /// <summary>
+        /// The condition of the edited node, or null when it has none or is not a supported node.
+        /// </summary>
+        protected virtual Il2CppNodeCanvas.Framework.ConditionTask? GetCondition()
         {
             _castedNode ??= Node.TryCast<ConditionNode>();
-            if (_castedNode == null) return;
+            return _castedNode?._condition;
+        }
+
+        /// <summary>
+        /// Writes a new condition into the edited node.
+        /// </summary>
+        protected virtual void SetCondition(Il2CppNodeCanvas.Framework.ConditionTask condition)
+        {
+            if (_castedNode != null) _castedNode._condition = condition;
+        }
+
+        /// <summary>
+        /// Whether the edited node is a node this editor understands.
+        /// </summary>
+        protected virtual bool IsSupported => (_castedNode ??= Node.TryCast<ConditionNode>()) != null;
+
+        /// <summary>
+        /// The caption of the node box.
+        /// </summary>
+        protected virtual string Title => "ConditionNode";
+
+        public override void Init()
+        {
+            if (!IsSupported) return;
             _guiCreateConditionTask = new GUICreateConditionTask();
-            Il2CppNodeCanvas.Framework.ConditionTask condition = _castedNode._condition;
+            Il2CppNodeCanvas.Framework.ConditionTask? condition = GetCondition();
             if (condition != null)
             {
                 _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(condition.GetIl2CppType());
@@ -51,7 +77,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 
         public override void DrawNode(Vector2 position)
         {
-            if (_castedNode == null || _drawTaskEditor == null)
+            if (!IsSupported || _drawTaskEditor == null)
             {
                 return;
             }
@@ -67,7 +93,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             Color previousBg = GUI.backgroundColor;
             GUI.color = Color.green;
             GUI.backgroundColor = Color.clear;
-            GUI.Box(rect, "ConditionNode");
+            GUI.Box(rect, Title);
             GUI.color = previousColor;
             GUI.backgroundColor = previousBg;
 
@@ -83,12 +109,12 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             else
             {
                 Il2CppNodeCanvas.Framework.ConditionTask? conditionTask = _guiCreateConditionTask.Draw(new Vector2(position.x, position.y + 20));
-                DialogueTree? dialogueTree = GraphEditorManager.DialogueTree;
-                if (conditionTask != null && dialogueTree != null)
+                Il2CppNodeCanvas.Framework.Graph? graph = GraphEditorManager.Graph;
+                if (conditionTask != null && graph != null)
                 {
-                    dialogueTree.allTasks.Add(conditionTask);
+                    graph.allTasks.Add(conditionTask);
                     _changeCondition = false;
-                    _castedNode._condition = conditionTask;
+                    SetCondition(conditionTask);
                     _drawTaskEditor = GraphEditorManager.DrawTaskEditorFactory.GetDrawTaskEditorFromType(conditionTask.GetIl2CppType());
                     if (_drawTaskEditor == null) return;
 

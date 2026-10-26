@@ -8,26 +8,21 @@ using UnityEngine;
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// Interception points for GUI content windows (letters/notes and the rune-drawing window),
-    /// so mods can inspect or swap what the player is shown without re-discovering the correct
-    /// overloads and chokepoints.
+    /// Interception points for GUI content windows (letters and the rune-drawing window), so mods can inspect or
+    /// swap what the player is shown.
     /// </summary>
     public static class WindowContentAccess
     {
         /// <summary>
-        /// A letter/note window finished building its content. Fires for world letters: the hook
-        /// is the two-argument <c>GUI_Window_Letter.ShowLetterContent(GameObject, Action)</c>
-        /// overload, which the one-argument overload delegates to. The journal's Letters tab
-        /// does NOT pass through this window - it builds the same content prefab in its own pane
-        /// (<see cref="OnJournalLetterShown"/>) - so content rewrites must subscribe to both to
-        /// stay consistent across a re-read. Mutate the window's children (e.g. swap
-        /// <c>Image.sprite</c>s) in the handler.
+        /// A world letter window finished building its content. Mutate the window's children in the handler.
+        /// The journal's Letters tab builds the same content without this window, so content rewrites also
+        /// subscribe to <see cref="OnJournalLetterShown"/>.
         /// </summary>
         public static event Action<GUI_Window_Letter>? OnLetterShown
         {
             add
             {
-                EnsureLetterHooked();
+                HookLetterOnce();
                 _onLetterShown += value;
             }
             remove
@@ -37,17 +32,14 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// The journal's Letters tab finished building a letter's content. The hook is a postfix
-        /// on <c>GUI_Journal_EntryController.Init(Journal_RuntimeTopic)</c>, which instantiates
-        /// the letter content prefab into the journal pane; it fires only when the shown topic
-        /// is a letter. Mutate the controller's children (e.g. swap <c>Image.sprite</c>s) in the
-        /// handler, exactly like an <see cref="OnLetterShown"/> handler does for the window.
+        /// The journal's Letters tab finished building a letter's content. Mutate the controller's children in the
+        /// handler, as an <see cref="OnLetterShown"/> handler does for the window.
         /// </summary>
         public static event Action<GUI_Journal_EntryController>? OnJournalLetterShown
         {
             add
             {
-                EnsureJournalHooked();
+                HookJournalOnce();
                 _onJournalLetterShown += value;
             }
             remove
@@ -65,17 +57,14 @@ namespace Drova_Modding_API.Access
         private static readonly List<Func<Texture2D, Texture2D?>> DrawingTransformers = [];
 
         /// <summary>
-        /// Register a transformer for the rune-drawing window's required pattern. Runs inside a
-        /// prefix on <c>GUI_Window_Drawing.SetTargetTexture</c>, before the window compares
-        /// anything - the drawn result is checked per-pixel against the (possibly replaced)
-        /// texture (alpha, plus RGB for multi-color windows), so replacement textures must be
-        /// pixel-exact 8x8 grids. Return null (or the input) to leave the pattern alone; the
-        /// first transformer that returns a different texture wins.
+        /// Register a transformer for the rune-drawing window's required pattern. The drawing is checked per pixel
+        /// against it, so a replacement must be a pixel-exact 8x8 grid. Return null or the input to leave the
+        /// pattern alone. The first transformer that returns a different texture wins.
         /// </summary>
         /// <param name="transformer">Maps the vanilla target texture to a replacement, or null.</param>
         public static void RegisterDrawingTargetTransformer(Func<Texture2D, Texture2D?> transformer)
         {
-            EnsureDrawingHooked();
+            HookDrawingOnce();
             DrawingTransformers.Add(transformer);
         }
 
@@ -89,11 +78,9 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Lazy: the letter hook is only applied once someone subscribes, and the overload must
-        /// be resolved explicitly - <c>ShowLetterContent</c> is overloaded, so a name-only
-        /// <c>AccessTools.Method</c> lookup is ambiguous.
+        /// Hooks the two-argument <c>ShowLetterContent</c>, which the one-argument overload delegates to, on first subscribe.
         /// </summary>
-        private static void EnsureLetterHooked()
+        private static void HookLetterOnce()
         {
             if (_letterHooked)
             {
@@ -107,7 +94,7 @@ namespace Drova_Modding_API.Access
                 nameof(ShowLetterContentPostfix), "GUI_Window_Letter.ShowLetterContent(prefab, callback)");
         }
 
-        private static void EnsureJournalHooked()
+        private static void HookJournalOnce()
         {
             if (_journalHooked)
             {
@@ -119,7 +106,7 @@ namespace Drova_Modding_API.Access
                 nameof(JournalInitPostfix));
         }
 
-        private static void EnsureDrawingHooked()
+        private static void HookDrawingOnce()
         {
             if (_drawingHooked)
             {
@@ -149,8 +136,7 @@ namespace Drova_Modding_API.Access
         {
             try
             {
-                // Init also builds quest and NPC topics; only letter topics carry a content
-                // prefab whose children handlers may want to rewrite.
+                // Init also builds quest and NPC topics, which carry no letter content.
                 if (__instance != null && topic != null
                     && topic.Topic?.TryCast<JournalLetterTopic>() != null)
                 {

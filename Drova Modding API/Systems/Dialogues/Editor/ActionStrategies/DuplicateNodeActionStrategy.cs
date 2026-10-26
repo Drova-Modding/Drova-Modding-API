@@ -1,5 +1,4 @@
 using Il2CppNodeCanvas.Framework;
-using Il2CppNodeCanvas.DialogueTrees;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
@@ -12,16 +11,16 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
         {
             GraphEditorManager editorManager = context.Manager;
             DrawNodeEditor? selection = context.Selection;
-            if (editorManager.DialogueTree == null || selection == null) return;
+            if (editorManager.Graph == null || selection == null) return;
 
             Il2CppSystem.Collections.Generic.List<Node> toClone = new();
-            toClone.Add(selection.Node.Cast<Node>());
+            toClone.Add(selection.Node);
 
-            Il2CppSystem.Collections.Generic.List<Node> cloned = Graph.CloneNodes(toClone, editorManager.DialogueTree, selection.Position + DuplicateOffset);
+            Il2CppSystem.Collections.Generic.List<Node> cloned = Graph.CloneNodes(toClone, editorManager.Graph, selection.Position + DuplicateOffset);
             if (cloned == null || cloned.Count == 0) return;
 
-            DTNode duplicatedNode = cloned[0].Cast<DTNode>();
-            DrawNodeEditor? duplicatedEditor = editorManager.DrawNodeEditorFactory.GetDrawNodeEditorFromType(duplicatedNode.GetIl2CppType());
+            Node duplicatedNode = cloned[0];
+            DrawNodeEditor? duplicatedEditor = editorManager.ActiveNodeEditorFactory.GetDrawNodeEditorFromType(duplicatedNode.GetIl2CppType());
             if (duplicatedEditor == null) return;
 
             duplicatedEditor.Node = duplicatedNode;

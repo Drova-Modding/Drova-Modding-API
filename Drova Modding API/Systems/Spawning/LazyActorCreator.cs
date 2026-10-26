@@ -10,6 +10,8 @@ using Il2CppNodeCanvas.BehaviourTrees;
 using Il2CppNodeCanvas.Framework;
 using MelonLoader;
 using System.Collections;
+using System.Security.Cryptography;
+using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using Object = UnityEngine.Object;
@@ -26,13 +28,27 @@ namespace Drova_Modding_API.Systems.Spawning
          */
         public const string LazyActorName = "Modding_API_Lazy_Actor";
 
+        private const string RoutineTreeName = "AI_Routine_General";
+
+        private static readonly Dictionary<string, EntityInfo> EntityInfosByGuid = new(StringComparer.OrdinalIgnoreCase);
+        private static BehaviourTree? _routineTree;
+
+        /// <summary>
+        /// A guid derived from a scope and an id, the same on every load and every machine.
+        /// The game keys an object's save state by its guid, so a stable guid keeps that state.
+        /// </summary>
+        public static string StableGuid(string scope, string id)
+            => new Guid(MD5.HashData(Encoding.UTF8.GetBytes(scope + "/" + id))).ToString();
+
         internal static void RestoreLazyActor(List<LazyActorSaveData> lazyActorSaveDatas)
         {
             for (int i = 0; i < lazyActorSaveDatas.Count; i++)
             {
                 LazyActorSaveData lazyActorSaveData = lazyActorSaveDatas[i];
+                bool minted = string.IsNullOrEmpty(lazyActorSaveData.ExternalDefinitionId);
                 GameObject gameObject = new(lazyActorSaveData.ActorName);
                 gameObject.SetActive(false);
+                NpcCreator.TrackSpawnedObject(gameObject.transform);
                 LazyActor lazyActor = gameObject.AddComponent<LazyActor>();
                 GuidComponent guidComponent = gameObject.AddComponent<GuidComponent>();
                 guidComponent._guid = new Il2CppSystem.Guid(lazyActorSaveData.ActorGuid);
@@ -49,12 +65,11 @@ namespace Drova_Modding_API.Systems.Spawning
                     {
                         customEntityInfo._guid = lazyActorSaveData.CustomEntityInfoGuid;
                     }
-                    ActivateLazyActor(lazyActor, customEntityInfo, lazyActorSaveData.IsNpc);
+                    ActivateLazyActor(lazyActor, customEntityInfo, lazyActorSaveData.IsNpc, minted);
                 }
                 else
                 {
-                    // Restore addressable EntityInfo
-                    MelonCoroutines.Start(LoadEntityInfo(lazyActor, new AssetReference(lazyActorSaveData.ActorEnitityInfoReferenceString), lazyActorSaveData.IsNpc));
+                    MelonCoroutines.Start(LoadEntityInfo(lazyActor, new AssetReference(lazyActorSaveData.ActorEnitityInfoReferenceString), lazyActorSaveData.IsNpc, minted));
                 }
             }
         }
@@ -63,14 +78,14 @@ namespace Drova_Modding_API.Systems.Spawning
         /// Creates a generic lazy actor and supports either an entity-info reference or a preloaded entity-info instance.
         /// </summary>
         /// <param name="actorName">Name for the spawned lazy actor game object.</param>
-        /// <param name="actorReference">Addressable actor prefab reference. Only its GUID is used: every lazy actor gets
-        /// its own <see cref="AssetReferenceGameObject"/> copy, because <c>LazyActor</c> loads through the reference
-        /// instance and a shared one would fail with "AssetReference that has already been loaded" on the second actor.</param>
+        /// <param name="actorReference">Addressable actor prefab reference. Only its GUID is used, each actor gets its own copy
+        /// because a shared reference fails to load a second time.</param>
         /// <param name="position">World position to spawn at.</param>
         /// <param name="entityInfoReference">Optional entity-info addressable reference.</param>
         /// <param name="customEntityInfo">Optional preloaded entity info. Takes precedence over <paramref name="entityInfoReference"/>.</param>
-        /// <param name="noSave">Optional if the lazy actor should not be saved</param>
-        /// <param name="isNpc">Optional if its a npc</param>
+        /// <param name="noSave">Whether the lazy actor is left out of the save.</param>
+        /// <param name="isNpc">Whether the actor is an NPC.</param>
+        /// <param name="guid">Optional fixed guid. The game keys the actor's save state by it, so a fixed guid keeps an actor's death across loads.</param>
         public static LazyActor CreateLazyActor(
             string actorName,
             AssetReferenceGameObject actorReference,
@@ -78,10 +93,14 @@ namespace Drova_Modding_API.Systems.Spawning
             AssetReference? entityInfoReference = null,
             EntityInfo? customEntityInfo = null,
             bool noSave = false,
-            bool isNpc = true)
+            bool isNpc = true,
+            string? guid = null)
         {
             GameObject gameObject = new(actorName);
             gameObject.SetActive(false);
+
+            // Under the actor scene's spawn root, so the actor goes with its world. The active scene outlives a save load.
+            NpcCreator.TrackSpawnedObject(gameObject.transform);
 
             LazyActor lazyActor = gameObject.AddComponent<LazyActor>();
             lazyActor._actorReference = new AssetReferenceGameObject(actorReference.AssetGUID);
@@ -103,17 +122,7 @@ namespace Drova_Modding_API.Systems.Spawning
             behaviourTreeOwner._firstActivation = GraphOwner.FirstActivation.Lazy;
             behaviourTreeOwner._boundGraphObjectReferences = new Il2CppSystem.Collections.Generic.List<Object>();
             behaviourTreeOwner._boundGraphSerialization = "";
-            var allBehaviourTrees = Resources.FindObjectsOfTypeAll<BehaviourTree>();
-            BehaviourTree behaviourTree = null;
-            for (int i = 0; i < allBehaviourTrees.Count; i++)
-            {
-                if (allBehaviourTrees[i].name == "AI_Routine_General")
-                {
-                    behaviourTree = allBehaviourTrees[i];
-                    break;
-                }
-            }
-            behaviourTreeOwner._graph = behaviourTree;
+            behaviourTreeOwner._graph = GetRoutineTree();
 
             LazyGraphUpdater lazyGraphUpdater = gameObject.AddComponent<LazyGraphUpdater>();
             lazyGraphUpdater._actor = lazyActor;
@@ -122,7 +131,15 @@ namespace Drova_Modding_API.Systems.Spawning
             lazyGraphUpdater._entityHandler = ProviderAccess.GetEntityGameHandler();
 
             GuidComponent guidComponent = gameObject.AddComponent<GuidComponent>();
-            guidComponent.CreateGuid();
+            if (guid != null)
+            {
+                guidComponent._guid = new Il2CppSystem.Guid(guid);
+                guidComponent._guidString = guid;
+            }
+            else
+            {
+                guidComponent.CreateGuid();
+            }
             lazyActor._guidComponent = guidComponent;
             lazyActor._guid = guidComponent._guid;
             lazyActor._guidstring = guidComponent._guidString;
@@ -135,16 +152,20 @@ namespace Drova_Modding_API.Systems.Spawning
             lazyActor._lazyDialogueActor = dialogueActor;
 
             if (noSave)
-                NoSaveGuidRegistry.Register(guidComponent._guidString);
+            {
+                string noSaveGuid = guidComponent._guidString;
+                NoSaveGuidRegistry.Register(noSaveGuid);
+                lazyActor.LazyActorDestroyedEvent.AddEventListener(new Action<LazyActor>(_ => NoSaveGuidRegistry.Unregister(noSaveGuid)));
+            }
 
             if (customEntityInfo != null)
             {
-                ActivateLazyActor(lazyActor, customEntityInfo, isNpc);
+                ActivateLazyActor(lazyActor, customEntityInfo, isNpc, guid == null);
             }
             else
             {
                 AssetReference referenceToLoad = entityInfoReference ?? AddressableAccess.EntityInfos.EntityInfo_Default;
-                MelonCoroutines.Start(LoadEntityInfo(lazyActor, referenceToLoad, isNpc));
+                MelonCoroutines.Start(LoadEntityInfo(lazyActor, referenceToLoad, isNpc, guid == null));
             }
 
             return lazyActor;
@@ -153,11 +174,10 @@ namespace Drova_Modding_API.Systems.Spawning
         /// <summary>
         /// Creates a lazy actor for a creature
         /// </summary>
-        /// <param name="actorParams">The params for how to create a lazy actor</param>
-        /// <returns>The created lazy actor, it is not fully initalized on the return, because we need to load things in the background</returns>
+        /// <returns>The created lazy actor, not fully initialized yet, the entity info still loads in the background</returns>
         public static LazyActor CreateLazyActorCreature(LazyActorParams actorParams)
         {
-            LazyActor lazyActor = CreateLazyActor(LazyActorName, actorParams.AssetReference, actorParams.Position, actorParams.EntityInfo);
+            LazyActor lazyActor = CreateLazyActor(LazyActorName, actorParams.AssetReference, actorParams.Position, actorParams.EntityInfo, guid: actorParams.Guid);
             lazyActor._health = new CustomActorHealth();
 
             if (actorParams.HasCustomHealth)
@@ -174,16 +194,55 @@ namespace Drova_Modding_API.Systems.Spawning
         /**
          * Load the entity info and activate the LazyActor
          */
-        public static IEnumerator LoadEntityInfo(LazyActor lazyActor, AssetReference assetReference, bool isNpc)
+        public static IEnumerator LoadEntityInfo(LazyActor lazyActor, AssetReference assetReference, bool isNpc, bool minted = true)
         {
-            UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<EntityInfo> handle = Addressables.LoadAssetAsync<EntityInfo>(assetReference);
-            while (!handle.IsDone)
-                yield return null;
+            // One load per entity info, kept: a load per actor would add a reference that is never released.
+            string key = assetReference.AssetGUID;
+            if (!EntityInfosByGuid.TryGetValue(key, out EntityInfo? entityInfo) || entityInfo == null)
+            {
+                UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<EntityInfo> handle = Addressables.LoadAssetAsync<EntityInfo>(key);
+                while (!handle.IsDone)
+                    yield return null;
 
-            ActivateLazyActor(lazyActor, handle.Result, isNpc);
+                entityInfo = handle.Result;
+                if (EntityInfosByGuid.TryGetValue(key, out EntityInfo? loaded) && loaded != null)
+                {
+                    Addressables.Release(handle);
+                    entityInfo = loaded;
+                }
+                else
+                {
+                    EntityInfosByGuid[key] = entityInfo;
+                }
+            }
+
+            ActivateLazyActor(lazyActor, entityInfo, isNpc, minted);
         }
 
-        private static void ActivateLazyActor(LazyActor lazyActor, EntityInfo entityInfo, bool isNpc)
+        /// <summary>
+        /// The vanilla routine tree every lazy actor starts with, found once instead of per actor.
+        /// </summary>
+        private static BehaviourTree? GetRoutineTree()
+        {
+            if (_routineTree != null)
+            {
+                return _routineTree;
+            }
+
+            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppArrayBase<BehaviourTree> trees = Resources.FindObjectsOfTypeAll<BehaviourTree>();
+            for (int i = 0; i < trees.Count; i++)
+            {
+                if (trees[i].name == RoutineTreeName)
+                {
+                    _routineTree = trees[i];
+                    break;
+                }
+            }
+
+            return _routineTree;
+        }
+
+        private static void ActivateLazyActor(LazyActor lazyActor, EntityInfo entityInfo, bool isNpc, bool minted)
         {
             lazyActor._entityInfo = entityInfo;
             lazyActor._playerActor = PlayerAccess.GetPlayer();
@@ -206,12 +265,8 @@ namespace Drova_Modding_API.Systems.Spawning
 
             entities.RegisterLazyActor(lazyActor);
 
-            // After the registration, and here rather than in the two callers, because this is the one point
-            // both the fresh-create and the restore-from-save paths pass through. What it records is that
-            // this creature's guid was invented in this process - see ActorSpawnAccess.IsRuntimeCreated for
-            // why anything sharing a world has to be able to ask that, and why the game's own table cannot
-            // answer it.
-            ActorSpawnAccess.RecordLazySpawn(lazyActor, lazyActor._actorReference?.AssetGUID ?? string.Empty);
+            // Here because both the create and the restore-from-save paths pass through. See ActorSpawnAccess.IsRuntimeCreated.
+            ActorSpawnAccess.RecordLazySpawn(lazyActor, lazyActor._actorReference?.AssetGUID ?? string.Empty, minted);
         }
 
         /**
@@ -224,7 +279,7 @@ namespace Drova_Modding_API.Systems.Spawning
              */
             public AssetReferenceGameObject AssetReference;
             /**
-             * Entity Info <see cref="AddressableAccess.EntityInfos"/>"/>
+             * Entity Info <see cref="AddressableAccess.EntityInfos"/>
              */
             public AssetReference EntityInfo;
             /**
@@ -244,7 +299,6 @@ namespace Drova_Modding_API.Systems.Spawning
              */
             public int? CurrentHealth;
 
-            // ── Custom EntityInfo Parameters ────────────────────────
             /**
              * Whether this actor uses custom EntityInfo that should be saved
              */
@@ -253,6 +307,11 @@ namespace Drova_Modding_API.Systems.Spawning
              * Custom EntityInfo GUID
              */
             public string CustomEntityInfoGuid;
+
+            /**
+             * Optional fixed actor guid, see <see cref="CreateLazyActor"/>
+             */
+            public string? Guid;
         }
     }
 }

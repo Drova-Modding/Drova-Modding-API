@@ -199,30 +199,30 @@ public override void OnDeinitializeMelon()
 
 ### `CoopAccess` (static)
 
-| Member                                                          | Description                                                                                          |
-|-----------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| `bool ShouldRun(CoopBehavior behavior)`                         | Whether work of that kind should happen here. `true` in single-player for every behavior.            |
-| `bool IsWorldAuthority`                                         | Whether this machine decides what the shared world contains. **`true` when nothing has registered.** |
-| `bool IsMultiplayer`                                            | Whether a session is live with somebody else in it. `false` when nothing has registered.             |
-| `bool HasProvider`                                              | Whether any co-op implementation has registered.                                                     |
-| `bool IsReplicating`                                            | Whether a change from elsewhere is being applied right now.                                          |
-| `void Declare(CoopBehavior behavior)`                           | Announces what the calling mod does, for the log. Gates nothing.                                     |
-| `void Declare(string modName, CoopBehavior behavior)`           | Same, for a mod that spans assemblies or wants to be explicit.                                       |
-| `void GetPlayers(List<CoopPlayer> buffer)`                      | Fills the list with everybody in the session, the local player included. Cleared first.              |
-| `bool TryGetPlayerActor(CoopPlayerId id, out Actor? actor)`     | The body being shown for a player. `false` when they have none here.                                 |
-| `bool IsRemotePlayer(Entity? entity)`                           | Whether this is somebody else's body. Always `false` with no session.                                |
-| `bool Supports(CoopCapability capability)`                      | Whether the installed implementation keeps that thing in step. Always `false` with no session.       |
-| `ulong SessionSeed`                                             | A number every machine in the session agrees on. Not stable across a save and load.                  |
-| `uint Roll(string key)`                                         | Derives a number from the session seed.                                                              |
-| `float RollValue(string key)`                                   | Derives a number in `[0, 1)`.                                                                        |
-| `int RollRange(string key, int minInclusive, int maxExclusive)` | Derives a number in a half-open range.                                                               |
+| Member                                                                                                    | Description                                                                                                  |
+|-----------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| `bool ShouldRun(CoopBehavior behavior)`                                                                   | Whether work of that kind should happen here. `true` in single-player for every behavior.                    |
+| `bool IsWorldAuthority`                                                                                   | Whether this machine decides what the shared world contains. **`true` when nothing has registered.**         |
+| `bool IsMultiplayer`                                                                                      | Whether a session is live with somebody else in it. `false` when nothing has registered.                     |
+| `bool HasProvider`                                                                                        | Whether any co-op implementation has registered.                                                             |
+| `bool IsReplicating`                                                                                      | Whether a change from elsewhere is being applied right now.                                                  |
+| `void Declare(CoopBehavior behavior)`                                                                     | Announces what the calling mod does, for the log. Gates nothing.                                             |
+| `void Declare(string modName, CoopBehavior behavior)`                                                     | Same, for a mod that spans assemblies or wants to be explicit.                                               |
+| `void GetPlayers(List<CoopPlayer> buffer)`                                                                | Fills the list with everybody in the session, the local player included. Cleared first.                      |
+| `bool TryGetPlayerActor(CoopPlayerId id, out Actor? actor)`                                               | The body being shown for a player. `false` when they have none here.                                         |
+| `bool IsRemotePlayer(Entity? entity)`                                                                     | Whether this is somebody else's body. Always `false` with no session.                                        |
+| `bool Supports(CoopCapability capability)`                                                                | Whether the installed implementation keeps that thing in step. Always `false` with no session.               |
+| `ulong SessionSeed`                                                                                       | A number every machine in the session agrees on. Not stable across a save and load.                          |
+| `uint Roll(string key)`                                                                                   | Derives a number from the session seed.                                                                      |
+| `float RollValue(string key)`                                                                             | Derives a number in `[0, 1)`.                                                                                |
+| `int RollRange(string key, int minInclusive, int maxExclusive)`                                           | Derives a number in a half-open range.                                                                       |
 | `void ShareHostSetting(string key, Func<string> read, Action<string?> enforce, bool needsReload = false)` | Makes a setting follow the host while a session is live. A second call with the same key replaces the first. |
-| `IReadOnlyCollection<HostSetting> HostSettings`                 | Every shared setting, for the co-op implementation: `Key`, `Read`, `Enforce`, `NeedsReload`.         |
-| `event Action? OnSessionChanged`                                | Somebody joined or left, or authority moved.                                                         |
-| `event Action? OnProviderChanged`                               | A co-op implementation registered or unregistered.                                                   |
-| `void RegisterProvider(ICoopProvider provider)`                 | Registers an implementation. One at a time, and a second replaces the first and warns.               |
-| `void UnregisterProvider(ICoopProvider provider)`               | Takes a registration back. Identity-checked.                                                         |
-| `void NotifySessionChanged()`                                   | Called by the implementation when players join or leave, or authority moves.                         |
+| `IReadOnlyCollection<HostSetting> HostSettings`                                                           | Every shared setting, for the co-op implementation: `Key`, `Read`, `Enforce`, `NeedsReload`.                 |
+| `event Action? OnSessionChanged`                                                                          | Somebody joined or left, or authority moved.                                                                 |
+| `event Action? OnProviderChanged`                                                                         | A co-op implementation registered or unregistered.                                                           |
+| `void RegisterProvider(ICoopProvider provider)`                                                           | Registers an implementation. One at a time, and a second replaces the first and warns.                       |
+| `void UnregisterProvider(ICoopProvider provider)`                                                         | Takes a registration back. Identity-checked.                                                                 |
+| `void NotifySessionChanged()`                                                                             | Called by the implementation when players join or leave, or authority moves.                                 |
 
 ### `CoopBehavior` (enum)
 
@@ -246,7 +246,7 @@ level" is not one number and a difficulty curve built on it fits at most one of 
 ### `CoopPlayer` / `CoopPlayerId` (readonly structs)
 
 | Member              | Description                                                                       |
-|---------------------|------------------------------------------------------------------------------------|
+|---------------------|-----------------------------------------------------------------------------------|
 | `CoopPlayerId Id`   | Who they are. Opaque, so compare and pass it around rather than constructing one. |
 | `string Name`       | Never null. Comes from a stranger, so treat it as text.                           |
 | `bool IsLocal`      | Whether this is the person at this machine.                                       |
@@ -279,7 +279,7 @@ The same surface `CoopAccess` exposes, which is what it forwards to: `IsMultipla
 - **Do not use `NetworkAccess.Role` instead.** It answers a different question and fails closed.
   With no networking build it is `None`, so `if (Role == Host) Spawn();` spawns nothing in
   single-player. A transport role is also not world authority, because a peer is a client while it
-  is still connecting and before it has an identity.
+  is still connecting, and before it has an identity.
 - **`SessionSeed` is not stable across a save and load**, and there is no way to make it so. A Drova
   save is identified by hero index and slot index alone, which are the same numbers on every machine
   and in every playthrough. A mod needing randomness that survives a reload has to persist its own.
@@ -294,5 +294,5 @@ The same surface `CoopAccess` exposes, which is what it forwards to: `IsMultipla
 - **`Supports` returning `false` with no session is not a missing feature.** It reads as "there is
   nobody to be out of step with". `ShouldRun` is the call most mods actually want.
 - **Only one implementation can register.** A second replaces the first and logs a warning, because
-  two implementations disagreeing about who the authority is would be worse than either being wrong
+  two implementations disagreeing about whom the authority is would be worse than either being wrong
   alone.

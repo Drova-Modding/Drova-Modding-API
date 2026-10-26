@@ -2,6 +2,58 @@
 
 ## [Unreleased]
 ### Added
+- **Quests** (`QuestSystem`): custom quests from `Mods/Modding_API/Quests/*.json` with journal topics and entries, kill targets and trigger `Areas`, driven by the vanilla quest dialogue nodes. `TriggerEntry(questId, entryId)` adds an entry from code. See `docs/systems/quests.md` and `samples/QuestShowcase`.
+- **Custom items** (`CustomItemSystem`): new items from `Mods/Modding_API/Items/*.json`, each a copy of a vanilla item with its own id, texts, prices, stack size and PNG icon. They work in dialogues, traders, equipment, placements and saves; a removed item falls back to its base item.
+- Custom items as **letters** (`Letter` with `TextKey` / `TitleKey`) and as **spells** (`Ability` values on a `flow_*` spell, `LearnSpell` on a recipe, `Dmg_Properties[0]` for damage).
+- **Morph spells** (`Morph` on a custom `flow_*` spell, `MorphManager`): the player turns into a creature for a while, through the game's unused morph ability. The world streams around the creature, NPCs spawn around it, saving is blocked, and the player dies when the creature dies. The creature attacks with its own weapon, keeps its faction (its kind turns hostile once attacked), and cannot loot or talk. Only the player can morph. `MorphManager.CanMorph` vetoes morphs, `BodyGuid`, `TryGetCreature` and `EquipCreatureWeapon` let co-op show the creature on other machines.
+- **Creature placements** (`ExternalCreaturePlacementSystem`) from `Mods/Modding_API/CreaturePlacement/*.json`; a killed creature stays dead in that save.
+- **Item placements** (`ExternalItemPlacementSystem`) from `Mods/Modding_API/ItemPlacement/*.json`; a taken item stays gone, and `TakenGVarList` / `TakenGBool` set a bool when it is taken.
+- Placement `Conditions`: NPCs, creatures, items and quest areas appear or leave as game variables change. `GVarConditions` exposes the check.
+- **Map editor** (`MapLayoutSystem`, `Mods/Modding_API/MapEditor/*.json`): place environment props, copies of world objects and traps, invisible walls, ground stamps, and new walkable (optionally `Indoor`) areas; hide vanilla objects. NPCs path around placed objects. Debug builds have an in-game editor with undo. See `docs/systems/map-editor.md`.
+- **Routines**: own behaviour trees (`BehaviourTreeStore`, `RoutineGraphAccess.Assign`), per-NPC or per-actor overrides in `Mods/Modding_API/Routines/*.json` (`RoutineOverrideStore`), edits of vanilla routine places (`PlaceEdits`), and gates that move an NPC between regions (`Gate` / `GateTarget`). Changes apply live. See `docs/systems/routines.md`.
+- Debug builds: the graph editor also edits behaviour trees, and a selected NPC gets an **Edit Routine** window.
+- Graph editor: a generic editor for tasks without their own editor (`GenericTaskEditor`), behaviour tree action nodes, the dialogue `ActionNode`, `DS_SetQuestStateNode` and a `TriggerJournalTask` editor.
+- `ModdingTools`: one **Modding Tools** window (pause menu or `modding_tools` cheat) for every modder tool. Mods add their own with `ModdingTools.Register`.
+- `ToastAccess.Show(text)`: short notices in the top right, shared by all mods, safe from any thread. Can be switched off or timed in the Modding UI options.
+- `StatusEffectAccess`: apply status effects by GUID (`TryApply`) and make an actor bleed (`TryApplyBleeding`). `GlobalFields.StatusEffectGuids` lists all effect GUIDs. See `docs/systems/status-effects.md`.
+- `ActorBuffAccess.TryApply(actor, ActorBuff)`: runtime health, damage, armor and magic resistance buffs. `EnemyAccess.TryFindNearest`: the closest enemy of a player. See `docs/systems/actor-buffs.md`.
+- `AbilityDataAccess`: read and write ability values, including `TrySetDamage`.
+- `PlayerAccess.IsFree(player)`: false while the player is dead, knocked out, in a dialogue or cutscene, or loading.
+- `GameEvents.OnEntityDied(Entity)`: every death, with or without a killer.
+- `InputAccess.SetGameplayInputBlocked(owner, blocked)`: block gameplay input while any of your windows is open.
+- `LazyActorCreator.StableGuid(scope, id)`: a guid derived from an id, the same on every load and machine.
+- `Il2CppObjectExtensions.PooledCast<T>()`: a cheaper `TryCast` for casts made every frame.
+- Co-op hooks for content: `ModContentAccess.GetContentHash()` to compare content between machines, `MapLayoutSystem.OnConsumed` / `MarkConsumed`, `QuestSystem.FindJournalEntry` / `FindJournalTopic`, and `ActorSpawnAccess.RecordLazySpawn(…, minted)` so JSON-placed actors sync like scene actors.
+- Testing: new TestAgent commands (`gui`, `frames`, `actors`, `routine`, `screen`, `show`, `invincible`, `sources`, `bubbles`) and TestRunner commands (`copy`, `stop A`), plus scenarios for quests, custom items, map editor, routines and performance.
+
+### Changed
+- Renamed `ExternalNpcModuleRegistry.EnsureDefaults` to `AddDefaultPayloads` and `EquipPresetHelper.EnsureInitialized` to `GetOrCreatePreset`.
+- JSON NPCs (`NpcPlacement`, NPC wizard) get a stable guid and are saved like vanilla NPCs: death, health and inventory persist per save.
+- **Breaking:** `TestAgent` exists only in Debug builds. Guard `TestAgent` calls in your mod with `#if DEBUG`. `LaunchProfile` (`--profile`) stays in every build.
+- **Breaking (source):** the graph editor API works on NodeCanvas `Graph` / `Node` instead of `DialogueTree` / `DTNode` (`GraphEditorManager.Graph`, `DrawNodeEditor.Node`, `DrawNodeEditorFactory.CreateNodeByName`).
+- `RoutineSystem.CreateRoutinePlace` accepts a null lazy actor.
+- **Breaking (binary):** `LazyActorCreator.CreateLazyActor` (`guid`), `LazyActorCreator.LoadEntityInfo` (`minted`) and `ActorSpawnAccess.RecordLazySpawn` (`minted`) gained optional parameters. Source compiles unchanged; a mod built against 0.6 must be rebuilt.
+- `GameEvents.OnEntityDied` is raised once `Health.CheckEvents` has really set the death, so a patch keeping the entity alive no longer reports one.
+- `ExternalNpcPlacementSystem.SpawnDefinition` honours `skipIfAlreadySpawned` again, so a definition never stands twice under its one guid.
+
+### Fixed
+- Routine dialogues that wait for an NPC started while that NPC was not spawned (Cengiz greeting Larea at the campfire before she is back). An absent NPC now counts as out of range.
+- Voiced lines played while their bubble was not on screen: world dialogues far from the player and answers spoken as the window faded out (the hero saying "Ich muss weiter" out of nowhere). A clip now plays only while its bubble is visible.
+- A goodbye replayed far away 10-20 s after a talk (Asmus' "Ich muss jetzt los", the hero's "Ich muss weiter" after a talk with no voice): each speaker's dialogue AudioSource kept its last clip with playOnAwake on, so Unity played it again at full volume whenever that speaker's dialogue UI was enabled again.
+- A voiced bubble stayed empty while its clip played (Carima answering Blaan) when another world dialogue spoke at the same time: one shared typing state let that line cancel the bubble's setup, and the typing re-read whichever window was current. Typing is now kept per conversation and stays on the speaker's own window.
+- `GetQuestState()` returned null for quest lists created from `GlobalVars` JSON.
+- Conditions added at runtime to API-saved dialogues and behaviour trees threw a NullReferenceException. Older files are repaired on load.
+- Stored overrides of vanilla dialogues and sub-dialogues only applied to trees loaded at the main menu; they now apply on first use.
+- Graph files mixed up variables with the same id in different lists (such as `QuestState`). Older files still load.
+- Dialogue audio broke for the whole session when a dialogue loaded before the gameplay systems.
+- Choosing an end choice (`ChoiceCreationData.IsEndNode`, the NPC wizard's starter choice) threw and removed the choice.
+- API-created lazy actors survived a save load in the wrong scene.
+- `ExternalNpcPlacementSystem.DespawnDefinition` now despawns through the game's own path.
+- Graph editor: a failing node no longer locks the game, flag enums are edited correctly, invalid connections are refused with a message, edits after saving a live dialogue are no longer lost, graphs without a start node are not saved, and hidden node types are now shown.
+- `Vector2JsonConverter` used the machine's culture, so files saved on a German system did not load on an English one. Old files still load.
+
+## [0.6.0 - 2026-10-11]
+### Added
 - Networking: LAN discovery for direct hosts. `NetworkAccess.SetDiscoveryInfo(provider)` makes a direct host answer discovery broadcasts with a mod-defined payload; `StartDiscovery(port)`, `StopDiscovery()`, `IsDiscovering` and `GetDiscoveredHosts(buffer)` (`DiscoveredHost`: address, port, payload, last seen) find such hosts on the local network, broadcasting every 2 s on a socket of their own. Inert unless a mod uses it, never active in a relay session, and a host answers only senders on a private network. See `docs/systems/networking.md`.
 - Test runner as a download: the Release packaging also writes `Drova_TestRunner_win-x64.zip` and `Drova_TestRunner_linux-x64.zip` (single-file, needs the .NET 8 runtime). The API zips are unchanged.
 - Test runner finds the game through Steam (registry or default install on Windows, `~/.steam/steam` or `~/.local/share/Steam` on Linux, every library in `libraryfolders.vdf`); `--game` still overrides. On Linux it launches the native `Drova.x86_64`.

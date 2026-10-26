@@ -31,11 +31,10 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public string DrawWizardUiAndSerialize(string payload)
         {
-            EnsureUiState(payload);
+            SyncUiState(payload);
 
             bool changed = false;
 
-            // ── Max attribute level ──────────────────────────────────────────
             GUILayout.Label("Max teachable attribute level");
             int updatedMaxLevel = Mathf.Max(1, (int)GUILayout.HorizontalSlider(_cachedState.MaxAttributeLevel, 1f, 200f));
             string previousMaxLevelInput = _maxAttributeLevelInput;
@@ -59,7 +58,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 changed = true;
             }
 
-            // ── Teachable attributes ─────────────────────────────────────────
             GUILayout.Space(6f);
             GUILayout.Label("Teachable attributes");
 
@@ -84,7 +82,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 changed = true;
             }
 
-            // ── Teachable talents ────────────────────────────────────────────
             GUILayout.Space(6f);
             bool updatedTeachExplicit = GUILayout.Toggle(_cachedState.TeachTalentsExplicitly, "Teach talents explicitly");
             if (updatedTeachExplicit != _cachedState.TeachTalentsExplicitly)
@@ -93,7 +90,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 changed = true;
             }
 
-            EnsureEditorDataSource();
+            LoadEditorDataSource();
             string? rawInput = _rawInput;
             ReadableIdModuleSupport.DrawEditor(
                 "Teachable talent readable ids",
@@ -173,7 +170,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private void EnsureUiState(string? payload)
+        private void SyncUiState(string? payload)
         {
             string normalizedPayload = payload ?? string.Empty;
             if (string.Equals(_lastPayload, normalizedPayload, StringComparison.Ordinal))
@@ -194,7 +191,7 @@ namespace Drova_Modding_API.Systems.Spawning
             return _serializedPayload;
         }
 
-        private void EnsureEditorDataSource()
+        private void LoadEditorDataSource()
         {
             if (_editorDataSource != null)
                 return;

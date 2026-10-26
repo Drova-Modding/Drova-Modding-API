@@ -1,6 +1,7 @@
 ﻿#if DEBUG
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Dialogues.Editor;
+using Drova_Modding_API.Systems.Routines.Editor;
 using Il2CppDrova;
 using Il2CppDrova.GUI.Cheat;
 using Il2CppInterop.Runtime.Attributes;
@@ -17,6 +18,8 @@ namespace Drova_Modding_API.Systems.Editor
         private TextMeshProUGUI _npcDisplay;
         private TextMeshProUGUI _playerPositionDisplay;
         private Button _npcEditButton = null!;
+        private Button _routineEditButton = null!;
+        private RoutineEditorWindow _routineEditorWindow = null!;
         private Actor _currentSelectedActor;
         private GraphEditorManager _graphEditorManager;
 
@@ -61,6 +64,7 @@ namespace Drova_Modding_API.Systems.Editor
             GameObject graphEditor = new("GraphEditor");
             graphEditor.transform.parent = gameObject.transform;
             _graphEditorManager = graphEditor.AddComponent<GraphEditorManager>();
+            _routineEditorWindow = gameObject.AddComponent<RoutineEditorWindow>();
 
             npcDisplay.SetActive(false);
             graphEditor.SetActive(false);
@@ -80,8 +84,7 @@ namespace Drova_Modding_API.Systems.Editor
         }
 
         /// <summary>
-        /// Guards against the option menu events firing on an instance whose GameObject was already
-        /// destroyed by a scene reload, which would throw when dereferencing the displays.
+        /// Guards against option menu events firing on an instance destroyed by a scene reload.
         /// </summary>
         [HideFromIl2Cpp]
         private void SetDisplaysActive(bool active)
@@ -114,6 +117,7 @@ namespace Drova_Modding_API.Systems.Editor
             OptionMenuAccess.Instance.OnOptionMenuOpen -= OnOptionMenuOpen;
             OptionMenuAccess.Instance.OnOptionMenuClose -= OnOptionMenuClose;
             if (_npcEditButton != null) _npcEditButton.onClick.RemoveAllListeners();
+            if (_routineEditButton != null) _routineEditButton.onClick.RemoveAllListeners();
         }
 
         [HideFromIl2Cpp]
@@ -133,23 +137,32 @@ namespace Drova_Modding_API.Systems.Editor
                 _graphEditorManager.gameObject.SetActive(false);
                 _npcDisplay.gameObject.SetActive(false);
                 _npcEditButton.gameObject.SetActive(false);
+                _routineEditButton.gameObject.SetActive(false);
                 return;
             }
 
             _npcDisplay.gameObject.SetActive(true);
             _npcDisplay.text = "NPC Selected: " + actor.name;
             _npcEditButton.gameObject.SetActive(true);
+            _routineEditButton.gameObject.SetActive(true);
         }
 
         [HideFromIl2Cpp]
         private void SetupNpcDialogEditor()
         {
-            GameObject npcEdit = new("NpcEditDialog")
+            _npcEditButton = CreateButton("NpcEditDialog", "Edit NPC", OnEditNpc);
+            _routineEditButton = CreateButton("NpcEditRoutine", "Edit Routine", OnEditRoutine);
+        }
+
+        [HideFromIl2Cpp]
+        private Button CreateButton(string objectName, string label, Action onClick)
+        {
+            GameObject npcEdit = new(objectName)
             {
                 layer = 5
             };
             npcEdit.transform.parent = gameObject.transform;
-            _npcEditButton = npcEdit.AddComponent<Button>();
+            Button button = npcEdit.AddComponent<Button>();
             Image image = npcEdit.AddComponent<Image>();
             image.sprite = TextureToSprite(Texture2D.grayTexture);
             RectTransform npcEditRectTransform = npcEdit.GetComponent<RectTransform>() ?? npcEdit.AddComponent<RectTransform>();
@@ -158,10 +171,11 @@ namespace Drova_Modding_API.Systems.Editor
             GameObject text = new("TextForButton");
             text.transform.parent = npcEdit.transform;
             TextMeshProUGUI textComponent = text.AddComponent<TextMeshProUGUI>();
-            textComponent.text = "Edit NPC";
+            textComponent.text = label;
             RectTransform textRectTransform = textComponent.GetComponent<RectTransform>() ?? text.AddComponent<RectTransform>();
             SetRectTransform(textRectTransform, new Vector2(300, 100));
-            _npcEditButton.onClick.AddListener(new Action(OnEditNpc));
+            button.onClick.AddListener(onClick);
+            return button;
         }
 
         [HideFromIl2Cpp]
@@ -177,6 +191,25 @@ namespace Drova_Modding_API.Systems.Editor
             _graphEditorManager.gameObject.SetActive(true);
             _graphEditorManager.Init(_currentSelectedActor);
             EditorManager.InEditor = true;
+        }
+
+        [HideFromIl2Cpp]
+        private void OnEditRoutine()
+        {
+            if (_currentSelectedActor == null)
+            {
+                ToastAccess.Show("Select an NPC first.");
+                return;
+            }
+            EntityInfo? entityInfo = _currentSelectedActor.GetEntityInfo();
+            if (entityInfo == null || string.IsNullOrEmpty(entityInfo.GUID))
+            {
+                ToastAccess.Show($"'{_currentSelectedActor.name}' has no routine data (no EntityInfo), so its routine cannot be edited.");
+                return;
+            }
+
+            _routineEditButton.gameObject.SetActive(false);
+            _routineEditorWindow.Open(_currentSelectedActor, _graphEditorManager);
         }
 
         [HideFromIl2Cpp]

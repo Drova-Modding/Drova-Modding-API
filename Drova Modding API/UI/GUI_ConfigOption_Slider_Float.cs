@@ -11,9 +11,6 @@ namespace Drova_Modding_API.UI
     /// <summary>
     /// Class for a float slider in the option menu.
     /// </summary>
-    /// <remarks>
-    /// Constructor for the float slider.
-    /// </remarks>
     [RegisterTypeInIl2Cpp]
     public class GUI_ConfigOption_Slider_Float : MonoBehaviour
     {

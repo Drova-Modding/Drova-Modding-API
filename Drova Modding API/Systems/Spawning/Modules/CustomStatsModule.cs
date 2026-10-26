@@ -103,7 +103,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// </summary>
         public static IReadOnlyDictionary<string, string> GetKnownReadableIds()
         {
-            EnsureStatDescCache();
+            LoadStatDescCache();
             return CachedStatDescsByReadableId.Keys.ToDictionary(static key => key, static key => key);
         }
 
@@ -184,7 +184,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
         private static bool TryResolveStatDesc(string readableId, [NotNullWhen(true)] out GenericStatDesc? statDesc)
         {
-            EnsureStatDescCache();
+            LoadStatDescCache();
             return CachedStatDescsByReadableId.TryGetValue(readableId, out statDesc);
         }
 
@@ -200,7 +200,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             return true;
         }
 
-        private static void EnsureStatDescCache()
+        private static void LoadStatDescCache()
         {
             if (_statDescCacheInitialized) return;
 

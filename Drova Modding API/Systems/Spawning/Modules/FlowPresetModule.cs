@@ -25,7 +25,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// Enables initializing this module's spell preset from the default <c>SpellPreset_T1</c> template.
         /// The template is looked up and cached automatically on first use.
         /// </summary>
-        /// <param name="enabled">True to use the default preset template; false to disable it.</param>
         /// <returns>This module for chaining.</returns>
         public FlowPresetModule UseDefaultPresetTemplate(bool enabled = true)
         {
@@ -70,7 +69,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             var inventory = context.GetComponentInChildren<Inventory_StartupEquipSettings>();
             if (inventory == null) return;
 
-            var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
+            var equipPreset = EquipPresetHelper.GetOrCreatePreset(inventory);
 
             if (equipPreset._spellEquipPreset == null)
             {
@@ -176,7 +175,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// </summary>
         private static void InitializeWithDefaultPreset(SpellEquipPreset spellPreset)
         {
-            // Always let game code create and initialize the slot list.
             spellPreset.InitSpellSlots();
 
             var defaultPreset = GetDefaultSpellPreset();
@@ -191,7 +189,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
             var count = Mathf.Min(sourceSlots.Count, targetSlots.Count);
             for (var i = 0; i < count; i++)
             {
-                // Mirror the default preset layout and default flow item per slot.
                 targetSlots[i].Slot = sourceSlots[i].Slot;
                 targetSlots[i].SpellItem = sourceSlots[i].SpellItem;
             }

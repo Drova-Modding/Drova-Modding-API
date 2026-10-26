@@ -55,7 +55,7 @@ namespace Drova_Modding_API.Systems.Dialogues
                 newNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice
                 {
                     statement = choice.Statement,
-                    isEndNode = choice.IsEndNode,
+                    isEndNode = false,
                     condition = choice.Condition,
                     UID = Il2CppSystem.Guid.NewGuid().ToString()
                 });
@@ -87,7 +87,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         }
 
         /// <summary>
-        /// Create a node that hides the dialog window. This is useful for actions that should be performed without the dialog window being visible like <see cref="DS_ChangeStanceNode"/>
+        /// Create a node that hides the dialog window, for actions like <see cref="DS_ChangeStanceNode"/>.
         /// </summary>
         /// <param name="coroutine">Coroutine for additional logic when the dialog should become visible again, can be null</param>
         public virtual DS_HideDialogWindow CreateDialogWindowHideNode(Coroutine? coroutine)
@@ -128,9 +128,9 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Create a node that gives the player/npc/void items from void/npc/player.
         /// </summary>
-        /// <param name="itemsExchanges">The items to exchange (TODO: Make it more user friendly if this will get exposed)</param>
+        /// <param name="itemsExchanges">The items to exchange</param>
         /// <param name="actor">The Actor to execute this node</param>
-        /// <param name="equip">If the reciever should equip it</param>
+        /// <param name="equip">If the receiver should equip it</param>
         /// <param name="equipInEmptyActiveSlot">If the receiver should equip it in a empty active slot</param>
         public virtual DS_GiveItemNode CreateGiveItemNode(ICollection<DialogItemsExchange> itemsExchanges, ActorParameter actor, bool equip = false, bool equipInEmptyActiveSlot = false)
         {
@@ -186,8 +186,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Create a node that revisits a multiple choice node.
         /// </summary>
-        /// <param name="tag">node to revisit</param>
-        /// <param name="repeats">repeats</param>
         public virtual DS_RevisitMultipleChoiceNode CreateRevisitMultipleChoiceNode(string tag, int repeats = 10)
         {
             DS_RevisitMultipleChoiceNode newNode = Tree.AddNode<DS_RevisitMultipleChoiceNode>();
@@ -200,7 +198,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Create a node that defines active actors
         /// </summary>
-        /// <param name="actors">Actors to define</param>
         public virtual DS_DefineActiveActors CreateDefineActiveActorsNode(EntityInfo[] actors)
         {
             DS_DefineActiveActors newNode = Tree.AddNode<DS_DefineActiveActors>();
@@ -214,9 +211,8 @@ namespace Drova_Modding_API.Systems.Dialogues
         }
 
         /// <summary>
-        /// Created a node that holds multiple conditions
+        /// Creates a node that holds multiple conditions
         /// </summary>
-        /// <param name="conditions">Conditions</param>
         public virtual MultipleConditionNode CreateMultipleConditionNode(ConditionTask[] conditions)
         {
             MultipleConditionNode newNode = Tree.AddNode<MultipleConditionNode>();
@@ -232,8 +228,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Creates a node that sets a global variable
         /// </summary>
-        /// <param name="var">Variable to set</param>
-        /// <param name="value">Value to set</param>
         public virtual DS_SetGBoolNode CreateSetGBoolNode(GBool var, bool value)
         {
             DS_SetGBoolNode newNode = Tree.AddNode<DS_SetGBoolNode>();
@@ -280,7 +274,7 @@ namespace Drova_Modding_API.Systems.Dialogues
                 newNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice
                 {
                     statement = choice.Statement,
-                    isEndNode = choice.IsEndNode,
+                    isEndNode = false,
                     condition = choice.Condition,
                     UID = Il2CppSystem.Guid.NewGuid().ToString()
                 });
@@ -318,7 +312,7 @@ namespace Drova_Modding_API.Systems.Dialogues
         public DS_Statement Statement;
 
         /**
-         * If this choice is an end node, meaning that the dialogue ends after this choice
+         * The choice ends the dialogue. It stays unconnected instead of using the game's end flag, which throws when stored.
          */
         public bool IsEndNode;
     }

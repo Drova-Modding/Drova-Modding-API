@@ -236,24 +236,24 @@ sword+slingshot, random). `BanditDifficulty` is `Easy | Normal | Hard`.
 
 ### `ActorSpawnAccess` (static)
 
-| Member                                                                 | Description                                                                                                      |
-|------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| Member                                                                  | Description                                                                                                      |
+|-------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
 | `bool TrySpawn(GameObject? prefab, Vector2 position, out Actor? actor)` | Spawns from an addressable prefab the way the game does. `false` when the prefab is missing or carries no actor. |
-| `bool TryDespawn(LazyActor? lazyActor)`                                | Removes the handle and the body it created, silently. `false` when there was nothing to remove.                  |
-| `bool TryKill(Actor? actor)`                                           | Kills through the game's own death path. `false` when there was nothing to kill.                                 |
-| `bool TryKillOrDespawn(LazyActor? lazyActor)`                          | Kills the body if it exists, otherwise removes the handle.                                                       |
+| `bool TryDespawn(LazyActor? lazyActor)`                                 | Removes the handle and the body it created, silently. `false` when there was nothing to remove.                  |
+| `bool TryKill(Actor? actor)`                                            | Kills through the game's own death path. `false` when there was nothing to kill.                                 |
+| `bool TryKillOrDespawn(LazyActor? lazyActor)`                           | Kills the body if it exists, otherwise removes the handle.                                                       |
 
 Null and already-destroyed inputs are accepted everywhere and answered with `false`.
 
 Telling other machines what you spawned:
 
-| Member                                                                                       | Description                                                                                 |
-|----------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `event Action<Actor, string>? OnActorSpawned`                                                 | An actor was spawned through this API, with the addressable it came from.                    |
-| `event Action<LazyActor, string>? OnLazyActorSpawned`                                         | A lazy handle was created through this API, with the actor asset behind it.                  |
-| `bool IsRuntimeCreated(string? guid)`                                                         | Whether this creature's guid was invented in this process rather than read out of a scene.   |
-| `bool TryGetSpawnAsset(Actor?, out string?)` / `TryGetLazySpawnAsset(LazyActor?, out string?)`| What a spawned actor or handle was made from.                                                |
-| `void RecordSpawn(Actor?, string)` / `RecordLazySpawn(LazyActor?, string)`                    | Register a spawn you performed yourself, so the above can answer for it.                     |
+| Member                                                                                         | Description                                                                                |
+|------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| `event Action<Actor, string>? OnActorSpawned`                                                  | An actor was spawned through this API, with the addressable it came from.                  |
+| `event Action<LazyActor, string>? OnLazyActorSpawned`                                          | A lazy handle was created through this API, with the actor asset behind it.                |
+| `bool IsRuntimeCreated(string? guid)`                                                          | Whether this creature's guid was invented in this process rather than read out of a scene. |
+| `bool TryGetSpawnAsset(Actor?, out string?)` / `TryGetLazySpawnAsset(LazyActor?, out string?)` | What a spawned actor or handle was made from.                                              |
+| `void RecordSpawn(Actor?, string)` / `RecordLazySpawn(LazyActor?, string)`                     | Register a spawn you performed yourself, so the above can answer for it.                   |
 
 **`IsRuntimeCreated` is the one every shared-world mod needs and no amount of looking at the creature
 will tell you.** A creature authored into a scene carries a guid both machines read out of the same

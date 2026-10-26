@@ -78,7 +78,7 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             _instance = this;
             _modFileName = ModCreationContext.GetCurrentModFileStemOrDefault(_modFileName);
-            ExternalNpcModuleRegistry.EnsureDefaults(Definition);
+            ExternalNpcModuleRegistry.AddDefaultPayloads(Definition);
             if (!TryRestoreLastLoadedDefinition())
                 TrySyncDefinitionPositionFromPlayer();
 
@@ -103,12 +103,12 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!_visible)
                 return;
 
-            _windowLayout.EnsureMainWindowRectFitsScreen();
+            _windowLayout.ClampMainWindowToScreen();
             _windowLayout.SetMainWindowRect(GUI.Window(487319, _windowLayout.MainWindowRect, new Action<int>(DrawWindow), "NPC Wizard"));
 
             if (_definitionsVisible)
             {
-                _windowLayout.EnsureDefinitionsWindowRectFitsScreen();
+                _windowLayout.ClampDefinitionsWindowToScreen();
                 _windowLayout.SetDefinitionsWindowRect(GUI.Window(487320, _windowLayout.DefinitionsWindowRect, new Action<int>(DrawDefinitionsWindow), "NPC Definitions"));
             }
         }
@@ -118,9 +118,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!_visible)
                 return;
 
-            // IMGUI rects use top-left origin; Input.mousePosition uses bottom-left origin.
-            // Suppress world-click dispatch when the pointer is over the wizard window,
-            // which also prevents UI button clicks (e.g. "Stop Freecam") from registering as world points.
+            // Clicks on the wizard window must not also register as world points.
             Vector2 mouseScreenPos = Input.mousePosition;
             Vector2 guiMousePos = new(mouseScreenPos.x, Screen.height - mouseScreenPos.y);
             if (_windowLayout.MainWindowRect.Contains(guiMousePos))
@@ -145,7 +143,7 @@ namespace Drova_Modding_API.Systems.Spawning
             _instance.SetWizardVisible(!_instance._visible);
             if (_instance._visible)
             {
-                ExternalNpcModuleRegistry.EnsureDefaults(_instance.Definition);
+                ExternalNpcModuleRegistry.AddDefaultPayloads(_instance.Definition);
                 ReadableIdModuleSupport.WarmUpCache();
                 _instance.TrySyncDefinitionPositionFromPlayer();
                 _instance.SyncPositionInputs();
@@ -184,7 +182,7 @@ namespace Drova_Modding_API.Systems.Spawning
             if (!forceApply && _gameplayInputBlockedByWizard == blocked)
                 return;
 
-            InputAccess.ToggleGameplayActionMaps(!blocked);
+            InputAccess.SetGameplayInputBlocked("NpcWizard", blocked);
             _gameplayInputBlockedByWizard = blocked;
         }
 
@@ -490,7 +488,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 if (ExternalNpcPlacementSystem.TryGetDefinition(Definition.Id, out ExternalNpcPlacementSystem.ExternalNpcDefinition? found))
                 {
                     Definition = found;
-                    ExternalNpcModuleRegistry.EnsureDefaults(Definition);
+                    ExternalNpcModuleRegistry.AddDefaultPayloads(Definition);
                     MarkCurrentDefinitionAsLoaded();
                     ClearDialogueLoadedMarker();
                     SyncPositionInputs();
@@ -804,7 +802,6 @@ namespace Drova_Modding_API.Systems.Spawning
         [HideFromIl2Cpp]
         private IEnumerator RespawnNextFrameCoroutine()
         {
-            // Destroy() completes at end-of-frame, so respawn on the next frame.
             yield return null;
 
             ExternalNpcPlacementSystem.ExternalNpcDefinition? definitionToSpawn = _pendingRespawnDefinition;
@@ -950,7 +947,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
 
             Definition = found;
-            ExternalNpcModuleRegistry.EnsureDefaults(Definition);
+            ExternalNpcModuleRegistry.AddDefaultPayloads(Definition);
             MarkCurrentDefinitionAsLoaded();
             ClearDialogueLoadedMarker();
             _initialPlayerPositionApplied = true;
@@ -1041,7 +1038,7 @@ namespace Drova_Modding_API.Systems.Spawning
         private void LoadDefinitionFromBrowser(ExternalNpcPlacementSystem.ExternalNpcDefinition definition)
         {
             Definition = definition;
-            ExternalNpcModuleRegistry.EnsureDefaults(Definition);
+            ExternalNpcModuleRegistry.AddDefaultPayloads(Definition);
             MarkCurrentDefinitionAsLoaded();
             ClearDialogueLoadedMarker();
             SyncPositionInputs();

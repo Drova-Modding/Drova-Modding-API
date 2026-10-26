@@ -61,7 +61,7 @@ namespace Drova_Modding_API.Systems.Spawning
         /// <summary>
         /// Ensures a definition has default payloads for every registered module.
         /// </summary>
-        public static void EnsureDefaults(ExternalNpcPlacementSystem.ExternalNpcDefinition definition)
+        public static void AddDefaultPayloads(ExternalNpcPlacementSystem.ExternalNpcDefinition definition)
         {
             for (int i = 0; i < RegisteredModules.Count; i++)
             {

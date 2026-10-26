@@ -1,4 +1,4 @@
-using Il2CppNodeCanvas.DialogueTrees;
+using Il2CppNodeCanvas.Framework;
 using MelonLoader;
 using UnityEngine;
 
@@ -11,9 +11,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
         {
             GraphEditorManager editorManager = context.Manager;
             Vector2 clickPosition = context.PointerPosition;
-            if (editorManager.DialogueTree == null) return;
+            if (editorManager.Graph == null) return;
 
-            DTNode? newNode = editorManager.DrawNodeEditorFactory.CreateNodeByName(editorManager.DialogueTree, nodeName);
+            Node? newNode = editorManager.ActiveNodeEditorFactory.CreateNodeByName(editorManager.Graph, nodeName);
             if (newNode == null)
             {
                 MelonLogger.Warning("Unable to create dialogue node for {0}", nodeName);
@@ -22,7 +22,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 
             editorManager.ApplyDefaultActorParameter(newNode);
 
-            DrawNodeEditor? nodeEditor = editorManager.DrawNodeEditorFactory.GetDrawNodeEditorFromType(newNode.GetIl2CppType());
+            DrawNodeEditor? nodeEditor = editorManager.ActiveNodeEditorFactory.GetDrawNodeEditorFromType(newNode.GetIl2CppType());
             if (nodeEditor == null)
             {
                 MelonLogger.Warning("Unable to create editor for node type {0}", newNode.GetIl2CppType().Name);

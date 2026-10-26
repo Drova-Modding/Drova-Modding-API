@@ -13,7 +13,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal static PeerWrapper Of(NetPeer peer)
         {
-            // Reuse the wrapper cached on the peer; only the first packet of a connection allocates.
             if (peer.Tag is PeerWrapper existing)
             {
                 return existing;

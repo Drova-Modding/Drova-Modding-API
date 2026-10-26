@@ -11,14 +11,8 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Networking.Diagnostics
 {
     /// <summary>
-    /// An in-game window over the coop transport's numbers: round trip, throughput, everything that was
-    /// dropped and why, and which message id is spending the bandwidth. Driven by the
-    /// <c>api_netstats</c> cheat command and only present in a coop-enabled Debug build, since it reads
-    /// transport internals no mod is given.
-    ///
-    /// Deliberately does not take gameplay input while open, unlike the gvar inspector: a network problem
-    /// is something you have to be moving to reproduce, and a view you must close to reproduce the bug
-    /// shows you the wrong numbers.
+    /// In-game window over the coop transport stats: round trip, throughput, drops and bandwidth per message id.
+    /// Opened with the <c>api_netstats</c> cheat command. It does not block gameplay input, so you can keep moving to reproduce a problem.
     /// </summary>
     [RegisterTypeInIl2Cpp]
     internal class NetworkStatsView(IntPtr ptr) : MonoBehaviour(ptr)
@@ -61,11 +55,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         private float _receivePacketsPerSecond;
 
         /// <summary>
-        /// Creates the view on its own object that survives scene loads, so the numbers keep accruing
-        /// across a load screen and the window is reachable from the main menu, where a session is
-        /// usually started, and registers the cheat command that drives it. The registration is queued
-        /// by <see cref="CheatMenuAccess"/> until cheat mode exists, so calling this at melon init is
-        /// safe.
+        /// Creates the view on a persistent object and registers its cheat command. Safe to call at melon init.
         /// </summary>
         [HideFromIl2Cpp]
         internal static void Initialize()
@@ -100,8 +90,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
 
         internal void Update()
         {
-            // Sampled whether or not the window is open, so opening it after something went wrong still
-            // shows the half minute that led there.
+            // Sampled while hidden too, so opening the window shows the history that led there.
             if (Time.unscaledTime < _nextSampleTime) return;
 
             _nextSampleTime = Time.unscaledTime + SampleIntervalSeconds;
@@ -115,11 +104,15 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             _windowRect = GUI.Window(WindowId, _windowRect, new Action<int>(DrawWindow), "Coop Network Stats (" + CommandName + ")");
         }
 
-        /// <summary>
-        /// Backs <c>api_netstats [on|off|toggle|reset|log]</c>. No argument toggles the window;
-        /// <c>reset</c> and <c>log</c> do their work whether or not it is open, which is what you want
-        /// when the console is already in front of the thing you are measuring.
-        /// </summary>
+        [HideFromIl2Cpp]
+        internal static void Toggle()
+        {
+            if (_instance != null)
+            {
+                _instance._isVisible = !_instance._isVisible;
+            }
+        }
+
         [HideFromIl2Cpp]
         private static void OnNetStatsCommand(Il2CppReferenceArray<CommandArg> args)
         {
@@ -168,8 +161,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             float elapsed = now - _lastSampleTime;
             _lastSampleTime = now;
 
-            // A new session, or the reset button, restarts the counters; the graph must not draw a cliff
-            // between two runs as if it were one.
+            // A new session or a reset restarts the counters, so the history starts over too.
             long countingSince = NetworkDiagnostics.CountingSinceMs;
             if (countingSince != _countingSinceMs)
             {
@@ -298,8 +290,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             Field("received", $"{statistics.PacketsReceived:N0} packets, {FormatBytes(statistics.BytesReceived)}, " +
                               $"{FormatRate(_receiveBytesPerSecond)} ({_receivePacketsPerSecond:F0}/s)");
 
-            // Reliable packets LiteNetLib had to send again, which is the only loss measurable from this
-            // end. Unreliable traffic that never arrived leaves no trace here by definition.
+            // Resent reliable packets are the only loss measurable from this end.
             Field("resent", $"{statistics.PacketLoss:N0} packets ({Percent(statistics.PacketLoss, statistics.PacketsSent)})");
         }
 
@@ -330,17 +321,14 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
                 return;
             }
 
-            // Refilled in the layout pass only. LiteNetLib maintains its peer list on its own thread, so a
-            // peer leaving between layout and repaint would change how many controls this method emits
-            // halfway through a frame, and IMGUI answers that with a mismatched layout group rather than
-            // with one fewer row.
+            // Refilled in the layout pass only, since LiteNetLib changes the peer list on its own thread
+            // and a different row count between layout and repaint breaks IMGUI.
             if (Event.current.type == EventType.Layout)
             {
                 NetworkSystem.GetPeers(_peers);
             }
 
-            // Checked before the peer count, because a relay host waiting for the first player still has a
-            // link worth looking at - and it is exactly the link they are waiting on.
+            // Before the peer count check, so a relay host with no players still sees its relay link.
             if (transport.Mode == TransportMode.Relay)
             {
                 DrawRelayPeers(transport);
@@ -407,8 +395,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
                 return;
             }
 
-            // Everyone is behind that one connection, so nothing per-player can be measured from here -
-            // not their share of the bytes and not the second leg of their latency.
+            // All players share the relay connection, so only the latency to the relay is known per player.
             foreach (INetPeer peer in _peers)
             {
                 Field("player " + peer.Id, "at least " + peer.Ping + " ms one-way, measured to the relay");
@@ -455,8 +442,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         }
 
         /// <summary>
-        /// Draws the history as bars, oldest on the left. The scale is the tallest sample or the given
-        /// floor, whichever is larger, so an idle session does not magnify its own noise into a mountain.
+        /// Draws the history as bars, oldest on the left. The scale never drops below <paramref name="minimumScale"/>, so idle noise stays flat.
         /// </summary>
         [HideFromIl2Cpp]
         private void DrawGraph(string label, float[] history, float minimumScale, bool asRate, Color color)
@@ -504,20 +490,16 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
                 }
             }
 
-            // The next sample would otherwise read a delta against the totals from before the reset and
-            // report one enormous spike.
+            // Otherwise the next sample diffs against the pre-reset totals.
             _hasBaseline = false;
         }
 
         /// <summary>
-        /// Writes the whole view to the MelonLoader log, which is what actually ends up attached to a bug
-        /// report - a screenshot of a window that updates four times a second usually is not.
+        /// Writes the whole view to the MelonLoader log. The counters outlive their session, so this also works after it ended.
         /// </summary>
         [HideFromIl2Cpp]
         private void LogSnapshot(LiteTransport? transport)
         {
-            // Written even with no session running: the counters outlive the session that filled them, and
-            // the moment somebody wants them written down is usually just after it ended badly.
             if (transport == null || transport.Role == NetRole.None)
             {
                 MelonLogger.Msg("[NetStats] no session running; what follows is the last one, " +
@@ -555,8 +537,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         }
 
         /// <summary>
-        /// The worst round trip in the session, because an average hides the one player whose connection
-        /// is the reason somebody opened this window.
+        /// The worst round trip in the session. An average would hide the one bad connection.
         /// </summary>
         [HideFromIl2Cpp]
         private static int WorstRoundTripMs()

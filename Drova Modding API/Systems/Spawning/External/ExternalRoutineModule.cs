@@ -1,6 +1,8 @@
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Converters;
+using Drova_Modding_API.Systems.Routines.Store;
 using Drova_Modding_API.Systems.Spawning.Modules;
+using MelonLoader;
 using System.Text.Json;
 using UnityEngine;
 
@@ -25,6 +27,7 @@ namespace Drova_Modding_API.Systems.Spawning
         private bool _freecamActive;
         private static RoutinePointVisualizer? _visualizer;
         private bool _changedFromUpdate;
+        private string? _graphHint;
         
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -39,13 +42,12 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public string DrawWizardUiAndSerialize(string payload)
         {
-            EnsureUiState(payload);
-            EnsureVisualizerExists();
+            SyncUiState(payload);
+            FindOrCreateVisualizer();
             if (_visualizer != null) _visualizer.SetPoints(_cachedState.Points, true);
             
             bool modeChanged = false;
 
-            // Mode selection
             GUILayout.Label("Routine Configuration Mode");
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Manual", GUILayout.Width(120f)))
@@ -70,7 +72,6 @@ namespace Drova_Modding_API.Systems.Spawning
 
             GUILayout.Space(8f);
 
-            // Mode-specific UI
             if (_editorMode == RoutineEditorMode.Manual)
             {
                 DrawManualMode();
@@ -80,7 +81,16 @@ namespace Drova_Modding_API.Systems.Spawning
                 DrawFreecamClickMode();
             }
 
-            // Points list
+            GUILayout.Space(8f);
+            _graphHint ??= "Routine graph (empty = shared). Saved: " + string.Join(", ", BehaviourTreeStore.GetSavedIds());
+            GUILayout.Label(_graphHint, GetHintLabelStyle());
+            string graphId = GUILayout.TextField(_cachedState.GraphId ?? string.Empty, GUILayout.Width(250f));
+            if (graphId != (_cachedState.GraphId ?? string.Empty))
+            {
+                _cachedState.GraphId = graphId.Length == 0 ? null : graphId;
+                modeChanged = true;
+            }
+
             GUILayout.Space(8f);
             GUILayout.Label($"Routine Points ({_cachedState.Points.Count})");
             GUILayout.Label("(Cyan circles show points on screen)", GetHintLabelStyle());
@@ -97,7 +107,7 @@ namespace Drova_Modding_API.Systems.Spawning
                     {
                         _cachedState.Points.RemoveAt(i);
                         modeChanged = true;
-                        break; // Avoid index out of range
+                        break;
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -196,7 +206,7 @@ namespace Drova_Modding_API.Systems.Spawning
             _changedFromUpdate = true;
         }
 
-        private static bool TryGetMouseWorldPosition(out Vector2 worldPosition)
+        internal static bool TryGetMouseWorldPosition(out Vector2 worldPosition)
         {
             worldPosition = default;
 
@@ -223,7 +233,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private static void EnsureVisualizerExists()
+        private static void FindOrCreateVisualizer()
         {
             if (_visualizer != null)
                 return;
@@ -246,9 +256,13 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             RoutineEditorState state = Parse(payload);
             if (state.Points.Count == 0)
+            {
+                if (!string.IsNullOrWhiteSpace(state.GraphId))
+                    MelonLogger.Warning($"[Routines] routine graph '{state.GraphId}' of an NPC placement is ignored because its routine has no points. Add at least one point.");
                 return;
+            }
 
-            creator.WithModule(new RoutineModule().With([.. state.Points]));
+            creator.WithModule(new RoutineModule().With([.. state.Points]).WithGraph(state.GraphId));
         }
 
         private static RoutineEditorState Parse(string? payload)
@@ -258,15 +272,18 @@ namespace Drova_Modding_API.Systems.Spawning
 
             try
             {
-                return JsonSerializer.Deserialize<RoutineEditorState>(payload, JsonOptions) ?? new RoutineEditorState();
+                RoutineEditorState state = JsonSerializer.Deserialize<RoutineEditorState>(payload, JsonOptions) ?? new RoutineEditorState();
+                state.Points ??= [];
+                return state;
             }
-            catch
+            catch (Exception e)
             {
+                MelonLogger.Warning("[Routines] the routine of an NPC placement could not be read and is ignored: " + e.Message);
                 return new RoutineEditorState();
             }
         }
 
-        private void EnsureUiState(string? payload)
+        private void SyncUiState(string? payload)
         {
             if (_changedFromUpdate)
             {
@@ -278,6 +295,7 @@ namespace Drova_Modding_API.Systems.Spawning
                 return;
 
             _cachedState = Parse(payload);
+            _graphHint = null;
             _serializedPayload = JsonSerializer.Serialize(_cachedState, JsonOptions);
             _lastPayload = normalizedPayload;
         }
@@ -315,6 +333,8 @@ namespace Drova_Modding_API.Systems.Spawning
         private sealed class RoutineEditorState
         {
             public List<Vector2> Points { get; set; } = [];
+
+            public string? GraphId { get; set; }
         }
     }
 }

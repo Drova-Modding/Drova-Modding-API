@@ -24,7 +24,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
         private readonly List<GUIDropdown> _valueModeDropdowns = [];
         private readonly Dictionary<int, GUIGvarSelectionEditor> _gvarSelectionEditors = [];
 
-        // Cached height from previous frame so we can draw the background box first
         private float _lastHeight = 150f;
 
         private readonly GUIContent _targetContent = new("Target Entity", "If empty, than the player is checked");
@@ -78,7 +77,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
 
             float y = position.y + rowStep;
 
-            // Target Entity
             GUI.Label(new Rect(x + 5, y, 100, rowH), _targetContent);
             if (_entityInfoDropdown.Draw(new Rect(x + 110, y, width - 115, rowH)))
             {
@@ -90,7 +88,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             {
                 DialogItems item = _castedTask.Items[i];
 
-                // Item
                 GUI.Label(new Rect(x + 5, y, 100, rowH), "Item:");
                 if (_itemDropdowns[i].Draw(new Rect(x + 110, y, width - 115, rowH)))
                 {
@@ -98,7 +95,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 }
                 y += rowStep;
 
-                // Valuemode
                 GUI.Label(new Rect(x + 5, y, 100, rowH), "Valuemode:");
                 if (_valueModeDropdowns[i].Draw(new Rect(x + 110, y, width - 115, rowH)))
                 {
@@ -106,7 +102,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 }
                 y += rowStep;
 
-                // Amount / GVar
                 if (item.Mode != DialogItems.ValueMode.GInt)
                 {
                     GUI.Label(new Rect(x + 5, y, 100, rowH), "Amount:");
@@ -122,11 +117,9 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                     y += rowStep * 2;
                 }
 
-                // Use Container
                 item.UseContainer = GUI.Toggle(new Rect(x + 5, y, 160, rowH), item.UseContainer, "Use Container");
                 y += rowStep;
 
-                // Remove button
                 if (GUI.Button(new Rect(x + 5, y, 80, rowH), "X"))
                 {
                     _castedTask.Items.RemoveAt(i);
@@ -139,7 +132,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
                 y += rowStep + 8;
             }
 
-            // Add Item button
             if (GUI.Button(new Rect(x + 5, y, 100, rowH), "Add Item"))
             {
                 _castedTask.Items.Add(new DialogItems());
@@ -149,7 +141,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             }
             y += rowStep + 5;
 
-            // Cache computed height for next frame's background box
             _lastHeight = y - position.y;
             drawRect.height = _lastHeight;
             return drawRect;

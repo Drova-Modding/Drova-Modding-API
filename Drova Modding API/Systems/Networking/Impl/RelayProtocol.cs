@@ -11,10 +11,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     {
         /// <summary>
         /// Protocol version announced in the handshake. A relay speaking anything else rejects us.
-        ///
-        /// Version 2 replaced the plaintext password in the handshake with a derived join token. The
-        /// field kept its shape, so only the bump tells a version 1 relay apart from one that will
-        /// actually understand us - without it the mismatch would surface as a wrong password.
         /// </summary>
         internal const ushort Version = 2;
 
@@ -101,8 +97,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal const byte DisconnectKicked = 2;
 
         /// <summary>
-        /// Builds the connect data the relay expects. Allocates, which is fine: this runs once per
-        /// session, not per packet.
+        /// Builds the connect data the relay expects.
         /// </summary>
         /// <param name="role">Either <see cref="RoleHost"/> or <see cref="RoleClient"/>.</param>
         /// <param name="sessionCode">The code that identifies the session. Empty from a host asks the relay to pick one.</param>
@@ -120,10 +115,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             return writer;
         }
 
-        // The token field is read with the same length convention the string field it replaced used -
-        // a ushort holding the byte count plus one, so that zero can still mean "absent" rather than
-        // "one byte". Writing it by hand keeps that explicit; NetDataWriter's own byte-array helper
-        // prefixes an int instead and would silently desynchronise the two ends.
+        // A ushort of byte count plus one, so zero means absent, as the relay reads it. NetDataWriter's own
+        // byte-array helper prefixes an int instead.
         private static void PutLengthPrefixed(NetDataWriter writer, byte[]? value)
         {
             if (value == null || value.Length == 0)

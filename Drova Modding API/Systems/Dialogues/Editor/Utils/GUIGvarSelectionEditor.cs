@@ -136,9 +136,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils
         /// <summary>
         /// Draws the Gvar editor.
         /// </summary>
-        /// <param name="listDropdown">list dropdown rect</param>
-        /// <param name="gvarsDropdown">value dropdown rect</param>
-        /// <returns>Whether the gvar value was changed, if <see cref="_showOnlyList"/> is true, than whether the list changed</returns>
+        /// <returns>Whether the gvar changed, or the list when <see cref="_showOnlyList"/> is set</returns>
         public bool DrawGvarEditor(Rect listDropdown, Rect gvarsDropdown = default)
         {
             bool result = false;

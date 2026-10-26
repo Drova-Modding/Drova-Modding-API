@@ -1,0 +1,60 @@
+# Routine graphs and overrides in a running game: an own tree for one NPC switches live and leaves the others on the
+# shared tree, a moved point of an existing place is walked right away, action nodes survive save and reload, the
+# shared tree can be stored and patched in place, and everything still holds after the world loads again.
+# Debug build only (the `routine` agent command). Leaves no files behind.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/routine_overrides.scn
+
+default hero 5
+default slot 0
+set olaf 52b3d368-a4c0-4a62-9542-1f597c3e669b
+set evi a5ed2c3c-7227-463a-9f97-0678d7ffbd18
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=1
+A load $hero $slot
+A wait world=1 timeout=240
+
+# A clean start, should an earlier run have stopped halfway.
+A routine shared $olaf
+A routine shared $evi
+A routine unpatchshared
+A expect routine info $olaf contains "tree=AI_Routine_Default" timeout=60
+
+# Own tree for Olaf only.
+A routine own $olaf
+A expect routine info $olaf contains "tree=Routine_$olaf" timeout=30
+A expect routine info $evi contains "tree=AI_Routine_Default"
+
+# The task editor reads every task of the tree, and action nodes are created, saved and loaded again.
+A expect routine tasks Routine_$olaf contains "WaitTask{"
+A expect routine newaction Routine_$olaf WaitTask contains "actions="
+A expect routine info $olaf contains "tree=Routine_$olaf" timeout=30
+
+# Edit a point of Olaf's existing place: live, and he walks there. The new spot is away from all of his places.
+A routine move $olaf 0 -1350 -4430
+A expect routine info $olaf contains "points=-1350;-4430"
+A expect routine dist $olaf 0 >= 120
+A expect routine dist $olaf 0 <= 40 timeout=90
+
+# The editors open on it.
+A routine window $olaf
+A routine graphui $olaf
+A shot routine_graph.png
+A routine closegraph
+
+# The shared tree, stored and patched in place: every routine on it starts again on a fresh copy.
+A expect routine patchshared contains "patched=1"
+A expect routine info $evi contains "tree=AI_Routine_Default points=" timeout=60
+
+# Everything is still there after the world loads again.
+A load $hero $slot
+A wait world=1 timeout=240
+A expect routine info $olaf contains "tree=Routine_$olaf points=-1350;-4430" timeout=90
+A expect routine dist $olaf 0 <= 40 timeout=90
+A expect routine info $evi contains "tree=AI_Routine_Default" timeout=60
+
+A routine shared $olaf
+A routine unpatchshared
+A expect routine info $olaf contains "tree=AI_Routine_Default" timeout=60

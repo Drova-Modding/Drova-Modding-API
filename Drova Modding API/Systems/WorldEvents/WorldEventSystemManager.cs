@@ -11,12 +11,8 @@ namespace Drova_Modding_API.Systems.WorldEvents
 {
 
     /// <summary>
-    /// A System that handles spawn Events for classes which implements <see cref="IWorldEvent"/>, or <see cref="ARegionalEvent"/>.
-    /// The system will handle the cooldown and the start of the events.
-    /// You can register your Events with <see cref="RegisterWorldEvents(IEnumerable{IWorldEvent})"/> and <see cref="RegisterWorldEvent(IWorldEvent)"/>.
-    /// You can register your Regional Events with <see cref="RegisterRegionalEvents(IEnumerable{ARegionalEvent})"/> and <see cref="RegisterRegionalEvent(ARegionalEvent)"/>.
-    /// It will kill automatically Events which are running more than 5 times the cooldown.
-    /// It will also block when the Player is in a Dialogue, Option menu, or in a blocked region
+    /// Starts registered <see cref="IWorldEvent"/>s on a cooldown and <see cref="ARegionalEvent"/>s on region entry, paused in
+    /// dialogue, the options menu and blocked regions. An event still running after five cooldowns is ended.
     /// </summary>
     [RegisterTypeInIl2Cpp]
     public class WorldEventSystemManager(IntPtr ptr) : MonoBehaviour(ptr)
@@ -102,9 +98,8 @@ namespace Drova_Modding_API.Systems.WorldEvents
         }
 
         /// <summary>
-        /// A remote player (a co-op teammate) entered or left a region. Called on the machine that owns the world, so
-        /// regional events run for a teammate standing in a region alone too - around them, see
-        /// <see cref="Regional.ARegionalEvent.TryGetAnchor"/>.
+        /// A co-op teammate entered or left a region. Called on the machine that owns the world, so regional events also
+        /// run around a teammate alone in a region, see <see cref="Regional.ARegionalEvent.TryGetAnchor"/>.
         /// </summary>
         /// <param name="player">The teammate's id; not -1.</param>
         /// <param name="region">The region.</param>
@@ -167,9 +162,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     continue;
                 }
 
-                // The keys are only written once the modding options menu has been opened. Until then the
-                // sliders' own defaults apply - falling back to the one-second tick instead started an
-                // event every few seconds on any profile that never opened that menu.
+                // The keys are only written once the modding options menu has been opened, so the sliders' defaults apply until then.
                 if (!ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMinOptionKey, out int min)) min = ModdingUI.ModdingUI.ModdingUIMinDefault;
                 if (!ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMaxOptionKey, out int max)) max = ModdingUI.ModdingUI.ModdingUIMaxDefault;
 #if DEBUG
@@ -262,7 +255,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <summary>
         /// Returns true if the player is alive and is currently in a dialogue or teleporting.
         /// </summary>
-        /// <returns>True if the player is alive and is in a dialogue or teleporting; otherwise, false.</returns>
         [HideFromIl2Cpp]
         public static bool IsPlayerInDialogueOrTeleporting()
         {

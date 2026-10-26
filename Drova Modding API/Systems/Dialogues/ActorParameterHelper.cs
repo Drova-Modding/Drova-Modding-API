@@ -18,8 +18,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Get the display name of an actor parameter, falling back to its key name.
         /// </summary>
-        /// <param name="actorParameter">The actor parameter.</param>
-        /// <returns>The display name, or the key name, or an empty string.</returns>
         internal static string GetActorParameterName(ActorParameter actorParameter)
         {
             if (!string.IsNullOrWhiteSpace(actorParameter.name))
@@ -33,8 +31,6 @@ namespace Drova_Modding_API.Systems.Dialogues
         /// <summary>
         /// Get the stable id of an actor parameter, falling back to its internal id.
         /// </summary>
-        /// <param name="actorParameter">The actor parameter.</param>
-        /// <returns>The id, or the internal id, or an empty string.</returns>
         internal static string GetActorParameterId(ActorParameter actorParameter)
         {
             if (!string.IsNullOrWhiteSpace(actorParameter.ID))

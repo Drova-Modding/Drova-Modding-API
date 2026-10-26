@@ -5,11 +5,8 @@ using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.DialogueTrees.UI;
 
 /// <summary>
-/// The player says a voiced answer. Where the window settles the answer picked - a plain choice or a hub's, both pass
-/// here - a choice node that would not say it is told to for this pick: the game then shows it as the player's line and
-/// plays its clip, as it does for nodes authored to say their answers. A node switched on here is switched back off for
-/// an answer without a clip. A hub answer standing in for a nested one is left to <see cref="DS_HubNodeOptionSelectedPatch"/>.
-/// By its parameters: by name alone this is Il2CppSystem.Object.Finalize.
+/// Makes a choice node say a voiced answer for this pick, so the game shows it as the player's line and plays its clip,
+/// and switches it back off for an answer without a clip. Patched by parameters, since by name this is Object.Finalize.
 /// </summary>
 [HarmonyPatch(typeof(DS_DialogueUGUI), "Finalize", [typeof(MultipleChoiceRequestInfo), typeof(int)])]
 internal static class DS_DialogueUGUIFinalizePatch
@@ -29,10 +26,8 @@ internal static class DS_DialogueUGUIFinalizePatch
 }
 
 /// <summary>
-/// The player says a hub answer that stands in for a nested one. A hub whose sub-menu ("About quests...") would hold a
-/// single answer shows that answer in its place ("Where was Jendrik again?"), and picking it runs the selection through
-/// the hub, which only knows its own placeholder. When the shown answer - the last of the nested choices the hub
-/// recorded - has a clip, it is said first and the hub's selection runs once it ends, without the hub saying anything.
+/// A hub whose sub-menu holds a single answer shows that answer in its place, but picking it runs through the hub, which
+/// only knows its placeholder. A voiced shown answer is said first, and the hub's selection resumes silently once it ends.
 /// </summary>
 [HarmonyPatch(typeof(DS_HubNode), nameof(DS_HubNode.OnHubOptionSelected))]
 internal static class DS_HubNodeOptionSelectedPatch

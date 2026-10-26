@@ -20,10 +20,10 @@ namespace Drova_Modding_API.Systems.ModdingUI
          */
         public const string ModdingUIMaxOptionKey = "ModdingUIMax";
 
-        /// <summary>The min slider's default, in minutes - also what applies before the menu was ever opened.</summary>
+        /// <summary>The min slider's default, in minutes.</summary>
         public const int ModdingUIMinDefault = 30;
 
-        /// <summary>The max slider's default, in minutes - also what applies before the menu was ever opened.</summary>
+        /// <summary>The max slider's default, in minutes.</summary>
         public const int ModdingUIMaxDefault = 60;
         /// <summary>
         /// Config key for regional event cooldown in minutes.
@@ -47,9 +47,19 @@ namespace Drova_Modding_API.Systems.ModdingUI
         /// </summary>
         public const string EnableDialogueAudioOptionKey = "EnableDialogueAudio";
 
+        /// <summary>Config key for whether <see cref="ToastAccess"/> shows notices at all.</summary>
+        public const string ToastsEnabledOptionKey = "ToastsEnabled";
+
+        /// <summary>Config key for how many seconds a <see cref="ToastAccess"/> notice stays.</summary>
+        public const string ToastSecondsOptionKey = "ToastSeconds";
+
+        /// <summary>The time on screen slider's default, in seconds.</summary>
+        public const int ToastSecondsDefault = 8;
+
         internal static void RegisterModdingUI()
         {
             OptionMenuAccess.Instance.OnOptionMenuOpen += Instance_OnOptionMenuOpen;
+            OptionMenuAccess.Instance.OnOptionMenuClose += ToastAccess.ReadSettings;
         }
 
         internal static void RegisterLocalization()
@@ -97,6 +107,18 @@ namespace Drova_Modding_API.Systems.ModdingUI
                 new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Aus", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
                 new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Off", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
                 new LocalizationAccess.LocalizationEntry("EnableDialogueAudioOff", "Désactivé", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("ToastHeader", "Benachrichtigungen", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("ToastHeader", "Notifications", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("ToastHeader", "Notifications", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("ToastDisclaimer", "Kurze Meldungen von Mods oben rechts, z. B. gefundene Gegenstände.", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("ToastDisclaimer", "Short notices from mods in the top right corner, such as items found.", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("ToastDisclaimer", "Courts messages des mods en haut à droite, par exemple les objets trouvés.", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("ToastsEnabled", "Benachrichtigungen anzeigen", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("ToastsEnabled", "Show notifications", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("ToastsEnabled", "Afficher les notifications", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
+                new LocalizationAccess.LocalizationEntry("ToastSeconds", "Anzeigedauer (Sekunden)", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.de),
+                new LocalizationAccess.LocalizationEntry("ToastSeconds", "Time on screen (seconds)", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.en),
+                new LocalizationAccess.LocalizationEntry("ToastSeconds", "Durée d'affichage (secondes)", Il2CppCustomFramework.Localization.LocalizationDB.ELanguage.fr),
                 ], "ModdingUI");
         }
 
@@ -121,6 +143,15 @@ namespace Drova_Modding_API.Systems.ModdingUI
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioMinDistance"), DialogueAudioMinDistanceOptionKey, 50, 800, 100)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioMaxDistance"), DialogueAudioMaxDistanceOptionKey, 200, 1000, 425)
                 .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "DialogueAudioVolumeLerpSpeed"), DialogueAudioVolumeLerpSpeedOptionKey, 1, 20, 5)
+                .CreateHeader(LocalizationAccess.GetLocalizedString("ModdingUI", "ToastHeader"))
+                .CreateDisclaimer(LocalizationAccess.GetLocalizedString("ModdingUI", "ToastDisclaimer"))
+                .CreateSwitch(
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "ToastsEnabled"),
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "EnableDialogueAudioOn"),
+                    LocalizationAccess.GetLocalizedString("ModdingUI", "EnableDialogueAudioOff"),
+                    ToastsEnabledOptionKey,
+                    defaultValue: true)
+                .CreateSlider(LocalizationAccess.GetLocalizedString("ModdingUI", "ToastSeconds"), ToastSecondsOptionKey, 2, 30, ToastSecondsDefault)
                 .Build();
             if (builded.Count >= 5)
             {

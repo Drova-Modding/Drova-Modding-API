@@ -170,17 +170,17 @@ OptionMenuAccess.Instance.OnOptionMenuClose += () =>
 
 ### `OptionUIBuilder` (fluent; every `Create*` returns the builder)
 
-| Method                                                                                                                     | Creates                                                                                     |
-|----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
-| `CreateTitle(LocalizedString)`                                                                                             | A title row.                                                                                |
-| `CreateHeader(LocalizedString)`                                                                                            | A centered section header.                                                                  |
-| `CreateDisclaimer(LocalizedString)`                                                                                        | A description/disclaimer paragraph.                                                         |
-| `CreateSlider(LocalizedString title, string key, int min, int max, int default)`                                           | An integer slider.                                                                          |
-| `CreateSlider(LocalizedString title, string key, float min, float max, float default, bool wholeNumbers)`                  | A float slider.                                                                             |
-| `CreateSwitch(LocalizedString title, LocalizedString on, LocalizedString off, string key, bool default, bool useGreyText)` | A toggle switch.                                                                            |
-| `CreateDropdown<E>(LocalizedString title, string key, Dictionary<E, LocalizedString> options, E default)`                  | An enum dropdown (`E : Enum`).                                                              |
-| `CreateButton(LocalizedString title, LocalizedString buttonName, Action onClick)`                                          | A button row.                                                                               |
-| `CreateInputActionSection(List<InputActionTemplate>)`                                                                      | A section of key-rebind rows (see [Input](./input.md)).                                     |
+| Method                                                                                                                     | Creates                                                                                                                       |
+|----------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `CreateTitle(LocalizedString)`                                                                                             | A title row.                                                                                                                  |
+| `CreateHeader(LocalizedString)`                                                                                            | A centered section header.                                                                                                    |
+| `CreateDisclaimer(LocalizedString)`                                                                                        | A description/disclaimer paragraph.                                                                                           |
+| `CreateSlider(LocalizedString title, string key, int min, int max, int default)`                                           | An integer slider.                                                                                                            |
+| `CreateSlider(LocalizedString title, string key, float min, float max, float default, bool wholeNumbers)`                  | A float slider.                                                                                                               |
+| `CreateSwitch(LocalizedString title, LocalizedString on, LocalizedString off, string key, bool default, bool useGreyText)` | A toggle switch.                                                                                                              |
+| `CreateDropdown<E>(LocalizedString title, string key, Dictionary<E, LocalizedString> options, E default)`                  | An enum dropdown (`E : Enum`).                                                                                                |
+| `CreateButton(LocalizedString title, LocalizedString buttonName, Action onClick)`                                          | A button row.                                                                                                                 |
+| `CreateInputActionSection(List<InputActionTemplate>)`                                                                      | A section of key-rebind rows (see [Input](./input.md)).                                                                       |
 | `List<GameObject> Build()`                                                                                                 | Finalizes the panel, saves the config file, rebuilds controller navigation over the rows, and returns them in creation order. |
 
 `record InputActionTemplate(LocalizedString Title, string ActionName)` pairs a rebound row's

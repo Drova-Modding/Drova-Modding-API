@@ -1,0 +1,13 @@
+{
+  "Version": 1,
+  "Areas": [
+    { "Id": "test_glade", "X": 80800, "Y": -79200, "Width": 1600, "Height": 1600, "Indoor": true }
+  ],
+  "Objects": [
+    { "Id": "test_glade_floor", "Scene": "Scene_Overworld_Floor_-2_-4", "Path": "SplatPlaneLoader(Clone)", "X": 80400, "Y": -79600, "Stamp": true, "SortingOrder": -16, "Terrain": "Grass" },
+    { "Id": "test_glade_enter", "Scene": "Scene_Teleporters", "Path": "Teleporter_Atlanterdungeon_Enter", "X": -2132, "Y": -5200, "TargetX": 80800, "TargetY": -79200, "Seed": "test_glade_enter" },
+    { "Id": "test_glade_exit", "Scene": "Scene_Teleporters", "Path": "Teleporter_Atlanterdungeon_Enter", "X": 80800, "Y": -79320, "TargetX": -2132, "TargetY": -5320, "Seed": "test_glade_exit" },
+    { "Id": "test_glade_wall", "X": 80800, "Y": -79000, "Width": 400, "Height": 32 }
+  ],
+  "Removed": []
+}

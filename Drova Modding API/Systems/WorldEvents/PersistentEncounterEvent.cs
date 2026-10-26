@@ -19,7 +19,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         /// <inheritdoc/>
         public virtual void EndEvent()
         {
-            // Do nothing
         }
 
         /// <inheritdoc/>

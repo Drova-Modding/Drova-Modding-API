@@ -6,11 +6,8 @@ using Il2CppDrova.Utilities.LazyLoading;
 namespace Drova_Modding_API.Patches;
 
 /// <summary>
-/// Harmony prefix on <c>Actor.StartInitAsync</c>. When the actor was spawned via a
-/// <see cref="LazyActor"/> (<c>IsControlledViaLazy == true</c>), the parent transform is
-/// the LazyActor GameObject. Any callbacks registered via
-/// <see cref="LazyActorPreInitRegistry.Register"/> are invoked here — before the game's
-/// own initialization runs — so module changes (cosmetics, equipment, stats…) take effect.
+/// Runs <see cref="LazyActorPreInitRegistry.Register"/> callbacks for a lazy-spawned actor before the game's own
+/// initialization, so module changes take effect. Such an actor's parent is its <see cref="LazyActor"/>.
 /// </summary>
 [HarmonyPatch(typeof(Actor), nameof(Actor.StartInitAsync))]
 internal static class ActorStartInitAsyncPatch

@@ -165,6 +165,18 @@ namespace Drova_Modding_API.Systems.GlobalVars
             }
         }
 
+        /// <summary>
+        /// Opens or closes the inspector, as F6 does.
+        /// </summary>
+        [HideFromIl2Cpp]
+        internal static void Toggle()
+        {
+            if (_instance != null)
+            {
+                _instance.SetInspectorVisible(!_instance._isVisible);
+            }
+        }
+
         [HideFromIl2Cpp]
         private void SetInspectorVisible(bool visible)
         {
@@ -194,7 +206,7 @@ namespace Drova_Modding_API.Systems.GlobalVars
                 return;
             }
 
-            InputAccess.ToggleGameplayActionMaps(!blocked);
+            InputAccess.SetGameplayInputBlocked("GVarInspector", blocked);
             _gameplayInputBlockedByInspector = blocked;
         }
 

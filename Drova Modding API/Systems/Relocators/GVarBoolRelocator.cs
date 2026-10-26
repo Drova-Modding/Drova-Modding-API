@@ -22,7 +22,7 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
             /// </summary>
             public string? GvarListGuid;
             /// <summary>
-            /// The global variable integer key. <see cref="AGVarBase.GetGVarId"/>
+            /// The global variable bool key. <see cref="AGVarBase.GetGVarId"/>
             /// </summary>
             public string? GVarBoolGuid;
         }

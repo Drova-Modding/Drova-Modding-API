@@ -18,7 +18,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public string DrawWizardUiAndSerialize(string payload)
         {
-            EnsureUiState(payload);
+            SyncUiState(payload);
 
             string? rawInput = _rawInput;
 
@@ -62,7 +62,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private void EnsureUiState(string? payload)
+        private void SyncUiState(string? payload)
         {
             string normalizedPayload = payload ?? string.Empty;
             if (string.Equals(_lastPayload, normalizedPayload, StringComparison.Ordinal))

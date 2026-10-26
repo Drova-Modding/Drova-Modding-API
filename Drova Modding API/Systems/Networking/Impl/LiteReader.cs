@@ -6,8 +6,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     /// <summary>
     /// Adapts an <see cref="INetReader"/> onto the packet reader LiteNetLib hands to the receive
     /// callback. A single instance is reused for every receive on the main thread; <see cref="Bind"/>
-    /// points it at the current packet before dispatch. Being a class, passing it as
-    /// <see cref="INetReader"/> does not box.
+    /// points it at the current packet before dispatch.
     /// </summary>
     internal sealed class LiteReader : INetReader
     {
@@ -18,12 +17,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         /// <summary>
         /// Whether this packet carried something no game can use, and is therefore not to be handed to
         /// anybody. Two things set it: a number that is a NaN or an infinity, and a length prefix that
-        /// names more bytes than the packet holds or than the field allows.
-        ///
-        /// A flag rather than an exception, because this path is reachable by any peer: throwing turns one
-        /// hostile packet into one logged stack trace, and a stream of them into a way of filling somebody
-        /// else's disk. The message is still decoded to the end so the reader stays in step with the
-        /// packet; <see cref="MessageChannel{T}"/> is what declines to deliver it.
+        /// names more bytes than the packet holds or than the field allows. A flag rather than an exception,
+        /// since any peer can reach this path and a stack trace per packet would flood the log.
         /// </summary>
         internal bool Poisoned { get; private set; }
 
@@ -77,11 +72,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         {
             float value = _packet.GetFloat();
 
-            // NaN and the infinities are never legitimate game state, and letting one through is not a
-            // cosmetic problem: a NaN position assigned to a transform is read back as the input to the
-            // next frame's interpolation, so every frame after it is NaN too and the object never
-            // recovers. Zero is substituted only so the rest of the message decodes; nothing acts on it,
-            // because the message is dropped before it reaches a handler.
+            // Zero only keeps the rest of the message decoding; the poisoned message is dropped before any handler.
             if (!float.IsFinite(value))
             {
                 Poisoned = true;
@@ -136,8 +127,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             int length = _packet.GetInt();
 
-            // A negative length is what an int prefix read as unsigned elsewhere looks like from here, and
-            // one longer than the packet is a claim the packet cannot back. Neither is allocated for.
+            // Never allocate for a length the packet cannot back.
             if (length < 0 || length > _packet.AvailableBytes)
             {
                 Poisoned = true;
@@ -192,8 +182,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             if (bytes > maxBytes)
             {
-                // Skipped rather than left in place, so the fields after it still line up. The message is
-                // dropped either way, but a reader out of step turns one bad field into a bad packet.
+                // Skipped so the fields after it still line up.
                 _packet.SkipBytes(bytes);
                 Poisoned = true;
                 return false;

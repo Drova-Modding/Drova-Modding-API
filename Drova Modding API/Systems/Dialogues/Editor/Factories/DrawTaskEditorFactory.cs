@@ -37,14 +37,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             {"DS_JudgeCanAtoneCrimeConditionTask", typeof(DS_JudgeCanAtoneCrimeConditionTaskEditor) },
             {"DS_WitnessedCrimeConditionTask", typeof(DS_WitnessedCrimeConditionTaskEditor) },
             {"DS_WitnessedOpenReactionCrimeConditionTask", typeof(DS_WitnessedOpenReactionCrimeConditionTaskEditor) },
-            {"DS_WitnessedSpecificCrimeConditionTask", typeof(DS_WitnessedSpecificCrimeConditionTaskEditor) }
+            {"DS_WitnessedSpecificCrimeConditionTask", typeof(DS_WitnessedSpecificCrimeConditionTaskEditor) },
+            {"TriggerJournalTask", typeof(TriggerJournalTaskEditor) }
         };
 
         /// <summary>
-        /// Get a DrawNodeEditor by type
+        /// Get a DrawTaskEditor by type. Tasks without a dedicated editor get a <see cref="GenericTaskEditor"/>.
         /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
         public virtual DrawTaskEditor? GetDrawTaskEditorFromType(Il2CppSystem.Type? type)
         {
             // A null type is the empty task, the fallback branch when no other condition holds.
@@ -54,18 +53,13 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories
             }
             try
             {
-                if (nameToTaskMap.TryGetValue(type.Name, out Type v))
-                {
-                    return (DrawTaskEditor)Activator.CreateInstance(v);
-                }
-                else
-                {
-                    return null;
-                }
+                return nameToTaskMap.TryGetValue(type.Name, out Type v)
+                    ? (DrawTaskEditor)Activator.CreateInstance(v)
+                    : new GenericTaskEditor();
             }
             catch (Exception e)
             {
-                MelonLogger.Error("Error creating DrawNodeEditor from type: " + e);
+                MelonLogger.Error("Error creating DrawTaskEditor from type: " + e);
                 return null;
             }
         }

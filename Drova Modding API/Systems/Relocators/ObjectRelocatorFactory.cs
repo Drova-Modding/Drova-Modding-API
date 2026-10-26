@@ -22,7 +22,6 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
         /// <summary>
         /// Registers a relocator for a specific type.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         public static void RegisterRelocator<T>(IObjectRelocator<T> relocator)
         {
             RelocatorByType[typeof(T)] = relocator;
@@ -31,7 +30,6 @@ namespace Drova_Modding_API.Systems.Editor.Relocators
         /// <summary>
         /// Gets the relocator for a specific type.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         public static IObjectRelocator<T>? GetRelocator<T>()
         {
             if (RelocatorByType.TryGetValue(typeof(T), out object? relocator))

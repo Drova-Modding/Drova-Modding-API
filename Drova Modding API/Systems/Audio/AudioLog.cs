@@ -5,7 +5,7 @@ namespace Drova_Modding_API.Systems.Audio
 {
     internal static class AudioLog
     {
-        private static bool ShouldLog()
+        internal static bool ShouldLog()
         {
 #if DEBUG
             return ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.EnableDialogueAudioOptionKey, out bool enabled) && enabled;

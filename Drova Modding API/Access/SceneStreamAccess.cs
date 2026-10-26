@@ -5,16 +5,10 @@ using UnityEngine.SceneManagement;
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// Streamed-scene awareness. Drova streams chunk scenes
-    /// (<c>Scene_Overworld_&lt;Layer&gt;_&lt;x&gt;_&lt;y&gt;</c>, area interiors, ...) continuously
-    /// while the player travels, so world objects appear and disappear with their scene.
-    ///
-    /// Register for the scene names you care about and you get the <see cref="Scene"/> handle the
-    /// moment it is loaded - without paying anything for the hundreds of loads you do not care
-    /// about. PERFORMANCE: do not sweep the whole heap
-    /// (<c>Resources.FindObjectsOfTypeAll</c>) or a full scene's renderers on every scene load -
-    /// chunk scenes carry thousands of objects and each check is an interop call, so per-load
-    /// sweeps tank the frame rate. Scope work to the scenes that provably contain your objects.
+    /// Streamed-scene awareness. Drova streams chunk scenes (<c>Scene_Overworld_&lt;Layer&gt;_&lt;x&gt;_&lt;y&gt;</c>,
+    /// area interiors) continuously while the player travels, so world objects come and go with their scene.
+    /// Do not sweep the heap or a whole scene on every load: chunk scenes carry thousands of objects and each
+    /// check is an interop call. Scope work to the scenes that contain your objects.
     /// </summary>
     public static class SceneStreamAccess
     {
@@ -75,10 +69,8 @@ namespace Drova_Modding_API.Access
 
         /// <summary>
         /// Enumerate every component of type <typeparamref name="T"/> in one scene, including on
-        /// inactive objects. This is the scoped alternative to
-        /// <c>Resources.FindObjectsOfTypeAll</c>: it walks only the given scene's hierarchy and
-        /// can never hand back prefab assets (parenting mod objects into a prefab corrupts every
-        /// future instance of it).
+        /// inactive objects. Unlike <c>Resources.FindObjectsOfTypeAll</c> it never returns prefab assets, which
+        /// would corrupt every future instance if modified.
         /// </summary>
         /// <typeparam name="T">Component type to collect.</typeparam>
         /// <param name="scene">A loaded scene.</param>
@@ -128,7 +120,6 @@ namespace Drova_Modding_API.Access
 
             if (list != null)
             {
-                // Copy: a handler may add/remove listeners while we iterate.
                 foreach (Action<Scene> handler in list.ToArray())
                 {
                     InvokeSafe(handler, scene);

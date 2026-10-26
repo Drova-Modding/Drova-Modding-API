@@ -7,16 +7,8 @@ using static Drova_Modding_API.Systems.Dialogues.ActorParameterHelper;
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
 {
     /// <summary>
-    /// Node editor for <see cref="SubDialogueTree"/>.
-    /// <para>
-    /// Besides selecting the sub-graph, this exposes the otherwise hidden
-    /// <c>_actorParametersMap</c>. That map binds each sub-graph actor slot to a
-    /// parent (containing) tree actor. The game stores it as
-    /// <c>sub-graph slot ID -&gt; parent slot ID</c> (both GUIDs) and consumes it in
-    /// <c>TryWriteMappedActorParameters()</c> via <c>GetParameterByID</c>. Vanilla's
-    /// <c>SetParametersMap()</c> only ever fills this positionally (slot i -&gt; slot i),
-    /// so we mirror that as the default but let each row be reassigned freely.
-    /// </para>
+    /// Node editor for <see cref="SubDialogueTree"/>. Also edits the hidden <c>_actorParametersMap</c>
+    /// (sub-graph slot GUID to parent slot GUID), which vanilla only ever fills positionally.
     /// </summary>
     internal class SubDialogueTreeEditor : DrawNodeEditor
     {
@@ -31,17 +23,11 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
         private const float MappingRowY = 100f;
         private const float MappingRowHeight = 24f;
 
-        // The sub-graph the mapping rows were last built for; used to detect changes.
         private DialogueTree? _mappingSubGraph;
-        // _actorParametersMap key per sub-graph actor slot (the slot's ID/GUID).
         private string[] _subGraphActorIds = [];
-        // Display label per sub-graph actor slot.
         private string[] _subGraphActorLabels = [];
-        // _actorParametersMap value per parent actor option (the parent slot's ID/GUID).
         private string[] _parentActorIds = [];
-        // Display label per parent actor dropdown option.
         private string[] _parentActorLabels = [];
-        // One dropdown per sub-graph actor slot.
         private GUIDropdown[] _actorMappingDropdowns = [];
 
         public SubDialogueTreeEditor()
@@ -69,7 +55,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 return;
             }
 
-            // Rebuild mapping rows when the selected sub-graph changed.
             if (_castedNode.subGraph != _mappingSubGraph)
             {
                 BuildActorMapping();
@@ -134,10 +119,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             }
         }
 
-        /// <summary>
-        /// Rebuilds the mapping rows from the selected sub-graph's actor parameters
-        /// and the parent dialogue tree's actor parameters.
-        /// </summary>
         private void BuildActorMapping()
         {
             _mappingSubGraph = _castedNode?.subGraph;
@@ -170,9 +151,7 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 string mappedValue = GetMapping(slotId);
                 int selectedIndex = Array.IndexOf(_parentActorIds, mappedValue);
 
-                // No saved binding for this slot: default positionally (slot i ->
-                // parent slot i), mirroring the game's SetParametersMap, and persist
-                // it so the saved map is complete.
+                // Unbound slots default positionally like the game's SetParametersMap, and are persisted so the saved map is complete.
                 if (selectedIndex < 0 && i < _parentActorIds.Length)
                 {
                     selectedIndex = i;
@@ -182,7 +161,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
                 _actorMappingDropdowns[i] = new GUIDropdown(_parentActorLabels, selectedIndex);
             }
 
-            // Resize the node so the mapping rows fit inside the box.
             float height = subCount == 0
                 ? BaseHeight
                 : MappingRowY + (subCount * MappingRowHeight) + 10f;

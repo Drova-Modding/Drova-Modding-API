@@ -10,17 +10,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     /// authenticated as associated data it cannot forge a packet as another peer either, which the host's
     /// authority over gameplay could never have detected on its own.
     ///
-    /// The reading half only actually closed in protocol version 2. Before it, the password was both the
-    /// key material and the credential the handshake showed the relay in the clear, so the relay held
-    /// everything it needed to derive the key and the encryption stopped everyone except the one party
-    /// it existed to stop. <see cref="DeriveJoinToken"/> is what separates the two.
-    ///
-    /// What it does not do is stop a hostile relay replaying a genuine packet it forwarded earlier.
-    /// Rejecting a repeated counter would break unreliable channels, whose whole point is that packets
-    /// arrive late, out of order or not at all, so that bound is left to the game's own state handling.
-    ///
-    /// One instance per session, used only from the poll thread, which is what lets the buffers and the
-    /// counter be plain fields.
+    /// It does not stop a hostile relay replaying a genuine packet: rejecting a repeated counter would
+    /// break unreliable channels. One instance per session, used only from the poll thread.
     /// </summary>
     internal sealed class SessionCrypto
     {
@@ -42,14 +33,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         private const int NoncePrefixSize = 4;
         private const int Iterations = 100_000;
 
-        // Two labels, one password. The relay is given only the value derived under the first, and the
-        // key is derived under the second, so holding a join token is no closer to holding the key than
-        // holding nothing is: both sides of the split cost a full PBKDF2 run per password guess.
-        //
-        // The admit label deliberately leaves the session code out. A host that asks the relay to pick
-        // its code has to present a token before it knows what that code will be, so anything the token
-        // depends on has to be knowable at handshake time. The key keeps the code, which is what stops
-        // one precomputed table serving every session.
+        // The relay sees only the value derived under the admit label, so a join token is no step toward the key.
+        // The admit label leaves the session code out because a host may not know its code at handshake time;
+        // the key keeps it, so one precomputed table cannot serve every session.
         private const string AdmitSaltLabel = "drova-coop-relay-v2:admit";
         private const string KeySaltLabel = "drova-coop-relay-v2:key:";
 
@@ -63,21 +49,14 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         {
             _cipher = new AesGcm(key);
 
-            // The counter alone is not enough: virtual ids are reused when a client leaves and another
-            // joins, so a fresh peer could otherwise repeat a nonce that was already used under the same
-            // key - the one mistake AES-GCM does not survive. A per-connection random prefix makes the
-            // nonce unique across rejoins as well as across packets.
+            // Virtual ids are reused across rejoins, so the counter alone could repeat a nonce under the same key.
             RandomNumberGenerator.Fill(_noncePrefix);
         }
 
         /// <summary>
         /// Derives the session key from the password and the session code and builds the cipher. Both
-        /// ends run this with the same two inputs and never exchange key material, so there is nothing
-        /// for a relay to sit in the middle of; the strength of the session is the strength of the
-        /// password.
-        ///
-        /// Costs about a tenth of a second on purpose - it runs once when a session starts, and it is
-        /// what makes a short password expensive to grind.
+        /// ends derive it themselves, so no key material crosses the relay. Deliberately slow, about a
+        /// tenth of a second, to make a short password expensive to grind.
         /// </summary>
         /// <param name="sessionCode">The code in use, upper-cased so the relay's case-insensitive matching cannot split the two ends.</param>
         /// <param name="password">The session password. Must not be empty; an open session has no key material and stays unencrypted.</param>
@@ -89,15 +68,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         }
 
         /// <summary>
-        /// Derives what the handshake presents to the relay instead of the password.
-        ///
-        /// This is the whole point of the split: the relay has to be able to tell whether a joiner knows
-        /// the session secret, and version 1 let it do that by simply handing it the password — which
-        /// also handed it both inputs to the key, so the encryption protected the traffic from everyone
-        /// except the party actually carrying it. The relay now gets a value it cannot walk back.
-        ///
-        /// Costs a second tenth of a second on top of <see cref="Create"/>, once per session. Both run
-        /// on the calling thread, so a session start is around a fifth of a second of work.
+        /// Derives what the handshake presents to the relay instead of the password: proof of the
+        /// secret that cannot be walked back to the key.
         /// </summary>
         /// <param name="password">The session password. Must not be empty.</param>
         internal static byte[] DeriveJoinToken(string password)
@@ -158,8 +130,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             }
             catch (CryptographicException)
             {
-                // The only thing a failed tag tells us is that this packet is not ours: a wrong password,
-                // a stale key, or something on the path that rewrote it. All three mean drop it.
                 return false;
             }
 

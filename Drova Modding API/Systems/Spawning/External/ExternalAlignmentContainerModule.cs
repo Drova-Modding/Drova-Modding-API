@@ -7,10 +7,7 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Spawning
 {
     /// <summary>
-    /// External module for NPC alignment handling.
-    /// Supports selecting an explicit <see cref="AlignmentContainer"/> override
-    /// resolved at spawn time via
-    /// <see cref="Resources.FindObjectsOfTypeAll{T}"/>.
+    /// External module that overrides the NPC's <see cref="AlignmentContainer"/>, resolved by name at spawn time.
     /// </summary>
     internal sealed class ExternalAlignmentContainerModule : IExternalNpcModule
     {
@@ -37,8 +34,8 @@ namespace Drova_Modding_API.Systems.Spawning
         public string CreateDefaultPayload() => JsonSerializer.Serialize(new AlignmentContainerModuleState());
         public string DrawWizardUiAndSerialize(string payload)
         {
-            EnsureUiState(payload);
-            EnsureContainerCache();
+            SyncUiState(payload);
+            LoadContainerCache();
             bool changed = false;
             GUILayout.Label("Alignment");
 
@@ -56,7 +53,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 _showContainerList = !_showContainerList;
             GUILayout.EndHorizontal();
 
-            // Show live info for the currently selected container.
             if (!string.IsNullOrWhiteSpace(_cachedState.ContainerName) && _cachedContainers != null)
             {
                 AlignmentContainer? selected = FindByName(_cachedContainers, _cachedState.ContainerName);
@@ -66,7 +62,6 @@ namespace Drova_Modding_API.Systems.Spawning
                     GetInfoStyle());
             }
 
-            // Container picker list
             if (_showContainerList && _cachedContainers != null)
             {
                 GUILayout.Space(4f);
@@ -96,7 +91,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 GUILayout.EndVertical();
             }
 
-            // Alignment matrix viewer
             GUILayout.Space(6f);
             if (GUILayout.Button(_showMatrix ? "Hide Alignment Matrix" : "Show Alignment Matrix", GUILayout.Width(200f)))
                 _showMatrix = !_showMatrix;
@@ -128,10 +122,9 @@ namespace Drova_Modding_API.Systems.Spawning
             MelonLogger.Warning($"[ExternalAlignmentContainerModule] AlignmentContainer ''{state.ContainerName}'' was not found at spawn time.");
         }
 
-        // -- Matrix drawing ----------------------------------------------------
         private void DrawAlignmentMatrix()
         {
-            EnsureMatrixCache();
+            LoadMatrixCache();
             if (_cachedMatrix == null)
             {
                 GUILayout.Label("No AlignmentMatrixContainer found in scene.", GetInfoStyle());
@@ -149,13 +142,12 @@ namespace Drova_Modding_API.Systems.Spawning
                 if (il2CppList[i] != null)
                     containers.Add(il2CppList[i]);
             }
-            EnsureCellStyles();
+            CreateCellStyles();
             GUILayout.Space(4f);
             GUILayout.Label($"Alignment Matrix ({containers.Count}x{containers.Count})  -- row checks col", GetInfoStyle());
             GUILayout.Label("Green=Friendly  Yellow=Neutral  Red=Enemy  >=selected", GetInfoStyle());
             GUILayout.Space(2f);
             _matrixScroll = GUILayout.BeginScrollView(_matrixScroll, GUILayout.Height(MatrixRowHeight * (containers.Count + 2) + 24f));
-            // Header row
             GUILayout.BeginHorizontal();
             GUILayout.Label(string.Empty, GUILayout.Width(HeaderCellWidth), GUILayout.Height(MatrixRowHeight));
             for (int col = 0; col < containers.Count; col++)
@@ -165,7 +157,6 @@ namespace Drova_Modding_API.Systems.Spawning
                 GUILayout.Label(isSelectedCol ? $">{shortName}" : shortName, _cellHeaderStyle!, GUILayout.Width(DataCellWidth), GUILayout.Height(MatrixRowHeight));
             }
             GUILayout.EndHorizontal();
-            // Data rows
             for (int row = 0; row < containers.Count; row++)
             {
                 AlignmentContainer rowContainer = containers[row];
@@ -198,12 +189,10 @@ namespace Drova_Modding_API.Systems.Spawning
         };
         private static string GetShortName(string name)
         {
-            // "Alignment_Wild_Human" -> "Wild_Human"
             int idx = name.IndexOf('_');
             return idx > 0 && idx < name.Length - 1 ? name[(idx + 1)..] : name;
         }
-        // -- Caching -----------------------------------------------------------
-        private void EnsureContainerCache()
+        private void LoadContainerCache()
         {
             if (_cachedContainers != null)
                 return;
@@ -211,9 +200,8 @@ namespace Drova_Modding_API.Systems.Spawning
         }
         private void RefreshContainerCache()
         {
-            EnsureMatrixCache();
+            LoadMatrixCache();
 
-            // Merge matrix containers and all discovered containers.
             // Matrix entries are added first to prefer canonical runtime references.
             Dictionary<string, AlignmentContainer> uniqueByName = new(StringComparer.OrdinalIgnoreCase);
 
@@ -248,7 +236,7 @@ namespace Drova_Modding_API.Systems.Spawning
             _cachedContainers = [.. uniqueByName.Values];
             _cachedContainers.Sort((a, b) => string.Compare(a.name, b.name, StringComparison.OrdinalIgnoreCase));
         }
-        private void EnsureMatrixCache()
+        private void LoadMatrixCache()
         {
             if (_cachedMatrix != null)
                 return;
@@ -266,7 +254,6 @@ namespace Drova_Modding_API.Systems.Spawning
             }
             return null;
         }
-        // -- Parsing -----------------------------------------------------------
         private static AlignmentContainerModuleState Parse(string? payload)
         {
             if (string.IsNullOrWhiteSpace(payload))
@@ -281,7 +268,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private void EnsureUiState(string? payload)
+        private void SyncUiState(string? payload)
         {
             string normalizedPayload = payload ?? string.Empty;
             if (string.Equals(_lastPayload, normalizedPayload, StringComparison.Ordinal))
@@ -290,8 +277,7 @@ namespace Drova_Modding_API.Systems.Spawning
             _serializedPayload = JsonSerializer.Serialize(_cachedState);
             _lastPayload = normalizedPayload;
         }
-        // -- Styles ------------------------------------------------------------
-        private static void EnsureCellStyles()
+        private static void CreateCellStyles()
         {
             _cellFriendlyStyle ??= new GUIStyle(GUI.skin.box) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };
             _cellFriendlyStyle.normal.textColor = new Color(0.2f, 0.9f, 0.2f);
@@ -314,7 +300,6 @@ namespace Drova_Modding_API.Systems.Spawning
             _infoStyle.normal.textColor = Color.gray;
             return _infoStyle;
         }
-        // -- State -------------------------------------------------------------
         private sealed class AlignmentContainerModuleState
         {
             /// <summary>

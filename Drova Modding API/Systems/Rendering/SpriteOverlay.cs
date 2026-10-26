@@ -6,23 +6,10 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Rendering
 {
     /// <summary>
-    /// Draws mod content over existing world art by parenting a child SpriteRenderer onto the
-    /// original. Encapsulates four field-learned traps that make naive overlays look wrong:
-    ///
-    /// 1. MATERIAL - Unity's default sprite material is unlit and lacks Drova's shader
-    ///    properties. The overlay must copy the parent's shared material (the Just2D shader) or
-    ///    it renders flat, ignores scene lighting/water, and can never be tinted by the game.
-    /// 2. HIGHLIGHT - the interact outline/flash (<c>Interact_Bhvr_FeedbackOutline</c>) works
-    ///    through the art's <see cref="Just2D_SpriteRenderer"/> wrapper, which property-blocks
-    ///    <c>_OverrideColor</c>/<c>_OutlineColor</c> onto every renderer in its list. The overlay
-    ///    registers itself there so it flashes in lockstep with the art it covers.
-    /// 3. ATLAS TRIM - packed sprites are trimmed: the runtime rect (which the pivot is relative
-    ///    to) is larger than the packed content, offset by <c>textureRectOffset</c>. Positions
-    ///    measured in packed-image pixels must add that offset; see
-    ///    <see cref="TryGetPackedContentOffset"/>.
-    /// 4. LIFETIME - overlays are children of streamed scene objects and die with them. Use
-    ///    <see cref="Destroy"/> for manual removal so the highlight wrapper is deregistered
-    ///    first, or it warns about an unassigned renderer on every later highlight.
+    /// Draws mod content over existing world art by parenting a child SpriteRenderer onto the original.
+    /// The overlay copies the parent's Just2D material so it takes scene lighting and tints, and joins the art's
+    /// <see cref="Just2D_SpriteRenderer"/> so the interact highlight flashes it too. Overlays die with their streamed
+    /// scene; remove one by hand only through <see cref="Destroy"/>, or the highlight wrapper warns on every later highlight.
     /// </summary>
     public static class SpriteOverlay
     {
@@ -35,19 +22,17 @@ namespace Drova_Modding_API.Systems.Rendering
         /// behavior follow the parent.
         /// </summary>
         /// <param name="parent">The renderer to draw over.</param>
-        /// <param name="sprite">The sprite to display (see <see cref="CreateRuntimeSprite"/>).</param>
-        /// <param name="localOffset">Offset from the parent's transform, in world units (for a
-        /// ppu-1 sprite: rect pixels). For "cover region (x,y,w,h) of the parent sprite" compute
-        /// <c>((x + w/2 - pivot.x) / ppu, (y + h/2 - pivot.y) / ppu)</c> and add the trim offset
-        /// when the region was measured on the packed image.</param>
-        /// <param name="name">GameObject name; pick a distinctive prefix so your own sweeps can
-        /// recognize (and skip) overlays you already created.</param>
+        /// <param name="sprite">The sprite to display, see <see cref="CreateRuntimeSprite"/>.</param>
+        /// <param name="localOffset">Offset from the parent's transform in world units. To cover region (x,y,w,h) of the
+        /// parent sprite use <c>((x + w/2 - pivot.x) / ppu, (y + h/2 - pivot.y) / ppu)</c>, plus the trim offset when
+        /// the region was measured on the packed image.</param>
+        /// <param name="name">GameObject name. A distinctive prefix lets your own sweeps skip overlays you already created.</param>
         /// <returns>The overlay GameObject, or null when creation failed.</returns>
         public static GameObject? Create(SpriteRenderer parent, Sprite sprite, Vector2 localOffset, string name)
         {
             try
             {
-                EnsurePruneHook();
+                HookPruneOnce();
                 GameObject overlayObject = new(name);
                 overlayObject.transform.SetParent(parent.transform, false);
                 overlayObject.transform.localPosition = new Vector3(localOffset.x, localOffset.y, 0f);
@@ -79,8 +64,7 @@ namespace Drova_Modding_API.Systems.Rendering
         }
 
         /// <summary>
-        /// Destroy an overlay created by <see cref="Create"/>, deregistering it from the
-        /// highlight wrapper first so it no longer warns on later highlights.
+        /// Destroy an overlay created by <see cref="Create"/>, deregistering it from the highlight wrapper first.
         /// </summary>
         /// <param name="overlay">The overlay GameObject (null is tolerated).</param>
         public static void Destroy(GameObject? overlay)
@@ -106,10 +90,9 @@ namespace Drova_Modding_API.Systems.Rendering
         }
 
         /// <summary>
-        /// Drop registrations whose overlay was destroyed with its streamed scene, so the list
-        /// cannot grow without bound over a long session. Wired to scene unload on first use.
+        /// Drops registrations whose overlay died with its streamed scene, so the list cannot grow over a long session.
         /// </summary>
-        private static void EnsurePruneHook()
+        private static void HookPruneOnce()
         {
             if (_pruneHooked)
             {
@@ -137,16 +120,14 @@ namespace Drova_Modding_API.Systems.Rendering
         }
 
         /// <summary>
-        /// Build a pixel-art sprite from raw pixels, configured the way world art expects:
-        /// point filtering (no bilinear smear), clamped wrap, centered pivot, and
-        /// <see cref="HideFlags.HideAndDontSave"/> so scene unloads never try to serialize it.
+        /// Build a pixel-art sprite from raw pixels the way world art expects: point filtering, clamped wrap, centered pivot,
+        /// and <see cref="HideFlags.HideAndDontSave"/> so scene unloads never try to serialize it.
         /// </summary>
-        /// <param name="pixels">Row-major, BOTTOM-UP pixel rows (Unity's SetPixels32 order).</param>
+        /// <param name="pixels">Row-major, bottom-up pixel rows (SetPixels32 order).</param>
         /// <param name="width">Texture width in pixels.</param>
         /// <param name="height">Texture height in pixels.</param>
         /// <param name="pixelsPerUnit">Use the parent sprite's ppu so sizes line up.</param>
-        /// <param name="name">Asset name. Give your mod's assets a recognizable prefix and check
-        /// for it before transforming sprites, so a swapped asset is never re-swapped.</param>
+        /// <param name="name">Asset name. A recognizable prefix lets you skip already swapped assets.</param>
         /// <returns>The sprite, or null when the arguments are invalid.</returns>
         public static Sprite? CreateRuntimeSprite(Color32[] pixels, int width, int height, float pixelsPerUnit, string name)
         {
@@ -185,11 +166,8 @@ namespace Drova_Modding_API.Systems.Rendering
         }
 
         /// <summary>
-        /// Where the packed (trimmed) content sits inside the sprite's runtime rect. Drova's
-        /// atlases trim sprites (e.g. a 72x72 plate packs 67x67 content at ~(2.08, 3.08)), and
-        /// <c>Sprite.pivot</c> is RECT-relative - so any position measured on the packed image
-        /// (exported art, offline calibration) must add this offset before being used against
-        /// the pivot. Zero for unpacked sprites.
+        /// Where the trimmed content sits inside the sprite's runtime rect. Drova's atlases trim sprites and the pivot is
+        /// rect-relative, so a position measured on the packed image must add this offset. Zero for unpacked sprites.
         /// </summary>
         /// <param name="sprite">The sprite.</param>
         /// <param name="offset">The content offset in rect pixels.</param>

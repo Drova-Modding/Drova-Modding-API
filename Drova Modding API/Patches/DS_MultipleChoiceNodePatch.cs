@@ -6,7 +6,6 @@ internal static class DS_MultipleChoiceNodePatch
 {
     private static bool Prefix(int index, DS_MultipleChoiceNode __instance)
     {
-        // NO audio don't do anything
         if (__instance.availableChoices[index].statement.audio == null) return true;
         DS_MultipleChoiceNode.__c__DisplayClass26_0 __c__DisplayClass26_ = new()
         {

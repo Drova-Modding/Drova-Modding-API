@@ -1,4 +1,4 @@
-﻿using Il2CppRewired;
+using Il2CppRewired;
 
 namespace Drova_Modding_API.Access
 {
@@ -7,6 +7,8 @@ namespace Drova_Modding_API.Access
     /// </summary>
     public static class InputAccess
     {
+        private static readonly HashSet<string> GameplayInputBlockers = [];
+
         /// <summary>
         /// Gets the current device in use
         /// </summary>
@@ -59,6 +61,26 @@ namespace Drova_Modding_API.Access
         public static string GetLocalizedAnimText(string actionName)
         {
             return Il2CppCustomFramework.InputHandling.InputSystem.GetLocalizedAnimText(actionName);
+        }
+
+        /// <summary>
+        /// Blocks gameplay input while any owner holds a block. Mod windows should use this instead of toggling the maps,
+        /// so one window closing does not unblock input while another is open.
+        /// </summary>
+        /// <param name="owner">Who blocks, for example the window's name.</param>
+        /// <param name="blocked">True to hold a block, false to release it.</param>
+        public static void SetGameplayInputBlocked(string owner, bool blocked)
+        {
+            if (blocked)
+            {
+                GameplayInputBlockers.Add(owner);
+            }
+            else
+            {
+                GameplayInputBlockers.Remove(owner);
+            }
+
+            ToggleGameplayActionMaps(GameplayInputBlockers.Count == 0);
         }
 
         /// <summary>
@@ -125,7 +147,6 @@ namespace Drova_Modding_API.Access
         /// </summary>
         private static void SaveRemapping(InputMapper.InputMappedEventData data)
         {
-            // Save the remapping
             ReInput.userDataStore.Save();
         }
 

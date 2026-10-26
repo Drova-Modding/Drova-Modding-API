@@ -17,7 +17,6 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         /// <summary>
         /// Adds an item to the equipment preset.
         /// </summary>
-        /// <param name="item">The item reference to add</param>
         /// <returns>This preset for chaining</returns>
         public EquipmentPresetModule With(AssetReferenceT<Item> item)
         {
@@ -43,7 +42,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         {
             var inventory = context.GetComponentInChildren<Inventory_StartupEquipSettings>();
             if (inventory == null) return;
-            var equipPreset = EquipPresetHelper.EnsureInitialized(inventory);
+            var equipPreset = EquipPresetHelper.GetOrCreatePreset(inventory);
 
             SubDatabase_Item? database = ProviderAccess.ItemDatabase;
             foreach (var readableId in _readableIds)

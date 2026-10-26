@@ -9,7 +9,6 @@ namespace Drova_Modding_API.Access
     /// </summary>
     public static class RegionAccess
     {
-        // Reused so the common question does not allocate a list every time it is asked.
         private static readonly List<Region> RegionBuffer = new();
 
         private static RegionChanged? _subscribers;
@@ -31,8 +30,7 @@ namespace Drova_Modding_API.Access
             }
             remove
             {
-                // Only the API's own forwarder is ever subscribed to the system, so a mod's handler is
-                // removed here and nowhere else.
+                // Only the API's forwarder is subscribed to the system, so a mod's handler lives here alone.
                 _subscribers -= value;
             }
         }

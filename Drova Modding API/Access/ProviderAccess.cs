@@ -536,7 +536,7 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Congition Manager
+        /// Cognition manager
         /// </summary>
         public static bool TryGetCognitionOctreeManager([NotNullWhen(true)] out CognitionOctreeManager? cognitionOctreeManager)
         {

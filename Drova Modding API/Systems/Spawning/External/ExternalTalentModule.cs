@@ -22,9 +22,9 @@ namespace Drova_Modding_API.Systems.Spawning
 
         public string DrawWizardUiAndSerialize(string payload)
         {
-            EnsureUiState(payload);
+            SyncUiState(payload);
 
-            EnsureEditorDataSource();
+            LoadEditorDataSource();
             string? rawInput = _rawInput;
 
             ReadableIdModuleSupport.DrawEditor(
@@ -75,7 +75,7 @@ namespace Drova_Modding_API.Systems.Spawning
             }
         }
 
-        private void EnsureUiState(string? payload)
+        private void SyncUiState(string? payload)
         {
             string normalizedPayload = payload ?? string.Empty;
             if (string.Equals(_lastPayload, normalizedPayload, StringComparison.Ordinal))
@@ -87,7 +87,7 @@ namespace Drova_Modding_API.Systems.Spawning
             _lastPayload = normalizedPayload;
         }
 
-        private void EnsureEditorDataSource()
+        private void LoadEditorDataSource()
         {
             if (_editorDataSource != null)
                 return;
@@ -111,9 +111,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
         private static string? TryGetName(Il2CppDrova.Talent.TalentContainer talent)
         {
-            // The cached containers come from Resources.FindObjectsOfTypeAll; some may be
-            // destroyed by the time the wizard draws, in which case get_name() raises a
-            // native NRE through Il2CppInterop. Skip those defensively.
+            // Containers from FindObjectsOfTypeAll may be destroyed by now, and reading their name then throws.
             try
             {
                 return talent.name;

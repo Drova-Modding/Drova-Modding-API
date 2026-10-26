@@ -8,7 +8,7 @@ namespace Drova_Modding_API.Access
     /// Deals damage to an actor, and heals one, through the game's own damage path.
     /// Use this rather than writing <c>Health._curHealth</c> or calling <c>Health.SetHealth</c>: a raw write that
     /// reaches zero skips the damage blockers and latches <c>_isDead</c>, which nothing ever clears.
-    /// The amount is always a positive magnitude; the <see cref="DamageStatDesc"/> decides whether it heals or hurts,
+    /// The amount is always a positive magnitude. The <see cref="DamageStatDesc"/> decides whether it heals or hurts,
     /// and the target's own defenses still apply.
     /// </summary>
     public static class DamageAccess
@@ -36,10 +36,8 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Deals damage of a given type to a health component. See
-        /// <see cref="TryApplyDamage(Actor, int, DamageStatDesc, Entity)"/> for what
-        /// <paramref name="source"/> means and why it is usually null; this overload only saves the
-        /// lookup for callers that already hold the component.
+        /// Deals damage of a given type to a health component the caller already holds. See
+        /// <see cref="TryApplyDamage(Actor, int, DamageStatDesc, Entity)"/> for why <paramref name="source"/> is usually null.
         /// </summary>
         /// <param name="target">The health component to damage.</param>
         /// <param name="amount">How much to deal, as a positive magnitude before the target's defenses.</param>
@@ -68,8 +66,7 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Deals physical damage, the type essentially every weapon in the game deals, and the one to
-        /// reach for when a mod has a number and no particular opinion about what kind of damage it is.
+        /// Deals physical damage, the type nearly every weapon deals and the default when the kind does not matter.
         /// </summary>
         /// <param name="target">The actor to damage.</param>
         /// <param name="amount">How much to deal, as a positive magnitude before the target's defenses.</param>

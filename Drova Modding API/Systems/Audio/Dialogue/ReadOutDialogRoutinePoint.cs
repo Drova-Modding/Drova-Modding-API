@@ -1,6 +1,5 @@
 ﻿using Il2Cpp;
 using Il2CppDrova.Routine;
-using MelonLoader;
 using System.Text;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue
@@ -19,11 +18,6 @@ namespace Drova_Modding_API.Systems.Audio.Dialogue
             {
                 DialogRoutinePoint point = points[i];
                 Il2CppDrova.DialogueNew.WorldDialogueStarterModule dialogues = point._worldDialogueStarterModule;
-
-                if (dialogues._worldDialogueSettings.Args.Count == 0)
-                {
-                    MelonLogger.Msg("No dialogues found for: " + point.name + " "  + point.transform.parent.name + " " + point.transform.parent.parent.name);
-                }
             
 
                 for (int j = 0; j < dialogues._worldDialogueSettings.Args.Count; j++)

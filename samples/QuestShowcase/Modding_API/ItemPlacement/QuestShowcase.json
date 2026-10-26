@@ -1,0 +1,35 @@
+{
+  "Version": 1,
+  "Items": [
+    {
+      "Id": "showcase_apples",
+      "Item": "item_apple",
+      "Amount": 3,
+      "X": -2000,
+      "Y": -5300
+    },
+    {
+      "Id": "showcase_supplies",
+      "Item": "item_meat_raw",
+      "Amount": 2,
+      "X": -2100,
+      "Y": -5650,
+      "Conditions": [
+        {
+          "GVarList": "Q_Showcase_Tracks",
+          "Var": "QuestState",
+          "Value": "IsRunning"
+        }
+      ],
+      "TakenGVarList": "Q_Showcase_Tracks",
+      "TakenGBool": "SuppliesTaken"
+    },
+    {
+      "Id": "showcase_spezi_crate",
+      "Item": "showcase_spezi",
+      "Amount": 2,
+      "X": -2060,
+      "Y": -5350
+    }
+  ]
+}

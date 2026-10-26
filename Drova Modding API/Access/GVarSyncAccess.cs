@@ -3,15 +3,9 @@ using System.Diagnostics.CodeAnalysis;
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// Where a mod declares global variables that belong to one player rather than to the world.
-    ///
-    /// A coop session synchronizes GVar writes so quest and world state converge, and that default is
-    /// wrong for anything per-player a mod stores in a GVar. A class choice is the canonical case: two
-    /// players need not both be mages, so the variable that says so must not cross. Marking it here
-    /// keeps it at home. Marking costs nothing when no coop mod is installed.
-    ///
-    /// Names are the asset names the declaring mod authored, compared ordinally. Declare during melon
-    /// initialization, before any session can exist.
+    /// Declares how global variables cross in a co-op session, which synchronizes GVar writes by default. Mark
+    /// per-player state, like a class choice, as local. Names are asset names, compared ordinally. Declare during
+    /// melon initialization. Marking costs nothing when no co-op mod is installed.
     /// </summary>
     public static class GVarSyncAccess
     {
@@ -46,16 +40,9 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Declares that a variable's transition should play out on every machine, not only the one
-        /// that triggered it.
-        ///
-        /// A synchronised variable normally crosses as state alone: the far machine gets the value and
-        /// none of the listeners, because a quest transition's listeners can be a cutscene and a
-        /// teleport that were authored for the player standing at the trigger. A forced story sequence
-        /// is the exception. When the story captures one player, it should capture all of them, and
-        /// that only happens if the transition runs everywhere. A join catch-up skips these variables
-        /// entirely: their value alone re-stages the gate when its scene loads, so writing it into a
-        /// joining player's world would capture them retroactively.
+        /// Declares that a variable's transition, listeners included, plays out on every machine, for forced story
+        /// sequences that should capture every player. A synchronized variable otherwise crosses as its value alone.
+        /// A join catch-up skips these, since the value alone would re-stage the gate around the joining player.
         /// </summary>
         /// <param name="listName">The owning list's asset name.</param>
         /// <param name="varName">The variable's asset name.</param>
@@ -67,22 +54,14 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Declares a GVar list as the state of a scripted story sequence.
-        ///
-        /// Such a list is a stage script, not a record: its variables say where the player is held,
-        /// which actors stand where, and which stage directions are armed, and the game's graphs poll
-        /// those values continuously. Copied into another player's world they re-enact the whole
-        /// scene there - the player is ported, actors move, the set is rebuilt. A finished sequence
-        /// is no safer than a running one, because the graph's own progress lives in the scene and
-        /// never crosses: a fresh graph handed a finished sequence's values runs the staging from the
-        /// top. So a sequence list never rides in a join catch-up. Live changes still cross while
-        /// players experience the sequence together.
+        /// Declares a GVar list as the state of a scripted story sequence. The game's graphs poll such a list
+        /// continuously, so copied into a joining player's world it re-enacts the scene from the top, even when
+        /// finished. It never rides in a join catch-up, while live changes still cross.
         /// </summary>
         /// <param name="listName">The list's asset name.</param>
         /// <param name="questListName">
-        /// The list whose quest-state variable says whether this sequence is running, for stage
-        /// lists that carry none of their own. A quest arc keeps parallel per-day lists, and whether
-        /// their live stage values may land is decided by the arc's quest, not by the day list.
+        /// The list whose quest-state variable says whether this sequence is running, for stage lists that carry
+        /// none of their own, such as a quest arc's per-day lists.
         /// </param>
         public static void MarkStorySequence(string listName, string? questListName = null)
         {
@@ -124,13 +103,9 @@ namespace Drova_Modding_API.Access
         public static IEnumerable<string> StorySequenceLists => StorySequences;
 
         /// <summary>
-        /// Declares that a variable's live transition should play out loudly on every machine, while
-        /// a join catch-up still applies its value silently.
-        ///
-        /// The mark for world milestones like a chapter change: the moment should be experienced by
-        /// everyone connected, but a joining player receives it as settled state, not as an event.
-        /// Journey-shared is the stronger cousin - its values never ride in a catch-up at all,
-        /// because they enforce a player state on arrival.
+        /// Declares that a variable's live transition plays out loudly on every machine, while a join catch-up
+        /// applies its value silently. For world milestones like a chapter change. Unlike
+        /// <see cref="MarkJourneyShared"/>, the value still rides in a catch-up.
         /// </summary>
         /// <param name="listName">The owning list's asset name.</param>
         /// <param name="varName">The variable's asset name.</param>

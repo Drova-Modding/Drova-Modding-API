@@ -1,0 +1,51 @@
+{
+  "Version": 1,
+  "Items": [
+    {
+      "ReadableId": "showcase_spezi",
+      "Base": "item_salve_healing",
+      "LocaPath": "QuestShowcase",
+      "BuyValue": 60,
+      "SellValue": 12,
+      "EffectStacks": 9,
+      "Ability": {
+        "ABI_HealthValue": 3
+      },
+      "Icon": "spezi.png"
+    },
+    {
+      "ReadableId": "showcase_letter",
+      "Base": "item_letterFromEtzel",
+      "LocaPath": "QuestShowcase",
+      "Letter": {
+        "TextKey": "showcase_letter_text"
+      }
+    },
+    {
+      "ReadableId": "showcase_swift_missile",
+      "Base": "flow_energyProjectile",
+      "LocaPath": "QuestShowcase",
+      "Ability": {
+        "Move_ForwardForce": 540,
+        "ABI_Lifetime": 6,
+        "ABI_EnergyProjectile_Explosion/Dmg_Properties[0]": 500
+      }
+    },
+    {
+      "ReadableId": "showcase_recipe_swift_missile",
+      "Base": "recipe_flow_energyProjectile",
+      "LocaPath": "QuestShowcase",
+      "BuyValue": 400,
+      "LearnSpell": "showcase_swift_missile"
+    },
+    {
+      "ReadableId": "showcase_ripper_form",
+      "Base": "flow_energyProjectile",
+      "LocaPath": "QuestShowcase",
+      "Morph": {
+        "Creature": "8074729ab27467d42bbb9c783c2f9758",
+        "Duration": 30
+      }
+    }
+  ]
+}

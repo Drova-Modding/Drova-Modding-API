@@ -38,10 +38,8 @@
         public bool IsAnchorRemote => AnchorPosition != null;
 
         /// <summary>
-        /// Where the event's creatures belong: the player who brought it into the region - the local player, or a co-op
-        /// teammate alone there. Spawn around this rather than around the local player.
+        /// Where the event's creatures belong: the local player, or the co-op teammate alone in the region who brought it in.
         /// </summary>
-        /// <param name="position">That player's position.</param>
         /// <returns>False when it is not known (no player yet, or the teammate's body is gone).</returns>
         public bool TryGetAnchor(out UnityEngine.Vector2 position)
         {

@@ -4,10 +4,8 @@ using Drova_Modding_API.Systems.Networking.Impl;
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// The coop mod's entry point to the networking transport. This is transport plumbing only: it
-    /// starts and stops a session, sends and receives messages, and raises connection events through
-    /// <see cref="NetworkEvents"/>. It never syncs game state and never draws UI - that is the coop
-    /// mod's job.
+    /// The co-op mod's entry point to the networking transport: sessions, messages, and connection events through
+    /// <see cref="NetworkEvents"/>. It never syncs game state or draws UI.
     /// </summary>
     public static class NetworkAccess
     {
@@ -59,20 +57,15 @@ namespace Drova_Modding_API.Access
         public static string? SessionCode => NetworkSystem.SessionCode;
 
         /// <summary>
-        /// Whether messages are encrypted end to end between the players. True only in a relay session with
-        /// a password: the password is the key material, so an open session cannot be encrypted. When this
-        /// is true the relay cannot read the traffic, and it cannot forge a message from another player
-        /// either. Every message costs 28 bytes more on the wire.
+        /// Whether messages are encrypted end to end, so the relay can neither read nor forge them. True only in a relay
+        /// session with a password, which is the key material. Every message costs 28 bytes more on the wire.
         /// </summary>
         public static bool IsEncrypted => NetworkSystem.IsEncrypted;
 
         /// <summary>
-        /// Largest payload a single message may serialize to, in bytes. A message over it is dropped
-        /// before it is sent and counted, because the relay would drop it too and say so to nobody.
-        ///
-        /// Shrinks by 28 bytes once <see cref="IsEncrypted"/> is true, since the seal travels in the same
-        /// packet. Read it after the session is up when a message is sized to fill the budget, and split
-        /// anything larger the way a chunked snapshot does.
+        /// Largest payload a single message may serialize to, in bytes. A larger message is dropped and counted, since
+        /// the relay would drop it silently. Shrinks by 28 bytes once <see cref="IsEncrypted"/> is true, so read it
+        /// after the session is up and split anything larger.
         /// </summary>
         public static int MaxPayloadSize => NetworkSystem.MaxPayloadSize;
 
@@ -85,9 +78,7 @@ namespace Drova_Modding_API.Access
         /// <param name="relayAddress">The relay's address or hostname.</param>
         /// <param name="relayPort">The relay's UDP port.</param>
         /// <param name="sessionCode">4 to 16 letters and digits, shared with the players joining. Null or
-        /// empty asks the relay to pick one, which is the better option: a relay-assigned code has real
-        /// entropy and cannot be claimed by whoever guesses it first. Read it back from
-        /// <see cref="SessionCode"/>.</param>
+        /// empty lets the relay pick one that cannot be guessed, readable from <see cref="SessionCode"/>.</param>
         /// <param name="password">Optional session password clients must match. Setting one also turns on
         /// end-to-end encryption, see <see cref="IsEncrypted"/>.</param>
         public static void StartHostViaRelay(string relayAddress, int relayPort, string? sessionCode = null, string? password = null)
@@ -223,8 +214,7 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Register a handler for raw packets on a channel. Channels 1 to 62 are available for raw
         /// traffic; channel 0 is reserved for typed messages and 63 for relay control traffic. The
-        /// handler runs on the Unity main thread. Use this only when bringing your own serialisation;
-        /// prefer <see cref="RegisterWithId{T}"/> otherwise.
+        /// handler runs on the Unity main thread. Prefer <see cref="RegisterWithId{T}"/> unless you bring your own serialization.
         /// </summary>
         /// <param name="channel">The raw channel, 1 to 62.</param>
         /// <param name="handler">Invoked with the sending peer and the raw payload.</param>

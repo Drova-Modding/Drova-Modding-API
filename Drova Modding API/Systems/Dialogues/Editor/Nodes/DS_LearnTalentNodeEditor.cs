@@ -58,7 +58,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes
             GUI.depth = 10;
             GUI.color = Color.green;
 
-            // Adjust height if dropdown is shown
             float dropdownExtraHeight = _talentDropdown.IsDropdownShown ? 200 : 0;
             NodeSizeInternal = new Vector2(300, 150 + dropdownExtraHeight);
 

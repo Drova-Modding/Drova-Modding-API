@@ -84,6 +84,6 @@
         public const string InputAction_PlayNote_4 = "PlayNote_4";
         public const string InputAction_SkipCutscene = "Dodge";
 
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member; They are self explanatory
+#pragma warning restore CS1591
     }
 }

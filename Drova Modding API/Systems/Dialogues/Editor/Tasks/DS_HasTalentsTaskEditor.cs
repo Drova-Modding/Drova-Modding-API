@@ -22,7 +22,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             _castedTask ??= Task.TryCast<DS_HasTalents>();
             if (_castedTask == null) return;
 
-            // Fetch all TalentContainers from resources
             _allTalents = Resources.FindObjectsOfTypeAll<TalentContainer>()
                 .OrderBy(t => t.name)
                 .ToArray();
@@ -51,7 +50,6 @@ namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks
             float x = position.x;
             float y = position.y;
 
-            // Background box
             Color previousColor = GUI.color;
             GUI.color = Color.cyan;
             Rect drawRect = new(x, y, width, _lastHeight);

@@ -340,16 +340,16 @@ stripped.
 
 ### Supporting types
 
-| Type                  | Members                                                                                                                                                                               |
-|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `INetPeer`            | `int Id`, `int Ping` (one-way, half the round trip), `void Disconnect()`                                                                                                              |
-| `INetMessage`         | `void Write(INetWriter)`, `void Read(INetReader)`                                                                                                                                     |
-| `INetWriter`          | `Put` for `byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`string`/`byte[]`                                                                       |
-| `INetReader`          | The matching `GetByte()` … `GetBytes()`, plus `GetString(int maxBytes)` and `GetBytes(int maxLength)` for fields with a known bound                                                   |
-| `RawHandler`          | `void (INetPeer peer, ReadOnlySpan<byte> data)`                                                                                                                                       |
-| `NetRole`             | `None`, `Host`, `Client`                                                                                                                                                              |
-| `Delivery`            | `Reliable` (default), `Unreliable`, `ReliableUnordered`, `Sequenced`, `ReliableSequenced`                                                                                             |
-| `DisconnectReason`    | `ConnectionFailed`, `Timeout`, `RemoteClose`, `LocalClose`, `Rejected`, `Unknown`, plus `SessionClosed` and `Kicked` in relay sessions                                                |
+| Type                  | Members                                                                                                                                                                                                                        |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `INetPeer`            | `int Id`, `int Ping` (one-way, half the round trip), `void Disconnect()`                                                                                                                                                       |
+| `INetMessage`         | `void Write(INetWriter)`, `void Read(INetReader)`                                                                                                                                                                              |
+| `INetWriter`          | `Put` for `byte`/`sbyte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`/`bool`/`string`/`byte[]`                                                                                                                |
+| `INetReader`          | The matching `GetByte()` … `GetBytes()`, plus `GetString(int maxBytes)` and `GetBytes(int maxLength)` for fields with a known bound                                                                                            |
+| `RawHandler`          | `void (INetPeer peer, ReadOnlySpan<byte> data)`                                                                                                                                                                                |
+| `NetRole`             | `None`, `Host`, `Client`                                                                                                                                                                                                       |
+| `Delivery`            | `Reliable` (default), `Unreliable`, `ReliableUnordered`, `Sequenced`, `ReliableSequenced`                                                                                                                                      |
+| `DisconnectReason`    | `ConnectionFailed`, `Timeout`, `RemoteClose`, `LocalClose`, `Rejected`, `Unknown`, plus `SessionClosed` and `Kicked` in relay sessions                                                                                         |
 | `ConnectionRejection` | `Unspecified`, `BadHandshake`, `BadSessionCode`, `SessionNotFound`, `SessionFull`, `DuplicateHost`, `WrongPassword`, `RelayFull`, `RateLimited`, `TooManySessions`, `TooManyAttempts`, `TooManyClients`, `PasswordNotRequired` |
 
 ## Notes & gotchas

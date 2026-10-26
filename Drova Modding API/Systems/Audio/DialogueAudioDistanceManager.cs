@@ -15,9 +15,6 @@ namespace Drova_Modding_API.Systems.Audio
     [RegisterTypeInIl2Cpp]
     public class DialogueAudioDistanceManager(IntPtr ptr) : MonoBehaviour(ptr)
     {
-        /// <summary>
-        /// Grace time in frames for the playback to start
-        /// </summary>
         private const int START_PLAYBACK_GRACE_FRAMES = 120;
         private const float DEFAULT_MIN_DISTANCE = 100f;
         private const float DEFAULT_MAX_DISTANCE = 425f;
@@ -34,7 +31,7 @@ namespace Drova_Modding_API.Systems.Audio
 
         /// <summary>Full volume up to this distance (world units).</summary>
         public float MinDistance = DEFAULT_MIN_DISTANCE;
-        /// <summary> The speed </summary>
+        /// <summary>How fast the volume eases toward its distance-based target.</summary>
         public float VolumeLerpSpeed  = DEFAULT_VOLUME_LERP_SPEED;
 
         /// <summary>Fully silent at this distance (world units) and beyond.</summary>
@@ -46,12 +43,10 @@ namespace Drova_Modding_API.Systems.Audio
         [HideFromIl2Cpp]
         public static DialogueAudioDistanceManager? Instance => _instance;
 
-        // Each entry pairs an AudioSource with the Transform of the speaking actor.
         private readonly List<RegisteredDialogueSource> _registeredSources = [];
 
         internal void Awake()
         {
-            AudioLog.Msg("Initializing DialogueAudioDistanceManager");
             if (_instance != null)
             {
                 AudioLog.Warning("DialogueAudioDistanceManager already exists, destroying duplicate.");
@@ -98,7 +93,6 @@ namespace Drova_Modding_API.Systems.Audio
         public void Register(AudioSource source, Transform actorTransform)
         {
             if (source == null || actorTransform == null) return;
-            AudioLog.Msg($"Registering dialogue audio source for actor {actorTransform.name}");
             Unregister(source);
             _registeredSources.Add(new RegisteredDialogueSource(source, actorTransform));
         }
@@ -134,27 +128,12 @@ namespace Drova_Modding_API.Systems.Audio
 
                 if (source == null || actorTransform == null)
                 {
-                    List<string> reasons = [];
-                    if (source == null)
-                    {
-                        reasons.Add("AudioSource is null");
-                    }
-                    if (actorTransform == null)
-                    {
-                        reasons.Add("actor Transform is null");
-                    }
-                    AudioLog.Msg($"Unregistering dialogue audio source for actor {(actorTransform == null ? "<unknown>" : actorTransform.name)}: {string.Join(", ", reasons)}");
                     _registeredSources.RemoveAt(i);
                     continue;
                 }
 
                 if (source.isPlaying)
                 {
-                    if (!entry.HasStartedPlaying)
-                    {
-                        AudioLog.Msg($"Dialogue audio source for actor {actorTransform.name} started playing after {entry.FramesSinceRegistration} update(s)");
-                    }
-
                     entry.HasStartedPlaying = true;
                 }
                 else if (!entry.HasStartedPlaying)
@@ -171,7 +150,6 @@ namespace Drova_Modding_API.Systems.Audio
                 }
                 else
                 {
-                    AudioLog.Msg($"Unregistering dialogue audio source for actor {actorTransform.name}: AudioSource stopped playing");
                     _registeredSources.RemoveAt(i);
                     continue;
                 }

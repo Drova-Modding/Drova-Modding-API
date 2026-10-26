@@ -15,10 +15,8 @@ namespace Drova_Modding_API.Systems.Audio
         internal static IAudioHandler _audioHandler = new DefaultAudioHandler();
 
         /// <summary>
-        /// The clip of an answer the player can pick in a dialogue window, by the index the window settles it with: from the
-        /// choice node the window stands on (inside a running sub-dialogue if there is one), loaded on demand and kept on the
-        /// choice. The clips loaded with a tree asset never reach the copy of the tree a conversation runs on, so an answer
-        /// is looked up when it is picked, as a spoken line is when it is said.
+        /// The clip of an answer in the choice node a dialogue window stands on, loaded on demand when it is picked,
+        /// since clips loaded with a tree asset never reach the copy of the tree a conversation runs on.
         /// </summary>
         /// <returns>The clip, or null when the answer has none, there is no choice node, or another connector is in place.</returns>
         public static UnityEngine.AudioClip? AnswerClip(Il2CppNodeCanvas.DialogueTrees.UI.DS_DialogueUGUI window, int index)
@@ -66,7 +64,6 @@ namespace Drova_Modding_API.Systems.Audio
         /// <summary>
         /// Replace the current DialogueAudioConnector with a new one
         /// </summary>
-        /// <param name="dialogueAudioConnector">new DialogueAudioConnector</param>
         public static void ReplaceDialogueAudioConnector(IAudioConnector dialogueAudioConnector)
         {
             _dialogueAudioConnector = dialogueAudioConnector;
@@ -75,7 +72,6 @@ namespace Drova_Modding_API.Systems.Audio
         /// <summary>
         /// Replace the current AudioHandler with a new one
         /// </summary>
-        /// <param name="audioHandler">new AudioHandler</param>
         public static void ReplaceAudioHandler(IAudioHandler audioHandler)
         {
             _audioHandler = audioHandler;

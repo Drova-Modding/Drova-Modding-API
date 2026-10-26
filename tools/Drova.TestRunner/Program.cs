@@ -19,11 +19,14 @@ namespace Drova.TestRunner;
 /// <list type="bullet">
 /// <item><c>launch A [extra game args]</c> - start Drova.exe as profile A with its own agent port, wait for the agent.</item>
 /// <item><c>attach A &lt;port&gt;</c> - use an instance that is already running with <c>--agent-port</c>.</item>
+/// <item><c>stop A</c> - end that instance's game; <c>launch A</c> starts it again.</item>
 /// <item><c>A &lt;agent command&gt;</c> - send it (see TestAgent for the built-in commands; mods add their own); an <c>err</c> fails the scenario.</item>
 /// <item><c>A wait key=value [timeout=s]</c> - poll <c>state</c> until it holds; a value of <c>*</c> means "anything but -".</item>
 /// <item><c>A ?&lt;agent command&gt;</c> - send it and ignore a failing answer.</item>
 /// <item><c>A expect &lt;agent command&gt; == text [timeout=s]</c>, <c>contains text</c>, <c>!contains text</c>, <c>&gt;= number</c> or <c>&lt;= number</c> - poll the command until its answer matches.</item>
 /// <item><c>sleep &lt;seconds&gt;</c>, <c>set name value</c>, <c>default name value</c> (a -D wins), <c>include &lt;file&gt;</c>.</item>
+/// <item><c>copy &lt;file&gt; &lt;game-relative path&gt;</c> - copy a fixture next to the scenario into the game folder, such as a
+/// layout under <c>Mods/Modding_API</c>. Before the <c>launch</c> that should read it.</item>
 /// </list>
 /// <c>$name</c> is replaced by a variable; <c>$A.key</c> by that key from A's last <c>state</c>.
 /// Exit code 0 when every step of every scenario passed, 1 otherwise.
@@ -232,8 +235,8 @@ internal static class Program
     }
 
     /// <summary>
-    /// Copies the newest MelonLoader log of each instance next to the scenario, under failed-logs: the game keeps a
-    /// limited number, and a batch of runs rotated the logs of a failure away before anyone read them.
+    /// Copies the newest MelonLoader log of each instance next to the scenario, under failed-logs, before the game
+    /// rotates it away.
     /// </summary>
     /// <returns>Where they were kept, or null.</returns>
     private static string? KeepLogs(string scenario, int instances)
@@ -277,6 +280,16 @@ internal static class Program
             case "attach":
                 return Attach(words[1], int.Parse(words[2]));
 
+            // "stop B": ends that instance's game, so a scenario can start it again (changed files, a rejoin).
+            case "stop":
+                if (_instances.Remove(words[1], out Instance? stopped) && stopped != null)
+                {
+                    stopped.Dispose(keep: false);
+                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                }
+
+                return null;
+
             case "sleep":
                 Thread.Sleep(TimeSpan.FromSeconds(double.Parse(words[1], System.Globalization.CultureInfo.InvariantCulture)));
                 return null;
@@ -286,7 +299,7 @@ internal static class Program
                 return null;
 
             // "capture <name> <instance> <command>": the answer (without "ok ") kept as $name, so one machine's value can be
-            // expected on another - a teammate's max health read off their own player.
+            // expected on another.
             case "capture":
             {
                 if (words.Length < 4 || !_instances.TryGetValue(words[2], out Instance? source) || source == null) return "capture needs <name> <instance> <command>";
@@ -301,6 +314,15 @@ internal static class Program
             case "track":
                 Recorder.Track(words[1]);
                 return null;
+
+            case "copy":
+            {
+                string destination = Path.Combine(_gameDir!, step.Substring(step.LastIndexOf(' ') + 1));
+                string source = step.Substring(5, step.LastIndexOf(' ') - 5);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                File.Copy(source, destination, true);
+                return null;
+            }
 
             // Like set, but a -D on the command line wins.
             case "default":
@@ -325,8 +347,7 @@ internal static class Program
             return Expect(target, rest.Substring(6).Trim());
         }
 
-        // "A ?command": sent, answered, never failing - a blow at a wave that may already be gone, a hit on a name
-        // that is not always there.
+        // "A ?command": sent and answered, never failing, for a target that may already be gone.
         if (rest.StartsWith('?'))
         {
             Console.Write("  -> " + Shorten(target.Send(rest.Substring(1))));
@@ -350,10 +371,8 @@ internal static class Program
         // with an A and B kept running; other names count up from the first.
         int port = name.Length == 1 && char.IsLetter(name[0]) ? FirstPort + char.ToUpperInvariant(name[0]) - 'A' : FirstPort + _instances.Count;
 
-        // A test instance renders windowed at 1280x720 (ConsolePlacer then fits it into its half of the second monitor),
-        // not at the screen's native resolution: two or three native instances kept
-        // the GPU hot for nothing. Unity's own flags, placed before `extra` so a scenario can still override them. More logs
-        // kept than MelonLoader's ten: a run of several scenarios rotated the failing one's logs away before anyone read them.
+        // Windowed at 1280x720 so several instances do not keep the GPU busy at native resolution. Unity's flags go before
+        // `extra` so a scenario can override them. More logs than MelonLoader's ten, so a failure's logs survive a suite.
         Process process = Process.Start(new ProcessStartInfo(exe, $"--profile {name} --agent-port {port} -screen-fullscreen 0 -screen-width 1280 -screen-height 720 --melonloader.maxlogs 60 {extra}")
         {
             WorkingDirectory = _gameDir,
@@ -366,11 +385,9 @@ internal static class Program
         Instance instance = new(name, port, process);
         _instances[name] = instance;
 
-        // MelonLoader's first start per instance generates nothing new, but loading the game still takes a while.
         if (instance.Connect(TimeSpan.FromMinutes(3))) return null;
 
-        // The game sometimes hangs for good while loading mods, right after the agent starts (about 1 launch in 6):
-        // one fresh start, not a failed scenario.
+        // The game sometimes hangs for good while loading mods, right after the agent starts. It gets one fresh start.
         instance.Dispose();
         if (retry)
         {
@@ -494,9 +511,18 @@ internal static class Program
         {
             string line = StripComment(raw);
 
+            string folder = Path.GetDirectoryName(Path.GetFullPath(path))!;
             if (line.StartsWith("include ", StringComparison.OrdinalIgnoreCase))
             {
-                lines.AddRange(Expand(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, line.Substring(8).Trim())));
+                lines.AddRange(Expand(Path.Combine(folder, line.Substring(8).Trim())));
+                continue;
+            }
+
+            // The fixture is resolved here, where the scenario's own folder is known.
+            if (line.StartsWith("copy ", StringComparison.OrdinalIgnoreCase))
+            {
+                string[] words = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                lines.Add($"copy {Path.Combine(folder, words[1])} {words[2]}");
                 continue;
             }
 

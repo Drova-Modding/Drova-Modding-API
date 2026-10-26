@@ -8,8 +8,7 @@ using UnityEngine;
 namespace Drova_Modding_API.Systems.Spawning;
 
 /// <summary>
-/// Encapsulates dialogue-related wizard actions (open, load, save) so the UI layer
-/// stays focused on input and rendering concerns.
+/// Dialogue actions of the NPC wizard: open, load and save.
 /// </summary>
 internal sealed class NpcWizardDialogueService
 {
@@ -47,7 +46,7 @@ internal sealed class NpcWizardDialogueService
         if (!TryEnsureDialogueGraphForActor(actor, controller, dialogueId, setStatus, markCurrentDialogueAsLoaded, clearDialogueLoadedMarker))
             return false;
 
-        EnsureWizardGraphEditor();
+        FindOrCreateWizardGraphEditor();
         if (_graphEditorManager == null)
         {
             setStatus("Failed to initialize graph editor.");
@@ -218,7 +217,7 @@ internal sealed class NpcWizardDialogueService
         endNode.availableChoices.Add(new DS_MultipleChoiceNode.Choice
         {
             statement = statementEnd,
-            isEndNode = true,
+            isEndNode = false,
             UID = Il2CppSystem.Guid.NewGuid().ToString()
         });
         endNode.TryGenerateUID();
@@ -229,11 +228,11 @@ internal sealed class NpcWizardDialogueService
         return tree;
     }
 
-    private void EnsureWizardGraphEditor()
+    private void FindOrCreateWizardGraphEditor()
     {
         if (_graphEditorManager != null)
         {
-            EnsureLifecycleWatcher(_graphEditorManager.gameObject);
+            AttachLifecycleWatcher(_graphEditorManager.gameObject);
             return;
         }
 
@@ -248,10 +247,10 @@ internal sealed class NpcWizardDialogueService
         if (_graphEditorManager == null)
             _graphEditorManager = graphEditorRoot.AddComponent<GraphEditorManager>();
 
-        EnsureLifecycleWatcher(graphEditorRoot);
+        AttachLifecycleWatcher(graphEditorRoot);
     }
 
-    private void EnsureLifecycleWatcher(GameObject graphEditorRoot)
+    private void AttachLifecycleWatcher(GameObject graphEditorRoot)
     {
         DialogueEditorLifecycleWatcher watcher = graphEditorRoot.GetComponent<DialogueEditorLifecycleWatcher>();
         if (watcher == null)
