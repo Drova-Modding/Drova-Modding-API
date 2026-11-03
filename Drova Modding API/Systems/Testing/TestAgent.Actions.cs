@@ -1,9 +1,12 @@
-﻿using System.Globalization;
+﻿using System.Collections;
+using System.Globalization;
 using System.Text;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Morphing;
+using Drova_Modding_API.Systems.Spawning;
 using Il2CppDrova;
 using Il2CppDrova.ActorActions;
+using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Testing
@@ -24,6 +27,13 @@ namespace Drova_Modding_API.Systems.Testing
         private static readonly List<(Il2CppDrova.Items.Item Item, float At)> _itemEnds = new();
 
         private static Actor? _logged;
+
+        /// <summary>The health <c>health &lt;target&gt; mark</c> remembered, by target as written.</summary>
+        private static readonly Dictionary<string, int> HealthMarks = new();
+
+        /// <summary>The experience <c>xp mark</c> remembered.</summary>
+        private static int _experienceMark;
+
         private static readonly List<string> ActionLog = new();
         private static (IntPtr Instance, int Usage, int Combo) _loggedInstance;
         private static string? _loggedToken;
@@ -119,16 +129,62 @@ namespace Drova_Modding_API.Systems.Testing
             return "used " + item.ReadableId;
         }
 
-        /// <summary><c>morph [end|trail]</c>: the creature and whether it is the player. <c>trail</c> is the hidden caster's distance to it.</summary>
+        /// <summary>
+        /// <c>spawn &lt;creature&gt; [dx dy]</c>: a creature (an <see cref="AddressableAccess.Creatures"/> field name or a guid) that far from
+        /// the player, 80 east by default. It loads in the background: wait for it with <c>actors</c>.
+        /// </summary>
+        private static string Spawn(string creature, float dx, float dy)
+        {
+            if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
+            if (!ExternalCreaturePlacementSystem.TryResolveAsset(creature, out string? guid, typeof(AddressableAccess.Creatures), typeof(AddressableAccess.Bandits)))
+            {
+                throw new InvalidOperationException("no creature " + creature);
+            }
+
+            MelonCoroutines.Start(SpawnWhenLoaded(guid, player.GetFeetPosition() + new Vector2(dx, dy)));
+            return "spawning " + creature;
+        }
+
+        private static IEnumerator SpawnWhenLoaded(string guid, Vector2 position)
+        {
+            float deadline = Time.time + 30f;
+            Actor? prefab;
+            while (!MorphManager.TryGetCreature(guid, out prefab) && Time.time < deadline)
+            {
+                yield return null;
+            }
+
+            if (prefab != null)
+            {
+                UnityEngine.Object.Instantiate(prefab.gameObject, position, Quaternion.identity);
+            }
+        }
+
+        /// <summary>
+        /// <c>xp [mark|gained]</c>: the player's <c>level= exp= lp=</c>, the hidden player's while morphed. <c>mark</c> remembers the
+        /// experience, <c>gained</c> is the experience earned since, for <c>expect xp gained &gt;= n</c>.
+        /// </summary>
+        private static string Experience(string verb)
+        {
+            PlayerAttributeStats stats = PlayerAccess.GetPlayerAttributeStats() ?? throw new InvalidOperationException("no player stats");
+            if (verb == "mark") _experienceMark = stats.ExperiencePoints;
+            if (verb == "gained") return Format(stats.ExperiencePoints - _experienceMark);
+            return $"level={stats.Level} exp={stats.ExperiencePoints} lp={stats.LearningPoints}";
+        }
+
+        /// <summary><c>morph [end|trail|swap]</c>: the creature, the hidden player's health and the weapon set.</summary>
         private static string Morph(string verb)
         {
             if (verb == "end") return MorphManager.EndMorph() ? "ended" : "not morphed";
+
+            if (verb == "swap" && MorphManager.Body != null) MorphManager.CycleWeaponSet(MorphManager.Body);
             Actor? body = MorphManager.Body;
             Actor? caster = MorphManager.Caster;
             if (!MorphManager.IsMorphed || body == null || caster == null) return "morphed=0";
             float trail = Vector2.Distance(body.GetFeetPosition(), caster.GetFeetPosition());
             bool isPlayer = PlayerAccess.TryGetPlayer(out Actor? player) && player.Pointer == body.Pointer;
-            return verb == "trail" ? Format(trail) : $"morphed=1 body={body.name} player={(isPlayer ? 1 : 0)}";
+            Health health = caster.GetHealth();
+            return verb == "trail" ? Format(trail) : $"morphed=1 body={body.name} player={(isPlayer ? 1 : 0)} caster={health.CurHealth}/{health.MaxHealth} set={MorphManager.WeaponSet}";
         }
 
         /// <summary><c>equip &lt;item&gt;</c>: gives the item if it is not carried and wears it in the active set, replacing what is there.</summary>
@@ -275,10 +331,15 @@ namespace Drova_Modding_API.Systems.Testing
             return alive ?? dead ?? throw new InvalidOperationException($"no actor {target} within {ByNameRange}");
         }
 
-        /// <summary><c>health &lt;me|guid|name&gt; [cur|max]</c>: "current/max", and "dead" when it is; with "cur" or "max" that number alone, for >= checks.</summary>
+        /// <summary>
+        /// <c>health &lt;me|guid|name&gt; [cur|max|mark|lost]</c>: "current/max", and "dead" when it is. With "cur" or "max" that number alone,
+        /// for >= checks. "lost" is the health lost since "mark" on the same target.
+        /// </summary>
         private static string ActorHealth(string target, string part)
         {
             Health health = ResolveActor(target).GetHealth() ?? throw new InvalidOperationException("no health: " + target);
+            if (part == "mark") HealthMarks[target] = health.CurHealth;
+            if (part == "lost") return Format(HealthMarks.TryGetValue(target, out int marked) ? marked - health.CurHealth : 0);
             if (part == "cur") return Format(health.CurHealth);
             if (part == "max") return Format(health.MaxHealth);
             return Format(health.CurHealth) + "/" + Format(health.MaxHealth) + (health.IsDead ? " dead" : string.Empty);
@@ -332,9 +393,9 @@ namespace Drova_Modding_API.Systems.Testing
 
         /// <summary>
         /// <c>effect list &lt;fragment&gt;</c> names the status effects the game knows that contain it; <c>effect add
-        /// &lt;name&gt;</c> puts one on this player - an always-crit, a poison - as if something had just applied it.
+        /// &lt;name&gt; [target]</c> puts one on this player or another body as if something had just applied it.
         /// </summary>
-        private static string Effect(string verb, string name)
+        private static string Effect(string verb, string name, string target)
         {
             if (verb == "list")
             {
@@ -348,8 +409,8 @@ namespace Drova_Modding_API.Systems.Testing
                 return names.Count == 0 ? "none" : string.Join(";", names);
             }
 
-            if (verb != "add" && verb != "remove") throw new InvalidOperationException("effect list <fragment> | effect add|remove <name>");
-            if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
+            if (verb != "add" && verb != "remove") throw new InvalidOperationException("effect list <fragment> | effect add|remove <name> [target]");
+            Actor actor = ResolveActor(target);
 
             foreach (Il2CppDrova.StatusEffects.StatusEffect effect in Resources.FindObjectsOfTypeAll<Il2CppDrova.StatusEffects.StatusEffect>())
             {
@@ -360,11 +421,11 @@ namespace Drova_Modding_API.Systems.Testing
                 {
                     Il2CppSystem.Collections.Generic.List<Il2CppDrova.StatusEffects.StatusEffect> one = new();
                     one.Add(effect);
-                    player.GetStatusEffectHandler().RemoveAllEffects(one);
+                    actor.GetStatusEffectHandler().RemoveAllEffects(one);
                     return "removed " + name;
                 }
 
-                player.GetStatusEffectHandler().AddEffectFromSource(effect);
+                actor.GetStatusEffectHandler().AddEffectFromSource(effect);
                 return "added " + name;
             }
 
@@ -415,14 +476,19 @@ namespace Drova_Modding_API.Systems.Testing
                 return perfect == null ? "none" : perfect.name;
             }
 
-            if (verb != "learn") throw new InvalidOperationException("talent list <fragment> | talent learn <name> | talent perfect");
+            if (verb != "learn" && verb != "canlearn") throw new InvalidOperationException("talent list <fragment> | talent learn <name> | talent canlearn <name> | talent perfect");
             if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
 
             foreach (Il2CppDrova.Talent.TalentContainer container in Resources.FindObjectsOfTypeAll<Il2CppDrova.Talent.TalentContainer>())
             {
                 if (container == null || container.name != name) continue;
 
-                player.TalentActorModule.TryCast<Il2CppDrova.Talent.TalentActorModule>()!.LearnTalentIntern(container.GUID, false);
+                Il2CppDrova.Talent.TalentActorModule module = player.TalentActorModule.TryCast<Il2CppDrova.Talent.TalentActorModule>()!;
+
+                // The game's own check, prerequisites in the talent graph included. learn below skips it.
+                if (verb == "canlearn") return module.CanLearnTalent(container.GUID) ? "yes" : "no";
+
+                module.LearnTalentIntern(container.GUID, false);
                 return "learned " + name;
             }
 

@@ -342,6 +342,8 @@ namespace Drova_Modding_API.Systems.Testing
                 case "stance": return Stance(Arg(parts, 1));
                 case "useitem": return UseItem(Arg(parts, 1), parts.Length > 2 ? Float(parts, 2) : 0.05f, parts.Length > 3 && parts[3] == "idle");
                 case "morph": return Morph(parts.Length > 1 ? parts[1] : string.Empty);
+                case "xp": return Experience(parts.Length > 1 ? parts[1] : string.Empty);
+                case "spawn": return Spawn(Arg(parts, 1), parts.Length > 2 ? Float(parts, 2) : 80f, parts.Length > 3 ? Float(parts, 3) : 0f);
                 case "equip": return Equip(Arg(parts, 1));
                 case "unequip": return Unequip();
                 case "itemsearch": return ItemSearch(Arg(parts, 1));
@@ -349,7 +351,7 @@ namespace Drova_Modding_API.Systems.Testing
                 case "effects": return Effects(Arg(parts, 1));
                 case "talents": return Talents(Arg(parts, 1), parts.Length > 2 ? parts[2] : string.Empty);
                 case "talent": return Talent(Arg(parts, 1), parts.Length > 2 ? parts[2] : string.Empty);
-                case "effect": return Effect(Arg(parts, 1), Arg(parts, 2));
+                case "effect": return Effect(Arg(parts, 1), Arg(parts, 2), parts.Length > 3 ? parts[3] : "me");
                 case "objects": return Objects(Arg(parts, 1), parts.Length > 2 && parts[2] == "list");
                 case "gui": return TestGuiInput.Command(parts);
                 case "actors": return Actors(parts.Length > 1 ? Float(parts, 1) : 600f, parts.Length > 2 ? parts[2] : null);
@@ -475,10 +477,8 @@ namespace Drova_Modding_API.Systems.Testing
                 case "netstats":
                 {
                     StringBuilder stats = new();
-                    stats.Append("encrypted=").Append(Networking.Impl.NetworkSystem.IsEncrypted ? 1 : 0)
-                        .Append(" oversized=").Append(Networking.Diagnostics.NetworkDiagnostics.OversizedSends)
+                    stats.Append("oversized=").Append(Networking.Diagnostics.NetworkDiagnostics.OversizedSends)
                         .Append(" nosession=").Append(Networking.Diagnostics.NetworkDiagnostics.SendsWithoutSession)
-                        .Append(" undecryptable=").Append(Networking.Diagnostics.NetworkDiagnostics.UndecryptablePackets)
                         .Append(" malformed=").Append(Networking.Diagnostics.NetworkDiagnostics.MalformedPackets).Append(' ');
                     LiteNetLib.NetStatistics? wire = Networking.Impl.NetworkSystem.Transport?.Manager?.Statistics;
                     if (wire != null) stats.Append("out=").Append(wire.PacketsSent).Append(':').Append(wire.BytesSent).Append(' ');
