@@ -32,6 +32,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         static LanDiscovery()
         {
             Listener.NetworkReceiveUnconnectedEvent += OnAnswer;
+
+            // LiteNetLib keeps an unanswered connection request forever, so a LAN device could fill memory with them.
+            Listener.ConnectionRequestEvent += request => request.RejectForce();
         }
 
         /// <summary>What a direct host answers with. Null means it does not answer.</summary>

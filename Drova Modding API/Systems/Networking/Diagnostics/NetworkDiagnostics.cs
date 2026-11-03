@@ -18,12 +18,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         private static readonly long[] ReceivedBytesById = new long[Dispatcher.MaxMessageTypes];
 
         /// <summary>
-        /// Relay packets that failed to decrypt. Either a password differing from the host's or a packet
-        /// somebody rewrote; the two are indistinguishable from this side.
-        /// </summary>
-        internal static long UndecryptablePackets { get; private set; }
-
-        /// <summary>
         /// Messages decoded but refused for carrying a NaN or an infinity, so no handler saw them.
         /// </summary>
         internal static long RefusedMessages { get; private set; }
@@ -45,8 +39,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         internal static long ReceiveFailures { get; private set; }
 
         /// <summary>
-        /// Sends dropped for being larger than a relay will forward. A relay drops these itself and counts
-        /// the sender as abusive, so catching them here is the only way the sender learns.
+        /// Sends dropped for being larger than Steam's 512 KB message limit.
         /// </summary>
         internal static long OversizedSends { get; private set; }
 
@@ -75,7 +68,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             Array.Clear(ReceivedMessagesById, 0, ReceivedMessagesById.Length);
             Array.Clear(ReceivedBytesById, 0, ReceivedBytesById.Length);
 
-            UndecryptablePackets = 0;
             RefusedMessages = 0;
             UnknownMessageIds = 0;
             MalformedPackets = 0;
@@ -84,8 +76,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             SendsWithoutSession = 0;
             CountingSinceMs = Environment.TickCount64;
         }
-
-        internal static void CountUndecryptablePacket() => UndecryptablePackets++;
 
         internal static void CountRefusedMessage() => RefusedMessages++;
 

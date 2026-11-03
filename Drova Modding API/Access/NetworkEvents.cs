@@ -1,3 +1,4 @@
+using System.Net;
 using Drova_Modding_API.Systems.Networking;
 using MelonLogger = MelonLoader.MelonLogger;
 
@@ -34,17 +35,28 @@ namespace Drova_Modding_API.Access
         public static event Action<INetPeer, DisconnectReason>? OnPeerDisconnected;
 
         /// <summary>
-        /// A connection attempt was refused, with the reason when the other side gave one. Fires before
-        /// the matching <see cref="OnPeerDisconnected"/>, and in a relay session it is the only place the
-        /// real cause (wrong code, wrong password, session full) shows up.
-        /// </summary>
-        public static event Action<ConnectionRejection>? OnConnectionRejected;
-
-        /// <summary>
         /// A transport-level socket error occurred. The string is a human-readable description for
         /// logging; it is not a stable contract.
         /// </summary>
         public static event Action<string>? OnNetworkError;
+
+        /// <summary>
+        /// A STUN server told <see cref="NetworkAccess.FindPublicEndPoint"/> this end's internet address, or the address
+        /// changed since.
+        /// </summary>
+        public static event Action<IPEndPoint>? OnPublicEndPointFound;
+
+        internal static void RaisePublicEndPointFound(IPEndPoint endPoint)
+        {
+            try
+            {
+                OnPublicEndPointFound?.Invoke(endPoint);
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("[NetworkEvents] OnPublicEndPointFound failed: " + e);
+            }
+        }
 
         internal static void RaiseHostStarted()
         {
@@ -91,18 +103,6 @@ namespace Drova_Modding_API.Access
             catch (Exception e)
             {
                 MelonLogger.Error("[NetworkEvents] OnPeerDisconnected failed: " + e);
-            }
-        }
-
-        internal static void RaiseConnectionRejected(ConnectionRejection rejection)
-        {
-            try
-            {
-                OnConnectionRejected?.Invoke(rejection);
-            }
-            catch (Exception e)
-            {
-                MelonLogger.Error("[NetworkEvents] OnConnectionRejected failed: " + e);
             }
         }
 

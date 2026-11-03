@@ -12,9 +12,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         Direct,
 
         /// <summary>
-        /// One transport connection to a relay that forwards for everyone. Peers are virtual ids behind
-        /// that single connection.
+        /// Steam peer-to-peer messages. Peers are Steam ids, see <see cref="SteamLink"/>.
         /// </summary>
-        Relay,
+        Steam,
     }
 }

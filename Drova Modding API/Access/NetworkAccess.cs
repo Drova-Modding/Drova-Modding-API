@@ -1,3 +1,4 @@
+using System.Net;
 using Drova_Modding_API.Systems.Networking;
 using Drova_Modding_API.Systems.Networking.Impl;
 
@@ -41,7 +42,53 @@ namespace Drova_Modding_API.Access
         /// <param name="key">Optional connection key that must match the host's.</param>
         public static void Connect(string address, int port, string? key = null)
         {
-            NetworkSystem.Connect(address, port, key);
+            NetworkSystem.Connect(address, port, key, false);
+        }
+
+        /// <summary>
+        /// Whether <see cref="StartHost"/> asks the router to open its port through UPnP. Read when the host starts. The
+        /// port closes again when the session stops or the game quits, and after an hour at most if the game crashed.
+        /// Off by default.
+        /// </summary>
+        public static bool UsePortMapping { get; set; }
+
+        /// <summary>
+        /// Joins a host whose router has no open port. Keeps trying for two minutes and finds this end's
+        /// <see cref="PublicEndPoint"/>, which the host passes to <see cref="Punch"/>.
+        /// </summary>
+        /// <param name="address">The host's public IP address, its <see cref="PublicEndPoint"/>.</param>
+        /// <param name="port">The host's public UDP port.</param>
+        /// <param name="key">Optional connection key that must match the host's.</param>
+        public static void ConnectWithPunch(string address, int port, string? key = null)
+        {
+            NetworkSystem.Connect(address, port, key, true);
+        }
+
+        /// <summary>
+        /// This end's address and port as the internet sees them, after <see cref="FindPublicEndPoint"/>. Null before that,
+        /// and outside a direct session.
+        /// </summary>
+        public static IPEndPoint? PublicEndPoint => NetworkSystem.PublicEndPoint;
+
+        /// <summary>
+        /// Asks a public STUN server (Google, Cloudflare) for this direct session's <see cref="PublicEndPoint"/>.
+        /// <see cref="NetworkEvents.OnPublicEndPointFound"/> fires with it. Asked again every 20 s, which also keeps the
+        /// router from forgetting the address.
+        /// </summary>
+        public static void FindPublicEndPoint()
+        {
+            NetworkSystem.FindPublicEndPoint();
+        }
+
+        /// <summary>
+        /// Opens this end's router toward a joiner for two minutes, so the joiner's <see cref="ConnectWithPunch"/> gets in.
+        /// Fails when both routers give every destination a new port.
+        /// </summary>
+        /// <param name="address">The joiner's public IP address, its <see cref="PublicEndPoint"/>.</param>
+        /// <param name="port">The joiner's public UDP port.</param>
+        public static void Punch(string address, int port)
+        {
+            NetworkSystem.Punch(address, port);
         }
 
         /// <summary>
@@ -50,54 +97,22 @@ namespace Drova_Modding_API.Access
         public static int PeerCount => NetworkSystem.PeerCount;
 
         /// <summary>
-        /// The relay session code in use, or null when there is no relay session. A host that let the relay
-        /// pick a code has it here by the time <see cref="NetworkEvents.OnHostStarted"/> fires, which is the
-        /// code to show the players who should join.
+        /// Host over Steam. Only the host's Steam friends are let in. <see cref="NetworkEvents.OnHostStarted"/> fires at once,
+        /// or <see cref="NetworkEvents.OnNetworkError"/> when Steam is not running.
         /// </summary>
-        public static string? SessionCode => NetworkSystem.SessionCode;
-
-        /// <summary>
-        /// Whether messages are encrypted end to end, so the relay can neither read nor forge them. True only in a relay
-        /// session with a password, which is the key material. Every message costs 28 bytes more on the wire.
-        /// </summary>
-        public static bool IsEncrypted => NetworkSystem.IsEncrypted;
-
-        /// <summary>
-        /// Largest payload a single message may serialize to, in bytes. A larger message is dropped and counted, since
-        /// the relay would drop it silently. Shrinks by 28 bytes once <see cref="IsEncrypted"/> is true, so read it
-        /// after the session is up and split anything larger.
-        /// </summary>
-        public static int MaxPayloadSize => NetworkSystem.MaxPayloadSize;
-
-        /// <summary>
-        /// Claim a session code on a relay and host through it, for when the host is not reachable from
-        /// the internet. Unlike <see cref="StartHost"/> this cannot succeed immediately:
-        /// <see cref="NetworkEvents.OnHostStarted"/> fires once the relay accepted the code, and
-        /// <see cref="NetworkEvents.OnConnectionRejected"/> if it refused.
-        /// </summary>
-        /// <param name="relayAddress">The relay's address or hostname.</param>
-        /// <param name="relayPort">The relay's UDP port.</param>
-        /// <param name="sessionCode">4 to 16 letters and digits, shared with the players joining. Null or
-        /// empty lets the relay pick one that cannot be guessed, readable from <see cref="SessionCode"/>.</param>
-        /// <param name="password">Optional session password clients must match. Setting one also turns on
-        /// end-to-end encryption, see <see cref="IsEncrypted"/>.</param>
-        public static void StartHostViaRelay(string relayAddress, int relayPort, string? sessionCode = null, string? password = null)
+        public static void StartHostViaSteam()
         {
-            NetworkSystem.StartHostViaRelay(relayAddress, relayPort, sessionCode, password);
+            NetworkSystem.StartHostViaSteam();
         }
 
         /// <summary>
-        /// Join a session held on a relay. <see cref="NetworkEvents.OnConnectedToHost"/> fires once the
-        /// relay put us in the session, <see cref="NetworkEvents.OnConnectionRejected"/> if it refused.
+        /// Join a Steam host. <see cref="NetworkEvents.OnConnectedToHost"/> fires once the host welcomed us, and
+        /// <see cref="NetworkEvents.OnNetworkError"/> if Steam could not reach it.
         /// </summary>
-        /// <param name="relayAddress">The relay's address or hostname.</param>
-        /// <param name="relayPort">The relay's UDP port.</param>
-        /// <param name="sessionCode">The code the host claimed or was assigned.</param>
-        /// <param name="password">The session password, when it has one. It must match the host's exactly or
-        /// every message will fail to decrypt, since the password is also the encryption key material.</param>
-        public static void ConnectViaRelay(string relayAddress, int relayPort, string sessionCode, string? password = null)
+        /// <param name="hostSteamId">The host's 64-bit Steam id, as <see cref="SteamAccess.LocalId"/> reads on the host.</param>
+        public static void ConnectViaSteam(ulong hostSteamId)
         {
-            NetworkSystem.ConnectViaRelay(relayAddress, relayPort, sessionCode, password);
+            NetworkSystem.ConnectViaSteam(hostSteamId);
         }
 
         /// <summary>
@@ -213,7 +228,7 @@ namespace Drova_Modding_API.Access
 
         /// <summary>
         /// Register a handler for raw packets on a channel. Channels 1 to 62 are available for raw
-        /// traffic; channel 0 is reserved for typed messages and 63 for relay control traffic. The
+        /// traffic. Channel 0 is reserved for typed messages and 63 for transport control traffic. The
         /// handler runs on the Unity main thread. Prefer <see cref="RegisterWithId{T}"/> unless you bring your own serialization.
         /// </summary>
         /// <param name="channel">The raw channel, 1 to 62.</param>
