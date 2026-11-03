@@ -33,6 +33,11 @@ gameplay start and when the player is found).
 
 ## How do I…?
 
+### Chain talents
+
+`AddTalent(talent, predecessor)` connects the talent to `predecessor` in the talent graph, as vanilla chains are:
+it can only be learned once the predecessor is, and unlearning the predecessor unlearns it too.
+
 ### Grant a talent to a spawned NPC
 
 Use the `TalentPresetModule` with [`NpcCreator`](./spawning.md). Readable talent IDs are in
