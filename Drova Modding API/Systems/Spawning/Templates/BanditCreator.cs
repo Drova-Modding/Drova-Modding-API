@@ -343,13 +343,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         }
 
         private static NpcCreator WithBanditRoutine(this NpcCreator creator, Vector2 position)
-        {
-            var routineModule = new RoutineModule();
-            if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("A bandit routine needs the player.");
-
-            routineModule.With(player.transform.position, position);
-            return creator.WithModule(routineModule);
-        }
+            => creator.WithModule(new RoutineModule().With(position));
 
         private static NpcCreator WithCustomEntityInfo(this NpcCreator creator)
         {

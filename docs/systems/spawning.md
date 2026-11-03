@@ -233,6 +233,8 @@ wiring lazy actors by hand.
 One `Create…BanditLazy(name, position, difficulty = Normal, saveToLazyActorStore = false)` per
 loadout (dagger, sword, axe, sword+shield, spear, spear+shield, bow, spear+slingshot,
 sword+slingshot, random). `BanditDifficulty` is `Easy | Normal | Hard`.
+A bandit's spawn point is its only routine place: it waits there until an enemy comes within its aggro range.
+Pass a group to `EnemyAccess.MakeAggressiveGroup` to have them notice the player from further away and fight together.
 
 ### `ActorSpawnAccess` (static)
 
