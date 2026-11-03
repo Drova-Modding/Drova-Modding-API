@@ -1,16 +1,88 @@
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using Il2CppDrova;
+using Il2CppDrova.AI.Modules;
 using Il2CppDrova.Alignment;
+using Il2CppDrova.Cognition;
 using Il2CppDrova.Stats;
+using Il2CppDrova.Utilities.LazyLoading;
+using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.Access
 {
     /// <summary>
-    /// Finds actors that are hostile to a player, with the same alignment test the game's aim assist uses.
+    /// Finds actors that are hostile to a player, with the same alignment test the game's aim assist uses,
+    /// and makes enemies notice and chase their targets from further away.
     /// </summary>
     public static class EnemyAccess
     {
+        private const float GroupLoadSeconds = 20f;
+
+        /// <summary>
+        /// Makes <paramref name="actor"/> notice its enemies from <paramref name="range"/> away and chase them that far
+        /// before it gives up, the way the game's aggro trigger zones do (<c>HitReceiveBhvr_SetAggroToActor</c>).
+        /// Territorial actors do not stop at their border, and teasing ones attack without posturing first.
+        /// </summary>
+        /// <param name="actor">An initialized actor. In co-op, call it where the actor's AI runs (the world authority).</param>
+        /// <param name="range">Aggro and chase range in world units. The game's own default is 100 to 125.</param>
+        public static void MakeAggressive(Actor actor, float range)
+        {
+            Component? ai = actor._aiModule != null ? actor._aiModule.GetAi() : null;
+            AI_TargetBhvr? target = ai != null ? ai.GetComponentInChildren<AI_TargetBhvr>() : null;
+            if (target != null)
+            {
+                // SetAggroRange leaves out the soft chase circle, which would end the chase at the prefab's 250 to 300.
+                target.SetAggroRange(range);
+                target._looseActorRange = range;
+            }
+
+            CognitionSeeingAroundBhvr seeing = actor.GetComponentInChildren<CognitionSeeingAroundBhvr>();
+            if (seeing != null)
+            {
+                seeing.SetNewRange(range);
+            }
+
+            AI_Perks perks = actor.GetComponentInChildren<AI_Perks>();
+            if (perks != null)
+            {
+                perks._territorial = false;
+                perks._preAggroPerk = PreAggroPerk.Aggressive;
+            }
+        }
+
+        /// <summary>
+        /// Once their bodies have loaded, puts <paramref name="members"/> in one AI group, so the first to fight pulls
+        /// the rest in, and applies <see cref="MakeAggressive"/> to each. Members not loaded within 20 seconds are left out.
+        /// </summary>
+        /// <param name="members">Lazy actors spawned together, for example by <c>BanditCreator</c>.</param>
+        /// <param name="range">Aggro and chase range in world units, see <see cref="MakeAggressive"/>.</param>
+        public static void MakeAggressiveGroup(IReadOnlyList<LazyActor> members, float range)
+        {
+            MelonCoroutines.Start(GroupWhenLoaded(members, range));
+        }
+
+        private static IEnumerator GroupWhenLoaded(IReadOnlyList<LazyActor> members, float range)
+        {
+            float deadline = Time.time + GroupLoadSeconds;
+            while (Time.time < deadline && members.Any(member => member != null && (member.Actor == null || !member.Actor.IsInitialized)))
+            {
+                yield return null;
+            }
+
+            List<Actor> actors = members.Where(member => member != null && member.Actor != null && member.Actor.IsInitialized)
+                .Select(member => member.Actor).ToList();
+            foreach (Actor actor in actors)
+            {
+                // Human NPCs carry no AI_GroupBhvr, so SetInCombat shares targets through this group module instead.
+                foreach (Actor other in actors.Where(other => other != actor))
+                {
+                    actor._aiModule.AddActorInGroup(other._aiModule.GetIAIFactory().GetActor());
+                }
+                MakeAggressive(actor, range);
+            }
+        }
+
         /// <summary>
         /// The closest living actor within <paramref name="radius"/> that is hostile to <paramref name="player"/>.
         /// Brawl opponents and knocked out actors do not count.

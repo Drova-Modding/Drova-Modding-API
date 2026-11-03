@@ -28,20 +28,9 @@ namespace Drova_Modding_API.Systems.Networking
         LocalClose,
 
         /// <summary>
-        /// The host rejected the connection request. The reason, when there is one, arrives separately
-        /// through <see cref="Access.NetworkEvents.OnConnectionRejected"/>.
+        /// The host rejected the connection request, for example because the connection key did not match.
         /// </summary>
         Rejected,
-
-        /// <summary>
-        /// Relay sessions only: the host left or the session timed out, so the whole session is gone.
-        /// </summary>
-        SessionClosed,
-
-        /// <summary>
-        /// Relay sessions only: the host had this peer removed from the session.
-        /// </summary>
-        Kicked,
 
         /// <summary>
         /// The reason did not map to any of the above.

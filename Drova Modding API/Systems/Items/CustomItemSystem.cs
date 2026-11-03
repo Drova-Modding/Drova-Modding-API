@@ -213,8 +213,13 @@ namespace Drova_Modding_API.Systems.Items
             {
                 SetIcon(item, baseItem, definition.Icon);
             }
+            else if (!string.IsNullOrWhiteSpace(definition.IconItem))
+            {
+                SetIconFromItem(item, definition.IconItem);
+            }
 
             RestoreBaseActions(item, baseItem);
+            MorphManager.ClearCost(item);
             if (definition.Letter != null)
             {
                 SetLetter(item, baseItem, definition, definition.Letter);
@@ -250,6 +255,15 @@ namespace Drova_Modding_API.Systems.Items
                 if (action != null && baseAction != null)
                 {
                     action._actionPrefab = baseAction._actionPrefab;
+                    action._flowDelta = baseAction._flowDelta;
+                    action._isFlowConsumed = baseAction._isFlowConsumed;
+                }
+
+                ItemBhvr_FlowAbilityData? flow = item._itemBehaviours[i].TryCast<ItemBhvr_FlowAbilityData>();
+                ItemBhvr_FlowAbilityData? baseFlow = baseItem._itemBehaviours[i].TryCast<ItemBhvr_FlowAbilityData>();
+                if (flow != null && baseFlow != null)
+                {
+                    flow._flowSpellType = baseFlow._flowSpellType;
                 }
 
                 ItemBhvr_Instant_Ability? instant = item._itemBehaviours[i].TryCast<ItemBhvr_Instant_Ability>();
@@ -302,6 +316,33 @@ namespace Drova_Modding_API.Systems.Items
 
             first.SetAbility(ability);
             first._placedOnPreDefinedPositions = false;
+            MorphManager.SetCost(item, ability, morph.HealthCost, morph.RequiredLevel);
+            if (morph.HealthCost > 0f)
+            {
+                PayWithHealth(item);
+            }
+        }
+
+        /// <summary>
+        /// No flow cost, and the physical school, which the player always has, so only the morph's own cost gates the cast.
+        /// </summary>
+        private static void PayWithHealth(Item item)
+        {
+            for (int i = 0; i < item._itemBehaviours.Count; i++)
+            {
+                ItemBhvr_ActorAction_FromPrefab? action = item._itemBehaviours[i].TryCast<ItemBhvr_ActorAction_FromPrefab>();
+                if (action != null)
+                {
+                    action._flowDelta = 0f;
+                    action._isFlowConsumed = false;
+                }
+
+                ItemBhvr_FlowAbilityData? flow = item._itemBehaviours[i].TryCast<ItemBhvr_FlowAbilityData>();
+                if (flow != null)
+                {
+                    flow._flowSpellType = FlowSpellType.Physical;
+                }
+            }
         }
 
         /// <summary>
@@ -634,6 +675,41 @@ namespace Drova_Modding_API.Systems.Items
             Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f), pixelsPerUnit);
             sprite.name = item.ReadableId;
             sprite.hideFlags = HideFlags.HideAndDontSave;
+            ShowIcon(item, sprite);
+            Own(item, texture);
+            Own(item, sprite);
+        }
+
+        /// <summary>
+        /// Shows another item's icon, its flow bar icon for a spell.
+        /// </summary>
+        private static void SetIconFromItem(Item item, string readableId)
+        {
+            Item? source = ProviderAccess.ItemDatabase?.GetItemByReadableId(readableId);
+            if (source == null)
+            {
+                MelonLogger.Warning($"[Items] '{item.ReadableId}': no item '{readableId}' to take the icon from.");
+                return;
+            }
+
+            Sprite? sprite = source.Icon;
+            for (int i = 0; i < source._itemBehaviours.Count; i++)
+            {
+                ItemBhvr_FlowAbilityData? flow = source._itemBehaviours[i].TryCast<ItemBhvr_FlowAbilityData>();
+                if (flow != null && flow._icon != null)
+                {
+                    sprite = flow._icon;
+                }
+            }
+
+            if (sprite != null)
+            {
+                ShowIcon(item, sprite);
+            }
+        }
+
+        private static void ShowIcon(Item item, Sprite sprite)
+        {
             item.SetIconSprite(sprite);
 
             // Spells show their icon on the flow bar from this behavior, not from the item.
@@ -645,9 +721,6 @@ namespace Drova_Modding_API.Systems.Items
                     flow._icon = sprite;
                 }
             }
-
-            Own(item, texture);
-            Own(item, sprite);
         }
 
         /// <summary>

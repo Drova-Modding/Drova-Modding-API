@@ -63,7 +63,7 @@ Every `*.json` file here is read on its own. The wizard only ever writes `wizard
 | `entityInfo`          | Name and identity info                                             |
 | `dialogue`            | Dialogue tree                                                      |
 | `teacher`             | Makes the NPC a trainer                                            |
-| `trader`              | Makes the NPC a merchant                                           |
+| `trader`              | Makes the NPC a merchant. An item's `Chapter` holds it back until that chapter |
 | `routine`             | Daily routine                                                      |
 
 The easiest way to get correct payloads: build the NPC once in the wizard and copy the entry from

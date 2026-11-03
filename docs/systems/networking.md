@@ -68,8 +68,40 @@ NetworkAccess.Connect("87.123.45.6", 9050, "my-secret");
 NetworkAccess.Stop();
 ```
 
-The host must have UDP `9050` reachable (port forwarding or a relay, see
-[Relay](#going-through-a-relay)).
+The host must have UDP `9050` reachable: forward it, let UPnP open it, or punch, see
+[Getting through the router](#getting-through-the-router).
+
+### Getting through the router
+
+A direct host behind a home router is reachable in one of three ways, tried in this order:
+
+1. **UPnP.** With `NetworkAccess.UsePortMapping` set (off by default, so offer it as a player
+   option), `StartHost` asks the router to open its port. The port closes again on `Stop()` and when
+   the game quits. The mapping is leased for an
+   hour and renewed while hosting, so a crashed game leaves it open for an hour at most. Many routers
+   ship with UPnP off; a FRITZ!Box needs "Selbstständige Portfreigaben" allowed for the PC.
+2. **Hole punching.** Both ends learn their internet address from a public STUN server (Google,
+   Cloudflare) and exchange it, for example by chat:
+
+   ```csharp
+   // Host: show this to the joiner.
+   NetworkEvents.OnPublicEndPointFound += endPoint => ShowCode(endPoint.ToString());
+   NetworkAccess.StartHost(9061, "secret");
+   NetworkAccess.FindPublicEndPoint();
+
+   // Joiner: enters the host's code. Its own code appears through the same event; it goes to the host.
+   NetworkAccess.ConnectWithPunch("203.0.113.7", 13139, "secret");
+
+   // Host: enters the joiner's code within two minutes.
+   NetworkAccess.Punch("87.123.45.6", 51234);
+   ```
+
+   `ConnectWithPunch` keeps trying for two minutes instead of five seconds. The address is re-asked
+   every 20 s, which keeps the router from forgetting it. Punching fails when a router gives every
+   destination a new port (symmetric NAT, common on mobile and carrier-grade NAT); the log says so.
+3. **Port forwarding** by hand, or a Steam session.
+
+All of it is managed sockets and HTTP, so it works the same under Wine and Proton.
 
 ### Define a message
 
@@ -135,7 +167,7 @@ than taking the receive loop down with it.
 ### Send raw bytes instead
 
 When you bring your own serialization, use a raw channel. Channel `0` is reserved for typed messages
-and `63` for relay control traffic; `1`–`62` are yours.
+and `63` for transport control traffic; `1`–`62` are yours.
 
 ```csharp
 NetworkAccess.RegisterChannel(1, (peer, data) =>
@@ -146,6 +178,59 @@ NetworkAccess.RegisterChannel(1, (peer, data) =>
 Span<byte> payload = stackalloc byte[8];
 NetworkAccess.SendRaw(peer, 1, payload);
 ```
+
+## Steam sessions
+
+A Steam session runs over Valve's relays: no port to forward, and players do not see each other's IP
+address unless `SteamAccess.AllowDirectConnections` is on at both ends. Everything below does nothing
+on a copy without Steam (`SteamAccess.IsAvailable`).
+
+```csharp
+// Host: friends see "Join Game" on you in Steam, or get your invite.
+NetworkAccess.StartHostViaSteam();
+SteamAccess.SetJoinString("my-mod:" + SteamAccess.LocalId);
+SteamAccess.OpenInviteDialog("my-mod:" + SteamAccess.LocalId);
+
+// Joiner: from the friends list, or when Steam hands over a join string.
+List<(ulong Id, string Name, string JoinString)> friends = new();
+SteamAccess.GetJoinableFriends(friends);
+SteamAccess.OnJoinRequested += joinString => { /* parse, then */ NetworkAccess.ConnectViaSteam(hostId); };
+```
+
+### Public lobbies
+
+A host only lets in its Steam friends, unless it opens a public lobby. The lobby is a listing: the
+host sits in it alone, and whoever finds it joins the Steam session with `ConnectViaSteam`. While the
+lobby is open **anyone** may join, so consider what a stranger can do in your mod.
+
+```csharp
+// Host, after StartHostViaSteam (which starts with no lobby data).
+SteamAccess.OpenLobby();
+SteamAccess.SetLobbyData("protocol", "7");
+SteamAccess.SetLobbyData("name", hostName);
+
+// Searcher: worldwide, only lobbies with protocol 7, never your own.
+SteamAccess.OnLobbiesFound += () =>
+{
+    List<SteamLobby> lobbies = new();
+    SteamAccess.GetFoundLobbies(lobbies);
+    // lobby.Data is untrusted input. Join with NetworkAccess.ConnectViaSteam(lobby.HostId).
+};
+SteamAccess.FindLobbies(("protocol", "7"));
+```
+
+The lobby closes with the session. Keys starting with `drova_api` are reserved.
+
+### Done for you
+
+- Players in one Steam session are shown as **playing together** in the Steam friends list.
+- Everyone you played with lands in Steam's **Recent players**, to befriend or invite again.
+
+### Steam Deck keyboard
+
+`SteamAccess.ShowKeyboard(x, y, width, height)` opens Steam's on-screen keyboard over a text field,
+in Big Picture and on the Steam Deck. Call it when the field gets focus; it types into the field like a
+real keyboard, and returns false elsewhere.
 
 ## Shipping
 
@@ -180,7 +265,7 @@ NetworkAccess.StopDiscovery();
 ```
 
 - **Inert unless used.** Without `SetDiscoveryInfo` a host answers nothing, and without `StartDiscovery`
-  nothing is broadcast. A relay session never receives a broadcast.
+  nothing is broadcast.
 - **Independent of a session.** Discovery runs on its own socket, so a client can look while idle.
 - **Private networks only.** The host answers requests from private, link-local and loopback addresses,
   so a host reachable from the internet through a forwarded port does not describe itself to it.
@@ -188,66 +273,7 @@ NetworkAccess.StopDiscovery();
 - Keep the payload well under 1 KB; it travels in one datagram.
 
 A direct session is **not encrypted**. The connection key travels in the clear and only keeps out a
-client that does not know it; `IsEncrypted` is false. Use a relay with a password for a sealed session.
-
-## Going through a relay
-
-Direct UDP needs the host to be reachable, which home connections usually are not without port
-forwarding. A relay fixes that: host and clients all connect **out** to one server that forwards
-their packets, addressed by a short session code.
-
-```csharp
-// Host: let the relay pick the code, and set a password to encrypt the session.
-NetworkAccess.StartHostViaRelay("relay.example.com", 9060, null, "shared-secret");
-
-NetworkEvents.OnHostStarted += () =>
-{
-    // Assigned by the relay and available by the time this fires. Show it to the players who join.
-    LoggerInstance.Msg($"Session {NetworkAccess.SessionCode}, encrypted: {NetworkAccess.IsEncrypted}");
-};
-
-// Client: join that code with the same password.
-NetworkAccess.ConnectViaRelay("relay.example.com", 9060, "ABCD12", "shared-secret");
-```
-
-Passing a code of your own to `StartHostViaRelay` works, but a relay-assigned code is better: it has
-real entropy, so nobody joins by guessing. A relay can be configured to require its own codes.
-
-Everything else is unchanged: same messages, same events, same `INetPeer`. Differences worth knowing:
-
-- **Success is asynchronous.** `StartHostViaRelay` returns before the relay has accepted the code —
-  wait for `NetworkEvents.OnHostStarted`, and handle `OnConnectionRejected` for a refusal (code taken,
-  wrong password, relay full).
-- **`INetPeer.Ping` is the one-way latency to the relay**, not to that player. Read it as a lower bound.
-- **`INetPeer.Disconnect()` on the host kicks that client**; a client calling it on the host peer
-  leaves the session.
-- **Raw channel 63 is unavailable** — it carries relay control traffic. `RegisterChannel` refuses it in
-  direct mode too, so channel numbers keep working when a session moves to a relay.
-
-### Encryption
-
-**A relay session with a password is encrypted end to end**, checked through
-`NetworkAccess.IsEncrypted`. The key is derived from the password and the session code, so nothing is
-exchanged for a relay to sit in the middle of, and both halves of the trust problem close: the relay
-cannot read the traffic, and it cannot forge a message from another player either — the sender id and
-channel are authenticated, and the relay is what stamps ids. A wrong password simply fails to decrypt,
-and the transport logs a summary rather than one line per packet.
-
-What that costs and what it does not cover:
-
-- **28 bytes per message** (nonce and tag), out of the relay's payload budget. `NetworkAccess.MaxPayloadSize`
-  is that budget with the nonce, tag and routing byte already subtracted, so read it once the session is
-  up and split anything larger.
-- **An open session is not encrypted.** No password, no key. `IsEncrypted` says so; show it.
-- **Replaying a genuine packet is still possible** for a hostile relay. Rejecting repeats would break
-  unreliable channels, so that bound belongs to your own state handling.
-- Addresses, packet sizes and timing stay visible to the relay regardless.
-
-Keep the host authoritative over anything that matters, and tell players whose relay they are on.
-
-The server is its own project (`Drova-Coop-Relay`) with the wire protocol specified in its
-`docs/protocol.md`; the design notes live in
-[`docs/coop-networking-plan.md`](../plans/coop-networking-plan.md#relay).
+client that does not know it.
 
 ## Seeing what the transport is doing
 
@@ -266,10 +292,10 @@ watch the numbers move; drag it by the title bar.
 
 | Section            | What it answers                                                                                                                                |
 |--------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Session**        | Role, direct or relay, peer count, session code, whether the session is encrypted, and how long the counters have been running.                |
+| **Session**        | Role, direct or Steam, peer count, and how long the counters have been running.                |
 | **Traffic**        | Packets and bytes in each direction, the current rate, and how many reliable packets had to be resent.                                         |
 | **Graphs**         | Round trip, outgoing rate and incoming rate over the last 30 seconds, sampled four times a second. Round trip is the **worst** peer's.         |
-| **Dropped**        | Packets that never reached a handler, split by cause: undecryptable, NaN or infinity, unknown message id, malformed, receive failures.         |
+| **Dropped**        | Packets that never reached a handler, split by cause: NaN or infinity, unknown message id, malformed, receive failures.         |
 | **Peers**          | Per peer: round trip, one-way latency, MTU, time since the last packet, bytes each way, and packets resent.                                    |
 | **Typed messages** | Per message id: how many were sent and received and how many bytes each direction cost. This is where you find out which message is expensive. |
 
@@ -281,9 +307,6 @@ Reading it honestly:
 
 - **Resent packets are the only loss you can see from here.** They count reliable packets LiteNetLib
   sent again. Unreliable traffic that never arrived leaves no trace anywhere by definition.
-- **In a relay session there is one real connection**, so per-player bytes do not exist and the peer
-  table says so. The latency shown for a player is the one-way latency to the relay — a lower bound,
-  and half of a round trip.
 - **A typed-message row counts a `SendToAll` once**, because it was serialized once. What the fan-out
   costs on the wire is in the byte counters under **Traffic**.
 - **A steady "unknown message id" count is a version mismatch**, not a network fault: the two ends
@@ -305,13 +328,13 @@ stripped.
 | `NetRole Role`                                                                                                    | `None`, `Host` or `Client`.                                                                    |
 | `bool IsConnected`                                                                                                | A session is running and at least one peer is connected.                                       |
 | `int PeerCount`                                                                                                   | How many remote peers are connected.                                                           |
-| `string? SessionCode`                                                                                             | The relay session code in use, including one the relay assigned. Null outside a relay session. |
-| `bool IsEncrypted`                                                                                                | Whether messages are sealed end to end. True only for a relay session with a password.         |
-| `int MaxPayloadSize`                                                                                              | Largest payload one message may serialize to. Anything larger is dropped before it is sent.    |
 | `void StartHost(int port, string? key = null)`                                                                    | Listen on a UDP port; clients must present the same `key` when set. Not encrypted.             |
 | `void Connect(string address, int port, string? key = null)`                                                      | Join a host.                                                                                   |
-| `void StartHostViaRelay(string relayAddress, int relayPort, string? sessionCode = null, string? password = null)` | Host through a relay; null code asks the relay to pick one. Confirmed by `OnHostStarted`.      |
-| `void ConnectViaRelay(string relayAddress, int relayPort, string sessionCode, string? password = null)`           | Join a relay session. Confirmed by `OnConnectedToHost`.                                        |
+| `bool UsePortMapping`                                                                                             | `StartHost` opens its port through UPnP and closes it on stop and quit. Off by default.        |
+| `void FindPublicEndPoint()`                                                                                       | Ask a STUN server for this direct session's internet address, then every 20 s.                 |
+| `IPEndPoint? PublicEndPoint`                                                                                      | That address, once found. Null outside a direct session.                                       |
+| `void ConnectWithPunch(string address, int port, string? key = null)`                                             | Join a host's public address, trying for two minutes, and find this end's address.             |
+| `void Punch(string address, int port)`                                                                            | Open this end's router toward a joiner's public address for two minutes.                       |
 | `void Stop()`                                                                                                     | Close the session and all connections.                                                         |
 | `void SetDiscoveryInfo(Func<byte[]>? provider)`                                                                   | What a direct host answers LAN discovery with. Null (the default) answers nothing.             |
 | `void StartDiscovery(int port)` / `void StopDiscovery()`                                                          | Broadcast for direct hosts on that port every 2 s, independent of any session.                 |
@@ -335,8 +358,8 @@ stripped.
 | `Action? OnConnectedToHost`                              | The local client finished connecting.                                   |
 | `Action<INetPeer>? OnPeerConnected`                      | A peer joined (host: per client; client: the host peer).                |
 | `Action<INetPeer, DisconnectReason>? OnPeerDisconnected` | A peer left. Do not use the peer after this callback.                   |
-| `Action<ConnectionRejection>? OnConnectionRejected`      | A connection attempt was refused, with the reason when there is one.    |
 | `Action<string>? OnNetworkError`                         | A socket-level error occurred. The string is for logs, not for parsing. |
+| `Action<IPEndPoint>? OnPublicEndPointFound`              | STUN reported this end's internet address, or it changed.               |
 
 ### Supporting types
 
@@ -349,8 +372,7 @@ stripped.
 | `RawHandler`          | `void (INetPeer peer, ReadOnlySpan<byte> data)`                                                                                                                                                                                |
 | `NetRole`             | `None`, `Host`, `Client`                                                                                                                                                                                                       |
 | `Delivery`            | `Reliable` (default), `Unreliable`, `ReliableUnordered`, `Sequenced`, `ReliableSequenced`                                                                                                                                      |
-| `DisconnectReason`    | `ConnectionFailed`, `Timeout`, `RemoteClose`, `LocalClose`, `Rejected`, `Unknown`, plus `SessionClosed` and `Kicked` in relay sessions                                                                                         |
-| `ConnectionRejection` | `Unspecified`, `BadHandshake`, `BadSessionCode`, `SessionNotFound`, `SessionFull`, `DuplicateHost`, `WrongPassword`, `RelayFull`, `RateLimited`, `TooManySessions`, `TooManyAttempts`, `TooManyClients`, `PasswordNotRequired` |
+| `DisconnectReason`    | `ConnectionFailed`, `Timeout`, `RemoteClose`, `LocalClose`, `Rejected`, `Unknown`                                                                                                                                                |
 
 ## Notes & gotchas
 
@@ -366,9 +388,7 @@ stripped.
 - **Message ids are a compatibility contract.** Changing an id or a struct's field order breaks
   every peer on the old build. Version the payload if you need to evolve it.
 - **Keep messages small.** Reliable messages larger than the MTU are fragmented and reassembled for
-  you; unreliable ones above it cannot be sent at all. In a relay session anything over
-  `NetworkAccess.MaxPayloadSize` is dropped before it leaves, and summarized in the log — a relay would
-  drop it too, but silently and counted against you.
+  you; unreliable ones above it cannot be sent at all.
 - **Sending before a session exists does nothing.** `Send` and `SendToAll` are no-ops until
   `OnHostStarted` or `OnConnectedToHost` has fired. They are counted and summarized in the log rather
   than failing, so an early send shows up instead of vanishing.

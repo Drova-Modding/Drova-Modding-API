@@ -1,3 +1,5 @@
+using System.Net;
+
 namespace Drova_Modding_API.Systems.Networking.Impl
 {
     /// <summary>
@@ -8,6 +10,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     /// </summary>
     internal static class NetworkSystem
     {
+        private const int PortCloseWaitMs = 3_000;
+
         private static LiteTransport? _transport;
 
         /// <summary>
@@ -23,24 +27,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal static int PeerCount => _transport?.PeerCount ?? 0;
 
-        internal static string? SessionCode => _transport?.SessionCode;
-
-        internal static bool IsEncrypted => _transport?.IsEncrypted ?? false;
-
-        /// <summary>
-        /// Largest payload a message may serialize to. Answered before a session exists as well, so a mod
-        /// can size its messages at load time; the number only shrinks once a session turns out to be
-        /// encrypted.
-        /// </summary>
-        internal static int MaxPayloadSize
-        {
-            get
-            {
-                Initialize();
-                return _transport!.MaxPayloadSize;
-            }
-        }
-
         internal static void Initialize()
         {
             _transport ??= new LiteTransport();
@@ -55,6 +41,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal static void Shutdown()
         {
             _transport?.Stop();
+            // The router keeps an open port for the rest of its lease unless it hears the close before the process ends.
+            _transport?.PortClosed.Wait(PortCloseWaitMs);
             LanDiscovery.Stop();
             // Handlers are process-global; drop them so a later session does not inherit stale ones.
             Dispatcher.Reset();
@@ -66,22 +54,36 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             _transport!.StartHost(port, key);
         }
 
-        internal static void Connect(string address, int port, string? key)
+        internal static IPEndPoint? PublicEndPoint => _transport?.PublicEndPoint;
+
+        internal static void Connect(string address, int port, string? key, bool punch)
         {
             Initialize();
-            _transport!.Connect(address, port, key);
+            _transport!.Connect(address, port, key, punch);
         }
 
-        internal static void StartHostViaRelay(string address, int port, string? sessionCode, string? password)
+        internal static void FindPublicEndPoint()
         {
             Initialize();
-            _transport!.StartHostViaRelay(address, port, sessionCode, password);
+            _transport!.FindPublicEndPoint();
         }
 
-        internal static void ConnectViaRelay(string address, int port, string sessionCode, string? password)
+        internal static void Punch(string address, int port)
         {
             Initialize();
-            _transport!.ConnectViaRelay(address, port, sessionCode, password);
+            _transport!.Punch(address, port);
+        }
+
+        internal static void StartHostViaSteam()
+        {
+            Initialize();
+            _transport!.StartHostViaSteam();
+        }
+
+        internal static void ConnectViaSteam(ulong hostId)
+        {
+            Initialize();
+            _transport!.ConnectViaSteam(hostId);
         }
 
         internal static void Stop()

@@ -16,9 +16,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
     /// Unity main thread and may touch game state directly.
     ///
     /// Two modes share this class. In <see cref="TransportMode.Direct"/> every remote player is a real
-    /// connection; in <see cref="TransportMode.Relay"/> there is one connection to a relay and players
-    /// are virtual ids behind it (see <see cref="RelayLink"/>). The public surface is identical either
-    /// way - only which start method was called differs.
+    /// LiteNetLib connection. In <see cref="TransportMode.Steam"/> <see cref="SteamLink"/> carries the
+    /// traffic. The public surface is the same in both modes.
     /// </summary>
     internal sealed class LiteTransport
     {
@@ -28,17 +27,28 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal const byte TypedChannel = 0;
 
         /// <summary>
-        /// Number of channels the manager multiplexes. Channel 0 is typed, 1..62 are raw, and 63 is
-        /// reserved for relay control traffic.
+        /// Number of channels the manager multiplexes. Channel 0 is typed, 1..62 are raw, and
+        /// <see cref="ControlChannel"/> is reserved.
         /// </summary>
         internal const int ChannelCount = 64;
 
+        /// <summary>
+        /// The channel <see cref="SteamLink"/> keeps for its own hello, welcome and goodbye.
+        /// </summary>
+        internal const byte ControlChannel = 63;
+
         private const long DropLogIntervalMs = 5_000;
 
+        /// <summary>At LiteNetLib's 500 ms between attempts, two minutes for the joiner's address to reach the host.</summary>
+        private const int PunchConnectAttempts = 240;
+
+        private const int MaxFragments = 512;
+
         private readonly EventBasedNetListener _listener = new();
-        private readonly RelayLink _link = new();
+        private readonly SteamLink _steam;
         private NetManager? _manager;
-        private PendingConnect? _pendingConnect;
+        private NatLayer? _nat;
+        private PortMapping? _portMapping;
         private TransportMode _mode = TransportMode.Direct;
 
         /// <summary>
@@ -69,13 +79,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             return (min, max);
         }
         private string? _connectKey;
-        private long _loggedUndecryptable;
         private long _loggedRefused;
-        private long _loggedOversized;
         private long _loggedWithoutSession;
-        private long _lastDropLogMs;
         private long _lastRefusedLogMs;
-        private long _lastOversizedLogMs;
         private long _lastWithoutSessionLogMs;
 
         internal NetRole Role { get; private set; } = NetRole.None;
@@ -91,59 +97,30 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         /// </summary>
         internal NetManager? Manager => _manager;
 
-        /// <summary>
-        /// The one real connection in a relay session, which is where every measurable number about that
-        /// session lives. Null in a direct session and before the relay accepted us.
-        /// </summary>
-        internal NetPeer? RelayConnection => _link.Connection;
+        /// <summary>This direct session's address on the internet, once a STUN server answered.</summary>
+        internal IPEndPoint? PublicEndPoint => _nat?.PublicEndPoint;
 
-        /// <summary>
-        /// The virtual id the relay assigned this peer, valid once the session is running.
-        /// </summary>
-        internal byte LocalVirtualId => _link.LocalVirtualId;
+        /// <summary>Completes once the router closed the last session's port, or at once when none was open.</summary>
+        internal Task PortClosed { get; private set; } = Task.CompletedTask;
 
-        internal bool IsConnected => _mode == TransportMode.Relay
-            ? _link.Welcomed && _link.PeerCount > 0
-            : _manager != null && _manager.ConnectedPeersCount > 0;
+        internal bool IsConnected => _mode switch
+        {
+            TransportMode.Steam => _steam.IsConnected,
+            _ => _manager != null && _manager.ConnectedPeersCount > 0,
+        };
 
         /// <summary>
         /// How many remote peers are currently known.
         /// </summary>
-        internal int PeerCount => _mode == TransportMode.Relay
-            ? _link.PeerCount
-            : _manager?.ConnectedPeersCount ?? 0;
-
-        /// <summary>
-        /// One-way latency to the relay, or 0 outside a relay session. Every
-        /// <see cref="RelayPeer.Ping"/> reports this, because the second leg is not measurable here.
-        /// </summary>
-        internal int RelayPing => _link.Connection?.Ping ?? 0;
-
-        /// <summary>
-        /// The relay session code in use, or null outside a relay session. A host that asked the relay to
-        /// pick one sees the assigned code here by the time <see cref="NetworkEvents.OnHostStarted"/> fires.
-        /// </summary>
-        internal string? SessionCode => _mode == TransportMode.Relay && !string.IsNullOrEmpty(_link.SessionCode)
-            ? _link.SessionCode
-            : null;
-
-        /// <summary>
-        /// Whether payloads are sealed end to end, which needs a password-protected relay session.
-        /// </summary>
-        internal bool IsEncrypted => _mode == TransportMode.Relay && _link.IsEncrypted;
-
-        /// <summary>
-        /// Largest payload a single message may serialize to. The relay's limit less its routing byte, and
-        /// less the seal when the session is encrypted, because both ride inside the same packet.
-        ///
-        /// Reported in direct mode too, where nothing enforces it: a message sized against this works in
-        /// either mode, and one sized against a direct session's fragmentation does not survive a relay.
-        /// </summary>
-        internal int MaxPayloadSize => RelayProtocol.MaxPayloadBytes - RelayProtocol.HeaderSize
-                                       - (IsEncrypted ? SessionCrypto.Overhead : 0);
+        internal int PeerCount => _mode switch
+        {
+            TransportMode.Steam => _steam.PeerCount,
+            _ => _manager?.ConnectedPeersCount ?? 0,
+        };
 
         internal LiteTransport()
         {
+            _steam = new SteamLink(() => Role = NetRole.None);
             _listener.ConnectionRequestEvent += OnConnectionRequest;
             _listener.PeerConnectedEvent += OnPeerConnected;
             _listener.PeerDisconnectedEvent += OnPeerDisconnected;
@@ -160,7 +137,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             _mode = TransportMode.Direct;
             _connectKey = key;
             _manager = NewManager();
-            // Only a direct host hears LAN discovery. A relay session never sees a broadcast.
+            // Only a direct host hears LAN discovery.
             _manager.BroadcastReceiveEnabled = true;
             if (!_manager.Start(port))
             {
@@ -169,11 +146,14 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 return;
             }
 
+            if (NetworkAccess.UsePortMapping) _portMapping = new PortMapping(_manager.LocalPort);
+
             Role = NetRole.Host;
             NetworkEvents.RaiseHostStarted();
         }
 
-        internal void Connect(string address, int port, string? key)
+        /// <summary>A punching connect keeps trying for two minutes and looks up this end's public address for the host.</summary>
+        internal void Connect(string address, int port, string? key, bool punch)
         {
             Stop();
             // Reset on start rather than in Stop, so an ended session's numbers stay readable.
@@ -181,51 +161,108 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             _mode = TransportMode.Direct;
             _connectKey = key;
             _manager = NewManager();
+            if (punch)
+            {
+                _manager.MaxConnectAttempts = PunchConnectAttempts;
+                _nat!.FindPublicEndPoint();
+            }
+
             _manager.Start();
             _manager.Connect(address, port, key ?? string.Empty);
             Role = NetRole.Client;
         }
 
-        /// <summary>
-        /// Claims a session code on a relay, or asks the relay to pick one when
-        /// <paramref name="sessionCode"/> is null or empty. Unlike <see cref="StartHost"/> this cannot
-        /// report success immediately: <see cref="NetworkEvents.OnHostStarted"/> fires when the relay has
-        /// accepted the code, and <see cref="NetworkEvents.OnConnectionRejected"/> when it refused it.
-        /// </summary>
-        internal void StartHostViaRelay(string address, int port, string? sessionCode, string? password)
+        internal void FindPublicEndPoint()
         {
-            ConnectToRelay(address, port, RelayProtocol.RoleHost, sessionCode, password, NetRole.Host);
+            if (_manager == null)
+            {
+                NetworkEvents.RaiseNetworkError("finding the public address needs a running direct session");
+                return;
+            }
+
+            _nat!.FindPublicEndPoint();
+        }
+
+        internal void Punch(string address, int port)
+        {
+            if (_manager == null)
+            {
+                NetworkEvents.RaiseNetworkError("punching needs a running direct session");
+                return;
+            }
+
+            if (!IPAddress.TryParse(address, out IPAddress? ip))
+            {
+                NetworkEvents.RaiseNetworkError($"cannot punch to '{address}', it is not an IP address");
+                return;
+            }
+
+            _nat!.Punch(new IPEndPoint(ip, port));
         }
 
         /// <summary>
-        /// Joins a session code on a relay. <see cref="NetworkEvents.OnConnectedToHost"/> fires once the
-        /// relay has put us in the session.
+        /// Hosts over Steam. <see cref="NetworkEvents.OnHostStarted"/> fires at once. A network error fires instead when Steam
+        /// is not running.
         /// </summary>
-        internal void ConnectViaRelay(string address, int port, string sessionCode, string? password)
+        internal void StartHostViaSteam()
         {
-            ConnectToRelay(address, port, RelayProtocol.RoleClient, sessionCode, password, NetRole.Client);
+            Stop();
+            NetworkDiagnostics.Reset();
+            _mode = TransportMode.Steam;
+
+            if (!_steam.StartHost())
+            {
+                NetworkEvents.RaiseNetworkError("Steam is not running, or this copy of the game is not the Steam one");
+                return;
+            }
+
+            Role = NetRole.Host;
+            NetworkEvents.RaiseHostStarted();
+        }
+
+        /// <summary>Joins a Steam host by its Steam id. <see cref="NetworkEvents.OnConnectedToHost"/> fires on its welcome.</summary>
+        internal void ConnectViaSteam(ulong hostId)
+        {
+            Stop();
+            NetworkDiagnostics.Reset();
+            _mode = TransportMode.Steam;
+
+            if (!_steam.Connect(hostId))
+            {
+                NetworkEvents.RaiseNetworkError("Steam is not running, or this copy of the game is not the Steam one");
+                return;
+            }
+
+            Role = NetRole.Client;
         }
 
         internal void Poll()
         {
-            CompletePendingConnect();
+            if (_mode == TransportMode.Steam) _steam.Poll();
+            if (_manager != null) _nat?.Poll(_manager);
+            _portMapping?.Poll();
             _manager?.PollEvents();
             DeliverDelayed();
-            FlushUndecryptableLog();
             FlushRefusedLog();
-            FlushOversizedLog();
             FlushWithoutSessionLog();
         }
 
         internal void Stop()
         {
-            _pendingConnect = null;
             if (_manager != null)
             {
                 _manager.Stop();
                 _manager = null;
             }
-            _link.Reset();
+
+            if (_portMapping != null)
+            {
+                PortClosed = _portMapping.Close();
+                _portMapping = null;
+            }
+
+            _nat = null;
+            _steam.Stop();
             _mode = TransportMode.Direct;
             Role = NetRole.None;
         }
@@ -236,9 +273,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         /// </summary>
         internal void CopyPeers(List<INetPeer> buffer)
         {
-            if (_mode == TransportMode.Relay)
+            if (_mode == TransportMode.Steam)
             {
-                _link.CopyPeers(buffer);
+                _steam.CopyPeers(buffer);
                 return;
             }
 
@@ -252,11 +289,12 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal void SendTyped<T>(INetPeer peer, in T message, Delivery delivery) where T : struct, INetMessage
         {
-            if (_mode == TransportMode.Relay)
+            if (_mode == TransportMode.Steam)
             {
-                if (!TryRelayTarget(peer, out byte target)) return;
+                if (!TrySteamPeer(peer, out SteamPeer? steamPeer)) return;
 
-                SendTypedViaRelay(target, message, delivery);
+                NetDataWriter typed = Dispatcher.BuildTyped(message);
+                _steam.Send(steamPeer!, TypedChannel, new ReadOnlySpan<byte>(typed.Data, 0, typed.Length), delivery);
                 return;
             }
 
@@ -268,15 +306,10 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal void SendTypedToAll<T>(in T message, Delivery delivery) where T : struct, INetMessage
         {
-            if (_mode == TransportMode.Relay)
+            if (_mode == TransportMode.Steam)
             {
-                if (!RelayReady())
-                {
-                    NetworkDiagnostics.CountSendWithoutSession();
-                    return;
-                }
-
-                SendTypedViaRelay(RelayLink.TargetForAll(Role), message, delivery);
+                NetDataWriter typed = Dispatcher.BuildTyped(message);
+                _steam.SendToAll(TypedChannel, new ReadOnlySpan<byte>(typed.Data, 0, typed.Length), delivery);
                 return;
             }
 
@@ -291,11 +324,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal void SendRaw(INetPeer peer, byte channel, ReadOnlySpan<byte> data, Delivery delivery)
         {
-            if (_mode == TransportMode.Relay)
+            if (_mode == TransportMode.Steam)
             {
-                if (!TryRelayTarget(peer, out byte target)) return;
-
-                SendRawViaRelay(target, channel, data, delivery);
+                if (TrySteamPeer(peer, out SteamPeer? steamPeer)) _steam.Send(steamPeer!, channel, data, delivery);
                 return;
             }
 
@@ -306,15 +337,9 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         internal void SendRawToAll(byte channel, ReadOnlySpan<byte> data, Delivery delivery)
         {
-            if (_mode == TransportMode.Relay)
+            if (_mode == TransportMode.Steam)
             {
-                if (!RelayReady())
-                {
-                    NetworkDiagnostics.CountSendWithoutSession();
-                    return;
-                }
-
-                SendRawViaRelay(RelayLink.TargetForAll(Role), channel, data, delivery);
+                _steam.SendToAll(channel, data, delivery);
                 return;
             }
 
@@ -330,122 +355,13 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             }
         }
 
-        /// <summary>
-        /// Backs <see cref="RelayPeer.Disconnect"/>. A host asks the relay to drop the client; a client
-        /// asking to drop its host leaves the session instead, since it has no authority over the host.
-        /// </summary>
-        internal void DisconnectRelayPeer(RelayPeer peer)
+        private static bool TrySteamPeer(INetPeer peer, [NotNullWhen(true)] out SteamPeer? steamPeer)
         {
-            if (!RelayReady()) return;
+            steamPeer = peer as SteamPeer;
+            if (steamPeer != null) return true;
 
-            if (Role != NetRole.Host || peer.VirtualId == RelayProtocol.HostVirtualId)
-            {
-                Stop();
-                return;
-            }
-
-            NetDataWriter control = _link.BuildControl(RelayProtocol.ControlKickPeer, peer.VirtualId);
-            _link.Connection!.Send(control, RelayProtocol.ControlChannel, DeliveryMethod.ReliableOrdered);
-
-            // The relay does not report back a kick the host itself asked for, so the event is raised
-            // here to keep both roles seeing a departure exactly once.
-            RelayPeer? removed = _link.Remove(peer.VirtualId);
-            if (removed != null) NetworkEvents.RaisePeerDisconnected(removed, DisconnectReason.LocalClose);
-        }
-
-        private void ConnectToRelay(string address, int port, byte role, string? sessionCode, string? password, NetRole localRole)
-        {
-            Stop();
-            // Reset on start rather than in Stop, so an ended session's numbers stay readable.
-            NetworkDiagnostics.Reset();
-            _mode = TransportMode.Relay;
-            _connectKey = null;
-            _link.Prepare(sessionCode, password);
-            _manager = NewManager();
-            _manager.Start();
-
-            Role = localRole;
-
-            if (string.IsNullOrEmpty(password))
-            {
-                _manager.Connect(address, port, RelayProtocol.BuildHandshake(role, sessionCode, null));
-                return;
-            }
-
-            // PBKDF2 takes about a tenth of a second, so it runs off the render thread and a later poll connects.
-            _pendingConnect = new PendingConnect(address, port, role, sessionCode,
-                Task.Run(() => SessionCrypto.DeriveJoinToken(password!)));
-        }
-
-        /// <summary>
-        /// Sends the handshake once its join token has been derived. Called every poll while one is
-        /// outstanding.
-        /// </summary>
-        private void CompletePendingConnect()
-        {
-            PendingConnect? pending = _pendingConnect;
-            if (pending == null || !pending.Token.IsCompleted) return;
-
-            _pendingConnect = null;
-
-            if (!pending.Token.IsCompletedSuccessfully || _manager == null)
-            {
-                MelonLogger.Error("[Networking] could not derive the join token, so the session was not started: "
-                    + pending.Token.Exception);
-                Stop();
-                return;
-            }
-
-            _manager.Connect(pending.Address, pending.Port,
-                RelayProtocol.BuildHandshake(pending.Role, pending.SessionCode, pending.Token.Result));
-        }
-
-        private void SendTypedViaRelay<T>(byte target, in T message, Delivery delivery) where T : struct, INetMessage
-        {
-            NetDataWriter plaintext = Dispatcher.BuildTyped(message);
-            SendFramed(target, TypedChannel, new ReadOnlySpan<byte>(plaintext.Data, 0, plaintext.Length), delivery);
-        }
-
-        private void SendRawViaRelay(byte target, byte channel, ReadOnlySpan<byte> data, Delivery delivery)
-        {
-            SendFramed(target, channel, data, delivery);
-        }
-
-        private void SendFramed(byte target, byte channel, ReadOnlySpan<byte> payload, Delivery delivery)
-        {
-            // Refused here because the relay drops an oversized packet silently.
-            if (payload.Length > MaxPayloadSize)
-            {
-                NetworkDiagnostics.CountOversizedSend();
-                return;
-            }
-
-            int length = _link.Frame(target, channel, payload);
-            _link.Connection!.Send(_link.FrameBuffer, 0, length, channel, Map(delivery));
-        }
-
-        private bool RelayReady()
-        {
-            return _link.Welcomed && _link.Connection != null;
-        }
-
-        private bool TryRelayTarget(INetPeer peer, out byte target)
-        {
-            target = 0;
-            if (!RelayReady())
-            {
-                NetworkDiagnostics.CountSendWithoutSession();
-                return false;
-            }
-
-            if (peer is not RelayPeer relayPeer)
-            {
-                MelonLogger.Error("[Networking] a peer from a direct session was used in a relay session");
-                return false;
-            }
-
-            target = relayPeer.VirtualId;
-            return true;
+            MelonLogger.Error("[Networking] a peer from another kind of session was used in a Steam session");
+            return false;
         }
 
         private bool TryDirectPeer(INetPeer peer, [NotNullWhen(true)] out PeerWrapper? wrapper)
@@ -453,7 +369,7 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             wrapper = peer as PeerWrapper;
             if (wrapper == null)
             {
-                MelonLogger.Error("[Networking] a peer from a relay session was used in a direct session");
+                MelonLogger.Error("[Networking] a peer from a Steam session was used in a direct session");
                 return false;
             }
 
@@ -470,7 +386,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         private NetManager NewManager()
         {
-            return new NetManager(_listener)
+            _nat = new NatLayer();
+            return new NetManager(_listener, _nat)
             {
                 UnsyncedEvents = false,
                 AutoRecycle = false,
@@ -479,20 +396,25 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 // Always on: the build running when coop misbehaves is the one whose numbers are needed.
                 EnableStatistics = true,
 
-                // The 15 ms default flush delay is paid four times per relay round trip, and per-frame state
-                // gains nothing from waiting.
+                // The 15 ms default flush delay is paid twice per round trip, and per-frame state gains
+                // nothing from waiting.
                 UpdateTime = 1,
 
                 // A story teleport into a big area stalls the process for well over the 5 s default, and both
                 // ends would time each other out.
                 DisconnectTimeout = 30_000,
+
+                // LiteNetLib allocates the whole fragment table when a fragmented message starts, sized by what the peer
+                // claims, and keeps up to 4096 open. At the default 65535 a few dozen tiny packets claim 2 GB.
+                // 512 fragments of at least 1 KB carry 512 KB, the most a Steam session can send in one message too.
+                MaxFragmentsCount = MaxFragments,
             };
         }
 
         private void OnConnectionRequest(ConnectionRequest request)
         {
-            // Only a direct host listens for requests; in relay mode the relay does the accepting.
-            if (_mode == TransportMode.Relay)
+            // A client's only peer is its host. Accepting here would let anyone who finds its port pose as a second host.
+            if (Role != NetRole.Host)
             {
                 request.Reject();
                 return;
@@ -510,14 +432,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         private void OnPeerConnected(NetPeer peer)
         {
-            // In relay mode the connection being up says nothing about the session; the relay's welcome
-            // does, so the events wait for it.
-            if (_mode == TransportMode.Relay)
-            {
-                _link.Attach(peer);
-                return;
-            }
-
             PeerWrapper wrapper = PeerWrapper.Of(peer);
             // Before the generic event, so a subscriber can special-case the host.
             if (Role == NetRole.Client)
@@ -529,42 +443,8 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
         private void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            if (_mode == TransportMode.Relay)
-            {
-                OnRelayDisconnected(disconnectInfo);
-                return;
-            }
-
-            if (disconnectInfo.Reason == LiteNetLib.DisconnectReason.ConnectionRejected)
-            {
-                NetworkEvents.RaiseConnectionRejected(ConnectionRejection.Unspecified);
-            }
-
             PeerWrapper wrapper = PeerWrapper.Of(peer);
             NetworkEvents.RaisePeerDisconnected(wrapper, Map(disconnectInfo.Reason));
-        }
-
-        private void OnRelayDisconnected(DisconnectInfo disconnectInfo)
-        {
-            byte code = disconnectInfo.AdditionalData.AvailableBytes > 0 ? disconnectInfo.AdditionalData.GetByte() : (byte)0;
-
-            if (disconnectInfo.Reason == LiteNetLib.DisconnectReason.ConnectionRejected)
-            {
-                NetworkEvents.RaiseConnectionRejected(RelayProtocol.MapRejection(code));
-            }
-
-            DisconnectReason reason = code switch
-            {
-                RelayProtocol.DisconnectSessionClosed => DisconnectReason.SessionClosed,
-                RelayProtocol.DisconnectKicked => DisconnectReason.Kicked,
-                _ => Map(disconnectInfo.Reason),
-            };
-
-            // Losing the one relay connection means losing every player behind it, so each is announced
-            // before the session state goes away.
-            _link.ForEachPeer(lost => NetworkEvents.RaisePeerDisconnected(lost, reason));
-            _link.Reset();
-            Role = NetRole.None;
         }
 
         private void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
@@ -608,12 +488,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         {
             try
             {
-                if (_mode == TransportMode.Relay)
-                {
-                    OnRelayReceive(reader, channel);
-                    return;
-                }
-
                 PeerWrapper wrapper = PeerWrapper.Of(peer);
                 if (channel == TypedChannel)
                 {
@@ -633,89 +507,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             {
                 // AutoRecycle is off, so return the reader to LiteNetLib's pool by hand.
                 reader.Recycle();
-            }
-        }
-
-        private void OnRelayReceive(NetPacketReader reader, byte channel)
-        {
-            if (reader.AvailableBytes < 1) return;
-
-            byte sender = reader.GetByte();
-
-            if (channel == RelayProtocol.ControlChannel && sender == RelayProtocol.RelayVirtualId)
-            {
-                OnRelayControl(reader);
-                return;
-            }
-
-            // Channels are independent, so a payload can outrun the control message announcing its
-            // sender. Whoever the relay stamped is a peer, whether we have been told about them yet.
-            RelayPeer relayPeer = _link.GetOrAddPeer(this, sender, out bool created);
-            if (created) NetworkEvents.RaisePeerConnected(relayPeer);
-
-            if (!_link.IsEncrypted)
-            {
-                if (channel == TypedChannel)
-                {
-                    Dispatcher.OnTypedReceived(relayPeer, reader);
-                }
-                else
-                {
-                    Dispatcher.OnRawReceived(relayPeer, channel, reader.GetRemainingBytesSpan());
-                }
-
-                return;
-            }
-
-            if (!_link.TryOpen(sender, channel, reader.GetRemainingBytesSpan(), out int length))
-            {
-                // A different password or a rewritten packet: indistinguishable here, and dropped either way.
-                NetworkDiagnostics.CountUndecryptablePacket();
-                return;
-            }
-
-            if (channel == TypedChannel)
-            {
-                Dispatcher.OnTypedReceived(relayPeer, _link.PlainReader(length));
-            }
-            else
-            {
-                Dispatcher.OnRawReceived(relayPeer, channel, new ReadOnlySpan<byte>(_link.PlainBuffer, 0, length));
-            }
-        }
-
-        private void OnRelayControl(NetPacketReader reader)
-        {
-            if (reader.AvailableBytes < 1) return;
-
-            byte opcode = reader.GetByte();
-
-            // The assigned code is the one opcode whose argument is a string, so it has to be split off
-            // before anything reads a single argument byte.
-            if (opcode == RelayProtocol.ControlSessionCode)
-            {
-                string assigned = reader.GetString(RelayProtocol.MaxSessionCodeLength);
-                if (assigned.Length > 0) _link.AssignSessionCode(assigned);
-                return;
-            }
-
-            if (reader.AvailableBytes < 1) return;
-
-            byte argument = reader.GetByte();
-
-            switch (opcode)
-            {
-                case RelayProtocol.ControlWelcome:
-                    OnRelayWelcome(argument);
-                    break;
-                case RelayProtocol.ControlPeerJoined:
-                    RelayPeer joined = _link.GetOrAddPeer(this, argument, out bool created);
-                    if (created) NetworkEvents.RaisePeerConnected(joined);
-                    break;
-                case RelayProtocol.ControlPeerLeft:
-                    RelayPeer? left = _link.Remove(argument);
-                    if (left != null) NetworkEvents.RaisePeerDisconnected(left, DisconnectReason.RemoteClose);
-                    break;
             }
         }
 
@@ -746,50 +537,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 "a bug or on purpose.");
         }
 
-        private void FlushUndecryptableLog()
-        {
-            long total = NetworkDiagnostics.UndecryptablePackets;
-            if (total <= _loggedUndecryptable)
-            {
-                _loggedUndecryptable = total;
-                return;
-            }
-
-            long now = Environment.TickCount64;
-            if (now - _lastDropLogMs < DropLogIntervalMs) return;
-
-            long dropped = total - _loggedUndecryptable;
-            _loggedUndecryptable = total;
-            _lastDropLogMs = now;
-
-            // Summarized, since a mismatched password fails every single packet.
-            MelonLogger.Error("[Networking] dropped " + dropped + " packets that failed to decrypt; do both sides use the same session password?");
-        }
-
-        /// <summary>
-        /// Summarizes messages too large for a relay to forward. Nothing else reports them: the sender
-        /// sees a send that returned normally, and the receiver sees a message that never came.
-        /// </summary>
-        private void FlushOversizedLog()
-        {
-            long total = NetworkDiagnostics.OversizedSends;
-            if (total <= _loggedOversized)
-            {
-                _loggedOversized = total;
-                return;
-            }
-
-            long now = Environment.TickCount64;
-            if (now - _lastOversizedLogMs < DropLogIntervalMs) return;
-
-            long dropped = total - _loggedOversized;
-            _loggedOversized = total;
-            _lastOversizedLogMs = now;
-
-            MelonLogger.Error("[Networking] dropped " + dropped + " messages larger than the " +
-                MaxPayloadSize + " bytes a relay forwards; split them or send fewer fields.");
-        }
-
         /// <summary>
         /// Summarizes sends made while no session was running. They do nothing, and a mod that starts
         /// sending a frame too early has no other way to find out.
@@ -812,21 +559,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
 
             MelonLogger.Warning("[Networking] " + dropped + " sends did nothing because no session was " +
                 "running; wait for OnHostStarted or OnConnectedToHost before sending.");
-        }
-
-        private void OnRelayWelcome(byte localVirtualId)
-        {
-            _link.Welcome(localVirtualId);
-
-            if (Role == NetRole.Host)
-            {
-                NetworkEvents.RaiseHostStarted();
-                return;
-            }
-
-            NetworkEvents.RaiseConnectedToHost();
-            RelayPeer host = _link.GetOrAddPeer(this, RelayProtocol.HostVirtualId, out bool created);
-            if (created) NetworkEvents.RaisePeerConnected(host);
         }
 
         private void OnReceiveUnconnected(IPEndPoint from, NetPacketReader reader, UnconnectedMessageType type)
@@ -859,31 +591,6 @@ namespace Drova_Modding_API.Systems.Networking.Impl
                 Delivery.ReliableSequenced => DeliveryMethod.ReliableSequenced,
                 _ => DeliveryMethod.ReliableOrdered,
             };
-        }
-
-        /// <summary>
-        /// A relay handshake waiting on the join token being derived for it.
-        /// </summary>
-        private sealed class PendingConnect
-        {
-            internal PendingConnect(string address, int port, byte role, string? sessionCode, Task<byte[]> token)
-            {
-                Address = address;
-                Port = port;
-                Role = role;
-                SessionCode = sessionCode;
-                Token = token;
-            }
-
-            internal string Address { get; }
-
-            internal int Port { get; }
-
-            internal byte Role { get; }
-
-            internal string? SessionCode { get; }
-
-            internal Task<byte[]> Token { get; }
         }
 
         private static DisconnectReason Map(LiteNetLib.DisconnectReason reason)

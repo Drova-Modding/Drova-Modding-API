@@ -53,6 +53,11 @@ namespace Drova_Modding_API.Systems.Items
         public Dictionary<string, double>? Ability { get; set; }
 
         /// <summary>
+        /// Readable id of a vanilla item whose icon the item shows, when <see cref="Icon"/> is not set.
+        /// </summary>
+        public string? IconItem { get; set; }
+
+        /// <summary>
         /// PNG file next to the item file, shown in the inventory and on placed pickups. The base item's icon when null.
         /// </summary>
         public string? Icon { get; set; }

@@ -98,11 +98,11 @@ namespace Drova_Modding_API.Systems.Networking.Impl
             {
                 throw new ArgumentOutOfRangeException(nameof(channel), "channel 0 is reserved for typed messages");
             }
-            // The top channel is reserved in both modes, so a mod's channel numbers keep working when a
-            // session moves from direct to relay.
-            if (channel >= RelayProtocol.ControlChannel)
+            // The top channel is reserved in every mode, so a mod's channel numbers keep working when a
+            // session moves from direct to Steam.
+            if (channel >= LiteTransport.ControlChannel)
             {
-                throw new ArgumentOutOfRangeException(nameof(channel), "channel must be below " + RelayProtocol.ControlChannel);
+                throw new ArgumentOutOfRangeException(nameof(channel), "channel must be below " + LiteTransport.ControlChannel);
             }
             RawHandlers[channel] = handler;
         }

@@ -29,6 +29,8 @@ if (PlayerAccess.TryGetPlayer(out Actor? player)
 | `Armor` / `MagicResistance`                                                     | Flat points added to physical / magical resistance. 10 points block about a quarter of a hit, 25 about 40%. |
 | `ActorBuffAccess.TryApply(actor, buff)`                                         | Applies the buff.                                                                                           |
 | `EnemyAccess.TryFindNearest(player, radius, filter, out enemy)`                 | Closest hostile actor within `radius`. `filter` is an optional extra condition.                             |
+| `EnemyAccess.MakeAggressive(actor, range)`                                      | The actor notices enemies from `range` away and chases them that far. Territorial and teasing actors attack at once. |
+| `EnemyAccess.MakeAggressiveGroup(lazyActors, range)`                            | Once loaded, puts the actors in one AI group (the first to fight pulls in the rest) and makes each aggressive. |
 
 ## Things to know
 
@@ -37,5 +39,6 @@ if (PlayerAccess.TryGetPlayer(out Actor? player)
 - Stats are capped by the game. When a damage factor hits the cap, a warning in the log names the stat.
 - In co-op each machine has its own copy of an enemy. Apply the buff on every machine, the API does not
   sync it.
+- `MakeAggressive` is not saved either. Call it where the actor's AI runs: in co-op that is the world authority.
 - `TryFindNearest` skips brawl opponents and knocked out actors. A radius of 400 reaches past the screen edge
   at 720p.

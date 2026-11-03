@@ -253,20 +253,10 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
                 return;
             }
 
-            bool relay = transport.Mode == TransportMode.Relay;
-            Field("role", transport.Role + (relay ? " via relay" : " direct"));
+            Field("role", transport.Role + " via " + transport.Mode);
             Field("connection", transport.IsConnected
                 ? "connected, " + transport.PeerCount + " peer(s)"
                 : "not connected yet, " + transport.PeerCount + " peer(s) known");
-
-            if (relay)
-            {
-                Field("session code", transport.SessionCode ?? "waiting for the relay to assign one");
-                Field("encryption", transport.IsEncrypted
-                    ? "on, end to end"
-                    : "off - an open session has no key material");
-                Field("local id", transport.LocalVirtualId.ToString());
-            }
 
             Field("counting for", FormatDuration(Environment.TickCount64 - NetworkDiagnostics.CountingSinceMs));
         }
@@ -300,7 +290,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             GUILayout.Space(6f);
             GUILayout.Label("Dropped");
 
-            Field("undecryptable", NetworkDiagnostics.UndecryptablePackets.ToString("N0"));
             Field("refused value", NetworkDiagnostics.RefusedMessages.ToString("N0"));
             Field("unknown id", NetworkDiagnostics.UnknownMessageIds.ToString("N0"));
             Field("malformed", NetworkDiagnostics.MalformedPackets.ToString("N0"));
@@ -326,13 +315,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             if (Event.current.type == EventType.Layout)
             {
                 NetworkSystem.GetPeers(_peers);
-            }
-
-            // Before the peer count check, so a relay host with no players still sees its relay link.
-            if (transport.Mode == TransportMode.Relay)
-            {
-                DrawRelayPeers(transport);
-                return;
             }
 
             if (_peers.Count == 0)
@@ -369,36 +351,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
                 Cell(FormatBytes(statistics.BytesReceived), 120f);
                 Cell(statistics.PacketLoss.ToString("N0"), 60f);
                 GUILayout.EndHorizontal();
-            }
-        }
-
-        [HideFromIl2Cpp]
-        private void DrawRelayPeers(LiteTransport transport)
-        {
-            NetPeer? connection = transport.RelayConnection;
-            if (connection == null)
-            {
-                GUILayout.Label("  no link to the relay");
-            }
-            else
-            {
-                NetStatistics statistics = connection.Statistics;
-                Field("relay link", $"rtt {connection.RoundTripTime} ms, mtu {connection.Mtu}, " +
-                                    $"last packet {connection.TimeSinceLastPacket:F0} ms ago");
-                Field("relay traffic", $"{FormatBytes(statistics.BytesSent)} out, {FormatBytes(statistics.BytesReceived)} in, " +
-                                       $"{statistics.PacketLoss:N0} resent");
-            }
-
-            if (_peers.Count == 0)
-            {
-                GUILayout.Label("  no players in the session yet");
-                return;
-            }
-
-            // All players share the relay connection, so only the latency to the relay is known per player.
-            foreach (INetPeer peer in _peers)
-            {
-                Field("player " + peer.Id, "at least " + peer.Ping + " ms one-way, measured to the relay");
             }
         }
 
@@ -507,7 +459,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
             }
             else
             {
-                MelonLogger.Msg($"[NetStats] role {transport.Role}, {(transport.Mode == TransportMode.Relay ? "relay" : "direct")}, " +
+                MelonLogger.Msg($"[NetStats] role {transport.Role}, {transport.Mode}," +
                                 $"{transport.PeerCount} peer(s), counting for {FormatDuration(Environment.TickCount64 - NetworkDiagnostics.CountingSinceMs)}");
             }
 
@@ -520,8 +472,7 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
                                 $"resent {statistics.PacketLoss:N0} ({Percent(statistics.PacketLoss, statistics.PacketsSent)})");
             }
 
-            MelonLogger.Msg($"[NetStats] dropped: undecryptable {NetworkDiagnostics.UndecryptablePackets}, " +
-                            $"refused value {NetworkDiagnostics.RefusedMessages}, unknown id {NetworkDiagnostics.UnknownMessageIds}, " +
+            MelonLogger.Msg($"[NetStats] dropped: refused value {NetworkDiagnostics.RefusedMessages}, unknown id {NetworkDiagnostics.UnknownMessageIds}, " +
                             $"malformed {NetworkDiagnostics.MalformedPackets}, receive failures {NetworkDiagnostics.ReceiveFailures}, " +
                             $"oversized {NetworkDiagnostics.OversizedSends}, no session {NetworkDiagnostics.SendsWithoutSession}");
 
@@ -544,11 +495,6 @@ namespace Drova_Modding_API.Systems.Networking.Diagnostics
         {
             LiteTransport? transport = NetworkSystem.Transport;
             if (transport == null) return 0;
-
-            if (transport.Mode == TransportMode.Relay)
-            {
-                return transport.RelayConnection?.RoundTripTime ?? 0;
-            }
 
             NetManager? manager = transport.Manager;
             if (manager == null) return 0;

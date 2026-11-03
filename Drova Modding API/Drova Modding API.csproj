@@ -8,8 +8,8 @@
         <IsPackable>false</IsPackable>
         <!-- Binding identity baked into every mod ever compiled against the API. Frozen; bump Version instead. -->
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <Version>0.7.0</Version>
-        <FileVersion>0.7.0.0</FileVersion>
+        <Version>0.8.0</Version>
+        <FileVersion>0.8.0.0</FileVersion>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Drova_Modding_API</AssemblyName>
     </PropertyGroup>
@@ -489,6 +489,7 @@
         <Compile Include="Patches\DS_StatementNodePatch.cs" />
         <Compile Include="Patches\GUIWindowOptions.cs" />
         <Compile Include="Patches\GUIWindowPatch.cs" />
+        <Compile Include="Patches\GUILearnWindowRowsPatch.cs" />
         <Compile Include="Patches\GetAllSubdirectoryNamesPatch.cs" />
         <Compile Include="Patches\LazyActorPatch.cs" />
         <Compile Include="Patches\ABIBhvrMorphActorPatch.cs" />
@@ -642,8 +643,8 @@
         <Compile Include="Systems\Networking\INetReader.cs" />
         <Compile Include="Systems\Networking\INetMessage.cs" />
         <Compile Include="Systems\Networking\RawHandler.cs" />
-        <Compile Include="Systems\Networking\ConnectionRejection.cs" />
         <Compile Include="Access\NetworkAccess.cs" />
+        <Compile Include="Access\SteamAccess.cs" />
         <Compile Include="Access\NetworkEvents.cs" />
         <Compile Include="Systems\Networking\Impl\LiteWriter.cs" />
         <Compile Include="Systems\Networking\Impl\LiteReader.cs" />
@@ -652,12 +653,16 @@
         <Compile Include="Systems\Networking\Impl\Dispatcher.cs" />
         <Compile Include="Systems\Networking\Impl\LiteTransport.cs" />
         <Compile Include="Systems\Networking\Impl\TransportMode.cs" />
-        <Compile Include="Systems\Networking\Impl\RelayProtocol.cs" />
-        <Compile Include="Systems\Networking\Impl\RelayPeer.cs" />
-        <Compile Include="Systems\Networking\Impl\RelayLink.cs" />
-        <Compile Include="Systems\Networking\Impl\SessionCrypto.cs" />
+        <Compile Include="Systems\Networking\Impl\SteamLink.cs" />
+        <Compile Include="Systems\Networking\Impl\SteamNative.cs" />
+        <Compile Include="Systems\Networking\Impl\SteamJoinCallback.cs" />
         <Compile Include="Systems\Networking\Impl\NetworkSystem.cs" />
         <Compile Include="Systems\Networking\Impl\LanDiscovery.cs" />
+        <Compile Include="Systems\Networking\Impl\NatLayer.cs" />
+        <Compile Include="Systems\Networking\Impl\PortMapping.cs" />
+        <Compile Include="Systems\Networking\Impl\SteamCallResult.cs" />
+        <Compile Include="Systems\Networking\Impl\SteamLobbies.cs" />
+        <Compile Include="Systems\Networking\SteamLobby.cs" />
         <Compile Include="Systems\Networking\DiscoveredHost.cs" />
         <Compile Include="Systems\Networking\Diagnostics\NetworkDiagnostics.cs" />
     </ItemGroup>

@@ -1,6 +1,43 @@
 # Changelog
 
-## [Unreleased]
+## [0.8.0 - 2026-11-03]
+### Added
+- The learn window shows every talent of a teacher: past four it adds a row of talent buttons and grows upward.
+- **Steam sessions**: `NetworkAccess.StartHostViaSteam()` / `ConnectViaSteam(steamId)` run sessions over Steam's relay network. Only the host's Steam friends can join. `SteamAccess` adds `LocalId`, `SetJoinString`, `OpenInviteDialog`, `GetJoinableFriends` and `OnJoinRequested`, and does nothing without Steam (`IsAvailable`). `AllowDirectConnections` (both ends) skips the relay but freezes about 2 s per new player and shows IPs.
+  - Players in one Steam session show up as playing together in the Steam friends list (`steam_player_group`), and under Recent players.
+  - Public lobbies: `SteamAccess.OpenLobby` / `CloseLobby` / `IsLobbyOpen` / `SetLobbyData` list a Steam host worldwide, `FindLobbies` / `OnLobbiesFound` / `GetFoundLobbies` (`SteamLobby`) find them. While a lobby is open, players who are not friends may join.
+  - `SteamAccess.ShowKeyboard`: Steam's on-screen keyboard over a text field, in Big Picture and on the Steam Deck.
+- **Direct sessions through routers**: with `NetworkAccess.UsePortMapping` set (off by default), `StartHost` opens its port through UPnP and closes it on stop and quit. A crashed game leaves it open for an hour at most. Without UPnP, hole punching: `FindPublicEndPoint()` / `PublicEndPoint` / `NetworkEvents.OnPublicEndPointFound` ask a public STUN server for the internet address, the joiner uses `ConnectWithPunch`, and the host `Punch`es toward the joiner's address. Works under Wine and Proton.
+- `EnemyAccess.MakeAggressive(actor, range)`: an enemy notices its targets from further away and chases them that far. `EnemyAccess.MakeAggressiveGroup(lazyActors, range)` also puts actors spawned together in one AI group, so the first to fight pulls in the rest.
+- Custom items: `IconItem` shows a vanilla item's icon (a spell's flow bar icon too) without shipping a PNG.
+- `TalentContainerDatabase.AddTalent(talent, predecessor)`: a modded talent that needs another one first, connected in the talent graph like vanilla chains.
+- Testing: TestAgent `spawn <creature> [dx dy]`, `xp [mark|gained]`, `health <target> mark|lost`, `talent canlearn <name>`, a target for `effect add|remove`, and `morph swap` plus the hidden player's health and weapon set in `morph`.
+
+### Security
+- A direct session caps a fragmented message at 512 fragments (about 512 KB, as on Steam). A few dozen tiny packets could make LiteNetLib allocate 2 GB before.
+- A direct client refuses incoming connections, so nobody who finds its port can pose as a second host.
+- A message cut short is counted, not logged with a stack trace per packet.
+- LAN discovery refuses connection requests instead of keeping them forever.
+- UPnP only talks to the device that answered the search, on its own address, and a broken answer no longer ends the search.
+- STUN answers count only from the STUN servers asked.
+- Dialogue voice names with a path in them (`..\`, `C:\`, `\\server\`) are refused, so a co-op peer cannot make the game open a file or network share of its choosing.
+- A Steam session no longer leaks the rest of a received batch when a handler ends it.
+
+### Changed
+- `BanditCreator` bandits keep their spawn point as their only routine place, so they no longer walk past a player who moved, or to the host's player in co-op. Creating one no longer needs the player.
+- **Breaking (binary):** `TraderModule` keeps its stock in the game's own `Inventory_Trading`, like vanilla traders. Each item can wait for a chapter (`WithItem(id, amount, chapter)`, `Chapter` in the NPC wizard), bought stock is saved, and the trader gets money each chapter. `WithName` is obsolete: the trade window shows the NPC's name.
+- Morph spells: kills as the creature give the player experience, and `PlayerAccess.GetPlayerAttributeStats()` returns the hidden player's stats. `Morph.HealthCost` / `RequiredLevel` are an alternative to flow cost and school, which still work. `MorphManager.AdjustDuration` / `SpareCaster` lengthen a morph or spare the caster.
+- Morph spells: `MorphManager.OnMorphStarted` fires once the creature is initialized and armed. Weapon swap cycles its weapon sets (`EquipCreatureWeaponSet`, `WeaponSet`, Insane-only sets left out), dodge uses its special attack, and a secondary-only attack (the harpy) also goes on the primary key.
+
+### Removed
+- **Breaking:** relay sessions: `NetworkAccess.StartHostViaRelay` / `ConnectViaRelay`, `SessionCode`, `IsEncrypted`, `MaxPayloadSize`, `NetworkEvents.OnConnectionRejected` / `ConnectionRejection`, `DisconnectReason.SessionClosed` / `Kicked`. Use direct or Steam sessions. A refused direct connection is still `DisconnectReason.Rejected`. Raw channel 63 stays reserved.
+
+### Fixed
+- Morph spells: NPCs no longer start a conversation with a morphed player (walk-up talks, scene talks). They talk once the morph ends.
+- Morph spells: a creature can use cave entrances. The hidden player follows it.
+- Morph spells: an NPC entering a routine place while the player is morphed no longer throws in `AIActorModule.RemoveActorsFromGroup` and finishes entering it.
+
+## [0.7.0 - 2026-10-26]
 ### Added
 - **Quests** (`QuestSystem`): custom quests from `Mods/Modding_API/Quests/*.json` with journal topics and entries, kill targets and trigger `Areas`, driven by the vanilla quest dialogue nodes. `TriggerEntry(questId, entryId)` adds an entry from code. See `docs/systems/quests.md` and `samples/QuestShowcase`.
 - **Custom items** (`CustomItemSystem`): new items from `Mods/Modding_API/Items/*.json`, each a copy of a vanilla item with its own id, texts, prices, stack size and PNG icon. They work in dialogues, traders, equipment, placements and saves; a removed item falls back to its base item.

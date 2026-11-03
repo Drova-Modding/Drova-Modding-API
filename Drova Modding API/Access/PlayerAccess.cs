@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Extensions;
+using Drova_Modding_API.Systems.Morphing;
 using Il2CppDrova;
 using Il2CppDrova.LoadingScreenHandles;
 using Il2CppDrova.Stats;
@@ -166,10 +167,16 @@ namespace Drova_Modding_API.Access
         }
 
         /// <summary>
-        /// Gets the player's attribute stats.
+        /// Gets the player's attribute stats. While morphed they are the hidden caster's, the creature has none.
         /// </summary>
         public static PlayerAttributeStats? GetPlayerAttributeStats()
         {
+            Actor? caster = MorphManager.Caster;
+            if (caster != null)
+            {
+                return caster.GetStats().TryCast<PlayerAttributeStats>();
+            }
+
             if (TryGetPlayer(out Actor? player))
             {
                 return player.GetStats().TryCast<PlayerAttributeStats>();

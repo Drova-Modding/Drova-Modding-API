@@ -19,6 +19,7 @@ namespace Drova_Modding_API.Systems.Talents
         private static Dictionary<string, TalentContainer>? _talentCache;
 
         private static readonly List<TalentContainer> TalentList = [];
+        private static readonly Dictionary<string, string> PredecessorByGuid = new(StringComparer.OrdinalIgnoreCase);
 
         private static bool _isInitialized;
 
@@ -64,6 +65,16 @@ namespace Drova_Modding_API.Systems.Talents
         }
 
         /// <summary>
+        /// Adds a talent that can only be learned after <paramref name="predecessor"/>, through a graph connection like vanilla
+        /// talent chains. Unlearning the predecessor unlearns it too.
+        /// </summary>
+        public static void AddTalent(TalentContainer talent, TalentContainer predecessor)
+        {
+            AddTalent(talent);
+            PredecessorByGuid[talent.GUID] = predecessor.GUID;
+        }
+
+        /// <summary>
         /// Initializes the talent graph and registers queued modded talents. Safe to call multiple times; only runs once.
         /// </summary>
         public static void Init()
@@ -87,7 +98,8 @@ namespace Drova_Modding_API.Systems.Talents
                     graph.SelfDeserialize();
                 }
                 graph.DeserializeIfNotDoneYet(true);
-                
+
+                List<TalentNode> added = [];
                 foreach (var talent in TalentList)
                 {
                     if(graph.GetTalentFromGUID(talent.GUID) != null) continue;
@@ -96,6 +108,18 @@ namespace Drova_Modding_API.Systems.Talents
                     node._talent = talent;
                     node.name = talent.GetTalentName();
                     node._talentFactory = graph.GetAllNodesOfType<TalentNode>().First()._talentFactory;
+                    added.Add(node);
+                }
+
+                // After all nodes, since a predecessor may come later in the list.
+                foreach (TalentNode node in added)
+                {
+                    if (!PredecessorByGuid.TryGetValue(node._talent.GUID, out string? predecessorGuid)) continue;
+                    TalentNodeBase? predecessor = graph.GetNodeFromGuid(predecessorGuid);
+                    if (predecessor != null)
+                    {
+                        graph.ConnectNodes(predecessor, node);
+                    }
                 }
             }
         }

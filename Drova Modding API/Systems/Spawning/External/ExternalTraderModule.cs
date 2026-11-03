@@ -31,15 +31,6 @@ namespace Drova_Modding_API.Systems.Spawning
 
             bool changed = false;
 
-            GUILayout.Label("Trader name (blank = NPC name)");
-            string updatedName = GUILayout.TextField(_cachedState.Name ?? string.Empty);
-            if (!string.Equals(updatedName, _cachedState.Name, StringComparison.Ordinal))
-            {
-                _cachedState.Name = updatedName;
-                changed = true;
-            }
-
-            GUILayout.Space(6f);
             GUILayout.Label("Trader money");
             string previousMoneyInput = _moneyInput;
             string updatedMoneyInput = GUILayout.TextField(_moneyInput);
@@ -80,14 +71,25 @@ namespace Drova_Modding_API.Systems.Spawning
             if (_cachedState.Items.Count > 0)
             {
                 GUILayout.Space(6f);
-                GUILayout.Label("Stock amounts");
+                GUILayout.Label("Stock amounts and first chapter (0 = from the start)");
                 for (int i = 0; i < _cachedState.Items.Count; i++)
                 {
                     TraderItemState entry = _cachedState.Items[i];
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(entry.ReadableId, GUILayout.ExpandWidth(true));
                     string amountInput = GUILayout.TextField(entry.Amount.ToString(CultureInfo.InvariantCulture), GUILayout.Width(80f));
+                    string chapterInput = GUILayout.TextField(entry.Chapter.ToString(CultureInfo.InvariantCulture), GUILayout.Width(40f));
                     GUILayout.EndHorizontal();
+
+                    if (int.TryParse(chapterInput, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedChapter))
+                    {
+                        int clampedChapter = Mathf.Clamp(parsedChapter, 0, 5);
+                        if (clampedChapter != entry.Chapter)
+                        {
+                            entry.Chapter = clampedChapter;
+                            changed = true;
+                        }
+                    }
 
                     if (int.TryParse(amountInput, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedAmount))
                     {
@@ -112,12 +114,11 @@ namespace Drova_Modding_API.Systems.Spawning
                 return;
 
             TraderModule module = new();
-            module.WithName(state.Name ?? string.Empty);
             module.WithMoney(state.Money);
             for (int i = 0; i < state.Items.Count; i++)
             {
                 TraderItemState entry = state.Items[i];
-                module.WithItem(entry.ReadableId, entry.Amount);
+                module.WithItem(entry.ReadableId, entry.Amount, entry.Chapter);
             }
 
             creator.WithModule(module);
@@ -125,16 +126,16 @@ namespace Drova_Modding_API.Systems.Spawning
 
         private static List<TraderItemState> Reconcile(List<string> selectedIds, List<TraderItemState> existing)
         {
-            Dictionary<string, int> amountsById = new(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, TraderItemState> existingById = new(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < existing.Count; i++)
-                amountsById[existing[i].ReadableId] = existing[i].Amount;
+                existingById[existing[i].ReadableId] = existing[i];
 
             List<TraderItemState> reconciled = new(selectedIds.Count);
             for (int i = 0; i < selectedIds.Count; i++)
             {
                 string id = selectedIds[i];
-                int amount = amountsById.GetValueOrDefault(id, 1);
-                reconciled.Add(new TraderItemState { ReadableId = id, Amount = Math.Max(1, amount) });
+                existingById.TryGetValue(id, out TraderItemState? old);
+                reconciled.Add(new TraderItemState { ReadableId = id, Amount = Math.Max(1, old?.Amount ?? 1), Chapter = old?.Chapter ?? 0 });
             }
 
             return reconciled;
@@ -182,6 +183,7 @@ namespace Drova_Modding_API.Systems.Spawning
 
         private sealed class TraderModuleState
         {
+            /// <summary>Ignored, kept so older payloads still carry it. The trade window shows the NPC's name.</summary>
             public string? Name { get; set; } = string.Empty;
             public float Money { get; set; }
             public List<TraderItemState> Items { get; set; } = [];
@@ -191,6 +193,7 @@ namespace Drova_Modding_API.Systems.Spawning
         {
             public string ReadableId { get; set; } = string.Empty;
             public int Amount { get; set; } = 1;
+            public int Chapter { get; set; }
         }
     }
 }

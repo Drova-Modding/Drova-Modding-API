@@ -225,14 +225,32 @@ any lethal blow). While morphed:
 - `PlayerAccess.GetPlayer()` is the creature, `MorphManager.Caster` the hidden player body with its
   inventory and equipment;
 - the hidden body is carried along, so NPCs spawn and the world streams around the creature;
-- the attack keys use the creature's own weapon (a ripper bites and charges). Creatures have no dodge,
-  and their special abilities (a ripper's leap or enrage) are AI-only;
+- the attack keys use the creature's own weapon (a ripper bites and charges). The weapon swap key cycles
+  the creature's weapon sets (a bear's dash bite and ground slam, a harpy's fan and throw), and the dodge
+  key, since creatures have no dodge, uses its special attack (a bear's rush, a harpy's scream). The
+  attacks the game keeps for Insane and the AI's cast abilities (a ripper's leap) stay AI-only. In co-op
+  the teammates' copies follow the weapon set;
 - the world treats the creature like one of its kind: rippers, other wild animals and bandits leave it
   alone, villagers, guards and dogs attack it. Attacking one of a friendly kind turns that kind hostile,
   and its pack joins in;
 - no looting, opening, using or talking (the creature's pockets are lost when the morph ends). Doors and
   teleporter gates do not let a creature through;
-- morphing out next to hostile creatures puts the player in the fight at once.
+- morphing out next to hostile creatures puts the player in the fight at once;
+- kills pay the player's experience like their own kills (the creature counts as a conjured companion),
+  and `PlayerAccess.GetPlayerAttributeStats()` returns the hidden player's stats.
+
+`HealthCost` makes the morph cost that percent of the player's max health instead of flow. The spell then
+needs no flow and no unlocked flow school (it shows as physical), and its slot is grayed out while the
+player has no more health than the cost. `RequiredLevel` grays it out below that character level. The
+health is taken when the creature spawns.
+
+```json
+"Morph": { "Creature": "8074729ab27467d42bbb9c783c2f9758", "Duration": 45, "HealthCost": 20, "RequiredLevel": 10 }
+```
+
+A mod scales the morph through `MorphManager.AdjustDuration` (caster, creature guid, duration in, duration out),
+buffs the creature in `OnMorphStarted` (`ActorBuffAccess`), and keeps the player alive after the creature died
+with `MorphManager.SpareCaster` (return true; the player keeps the health they had).
 
 Only the player can morph. The same spell cast by an NPC or replayed on a co-op teammate's body does
 nothing. In co-op, teammates see the morphed player as that creature. A mod that cannot handle the
@@ -327,10 +345,13 @@ QuestSystem.TriggerEntry("showcase_ripper_hunt", "killed");
 | `EffectStacks`                     | Stacks of the base item's status effect: it acts once when applied and once per stack.              |
 | `Ability`                          | Ability values by key (`ABI_HealthValue`, `ABI_Lifetime`, …). Bools take 0 or 1.                    |
 | `Icon`                             | PNG file next to the item file.                                                                     |
+| `IconItem`                         | Readable id of a vanilla item whose icon to show instead, when there is no `Icon`.                  |
 | `Letter.TextKey`                   | Makes the item a letter with this text (`Base` must be a vanilla letter).                           |
 | `Letter.TitleKey`                  | The letter's journal title. The item's name when left out.                                          |
 | `LearnSpell`                       | Spell a recipe teaches (`Base` must be a vanilla `recipe_flow_*`).                                  |
 | `Morph.Creature`, `Morph.Duration` | Makes a spell a morph into that creature for that many seconds (`Base` must be a vanilla `flow_*`). |
+| `Morph.HealthCost`                 | Percent of max health the morph costs instead of flow. Also drops the flow school requirement.       |
+| `Morph.RequiredLevel`              | Character level needed to cast the morph.                                                           |
 
 ## API reference
 
@@ -347,9 +368,12 @@ QuestSystem.TriggerEntry("showcase_ripper_hunt", "killed");
 | `MorphManager.OnMorphStarted` / `OnMorphEnded`                                                      | Events: a morph started (caster, creature) or ended (caster).                                                    |
 | `MorphManager.EndMorph()`                                                                           | Ends a running morph early.                                                                                      |
 | `MorphManager.CanMorph`                                                                             | Optional veto, asked when a morph spell is cast.                                                                 |
+| `MorphManager.AdjustDuration`                                                                       | Optional, asked when a morph starts: caster, creature guid and duration in, the duration to use out.             |
+| `MorphManager.SpareCaster`                                                                          | Optional, asked when the creature died: true keeps the player alive.                                             |
 | `MorphManager.BodyGuid`                                                                             | Addressable guid of the creature during a morph.                                                                 |
 | `MorphManager.TryGetCreature(guid, out prefab)`                                                     | A creature prefab, loaded in the background on first ask.                                                        |
 | `MorphManager.EquipCreatureWeapon(actor)`                                                           | Binds a creature's attacks to the attack keys while its AI is off.                                               |
+| `MorphManager.EquipCreatureWeaponSet(actor, index)` / `WeaponSet`                                   | Arms a creature with one of its weapon sets (`EquipIndex` value); the controlled creature's current one.         |
 | `MorphManager.CreateAbility(template, creature, duration, holder)`                                  | Builds a morph ability from code.                                                                                |
 | `GVarConditions.Changed`                                                                            | Event: a quest state or bool changed.                                                                            |
 | `GVarConditions.AllMet(conditions)`                                                                 | Whether every condition holds.                                                                                   |

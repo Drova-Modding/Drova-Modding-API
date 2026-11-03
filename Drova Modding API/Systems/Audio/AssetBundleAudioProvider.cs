@@ -28,6 +28,9 @@ namespace Drova_Modding_API.Systems.Audio
         // Clip key to bundle, from the .manifest files. The game renames NPCs, so the actor name does not always name the bundle.
         private readonly Dictionary<string, string> _clipBundles = [];
 
+        /// <summary>The folder the voice bundles are read from.</summary>
+        internal static string BundleFolder => Path.Combine(Utils.SavePath, AudioFolderName, BundleSubFolder);
+
         /// <summary>
         /// A loaded bundle with its lower-cased clip names, so misses skip <c>LoadAsset</c>, and its decoded clips.
         /// </summary>
@@ -52,7 +55,7 @@ namespace Drova_Modding_API.Systems.Audio
         /// </summary>
         private void IndexManifests()
         {
-            string folder = Path.Combine(Utils.SavePath, AudioFolderName, BundleSubFolder);
+            string folder = BundleFolder;
             if (!Directory.Exists(folder)) return;
 
             foreach (string manifest in Directory.EnumerateFiles(folder, "*.manifest"))
@@ -165,6 +168,16 @@ namespace Drova_Modding_API.Systems.Audio
         }
 
         /// <summary>
+        /// Whether a bundle manifest lists the clip.
+        /// </summary>
+        internal bool HasClip(string clipName) => _clipBundles.ContainsKey(clipName.ToLowerInvariant());
+
+        /// <summary>
+        /// The bundle whose manifest lists the clip, or null.
+        /// </summary>
+        internal string? BundleOf(string clipName) => _clipBundles.TryGetValue(clipName.ToLowerInvariant(), out string? bundle) ? bundle : null;
+
+        /// <summary>
         /// Yields the actors whose bundles may hold the line, most likely first.
         /// The narrator is always included, since the actor alone does not tell which voice recorded a line.
         /// </summary>
@@ -219,13 +232,16 @@ namespace Drova_Modding_API.Systems.Audio
         {
             if (string.IsNullOrEmpty(actorName)) return null;
 
+            // Co-op peers name the speaker, so a name with a path in it (..\, C:\, \\server\) would open a file of their choosing.
+            if (Path.GetFileName(actorName) != actorName || actorName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return null;
+
             string key = actorName.ToLowerInvariant();
             if (_bundleCache.TryGetValue(key, out var cached))
             {
                 return cached;
             }
 
-            string path = Path.Combine(Utils.SavePath, AudioFolderName, BundleSubFolder, key);
+            string path = Path.Combine(BundleFolder, key);
             if (_unreadable.Contains(key) || !File.Exists(path))
             {
                 return null;

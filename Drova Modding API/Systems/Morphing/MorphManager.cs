@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Access;
 using Il2CppDrova;
 using Il2CppDrova.ABI;
+using Il2CppDrova.ActorActions;
+using Il2CppDrova.AI.Logic;
 using Il2CppDrova.AI.Modules;
 using Il2CppDrova.Alignment;
 using Il2CppDrova.HitSystem;
@@ -26,27 +28,46 @@ namespace Drova_Modding_API.Systems.Morphing
     /// </summary>
     public static class MorphManager
     {
+        private const float InitTimeout = 2f;
+
+        /// <summary>The game's Insane-only weapon set. EquipIndex has no name for it.</summary>
+        private const int InsaneSet = 14;
+
         private static readonly Dictionary<string, Actor> CreaturesByGuid = new(StringComparer.OrdinalIgnoreCase);
         private static readonly Dictionary<IntPtr, (float Duration, ABI_Bhvr_Morph_Actor Morph, string Guid)> MorphsByAbility = new();
+        private static readonly Dictionary<IntPtr, (float HealthCost, int RequiredLevel)> CostsByItem = new();
+        private static readonly Dictionary<IntPtr, float> HealthCostByAbility = new();
         private static readonly HashSet<string> Loading = new(StringComparer.OrdinalIgnoreCase);
 
         // Guids that named no actor prefab, so a caller asking every frame does not start a load every frame.
         private static readonly HashSet<string> Failed = new(StringComparer.OrdinalIgnoreCase);
         private static readonly HashSet<IntPtr> HostileKinds = new();
+        private static readonly Dictionary<IntPtr, Il2CppCollections.List<AI_Equipment.EquipData>> SetsByBody = new();
         private static ABI_Bhvr_Morph_Actor? _active;
         private static bool _bodyDied;
         private static Entity? _killer;
 
         /// <summary>
-        /// A morph started, with the hidden caster and the creature the player controls.
+        /// A morph started, with the hidden caster and the creature the player controls. Raised once the creature is
+        /// initialized and armed, so buffs and stat changes on it hold.
         /// </summary>
         public static event Action<Actor, Actor>? OnMorphStarted;
 
         /// <summary>
         /// A morph ended and the caster has the controls again. Not raised when a load ends it.
-        /// When the creature died, the caster dies right after.
+        /// When the creature died, the caster dies right after, unless <see cref="SpareCaster"/> says otherwise.
         /// </summary>
         public static event Action<Actor>? OnMorphEnded;
+
+        /// <summary>
+        /// Optional, asked when a morph starts: caster, creature guid and the spell's duration in, the duration to use out.
+        /// </summary>
+        public static Func<Actor, string, float, float>? AdjustDuration { get; set; }
+
+        /// <summary>
+        /// Optional, asked when the creature died, with the caster. True keeps the caster alive with the health it had.
+        /// </summary>
+        public static Func<Actor, bool>? SpareCaster { get; set; }
 
         /// <summary>
         /// Optional veto, asked when a morph spell is cast. False cancels the morph, the cast animation still plays.
@@ -67,6 +88,11 @@ namespace Drova_Modding_API.Systems.Morphing
         /// Addressable guid of the creature during a morph, or null.
         /// </summary>
         public static string? BodyGuid { get; private set; }
+
+        /// <summary>
+        /// The <c>EquipIndex</c> value of the controlled creature's weapon set, which the weapon swap key cycles. -1 when not morphed.
+        /// </summary>
+        public static int WeaponSet { get; private set; } = -1;
 
         /// <summary>
         /// Whether the player is morphed right now.
@@ -135,7 +161,70 @@ namespace Drova_Modding_API.Systems.Morphing
                 return false;
             }
 
-            return entry.Morph != null && entry.Morph._targetActor != null && CanMorph?.Invoke() != false;
+            if (entry.Morph == null || entry.Morph._targetActor == null || CanMorph?.Invoke() == false)
+            {
+                return false;
+            }
+
+            // Charged here, where the creature really spawns. Health can have dropped since the cast began.
+            if (!HealthCostByAbility.TryGetValue(ability.Pointer, out float percent) || percent <= 0f)
+            {
+                return true;
+            }
+
+            Health health = caster.GetHealth();
+            if (health == null)
+            {
+                return false;
+            }
+
+            int cost = HealthCostOf(health, percent);
+            return health.CurHealth > cost && DamageAccess.TryGetPureDamageType(out DamageStatDesc? pure) && DamageAccess.TryApplyDamage(health, cost, pure);
+        }
+
+        /// <summary>
+        /// Gives a morph item the cost and level its <see cref="Items.CustomMorphDefinition"/> asks for.
+        /// </summary>
+        internal static void SetCost(Item item, ABI_Ability ability, float healthCost, int requiredLevel)
+        {
+            CostsByItem[item.Pointer] = (healthCost, requiredLevel);
+            HealthCostByAbility[ability.Pointer] = healthCost;
+        }
+
+        internal static void ClearCost(Item item)
+        {
+            CostsByItem.Remove(item.Pointer);
+        }
+
+        /// <summary>
+        /// False while the player lacks the level or health a morph item asks for, which greys its spell slot out.
+        /// Asked every frame for each slot, so it is one lookup for any other item.
+        /// </summary>
+        internal static bool MeetsRequirements(Item item, Actor? actor)
+        {
+            if (!CostsByItem.TryGetValue(item.Pointer, out (float HealthCost, int RequiredLevel) cost) || actor == null)
+            {
+                return true;
+            }
+
+            // A co-op puppet replays the owner's cast with its own stats. MaySpawn stops it from morphing anyway.
+            if (!PlayerAccess.TryGetPlayer(out Actor? player) || player.Pointer != actor.Pointer)
+            {
+                return true;
+            }
+
+            if (cost.RequiredLevel > 0 && actor.GetStats().Level < cost.RequiredLevel)
+            {
+                return false;
+            }
+
+            Health health = actor.GetHealth();
+            return cost.HealthCost <= 0f || (health != null && health.CurHealth > HealthCostOf(health, cost.HealthCost));
+        }
+
+        private static int HealthCostOf(Health health, float percent)
+        {
+            return Mathf.CeilToInt(health.MaxHealth * percent / 100f);
         }
 
         /// <summary>
@@ -206,6 +295,11 @@ namespace Drova_Modding_API.Systems.Morphing
             }
 
             AddReferencePoint(body);
+
+            // Like a conjured creature: its kills pay the player, its own death pays nobody.
+            body.CustomStats.SetGivesPlayerExp(true);
+            body.GetStats().SetExpOnDead(0);
+            body.GetStats().SetBrawlExp(0);
             _active = morph;
             Caster = caster;
             Body = body;
@@ -217,8 +311,12 @@ namespace Drova_Modding_API.Systems.Morphing
                 BodyGuid = entry.Guid;
             }
 
+            if (AdjustDuration != null && BodyGuid != null)
+            {
+                duration = Math.Max(0f, AdjustDuration(caster, BodyGuid, duration));
+            }
+
             MelonCoroutines.Start(Follow(morph, caster, body, duration));
-            OnMorphStarted?.Invoke(caster, body);
         }
 
         /// <summary>
@@ -254,7 +352,7 @@ namespace Drova_Modding_API.Systems.Morphing
             }
 
             OnMorphEnded?.Invoke(caster);
-            if (died)
+            if (died && SpareCaster?.Invoke(caster) != true)
             {
                 MelonCoroutines.Start(KillCaster(caster, killer));
             }
@@ -288,9 +386,25 @@ namespace Drova_Modding_API.Systems.Morphing
             IntPtr pointer = morph.Pointer;
             float endsAt = Time.time + duration;
             yield return null;
-            if (body != null)
+
+            // The creature initializes after the morph ability, and buffs and stats refuse an uninitialized actor.
+            float initDeadline = Time.time + InitTimeout;
+            while (body != null && !body.IsInitialized && Time.time < initDeadline)
+            {
+                yield return null;
+            }
+
+            if (body != null && _active != null && _active.Pointer == pointer)
             {
                 EquipCreatureWeapon(body);
+                try
+                {
+                    OnMorphStarted?.Invoke(caster, body);
+                }
+                catch (Exception e)
+                {
+                    MelonLogger.Error("[Morph] an OnMorphStarted listener failed: " + e);
+                }
             }
 
             while (morph != null && caster != null && body != null && _active != null && _active.Pointer == pointer)
@@ -312,25 +426,61 @@ namespace Drova_Modding_API.Systems.Morphing
         }
 
         /// <summary>
-        /// Equips a creature's first weapon set, which binds its attacks to the attack keys. Its AI equips it only from
-        /// the combat graph, and with the AI off <c>AI_Equipment</c> never starts. For any creature whose AI is off.
+        /// Equips a creature's first weapon set, which binds its attacks to the attack keys, and its special attack to the
+        /// dodge key. Its AI equips it only from the combat graph, and with the AI off <c>AI_Equipment</c> never starts.
         /// </summary>
         public static void EquipCreatureWeapon(Actor body)
         {
-            AI_Equipment? equipment = body.GetComponentInChildren<AI_Equipment>(true);
-            if (equipment == null || equipment._equipmentData == null || equipment._equipmentData.Count == 0)
+            if (!EquipCreatureWeaponSet(body, -1))
             {
-                MelonLogger.Warning($"[Morph] '{body.name}' has no weapon to equip, it cannot attack.");
-                return;
+                MelonLogger.Warning($"[Morph] '{body.name}' has no weapon it could equip, it cannot attack.");
+            }
+        }
+
+        /// <summary>
+        /// Equips the creature's weapon set with that <c>EquipIndex</c> value, or its first one for -1. The special set
+        /// (<c>Custom_1</c>) goes on the dodge key instead, and the set the game uses only on Insane is left out.
+        /// </summary>
+        /// <returns>False when the creature has no such set, or the game refused an item of it for now (call again later).</returns>
+        public static bool EquipCreatureWeaponSet(Actor body, int index)
+        {
+            Il2CppCollections.List<AI_Equipment.EquipData>? sets = GetWeaponSets(body);
+            AI_Equipment.EquipData? set = null;
+            if (sets != null)
+            {
+                foreach (AI_Equipment.EquipData data in sets)
+                {
+                    if (IsAttackSet(data) && (index < 0 || (int)data.Index == index))
+                    {
+                        set = data;
+                        break;
+                    }
+                }
             }
 
+            if (sets == null || set == null)
+            {
+                return false;
+            }
+
+            Actor.ActionModule actions = body.GetActionModule();
             IInventoryContainer inventory = body.GetInventoryActorModule().GetDefaultInventory();
-            foreach (AI_Equipment.SlotData slot in equipment._equipmentData[0].Equipment)
+            bool unbound = false;
+            bool equipped = true;
+            foreach (AI_Equipment.SlotData slot in set.Equipment)
             {
                 Il2CppCollections.List<ActorEquipSlot>? slots = slot.Item != null ? body.GetEquipmentModule().GetEquipmentSlotsOfType(slot.SlotType) : null;
-                if (slots == null || slots.Count == 0)
+                if (slots == null || slots.Count == 0 || slots[0].GetItemOnSlot() == slot.Item)
                 {
                     continue;
+                }
+
+                // A set without a secondary attack must not keep the last set's one. An item already worn keeps its binds.
+                if (!unbound)
+                {
+                    actions.UnbindActionType(Actor.ActionModule.EActionBind.PrimaryAttack);
+                    actions.UnbindActionType(Actor.ActionModule.EActionBind.SecondaryAttack);
+                    unbound = true;
                 }
 
                 if (!inventory.HasAtLeastItemInInventory(slot.Item, 1))
@@ -338,8 +488,116 @@ namespace Drova_Modding_API.Systems.Morphing
                     inventory.AddItem(new ItemStack(slot.Item, 1), false, false);
                 }
 
-                slots[0].TryEquip(slot.Item);
+                equipped &= slots[0].TryEquip(slot.Item);
             }
+
+            // The harpy carries its only melee attack on the secondary key.
+            if (!actions.IsActionBinded(Actor.ActionModule.EActionBind.PrimaryAttack) && actions.IsActionBinded(Actor.ActionModule.EActionBind.SecondaryAttack))
+            {
+                actions.BindActionType(actions._actionTypeToPrefabMap[Actor.ActionModule.EActionBind.SecondaryAttack], Actor.ActionModule.EActionBind.PrimaryAttack);
+            }
+
+            BindSpecialAttack(body, sets);
+            if (equipped && Body != null && Body.Pointer == body.Pointer)
+            {
+                WeaponSet = (int)set.Index;
+            }
+
+            return equipped;
+        }
+
+        /// <summary>
+        /// Moves the controlled creature on to its next weapon set, from the weapon swap key.
+        /// </summary>
+        internal static void CycleWeaponSet(Actor body)
+        {
+            Il2CppCollections.List<AI_Equipment.EquipData>? all = GetWeaponSets(body);
+            if (all == null)
+            {
+                return;
+            }
+
+            List<int> sets = [];
+            foreach (AI_Equipment.EquipData data in all)
+            {
+                if (IsAttackSet(data) && !sets.Contains((int)data.Index))
+                {
+                    sets.Add((int)data.Index);
+                }
+            }
+
+            int next = sets.Count > 0 ? sets[(sets.IndexOf(WeaponSet) + 1) % sets.Count] : -1;
+            if (sets.Count > 1)
+            {
+                EquipCreatureWeaponSet(body, next);
+            }
+        }
+
+        /// <summary>
+        /// The creature's weapon sets, kept from the first look: taking its AI away also takes its <c>AI_Equipment</c>.
+        /// </summary>
+        private static Il2CppCollections.List<AI_Equipment.EquipData>? GetWeaponSets(Actor body)
+        {
+            if (SetsByBody.TryGetValue(body.Pointer, out Il2CppCollections.List<AI_Equipment.EquipData>? sets))
+            {
+                return sets;
+            }
+
+            AI_Equipment? equipment = body.GetComponentInChildren<AI_Equipment>(true);
+            if (equipment == null || equipment._equipmentData == null)
+            {
+                return null;
+            }
+
+            SetsByBody[body.Pointer] = equipment._equipmentData;
+            return equipment._equipmentData;
+        }
+
+        private static bool IsAttackSet(AI_Equipment.EquipData data)
+        {
+            int index = (int)data.Index;
+            return index != (int)EquipIndex.Custom_1 && index != InsaneSet && data.Equipment != null && data.Equipment.Count > 0;
+        }
+
+        /// <summary>
+        /// Puts the special set's first attack (a bear's rush, a harpy's scream) on the dodge key, which a creature has no
+        /// use for otherwise. Cast abilities of a creature's AI (a ripper's leap) stay the AI's: the game's jump only works under AI steering.
+        /// </summary>
+        private static void BindSpecialAttack(Actor body, Il2CppCollections.List<AI_Equipment.EquipData> sets)
+        {
+            Actor.ActionModule actions = body.GetActionModule();
+            foreach (AI_Equipment.EquipData data in sets)
+            {
+                if ((int)data.Index != (int)EquipIndex.Custom_1)
+                {
+                    continue;
+                }
+
+                foreach (AI_Equipment.SlotData slot in data.Equipment)
+                {
+                    ItemBhvr_EquipEffect_ActionBinding? binding = slot.Item != null ? FindActionBinding(slot.Item) : null;
+                    AA_ABase? special = binding != null && binding._actions.Count > 0 ? binding._actions[0].ActionPrefab : null;
+                    if (special != null && actions.GetOrCreateActionInstanceFromPrefab(special, null, slot.Item) != null)
+                    {
+                        actions.BindActionType(special, Actor.ActionModule.EActionBind.Dodge);
+                        return;
+                    }
+                }
+            }
+        }
+
+        private static ItemBhvr_EquipEffect_ActionBinding? FindActionBinding(Item item)
+        {
+            for (int i = 0; i < item._itemBehaviours.Count; i++)
+            {
+                ItemBhvr_EquipEffect_ActionBinding? binding = item._itemBehaviours[i].TryCast<ItemBhvr_EquipEffect_ActionBinding>();
+                if (binding != null)
+                {
+                    return binding;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -373,9 +631,40 @@ namespace Drova_Modding_API.Systems.Morphing
             }
         }
 
+        /// <summary>
+        /// Makes the caster the registered player for one kill payout, because only its stats hold experience.
+        /// </summary>
+        /// <returns>The creature to put back afterwards, or null when nothing was swapped.</returns>
+        internal static Actor? PayCasterInstead()
+        {
+            EntityGameHandler handler = EntityGameHandler.TryGet();
+            if (!IsMorphed || Caster == null || handler == null || handler._playerActor == null || handler._playerActor.Pointer != Body!.Pointer)
+            {
+                return null;
+            }
+
+            handler._playerActor = Caster;
+            return Body;
+        }
+
+        internal static void RestorePlayer(Actor body)
+        {
+            EntityGameHandler handler = EntityGameHandler.TryGet();
+            if (handler != null)
+            {
+                handler._playerActor = body;
+            }
+        }
+
         private static void Clear()
         {
             HostileKinds.Clear();
+            if (Body != null)
+            {
+                SetsByBody.Remove(Body.Pointer);
+            }
+
+            WeaponSet = -1;
             _bodyDied = false;
             _killer = null;
             _active = null;

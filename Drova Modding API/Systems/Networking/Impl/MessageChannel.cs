@@ -24,7 +24,16 @@ namespace Drova_Modding_API.Systems.Networking.Impl
         internal override void Handle(INetPeer peer, LiteReader reader)
         {
             T message = default;
-            message.Read(reader);
+            try
+            {
+                message.Read(reader);
+            }
+            catch (InvalidOperationException)
+            {
+                // A message cut short. Counted, not logged, since a peer can send thousands a second.
+                NetworkDiagnostics.CountMalformedPacket();
+                return;
+            }
 
             // Dropped rather than repaired: a NaN written into a transform feeds every later frame, and a
             // mod cannot be expected to check every float it reads.
