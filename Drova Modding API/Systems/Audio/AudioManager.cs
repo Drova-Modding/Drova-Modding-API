@@ -62,6 +62,27 @@ namespace Drova_Modding_API.Systems.Audio
                 ? provider.GetClipByName(actorName, clipName) : null;
 
         /// <summary>
+        /// Drops the default provider's loaded bundles and reads the bundle folder again, for bundles replaced while the game runs.
+        /// </summary>
+        internal static void ReloadBundles()
+        {
+            if ((_dialogueAudioConnector as DefaultDialogueAudioConnector)?.AudioProvider is AssetBundleAudioProvider old) old.UnloadAll();
+            _dialogueAudioConnector = new DefaultDialogueAudioConnector(new AssetBundleAudioProvider());
+        }
+
+        /// <summary>
+        /// Whether a bundle manifest of the default provider lists the clip, without loading it.
+        /// </summary>
+        internal static bool HasDialogueClip(string clipName) =>
+            (_dialogueAudioConnector as DefaultDialogueAudioConnector)?.AudioProvider is AssetBundleAudioProvider provider && provider.HasClip(clipName);
+
+        /// <summary>
+        /// The bundle of the default provider whose manifest lists the clip, or null.
+        /// </summary>
+        internal static string? DialogueClipBundle(string clipName) =>
+            (_dialogueAudioConnector as DefaultDialogueAudioConnector)?.AudioProvider is AssetBundleAudioProvider provider ? provider.BundleOf(clipName) : null;
+
+        /// <summary>
         /// Replace the current DialogueAudioConnector with a new one
         /// </summary>
         public static void ReplaceDialogueAudioConnector(IAudioConnector dialogueAudioConnector)
