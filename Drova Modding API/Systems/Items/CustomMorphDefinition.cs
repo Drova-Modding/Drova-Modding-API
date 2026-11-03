@@ -16,5 +16,16 @@ namespace Drova_Modding_API.Systems.Items
         /// Seconds the morph lasts. 0 lasts until the creature dies.
         /// </summary>
         public float Duration { get; set; } = 30f;
+
+        /// <summary>
+        /// Percent of the caster's max health the morph costs instead of flow. Above 0 the spell costs no flow and needs no
+        /// unlocked flow school, and it cannot be cast while the caster has no more health than the cost.
+        /// </summary>
+        public float HealthCost { get; set; }
+
+        /// <summary>
+        /// Character level the player needs to cast the morph. 0 needs none.
+        /// </summary>
+        public int RequiredLevel { get; set; }
     }
 }
