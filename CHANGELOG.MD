@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.1 - 2026-11-04]
+### Added
+- `EnemyAccess.MakeAggressiveGroup(lazyActors, range, target)` sends the group straight at a player or a co-op teammate's body, the way the game's aggro zones do, and sends a body that streams in again once more.
+
+### Fixed
+- `ActorWorldLocator` puts a spawn spot on the walking path from the player. A spot behind a forest or a cliff left its creatures standing at their chase limit, running in place.
+- Bandits from `BanditCreator` look and fight the same on every co-op machine. They are rolled from a seed, and `ActorSpawnAccess.TrySpawnFromAsset` rebuilds them from the recipe. Before, teammates saw a naked human.
+
 ## [0.8.0 - 2026-11-03]
 ### Added
 - The learn window shows every talent of a teacher: past four it adds a row of talent buttons and grows upward.

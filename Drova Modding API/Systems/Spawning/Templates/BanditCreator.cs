@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Systems.Spawning.Modules;
@@ -357,187 +358,77 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 .WithCustomEntityInfo()
                 .WithBanditCosmetics(difficulty, rng);
 
+        /// <summary>The prefix of a bandit's spawn recipe, which <see cref="ActorSpawnAccess.TrySpawnFromAsset"/> rebuilds on another machine.</summary>
+        internal const string RecipePrefix = "bandit:";
+
+        private enum Loadout
+        {
+            Dagger,
+            Sword,
+            Axe,
+            SwordShield,
+            Spear,
+            SpearShield,
+            Bow,
+            SpearSlingshot,
+            SwordSlingshot,
+        }
+
         /// <summary>
         /// Lazy bandit armed with a dagger. Difficulty controls the blade quality.
         /// </summary>
-        public static LazyActor CreateDaggerBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(DaggerByDifficulty[DifficultyIndex(difficulty)])
-                .WithBanditCombatModules(difficulty, DaggerHardBonusTalents, DaggerTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateDaggerBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.Dagger, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Lazy bandit armed with a sword. Difficulty controls the blade quality.
         /// </summary>
-        public static LazyActor CreateSwordBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(SwordByDifficulty[DifficultyIndex(difficulty)])
-                .WithBanditCombatModules(difficulty, SwordHardBonusTalents, SwordTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateSwordBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.Sword, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Lazy bandit armed with an axe. Difficulty controls the axe quality.
         /// </summary>
-        public static LazyActor CreateAxeBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(AxeByDifficulty[DifficultyIndex(difficulty)])
-                .WithBanditCombatModules(difficulty, AxeHardBonusTalents, AxeTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateAxeBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.Axe, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Lazy bandit armed with a sword and shield. Difficulty controls equipment quality.
         /// </summary>
-        public static LazyActor CreateSwordShieldBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            int d = DifficultyIndex(difficulty);
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(SwordByDifficulty[d])
-                .WithItem(ShieldByDifficulty[d])
-                .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, ShieldHardBonusTalents), SwordTalentsByDifficulty, ShieldTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateSwordShieldBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SwordShield, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Lazy bandit armed with a spear. Difficulty controls the spear quality.
         /// </summary>
-        public static LazyActor CreateSpearBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(SpearByDifficulty[DifficultyIndex(difficulty)])
-                .WithBanditCombatModules(difficulty, SpearHardBonusTalents, SpearTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateSpearBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.Spear, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Lazy bandit armed with a spear and shield. Difficulty controls equipment quality.
         /// </summary>
-        public static LazyActor CreateSpearShieldBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            int d = DifficultyIndex(difficulty);
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(SpearByDifficulty[d])
-                .WithItem(ShieldByDifficulty[d])
-                .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, ShieldHardBonusTalents), SpearTalentsByDifficulty, ShieldTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateSpearShieldBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SpearShield, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Lazy bandit armed with a bow and quiver. Difficulty controls bow quality.
         /// </summary>
-        public static LazyActor CreateBowBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(BowByDifficulty[DifficultyIndex(difficulty)])
-                .WithItem(ItemReadableIds.Quiver.SimpleGroup.NameId)
-                .WithBanditCombatModules(difficulty, BowHardBonusTalents, BowTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateBowBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.Bow, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Lazy bandit carrying a spear and a slingshot (mixed melee/ranged).
         /// Difficulty controls weapon quality.
         /// </summary>
-        public static LazyActor CreateSpearSlingshotBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            int d = DifficultyIndex(difficulty);
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(SpearByDifficulty[d])
-                .WithItem(SlingshotByDifficulty[d])
-                .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, SlingHardBonusTalents), SpearTalentsByDifficulty, SlingTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateSpearSlingshotBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SpearSlingshot, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Lazy bandit carrying a sword and a slingshot (mixed melee/ranged).
         /// Difficulty controls weapon quality.
         /// </summary>
-        public static LazyActor CreateSwordSlingshotBanditLazy(
-            string name,
-            Vector2 position,
-            BanditDifficulty difficulty = BanditDifficulty.Normal,
-            bool saveToLazyActorStore = false)
-        {
-            var rng = Random.Shared;
-            int d = DifficultyIndex(difficulty);
-            return CreateLazyBanditBase(name, position, difficulty, rng)
-                .WithItem(SwordByDifficulty[d])
-                .WithItem(SlingshotByDifficulty[d])
-                .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, SlingHardBonusTalents), SwordTalentsByDifficulty, SlingTalentsByDifficulty)
-                .WithBanditHealth(difficulty, rng)
-                .WithBanditXp(difficulty)
-                .IsPlayerFriendly(false)
-                .CreateLazy(saveToLazyActorStore);
-        }
+        public static LazyActor CreateSwordSlingshotBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SwordSlingshot, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
         /// Spawns a lazy bandit with a randomly chosen loadout from all available variants.
@@ -548,19 +439,81 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             BanditDifficulty difficulty = BanditDifficulty.Normal,
             bool saveToLazyActorStore = false)
         {
-            return Random.Shared.Next(9) switch
+            return SpawnLazy((Loadout)Random.Shared.Next(Enum.GetValues<Loadout>().Length), name, position, difficulty, saveToLazyActorStore);
+        }
+
+        /// <summary>
+        /// Rolls the bandit from a seed and records it by a recipe of loadout, difficulty and seed, so a co-op
+        /// teammate builds the same bandit instead of the bare human template.
+        /// </summary>
+        private static LazyActor SpawnLazy(Loadout loadout, string name, Vector2 position, BanditDifficulty difficulty, bool saveToLazyActorStore)
+        {
+            int seed = Random.Shared.Next();
+            LazyActor bandit = Build(loadout, name, position, difficulty, seed).CreateLazy(saveToLazyActorStore);
+            ActorSpawnAccess.RecordLazySpawn(bandit, $"{RecipePrefix}{(int)loadout}:{(int)difficulty}:{seed}");
+            return bandit;
+        }
+
+        /// <summary>Builds the bandit a recipe from <see cref="SpawnLazy"/> describes, as a plain actor.</summary>
+        internal static bool TryBuild(string recipe, Vector2 position, [NotNullWhen(true)] out Actor? actor)
+        {
+            actor = null;
+            string[] parts = recipe.Substring(RecipePrefix.Length).Split(':');
+            if (parts.Length != 3 || !int.TryParse(parts[0], out int loadout) || !Enum.IsDefined((Loadout)loadout)
+                || !int.TryParse(parts[1], out int difficulty) || !int.TryParse(parts[2], out int seed))
             {
-                0 => CreateDaggerBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                1 => CreateSwordBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                2 => CreateAxeBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                3 => CreateSwordShieldBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                4 => CreateSpearBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                5 => CreateSpearShieldBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                6 => CreateBowBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                7 => CreateSpearSlingshotBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                8 => CreateSwordSlingshotBanditLazy(name, position, difficulty, saveToLazyActorStore),
-                _ => CreateSwordBanditLazy(name, position, difficulty, saveToLazyActorStore)
+                return false;
+            }
+
+            actor = Build((Loadout)loadout, "Bandit", position, (BanditDifficulty)difficulty, seed).Create().GetComponent<Actor>();
+            return actor != null;
+        }
+
+        private static NpcCreator Build(Loadout loadout, string name, Vector2 position, BanditDifficulty difficulty, int seed)
+        {
+            Random rng = new(seed);
+            int d = DifficultyIndex(difficulty);
+            NpcCreator creator = CreateLazyBanditBase(name, position, difficulty, rng);
+            creator = loadout switch
+            {
+                Loadout.Dagger => creator
+                    .WithItem(DaggerByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, DaggerHardBonusTalents, DaggerTalentsByDifficulty),
+                Loadout.Sword => creator
+                    .WithItem(SwordByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, SwordHardBonusTalents, SwordTalentsByDifficulty),
+                Loadout.Axe => creator
+                    .WithItem(AxeByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, AxeHardBonusTalents, AxeTalentsByDifficulty),
+                Loadout.SwordShield => creator
+                    .WithItem(SwordByDifficulty[d])
+                    .WithItem(ShieldByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, ShieldHardBonusTalents), SwordTalentsByDifficulty, ShieldTalentsByDifficulty),
+                Loadout.Spear => creator
+                    .WithItem(SpearByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, SpearHardBonusTalents, SpearTalentsByDifficulty),
+                Loadout.SpearShield => creator
+                    .WithItem(SpearByDifficulty[d])
+                    .WithItem(ShieldByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, ShieldHardBonusTalents), SpearTalentsByDifficulty, ShieldTalentsByDifficulty),
+                Loadout.Bow => creator
+                    .WithItem(BowByDifficulty[d])
+                    .WithItem(ItemReadableIds.Quiver.SimpleGroup.NameId)
+                    .WithBanditCombatModules(difficulty, BowHardBonusTalents, BowTalentsByDifficulty),
+                Loadout.SpearSlingshot => creator
+                    .WithItem(SpearByDifficulty[d])
+                    .WithItem(SlingshotByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, SlingHardBonusTalents), SpearTalentsByDifficulty, SlingTalentsByDifficulty),
+                _ => creator
+                    .WithItem(SwordByDifficulty[d])
+                    .WithItem(SlingshotByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, SlingHardBonusTalents), SwordTalentsByDifficulty, SlingTalentsByDifficulty),
             };
+
+            return creator
+                .WithBanditHealth(difficulty, rng)
+                .WithBanditXp(difficulty)
+                .IsPlayerFriendly(false);
         }
     }
 }

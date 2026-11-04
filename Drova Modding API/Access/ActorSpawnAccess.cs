@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Systems.Spawning;
+using Drova_Modding_API.Systems.Spawning.Templates;
 using Il2CppDrova;
 using Il2CppDrova.Utilities.LazyLoading;
 using MelonLoader;
@@ -30,7 +31,8 @@ namespace Drova_Modding_API.Access
         public static event Action<Actor, string>? OnActorSpawned;
 
         /// <summary>
-        /// Raised on the main thread for every lazy handle created through this API, with the base actor asset behind it.
+        /// Raised on the main thread for every lazy handle created through this API, with the base actor asset behind it,
+        /// or a recipe <see cref="TrySpawnFromAsset"/> rebuilds. A recipe follows the asset in a second raise.
         /// The body streams in and out with distance, so watch <c>LazyActor.Actor</c> for it.
         /// </summary>
         public static event Action<LazyActor, string>? OnLazyActorSpawned;
@@ -239,6 +241,13 @@ namespace Drova_Modding_API.Access
 
             try
             {
+                if (assetGuid.StartsWith(BanditCreator.RecipePrefix, StringComparison.Ordinal))
+                {
+                    if (!BanditCreator.TryBuild(assetGuid, position, out actor)) return false;
+                    RecordSpawn(actor, assetGuid);
+                    return true;
+                }
+
                 AssetReferenceGameObject reference = new(assetGuid);
 
                 GameObject prefab = reference.LoadAssetAsync<GameObject>().WaitForCompletion();

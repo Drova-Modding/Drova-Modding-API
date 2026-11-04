@@ -21,7 +21,7 @@ using Drova_Modding_API.Systems.Networking.Diagnostics;
 using UnityEngine.InputSystem;
 #endif
 
-[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.8.0", "Drova Modding")]
+[assembly: MelonInfo(typeof(Drova_Modding_API.Core), "Drova Modding API", "0.8.1", "Drova Modding")]
 [assembly: MelonGame("Just2D", "Drova")]
 [assembly: VerifyLoaderVersion(0, 7, 3, true)]
 [assembly: MelonPriority(-1)]

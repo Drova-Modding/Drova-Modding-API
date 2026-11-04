@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using Il2CppDrova;
+using Il2CppDrova.AI.Logic;
 using Il2CppDrova.AI.Modules;
 using Il2CppDrova.Alignment;
 using Il2CppDrova.Cognition;
@@ -18,6 +19,8 @@ namespace Drova_Modding_API.Access
     public static class EnemyAccess
     {
         private const float GroupLoadSeconds = 20f;
+        private const float ChaseSeconds = 300f;
+        private static readonly WaitForSeconds RecheckWait = new(1f);
 
         /// <summary>
         /// Makes <paramref name="actor"/> notice its enemies from <paramref name="range"/> away and chase them that far
@@ -59,10 +62,23 @@ namespace Drova_Modding_API.Access
         /// <param name="range">Aggro and chase range in world units, see <see cref="MakeAggressive"/>.</param>
         public static void MakeAggressiveGroup(IReadOnlyList<LazyActor> members, float range)
         {
-            MelonCoroutines.Start(GroupWhenLoaded(members, range));
+            MelonCoroutines.Start(GroupWhenLoaded(members, range, null));
         }
 
-        private static IEnumerator GroupWhenLoaded(IReadOnlyList<LazyActor> members, float range)
+        /// <summary>
+        /// Does <see cref="MakeAggressiveGroup(IReadOnlyList{LazyActor}, float)"/> and sends the group at
+        /// <paramref name="target"/> at once, as the game's aggro zones do. Without it a group spawned past its
+        /// perception radius never notices anyone and stands at its spawn point.
+        /// </summary>
+        /// <param name="members">Lazy actors spawned together, for example by <c>BanditCreator</c>.</param>
+        /// <param name="range">Aggro and chase range in world units, see <see cref="MakeAggressive"/>.</param>
+        /// <param name="target">Whom they attack, a player or a co-op teammate's body.</param>
+        public static void MakeAggressiveGroup(IReadOnlyList<LazyActor> members, float range, Actor? target)
+        {
+            MelonCoroutines.Start(GroupWhenLoaded(members, range, target));
+        }
+
+        private static IEnumerator GroupWhenLoaded(IReadOnlyList<LazyActor> members, float range, Actor? target)
         {
             float deadline = Time.time + GroupLoadSeconds;
             while (Time.time < deadline && members.Any(member => member != null && (member.Actor == null || !member.Actor.IsInitialized)))
@@ -72,6 +88,7 @@ namespace Drova_Modding_API.Access
 
             List<Actor> actors = members.Where(member => member != null && member.Actor != null && member.Actor.IsInitialized)
                 .Select(member => member.Actor).ToList();
+            IAIActor? targetActor = target != null && target.AIModule != null ? target.AIModule.GetIAIFactory().GetActor() : null;
             foreach (Actor actor in actors)
             {
                 // Human NPCs carry no AI_GroupBhvr, so SetInCombat shares targets through this group module instead.
@@ -80,7 +97,37 @@ namespace Drova_Modding_API.Access
                     actor._aiModule.AddActorInGroup(other._aiModule.GetIAIFactory().GetActor());
                 }
                 MakeAggressive(actor, range);
+
+                if (targetActor != null) SendAt(actor, targetActor);
             }
+
+            if (targetActor == null) yield break;
+
+            // A body that streams out and back in is a new actor without any of this, so it is sent again.
+            // ponytail: polls for ChaseSeconds, a load event per handle if many groups ever run at once.
+            HashSet<IntPtr> sent = actors.Select(actor => actor.Pointer).ToHashSet();
+            float chaseEnd = Time.time + ChaseSeconds;
+            while (Time.time < chaseEnd && target != null)
+            {
+                yield return RecheckWait;
+                foreach (LazyActor member in members)
+                {
+                    Actor? body = member != null ? member.Actor : null;
+                    if (body == null || !body.IsInitialized || !sent.Add(body.Pointer) || body.GetHealth()?.IsDead == true) continue;
+
+                    MakeAggressive(body, range);
+                    SendAt(body, targetActor);
+#if DEBUG
+                    MelonLogger.Msg($"[EnemyAccess] {body.name} streamed in again and was sent at {target.name}.");
+#endif
+                }
+            }
+        }
+
+        private static void SendAt(Actor actor, IAIActor target)
+        {
+            actor.GetHealth()?.SetReceivedDamageLastFrame();
+            actor._aiModule.AddTargetInCombat(target);
         }
 
         /// <summary>
