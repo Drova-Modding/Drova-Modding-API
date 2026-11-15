@@ -31,6 +31,7 @@ if (PlayerAccess.TryGetPlayer(out Actor? player)
 | `EnemyAccess.TryFindNearest(player, radius, filter, out enemy)`                 | Closest hostile actor within `radius`. `filter` is an optional extra condition.                             |
 | `EnemyAccess.MakeAggressive(actor, range)`                                      | The actor notices enemies from `range` away and chases them that far. Territorial and teasing actors attack at once. |
 | `EnemyAccess.MakeAggressiveGroup(lazyActors, range)`                            | Once loaded, puts the actors in one AI group (the first to fight pulls in the rest) and makes each aggressive. |
+| `EnemyAccess.MakeAggressiveGroup(lazyActors, range, target)`                    | Also sends the group at `target`, lifts the chase leash and keeps sending a member that drops out of the fight, until the group is dead. |
 
 ## Things to know
 

@@ -19,7 +19,6 @@ namespace Drova_Modding_API.Access
     public static class EnemyAccess
     {
         private const float GroupLoadSeconds = 20f;
-        private const float ChaseSeconds = 300f;
         private static readonly WaitForSeconds RecheckWait = new(1f);
 
         /// <summary>
@@ -28,7 +27,8 @@ namespace Drova_Modding_API.Access
         /// Territorial actors do not stop at their border, and teasing ones attack without posturing first.
         /// </summary>
         /// <param name="actor">An initialized actor. In co-op, call it where the actor's AI runs (the world authority).</param>
-        /// <param name="range">Aggro and chase range in world units. The game's own default is 100 to 125.</param>
+        /// <param name="range">Aggro and chase range in world units. The game's own default is 100 to 125. The chase leash is
+        /// measured from where the chase began, not from the target, so an actor sent at someone far away needs that distance plus room to follow.</param>
         public static void MakeAggressive(Actor actor, float range)
         {
             Component? ai = actor._aiModule != null ? actor._aiModule.GetAi() : null;
@@ -68,7 +68,8 @@ namespace Drova_Modding_API.Access
         /// <summary>
         /// Does <see cref="MakeAggressiveGroup(IReadOnlyList{LazyActor}, float)"/> and sends the group at
         /// <paramref name="target"/> at once, as the game's aggro zones do. Without it a group spawned past its
-        /// perception radius never notices anyone and stands at its spawn point.
+        /// perception radius never notices anyone and stands at its spawn point. A member that drops out of the fight
+        /// is sent again, so the group hunts <paramref name="target"/> until it dies.
         /// </summary>
         /// <param name="members">Lazy actors spawned together, for example by <c>BanditCreator</c>.</param>
         /// <param name="range">Aggro and chase range in world units, see <see cref="MakeAggressive"/>.</param>
@@ -98,30 +99,60 @@ namespace Drova_Modding_API.Access
                 }
                 MakeAggressive(actor, range);
 
-                if (targetActor != null) SendAt(actor, targetActor);
+                if (targetActor == null) continue;
+
+                Unleash(actor);
+                SendAt(actor, targetActor);
             }
 
             if (targetActor == null) yield break;
 
-            // A body that streams out and back in is a new actor without any of this, so it is sent again.
-            // ponytail: polls for ChaseSeconds, a load event per handle if many groups ever run at once.
-            HashSet<IntPtr> sent = actors.Select(actor => actor.Pointer).ToHashSet();
-            float chaseEnd = Time.time + ChaseSeconds;
-            while (Time.time < chaseEnd && target != null)
+            // A member that drops out of the fight, or streams in again as a new body, is sent again until it dies.
+            string targetKey = targetActor.GetGuidString();
+            HashSet<IntPtr> dead = [];
+            while (target != null && members.Any(member => member != null && !dead.Contains(member.Pointer)))
             {
                 yield return RecheckWait;
                 foreach (LazyActor member in members)
                 {
-                    Actor? body = member != null ? member.Actor : null;
-                    if (body == null || !body.IsInitialized || !sent.Add(body.Pointer) || body.GetHealth()?.IsDead == true) continue;
+                    if (member == null || dead.Contains(member.Pointer)) continue;
 
+                    Actor? body = member.Actor;
+                    Health? health = body != null ? body.GetHealth() : null;
+                    if (member.IsDead() || (health != null && health.IsDead))
+                    {
+                        dead.Add(member.Pointer);
+                        continue;
+                    }
+                    if (body == null || !body.IsInitialized) continue;
+
+                    // Leaving a game aggro zone puts the ranges back mid-fight, so they are set again on every check.
                     MakeAggressive(body, range);
+                    Unleash(body);
+
+                    // Ending a fight clears the combat targets, so a missing target means the member gave up or is a new body.
+                    if (body._aiModule.GetTargetsInCombat().Contains(targetKey)) continue;
+
                     SendAt(body, targetActor);
 #if DEBUG
-                    MelonLogger.Msg($"[EnemyAccess] {body.name} streamed in again and was sent at {target.name}.");
+                    MelonLogger.Msg($"[EnemyAccess] {body.name} was out of the fight and was sent at {target.name} again.");
 #endif
                 }
             }
+        }
+
+        /// <summary>
+        /// Lifts the chase leash: the chase graph gives up once the actor is this far from its home or the target this far from it.
+        /// </summary>
+        private static void Unleash(Actor actor)
+        {
+            Component? ai = actor._aiModule != null ? actor._aiModule.GetAi() : null;
+            AI_TargetBhvr? targetBhvr = ai != null ? ai.GetComponentInChildren<AI_TargetBhvr>() : null;
+            if (targetBhvr == null) return;
+
+            targetBhvr._looseAggroRange = float.MaxValue;
+            targetBhvr._looseActorRange = float.MaxValue;
+            targetBhvr._looseActorToActorRange = float.MaxValue;
         }
 
         private static void SendAt(Actor actor, IAIActor target)
