@@ -3,6 +3,7 @@ using Drova_Modding_API.Access;
 using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.Systems.Spawning.Modules;
 using Il2CppDrova;
+using Il2CppDrova.AI;
 using Il2CppDrova.Utilities.LazyLoading;
 using Random = System.Random;
 using UnityEngine;
@@ -30,13 +31,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
     /// </summary>
     public static class BanditCreator
     {
-        private static readonly string[] DaggerByDifficulty =
-        [
-            ItemReadableIds.Weapon.DaggerGroup.CoarseDaggerId,
-            ItemReadableIds.Weapon.DaggerGroup.IronDaggerId,
-            ItemReadableIds.Weapon.DaggerGroup.HeartSeekerId
-        ];
-
         private static readonly string[] SwordByDifficulty =
         [
             ItemReadableIds.Weapon.SwordGroup.CoarseBroadswordId,
@@ -80,20 +74,6 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         ];
 
         // Talent progression tracks (Easy => first, Normal => first two, Hard => first three)
-        private static readonly string[] DaggerTalentsByDifficulty =
-        [
-            TalentReadableIds.Daggers.Talent00,
-            TalentReadableIds.Daggers.Talent01,
-            TalentReadableIds.Daggers.Talent02
-        ];
-
-        private static readonly string[] DaggerHardBonusTalents =
-        [
-            TalentReadableIds.Daggers.SurpriseAttack,
-            TalentReadableIds.Daggers.GoingWithTheFlow,
-            TalentReadableIds.Daggers.EfficientStrikes
-        ];
-
         private static readonly string[] SwordTalentsByDifficulty =
         [
             TalentReadableIds.Sword.Talent00,
@@ -343,6 +323,15 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                 ;
         }
 
+        private static NpcCreator WithBow(this NpcCreator creator, int d)
+            => creator.WithItem(BowByDifficulty[d]).WithItem(ItemReadableIds.Quiver.SimpleGroup.NameId);
+
+        /// <summary>
+        /// Vanilla NPC presets keep the net in <c>Skill_07</c> and throwing knives in <c>Skill_06</c>, the slots their combat graphs cast.
+        /// </summary>
+        private static NpcCreator WithThrowable(this NpcCreator creator, string readableId, SpellSlot slot)
+            => creator.WithModule(new FlowPresetModule().With(readableId, slot));
+
         private static NpcCreator WithBanditRoutine(this NpcCreator creator, Vector2 position)
             => creator.WithModule(new RoutineModule().With(position));
 
@@ -361,6 +350,11 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
         /// <summary>The prefix of a bandit's spawn recipe, which <see cref="ActorSpawnAccess.TrySpawnFromAsset"/> rebuilds on another machine.</summary>
         internal const string RecipePrefix = "bandit:";
 
+        private const string NetId = ItemReadableIds.Throwing.GeneralGroup.EnsnareId;
+        private const string KnivesId = ItemReadableIds.Throwing.GeneralGroup.KnifeId;
+        private const SpellSlot NetSlot = SpellSlot.Skill_07;
+        private const SpellSlot KnivesSlot = SpellSlot.Skill_06;
+
         private enum Loadout
         {
             Dagger,
@@ -372,10 +366,17 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             Bow,
             SpearSlingshot,
             SwordSlingshot,
+            SwordBow,
+            SpearBow,
+            SwordNet,
+            AxeNet,
+            SpearNet,
+            SwordKnives,
+            SpearKnives,
         }
 
         /// <summary>
-        /// Lazy bandit armed with a dagger. Difficulty controls the blade quality.
+        /// Builds a sword bandit. An NPC fighting with a dagger can circle its target without ever striking.
         /// </summary>
         public static LazyActor CreateDaggerBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
             => SpawnLazy(Loadout.Dagger, name, position, difficulty, saveToLazyActorStore);
@@ -431,6 +432,48 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             => SpawnLazy(Loadout.SwordSlingshot, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
+        /// Lazy bandit with a sword and a bow: it shoots from range and closes in with the sword.
+        /// </summary>
+        public static LazyActor CreateSwordBowBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SwordBow, name, position, difficulty, saveToLazyActorStore);
+
+        /// <summary>
+        /// Lazy bandit with a spear and a bow: it shoots from range and closes in with the spear.
+        /// </summary>
+        public static LazyActor CreateSpearBowBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SpearBow, name, position, difficulty, saveToLazyActorStore);
+
+        /// <summary>
+        /// Lazy bandit with a sword that also throws nets (Fangnetz).
+        /// </summary>
+        public static LazyActor CreateSwordNetBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SwordNet, name, position, difficulty, saveToLazyActorStore);
+
+        /// <summary>
+        /// Lazy bandit with an axe that also throws nets (Fangnetz).
+        /// </summary>
+        public static LazyActor CreateAxeNetBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.AxeNet, name, position, difficulty, saveToLazyActorStore);
+
+        /// <summary>
+        /// Lazy bandit with a spear that also throws nets (Fangnetz).
+        /// </summary>
+        public static LazyActor CreateSpearNetBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SpearNet, name, position, difficulty, saveToLazyActorStore);
+
+        /// <summary>
+        /// Lazy bandit with a sword that also throws knives from range.
+        /// </summary>
+        public static LazyActor CreateSwordKnivesBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SwordKnives, name, position, difficulty, saveToLazyActorStore);
+
+        /// <summary>
+        /// Lazy bandit with a spear that also throws knives from range.
+        /// </summary>
+        public static LazyActor CreateSpearKnivesBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
+            => SpawnLazy(Loadout.SpearKnives, name, position, difficulty, saveToLazyActorStore);
+
+        /// <summary>
         /// Spawns a lazy bandit with a randomly chosen loadout from all available variants.
         /// </summary>
         public static LazyActor CreateRandomBanditLazy(
@@ -439,7 +482,8 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             BanditDifficulty difficulty = BanditDifficulty.Normal,
             bool saveToLazyActorStore = false)
         {
-            return SpawnLazy((Loadout)Random.Shared.Next(Enum.GetValues<Loadout>().Length), name, position, difficulty, saveToLazyActorStore);
+            // Dagger is the first loadout and builds a sword bandit, which would come up twice as often.
+            return SpawnLazy((Loadout)Random.Shared.Next(1, Enum.GetValues<Loadout>().Length), name, position, difficulty, saveToLazyActorStore);
         }
 
         /// <summary>
@@ -453,6 +497,12 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ActorSpawnAccess.RecordLazySpawn(bandit, $"{RecipePrefix}{(int)loadout}:{(int)difficulty}:{seed}");
             return bandit;
         }
+
+#if DEBUG
+        /// <summary>Spawns a bandit with the loadout named <paramref name="loadout"/>, for the test agent.</summary>
+        internal static LazyActor CreateLazy(string loadout, Vector2 position, BanditDifficulty difficulty)
+            => SpawnLazy(Enum.Parse<Loadout>(loadout, true), "Bandit", position, difficulty, false);
+#endif
 
         /// <summary>Builds the bandit a recipe from <see cref="SpawnLazy"/> describes, as a plain actor.</summary>
         internal static bool TryBuild(string recipe, Vector2 position, [NotNullWhen(true)] out Actor? actor)
@@ -476,10 +526,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             NpcCreator creator = CreateLazyBanditBase(name, position, difficulty, rng);
             creator = loadout switch
             {
-                Loadout.Dagger => creator
-                    .WithItem(DaggerByDifficulty[d])
-                    .WithBanditCombatModules(difficulty, DaggerHardBonusTalents, DaggerTalentsByDifficulty),
-                Loadout.Sword => creator
+                Loadout.Dagger or Loadout.Sword => creator
                     .WithItem(SwordByDifficulty[d])
                     .WithBanditCombatModules(difficulty, SwordHardBonusTalents, SwordTalentsByDifficulty),
                 Loadout.Axe => creator
@@ -497,17 +544,44 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                     .WithItem(ShieldByDifficulty[d])
                     .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, ShieldHardBonusTalents), SpearTalentsByDifficulty, ShieldTalentsByDifficulty),
                 Loadout.Bow => creator
-                    .WithItem(BowByDifficulty[d])
-                    .WithItem(ItemReadableIds.Quiver.SimpleGroup.NameId)
+                    .WithBow(d)
                     .WithBanditCombatModules(difficulty, BowHardBonusTalents, BowTalentsByDifficulty),
                 Loadout.SpearSlingshot => creator
                     .WithItem(SpearByDifficulty[d])
                     .WithItem(SlingshotByDifficulty[d])
                     .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, SlingHardBonusTalents), SpearTalentsByDifficulty, SlingTalentsByDifficulty),
-                _ => creator
+                Loadout.SwordSlingshot => creator
                     .WithItem(SwordByDifficulty[d])
                     .WithItem(SlingshotByDifficulty[d])
                     .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, SlingHardBonusTalents), SwordTalentsByDifficulty, SlingTalentsByDifficulty),
+                Loadout.SwordBow => creator
+                    .WithItem(SwordByDifficulty[d])
+                    .WithBow(d)
+                    .WithBanditCombatModules(difficulty, MergeTalents(SwordHardBonusTalents, BowHardBonusTalents), SwordTalentsByDifficulty, BowTalentsByDifficulty),
+                Loadout.SpearBow => creator
+                    .WithItem(SpearByDifficulty[d])
+                    .WithBow(d)
+                    .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, BowHardBonusTalents), SpearTalentsByDifficulty, BowTalentsByDifficulty),
+                Loadout.SwordNet => creator
+                    .WithItem(SwordByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, SwordHardBonusTalents, SwordTalentsByDifficulty)
+                    .WithThrowable(NetId, NetSlot),
+                Loadout.AxeNet => creator
+                    .WithItem(AxeByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, AxeHardBonusTalents, AxeTalentsByDifficulty)
+                    .WithThrowable(NetId, NetSlot),
+                Loadout.SpearNet => creator
+                    .WithItem(SpearByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, SpearHardBonusTalents, SpearTalentsByDifficulty)
+                    .WithThrowable(NetId, NetSlot),
+                Loadout.SwordKnives => creator
+                    .WithItem(SwordByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, SwordHardBonusTalents, SwordTalentsByDifficulty)
+                    .WithThrowable(KnivesId, KnivesSlot),
+                _ => creator
+                    .WithItem(SpearByDifficulty[d])
+                    .WithBanditCombatModules(difficulty, SpearHardBonusTalents, SpearTalentsByDifficulty)
+                    .WithThrowable(KnivesId, KnivesSlot),
             };
 
             return creator

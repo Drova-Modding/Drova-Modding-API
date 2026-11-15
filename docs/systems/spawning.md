@@ -157,7 +157,7 @@ new NpcCreator("Elite", position)
 | `CosmeticsPresetModule` | Adds cosmetics. (`WithCosmetic` on the creator uses this.)             |
 | `CustomStatsModule`     | Custom stats, e.g. XP on death.                                        |
 | `TalentPresetModule`    | Grants talents.                                                        |
-| `FlowPresetModule`      | Configures AI behaviour/spell preset.                                  |
+| `FlowPresetModule`      | Configures AI behaviour/spell preset. `With(readableId, slot)` fills one slot: combat graphs cast by slot (net `Skill_07`, throwing knives `Skill_06`). |
 | `AlignmentModule`       | Sets faction/alignment (used by `IsPlayerFriendly`).                   |
 | `RoutineModule`         | Gives the NPC a waypoint routine (see [Routines](./routines.md)).      |
 | `DialogueModule`        | Attaches a dialogue tree (see [Dialogues](./dialogues.md)).            |
@@ -232,7 +232,10 @@ wiring lazy actors by hand.
 
 One `Create…BanditLazy(name, position, difficulty = Normal, saveToLazyActorStore = false)` per
 loadout (dagger, sword, axe, sword+shield, spear, spear+shield, bow, spear+slingshot,
-sword+slingshot, random). `BanditDifficulty` is `Easy | Normal | Hard`.
+sword+slingshot, sword+bow, spear+bow, sword/axe/spear+net, sword/spear+throwing knives, random).
+`BanditDifficulty` is `Easy | Normal | Hard`. An axe bandit neither uses a bow nor throws knives, so those are left out.
+The dagger loadout builds a sword bandit: an NPC fighting with a dagger can circle its target without ever striking.
+Random never picks it.
 A bandit's spawn point is its only routine place: it waits there until an enemy comes within its aggro range.
 Pass a group to `EnemyAccess.MakeAggressiveGroup` to have them notice the player from further away and fight together.
 
