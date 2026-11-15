@@ -4,8 +4,10 @@ using System.Text;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Morphing;
 using Drova_Modding_API.Systems.Spawning;
+using Drova_Modding_API.Systems.Spawning.Templates;
 using Il2CppDrova;
 using Il2CppDrova.ActorActions;
+using Il2CppDrova.Utilities.LazyLoading;
 using MelonLoader;
 using UnityEngine;
 
@@ -143,6 +145,19 @@ namespace Drova_Modding_API.Systems.Testing
 
             MelonCoroutines.Start(SpawnWhenLoaded(guid, player.GetFeetPosition() + new Vector2(dx, dy)));
             return "spawning " + creature;
+        }
+
+        /// <summary>
+        /// <c>bandit &lt;loadout&gt; [dx dy]</c>: a Normal <see cref="BanditCreator"/> bandit with that loadout (its enum name, such as
+        /// <c>SpearNet</c>) that far from the player, 200 east by default, sent at the player. Answers its guid.
+        /// </summary>
+        private static string SpawnBandit(string loadout, float dx, float dy)
+        {
+            if (!PlayerAccess.TryGetPlayer(out Actor? player)) throw new InvalidOperationException("no player yet");
+
+            LazyActor bandit = BanditCreator.CreateLazy(loadout, player.GetFeetPosition() + new Vector2(dx, dy), BanditDifficulty.Normal);
+            EnemyAccess.MakeAggressiveGroup([bandit], 1600f, player);
+            return bandit.GUID;
         }
 
         private static IEnumerator SpawnWhenLoaded(string guid, Vector2 position)

@@ -344,6 +344,7 @@ namespace Drova_Modding_API.Systems.Testing
                 case "morph": return Morph(parts.Length > 1 ? parts[1] : string.Empty);
                 case "xp": return Experience(parts.Length > 1 ? parts[1] : string.Empty);
                 case "spawn": return Spawn(Arg(parts, 1), parts.Length > 2 ? Float(parts, 2) : 80f, parts.Length > 3 ? Float(parts, 3) : 0f);
+                case "bandit": return SpawnBandit(Arg(parts, 1), parts.Length > 2 ? Float(parts, 2) : 200f, parts.Length > 3 ? Float(parts, 3) : 0f);
                 case "equip": return Equip(Arg(parts, 1));
                 case "unequip": return Unequip();
                 case "itemsearch": return ItemSearch(Arg(parts, 1));

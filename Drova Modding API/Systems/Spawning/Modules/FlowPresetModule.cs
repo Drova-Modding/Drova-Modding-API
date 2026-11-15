@@ -1,4 +1,5 @@
 using Drova_Modding_API.Access;
+using Il2CppDrova.AI;
 using Il2CppDrova.InventorySystem;
 using Il2CppDrova.Items;
 using MelonLoader;
@@ -19,6 +20,7 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
 
         private readonly HashSet<string> _readableIds = new();
         private readonly List<AssetReferenceT<Item>> _flows = new();
+        private readonly Dictionary<SpellSlot, string> _readableIdBySlot = new();
         private bool _useDefaultPresetTemplate;
 
         /// <summary>
@@ -49,6 +51,20 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
         {
             if (string.IsNullOrWhiteSpace(readableId)) return this;
             _readableIds.Add(readableId);
+            return this;
+        }
+
+        /// <summary>
+        /// Puts an item into one spell slot, replacing what the template had there. NPC combat graphs cast by slot,
+        /// so a throwable only gets used from the slot the weapon's graph casts, for example the net from <c>Skill_07</c>.
+        /// </summary>
+        /// <param name="readableId">Readable id from the item database.</param>
+        /// <param name="slot">The slot to fill.</param>
+        /// <returns>This module for chaining.</returns>
+        public FlowPresetModule With(string readableId, SpellSlot slot)
+        {
+            if (string.IsNullOrWhiteSpace(readableId)) return this;
+            _readableIdBySlot[slot] = readableId;
             return this;
         }
 
@@ -112,6 +128,21 @@ namespace Drova_Modding_API.Systems.Spawning.Modules
                 InitializeSpellPreset(equipPreset._spellEquipPreset);
                 slots = equipPreset._spellEquipPreset._slots;
                 if (slots == null || slots.Count == 0) return;
+            }
+
+            foreach (KeyValuePair<SpellSlot, string> entry in _readableIdBySlot)
+            {
+                Item? item = database != null ? database.GetItemByReadableId(entry.Value) : null;
+                if (item == null)
+                {
+                    MelonLogger.Warning($"Could not resolve flow readable id '{entry.Value}'.");
+                    continue;
+                }
+
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    if (slots[i].Slot == entry.Key) slots[i].SpellItem = item;
+                }
             }
 
             var slotIndex = 0;

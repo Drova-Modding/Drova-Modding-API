@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.9.0 - 2026-11-15]
+### Added
+- `BanditCreator`: bandits with sword+bow, spear+bow, a net (Fangnetz) with sword, axe or spear, and throwing knives with sword or spear. The random loadout picks them too.
+- `FlowPresetModule.With(readableId, slot)` puts an item into one spell slot. NPC combat graphs cast by slot, so a throwable only gets used from the right one.
+- Debug builds: test agent command `bandit <loadout> [dx dy]` spawns one bandit with that loadout and sends it at the player.
+
+### Changed
+- `EnemyAccess.MakeAggressiveGroup(lazyActors, range, target)` hunts the target until the whole group is dead. The chase leash of `AI_TargetBhvr` is lifted, the aggro ranges are set again every second (a game aggro zone resets them), and a member that drops out of the fight is sent again. Before, only bodies that streamed in again were sent, and only for five minutes.
+- `BanditCreator`: the dagger loadout builds a sword bandit, and the random loadout never picks it. An NPC fighting with a dagger could circle its target without ever striking.
+
 ## [0.8.1 - 2026-11-04]
 ### Added
 - `EnemyAccess.MakeAggressiveGroup(lazyActors, range, target)` sends the group straight at a player or a co-op teammate's body, the way the game's aggro zones do, and sends a body that streams in again once more.
