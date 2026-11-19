@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.9.1 - 2026-11-19]
+### Fixed
+- `MorphManager`: hitting a summoned creature (`CustomStats.IsFromSummoner`) in creature form no longer makes the creature an enemy of that kind.
+
 ## [0.9.0 - 2026-11-15]
 ### Added
 - `BanditCreator`: bandits with sword+bow, spear+bow, a net (Fangnetz) with sword, axe or spear, and throwing knives with sword or spear. The random loadout picks them too.

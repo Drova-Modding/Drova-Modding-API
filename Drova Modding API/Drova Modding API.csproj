@@ -8,8 +8,8 @@
         <IsPackable>false</IsPackable>
         <!-- Binding identity baked into every mod ever compiled against the API. Frozen; bump Version instead. -->
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <Version>0.9.0</Version>
-        <FileVersion>0.9.0.0</FileVersion>
+        <Version>0.9.1</Version>
+        <FileVersion>0.9.1.0</FileVersion>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Drova_Modding_API</AssemblyName>
     </PropertyGroup>
