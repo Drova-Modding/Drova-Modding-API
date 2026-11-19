@@ -624,6 +624,13 @@ namespace Drova_Modding_API.Systems.Morphing
                 return;
             }
 
+            // The creature's own summons share its alignment. A stray blow must not turn all of them hostile.
+            Actor? targetActor = target.TryCast<Actor>();
+            if (targetActor != null && targetActor.CustomStats.IsFromSummoner)
+            {
+                return;
+            }
+
             EntityInfo? kind = target.GetEntityInfo();
             if (kind != null && HostileKinds.Add(kind.Pointer))
             {
