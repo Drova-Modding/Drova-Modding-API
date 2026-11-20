@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.9.2 - 2026-11-20]
+### Added
+- `CombatTreeModule` gives an NPC one of the game's combat trees by name, for example a bow tree the default combat tree never picks.
+- `PlayerAccess.IsWorldLoading()`: a loading screen is up or the world is not ready yet.
+
+### Changed
+- `EncounterEvent` spawns its encounters asynchronously, one at a time. `OnEncounterSpawned` now runs after `StartEvent` returns, and `SelfEnd` starts once all have spawned.
+
+### Fixed
+- World events no longer start during a loading screen, in a dialogue or while the options menu is open. Regional events entered during a load start once the world is ready. Spawning during a load could freeze the game.
+- `BanditCreator`: bow-only bandits shoot. They run the game's bow combat tree instead of the melee fallback, which kept them running after the player and reloading.
+
 ## [0.9.1 - 2026-11-19]
 ### Fixed
 - `MorphManager`: hitting a summoned creature (`CustomStats.IsFromSummoner`) in creature form no longer makes the creature an enemy of that kind.
