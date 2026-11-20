@@ -574,6 +574,7 @@
         <Compile Include="Systems\Spawning\ModuleContext.cs" />
         <Compile Include="Systems\Spawning\Modules\DialogueModule.cs" />
         <Compile Include="Systems\Spawning\Modules\AlignmentModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\CombatTreeModule.cs" />
         <Compile Include="Systems\Spawning\Modules\CosmeticsPresetModule.cs" />
         <Compile Include="Systems\Spawning\Modules\CustomStatsModule.cs" />
         <Compile Include="Systems\Spawning\Modules\EntityInfoModule.cs" />

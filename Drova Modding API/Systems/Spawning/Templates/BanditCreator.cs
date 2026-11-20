@@ -59,6 +59,17 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             ItemReadableIds.Weapon.BowGroup.BattleBowId
         ];
 
+        /// <summary>
+        /// The game's bow combat trees by talent tier. The default combat tree has no bow branch, so a bandit with only a
+        /// bow needs one of these or it keeps running in to reload.
+        /// </summary>
+        private static readonly string[] BowTreeByDifficulty =
+        [
+            "AI_Sub_NPC_Combat_2H_Bow_Talent_01",
+            "AI_Sub_NPC_Combat_2H_Bow_Talent_02",
+            "AI_Sub_NPC_Combat_2H_Bow_Talent_03"
+        ];
+
         private static readonly string[] ShieldByDifficulty =
         [
             ItemReadableIds.Weapon.ShieldGroup.SmallWoodenShieldId,
@@ -412,7 +423,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             => SpawnLazy(Loadout.SpearShield, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
-        /// Lazy bandit armed with a bow and quiver. Difficulty controls bow quality.
+        /// Lazy bandit armed with a bow and quiver, running the game's bow combat tree. Difficulty controls bow quality and the tree's talent tier.
         /// </summary>
         public static LazyActor CreateBowBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
             => SpawnLazy(Loadout.Bow, name, position, difficulty, saveToLazyActorStore);
@@ -432,13 +443,13 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
             => SpawnLazy(Loadout.SwordSlingshot, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
-        /// Lazy bandit with a sword and a bow: it shoots from range and closes in with the sword.
+        /// Lazy bandit with a sword and a bow. It fights with the sword and never draws the bow.
         /// </summary>
         public static LazyActor CreateSwordBowBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
             => SpawnLazy(Loadout.SwordBow, name, position, difficulty, saveToLazyActorStore);
 
         /// <summary>
-        /// Lazy bandit with a spear and a bow: it shoots from range and closes in with the spear.
+        /// Lazy bandit with a spear and a bow. It fights with the spear and never draws the bow.
         /// </summary>
         public static LazyActor CreateSpearBowBanditLazy(string name, Vector2 position, BanditDifficulty difficulty = BanditDifficulty.Normal, bool saveToLazyActorStore = false)
             => SpawnLazy(Loadout.SpearBow, name, position, difficulty, saveToLazyActorStore);
@@ -545,6 +556,7 @@ namespace Drova_Modding_API.Systems.Spawning.Templates
                     .WithBanditCombatModules(difficulty, MergeTalents(SpearHardBonusTalents, ShieldHardBonusTalents), SpearTalentsByDifficulty, ShieldTalentsByDifficulty),
                 Loadout.Bow => creator
                     .WithBow(d)
+                    .WithModule(new CombatTreeModule(BowTreeByDifficulty[d]))
                     .WithBanditCombatModules(difficulty, BowHardBonusTalents, BowTalentsByDifficulty),
                 Loadout.SpearSlingshot => creator
                     .WithItem(SpearByDifficulty[d])
