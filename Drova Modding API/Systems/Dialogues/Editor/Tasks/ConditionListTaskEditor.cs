@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
+using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppNodeCanvas.Framework;
 using UnityEngine;
 using static Il2CppNodeCanvas.Framework.ConditionList;

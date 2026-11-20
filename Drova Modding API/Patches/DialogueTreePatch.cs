@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems;
+using Drova_Modding_API.Systems;
 using Drova_Modding_API.Systems.Audio;
 using Drova_Modding_API.Systems.Dialogues.Store;
 using Drova_Modding_API.Systems.Editor;

@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems;
+using Drova_Modding_API.Systems;
 using HarmonyLib;
 using Il2CppDrova;
 

@@ -1,4 +1,4 @@
-﻿using Il2CppDrova;
+using Il2CppDrova;
 using System.Text;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue

@@ -1,4 +1,4 @@
-﻿using Il2CppDrova;
+using Il2CppDrova;
 using System.Text.Json;
 using UnityEngine;
 

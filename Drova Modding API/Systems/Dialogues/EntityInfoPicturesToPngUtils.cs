@@ -1,4 +1,4 @@
-﻿using Il2CppDrova;
+using Il2CppDrova;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues

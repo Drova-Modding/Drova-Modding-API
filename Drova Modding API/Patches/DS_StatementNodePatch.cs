@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Audio;
+using Drova_Modding_API.Systems.Audio;
 using HarmonyLib;
 using Il2CppDrova;
 using Il2CppDrova.DialogueNew;

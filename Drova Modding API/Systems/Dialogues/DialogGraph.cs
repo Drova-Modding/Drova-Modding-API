@@ -1,4 +1,4 @@
-﻿using Il2CppDrova;
+using Il2CppDrova;
 using Il2CppDrova.ActorActions;
 using Il2CppDrova.DialogueNew;
 using Il2CppDrova.Factions;

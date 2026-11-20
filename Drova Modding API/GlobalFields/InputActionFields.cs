@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.GlobalFields
+namespace Drova_Modding_API.GlobalFields
 {
     /// <summary>
     /// Key fields for the InputActions

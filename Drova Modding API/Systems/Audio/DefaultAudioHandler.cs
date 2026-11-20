@@ -1,4 +1,4 @@
-﻿using Il2CppNodeCanvas.DialogueTrees;
+using Il2CppNodeCanvas.DialogueTrees;
 using Il2CppNodeCanvas.DialogueTrees.UI;
 using Il2CppTMPro;
 using MelonLoader;

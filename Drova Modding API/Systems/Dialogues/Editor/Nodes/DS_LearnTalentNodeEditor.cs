@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
+using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Drova_Modding_API.Systems.Talents;
 using Il2CppDrova.Talent;
 using Il2CppNodeCanvas.DialogueTrees;

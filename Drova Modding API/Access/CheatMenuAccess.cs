@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Il2CppCommandTerminal;
 using Il2CppDrova;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;

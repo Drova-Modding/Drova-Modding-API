@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
+using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2Cpp;
 using Il2CppDrova.Cutscenes;
 using UnityEngine;

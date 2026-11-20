@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
+namespace Drova_Modding_API.Systems.Dialogues.Editor.ActionStrategies
 {
     /// <summary>
     /// Interface for action strategies

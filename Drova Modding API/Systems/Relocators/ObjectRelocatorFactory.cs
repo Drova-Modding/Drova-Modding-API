@@ -1,4 +1,4 @@
-﻿using Il2CppDrova;
+using Il2CppDrova;
 using Il2CppDrova.GlobalVarSystem;
 using Il2CppDrova.Items;
 using Il2CppNodeCanvas.DialogueTrees;

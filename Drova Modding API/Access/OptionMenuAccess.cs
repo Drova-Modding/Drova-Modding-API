@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.GlobalFields;
+using Drova_Modding_API.GlobalFields;
 using Drova_Modding_API.UI.Builder;
 using Il2Cpp;
 using Il2CppDrova.GUI;

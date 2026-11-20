@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Systems.Morphing;

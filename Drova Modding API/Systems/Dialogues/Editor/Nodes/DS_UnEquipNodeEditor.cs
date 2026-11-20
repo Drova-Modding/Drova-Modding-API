@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
+using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppDrova.Items;
 using Il2CppNodeCanvas.DialogueTrees;
 using UnityEngine;

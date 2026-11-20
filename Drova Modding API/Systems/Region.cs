@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.Systems
+namespace Drova_Modding_API.Systems
 {
     /**
      * Regions in the game.

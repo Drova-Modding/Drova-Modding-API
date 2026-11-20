@@ -1,4 +1,4 @@
-﻿using Il2CppDrova;
+using Il2CppDrova;
 
 namespace Drova_Modding_API.Systems.Editor
 {

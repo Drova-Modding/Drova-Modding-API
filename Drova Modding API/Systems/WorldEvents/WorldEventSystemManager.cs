@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Systems.WorldEvents.Regional;
 using Il2CppDrova;

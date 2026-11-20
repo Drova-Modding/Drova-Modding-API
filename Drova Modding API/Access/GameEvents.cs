@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using HarmonyLib;
 using Il2CppDrova;
 using Il2CppDrova.Crafting;

@@ -1,4 +1,4 @@
-﻿using Il2CppNodeCanvas.Framework;
+using Il2CppNodeCanvas.Framework;
 using MelonLoader;
 using UnityEngine;
 

@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using Il2CppNodeCanvas.DialogueTrees;
 
 [HarmonyPatch(typeof(DS_MultipleChoiceNode), nameof(DS_MultipleChoiceNode.OnOptionSelected), [typeof(int)])]

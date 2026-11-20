@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.Systems.WorldEvents.Regional
+namespace Drova_Modding_API.Systems.WorldEvents.Regional
 {
     /// <summary>
     /// A regional event that will start when a player enters a region.

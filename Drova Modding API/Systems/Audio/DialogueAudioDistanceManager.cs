@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using ModdingUIOptions = Drova_Modding_API.Systems.ModdingUI.ModdingUI;
 using Il2CppInterop.Runtime.Attributes;
 using MelonLoader;

@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using Il2CppDrova.GlobalVarSystem;
 using System.Text.Json;
 

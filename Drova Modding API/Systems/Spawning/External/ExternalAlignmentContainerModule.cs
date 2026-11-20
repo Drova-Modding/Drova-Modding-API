@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Spawning.Modules;
+using Drova_Modding_API.Systems.Spawning.Modules;
 using Il2CppDrova.Alignment;
 using MelonLoader;
 using System.Text.Json;

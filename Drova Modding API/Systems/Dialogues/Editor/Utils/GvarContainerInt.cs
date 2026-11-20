@@ -1,4 +1,4 @@
-﻿using Il2CppDrova.GlobalVarSystem;
+using Il2CppDrova.GlobalVarSystem;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Utils

@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.Systems.WorldEvents
+namespace Drova_Modding_API.Systems.WorldEvents
 {
     /// <summary>
     /// Base interface for all world events.

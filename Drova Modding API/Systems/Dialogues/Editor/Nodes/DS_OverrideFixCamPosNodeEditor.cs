@@ -1,4 +1,4 @@
-﻿using Il2CppDrova.DialogueNew;
+using Il2CppDrova.DialogueNew;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Nodes

@@ -1,4 +1,4 @@
-﻿using Il2CppInterop.Runtime.InteropTypes.Fields;
+using Il2CppInterop.Runtime.InteropTypes.Fields;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
