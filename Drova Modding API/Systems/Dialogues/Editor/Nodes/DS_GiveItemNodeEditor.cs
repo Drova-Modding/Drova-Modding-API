@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppDrova.DialogueNew;
 using Il2CppDrova.GlobalVarSystem;

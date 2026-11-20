@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Systems.Spawning;
 using Drova_Modding_API.Systems.Spawning.Templates;
 using Il2CppDrova;

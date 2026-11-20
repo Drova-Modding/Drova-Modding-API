@@ -1,11 +1,13 @@
-﻿using Drova_Modding_API.Access;
+using System.Collections;
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Systems.Spawning;
 using Il2CppDrova;
 using MelonLoader;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using Object = UnityEngine.Object;
 
 namespace Drova_Modding_API.Systems.WorldEvents
 {
@@ -31,6 +33,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         protected readonly int SelfEndInSecond = selfEndInSecond;
         private object? _melonCoroutineToken;
         private bool _isRunning;
+        private int _run;
 
         /// <summary>
         /// Called when the event starts. Checks if the player is alive and not teleporting.
@@ -45,7 +48,8 @@ namespace Drova_Modding_API.Systems.WorldEvents
         }
 
         /// <summary>
-        /// Starts the event and spawns the encounters. Also sets a random min and max range for the encounters to spawn.
+        /// Starts the event and spawns <see cref="EncountersToSpawn"/> around the player, one at a time and asynchronously.
+        /// <see cref="OnEncounterSpawned"/> runs for each after this returns. <see cref="SelfEnd"/> starts once all are in.
         /// </summary>
         public virtual void StartEvent()
         {
@@ -55,31 +59,48 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
                 return;
             }
-            Vector3 position = player.transform.position;
-            foreach (KeyValuePair<AssetReferenceGameObject, int> encounter in EncountersToSpawn)
+            MelonCoroutines.Start(Spawn(++_run, player.transform.position, EncountersToSpawn.ToList()));
+        }
+
+        /// <summary>
+        /// Spawns the encounters for <paramref name="run"/>. <see cref="EndEvent"/> moves the run on rather than stopping this,
+        /// so an instance still loading then is destroyed on arrival.
+        /// </summary>
+        private IEnumerator Spawn(int run, Vector3 position, List<KeyValuePair<AssetReferenceGameObject, int>> encounters)
+        {
+            foreach (KeyValuePair<AssetReferenceGameObject, int> encounter in encounters)
             {
                 for (int i = 0; i < encounter.Value; i++)
                 {
-
                     Vector2? randomPosition = WorldLocator.GetRandomFreePosition(new Vector2(position.x, position.y));
-                    if (randomPosition.HasValue)
-                    {
-                        GameObject spawned = encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity).WaitForCompletion();
-                        _spawnedEncounters.Add(spawned);
-
-                        // A creature spawned at runtime has no identity a co-op peer can resolve, so it is announced with its asset.
-                        if (spawned != null)
-                        {
-                            ActorSpawnAccess.RecordSpawn(spawned.GetComponent<Actor>(), encounter.Key.AssetGUID);
-                        }
-                        OnEncounterSpawned(spawned, encounter.Key, randomPosition.Value);
-                    }
-                    else
+                    if (!randomPosition.HasValue)
                     {
                         MelonLogger.Warning("Couldn't find a free position to spawn the encounter.");
                         if (WorldEventSystemManager.Instance != null) WorldEventSystemManager.Instance.EndEvent();
-                        return;
+                        yield break;
                     }
+
+                    AsyncOperationHandle<GameObject> handle = encounter.Key.InstantiateAsync(randomPosition.Value, Quaternion.identity);
+                    while (!handle.IsDone)
+                    {
+                        yield return null;
+                    }
+
+                    GameObject? spawned = handle.Status == AsyncOperationStatus.Succeeded ? handle.Result : null;
+                    if (run != _run)
+                    {
+                        if (spawned != null) Object.Destroy(spawned);
+                        yield break;
+                    }
+
+                    _spawnedEncounters.Add(spawned);
+
+                    // A creature spawned at runtime has no identity a co-op peer can resolve, so it is announced with its asset.
+                    if (spawned != null)
+                    {
+                        ActorSpawnAccess.RecordSpawn(spawned.GetComponent<Actor>(), encounter.Key.AssetGUID);
+                    }
+                    OnEncounterSpawned(spawned, encounter.Key, randomPosition.Value);
                 }
             }
             _melonCoroutineToken = MelonCoroutines.Start(SelfEnd());
@@ -117,6 +138,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 return;
             }
             _isRunning = false;
+            _run++;
             if (_melonCoroutineToken != null)
             {
                 MelonCoroutines.Stop(_melonCoroutineToken);
@@ -125,7 +147,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
             {
                 if (encounter != null)
                 {
-                    UnityEngine.Object.Destroy(encounter);
+                    Object.Destroy(encounter);
                 }
             }
             _spawnedEncounters.Clear();

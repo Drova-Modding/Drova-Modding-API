@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using Il2CppDrova;
 using Il2CppDrova.Routine;
 

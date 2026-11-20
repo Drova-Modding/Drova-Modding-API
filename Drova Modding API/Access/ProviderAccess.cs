@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using Il2Cpp;
 using Il2CppCustomFramework.Localization;
 using Il2CppDrova;

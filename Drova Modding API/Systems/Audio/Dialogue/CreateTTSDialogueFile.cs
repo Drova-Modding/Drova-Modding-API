@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Audio.Dialogue.Dynamic;
+using Drova_Modding_API.Systems.Audio.Dialogue.Dynamic;
 using Drova_Modding_API.Systems.Audio.Dialogue.Generic;
 using Drova_Modding_API.Systems.Editor;
 using Il2CppNodeCanvas.DialogueTrees;

@@ -1,4 +1,4 @@
-﻿using Il2CppDrova.Items;
+using Il2CppDrova.Items;
 using UnityEngine.AddressableAssets;
 
 namespace Drova_Modding_API.Access

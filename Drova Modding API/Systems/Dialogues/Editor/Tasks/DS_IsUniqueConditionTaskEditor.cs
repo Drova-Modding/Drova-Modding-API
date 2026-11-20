@@ -1,4 +1,4 @@
-﻿using Il2Cpp;
+using Il2Cpp;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Tasks

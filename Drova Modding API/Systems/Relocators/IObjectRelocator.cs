@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.Systems.Editor.Relocators
+namespace Drova_Modding_API.Systems.Editor.Relocators
 {
     /// <summary>
     /// Relocates unity objects.

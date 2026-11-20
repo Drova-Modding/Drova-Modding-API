@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -8,8 +8,8 @@
         <IsPackable>false</IsPackable>
         <!-- Binding identity baked into every mod ever compiled against the API. Frozen; bump Version instead. -->
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <Version>0.9.1</Version>
-        <FileVersion>0.9.1.0</FileVersion>
+        <Version>0.9.2</Version>
+        <FileVersion>0.9.2.0</FileVersion>
         <NeutralLanguage>en-US</NeutralLanguage>
         <AssemblyName>Drova_Modding_API</AssemblyName>
     </PropertyGroup>
@@ -574,6 +574,7 @@
         <Compile Include="Systems\Spawning\ModuleContext.cs" />
         <Compile Include="Systems\Spawning\Modules\DialogueModule.cs" />
         <Compile Include="Systems\Spawning\Modules\AlignmentModule.cs" />
+        <Compile Include="Systems\Spawning\Modules\CombatTreeModule.cs" />
         <Compile Include="Systems\Spawning\Modules\CosmeticsPresetModule.cs" />
         <Compile Include="Systems\Spawning\Modules\CustomStatsModule.cs" />
         <Compile Include="Systems\Spawning\Modules\EntityInfoModule.cs" />

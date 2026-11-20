@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor.Nodes;
+using Drova_Modding_API.Systems.Dialogues.Editor.Nodes;
 using Drova_Modding_API.Systems.Routines.Editor;
 using Il2CppDrova.Cutscenes;
 using Il2CppDrova.DialogueNew;

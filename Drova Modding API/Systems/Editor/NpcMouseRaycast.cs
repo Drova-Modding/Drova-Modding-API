@@ -1,4 +1,4 @@
-﻿#if DEBUG
+#if DEBUG
 using Il2CppDrova;
 using Il2CppInterop.Runtime.Attributes;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;

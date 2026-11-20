@@ -1,4 +1,4 @@
-﻿using Il2Cpp;
+using Il2Cpp;
 using Il2CppCustomFramework.Localization;
 using Il2CppInterop.Runtime.Injection;
 using MelonLoader;

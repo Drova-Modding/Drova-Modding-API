@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor.Tasks;
+using Drova_Modding_API.Systems.Dialogues.Editor.Tasks;
 using MelonLoader;
 
 namespace Drova_Modding_API.Systems.Dialogues.Editor.Factories

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Morphing;
 using Drova_Modding_API.Systems.Spawning;

@@ -1,0 +1,30 @@
+# A bow-only bandit from BanditCreator shoots at a moving player. It runs the game's bow combat tree (CombatTreeModule):
+# the default combat tree has no bow branch, and its melee fallback only shoots point blank at a target standing still.
+# Once the player moves away, a bandit on the fallback only loads its quiver while it follows. Debug build only.
+#
+# dotnet run --project tools/Drova.TestRunner -c Debug -- tests/scenarios/bow_bandit.scn
+
+default hero 5
+default slot 0
+
+launch A
+A wait ready=1 timeout=240
+A wait saves=separate timeout=60
+A load $hero $slot
+A wait world=1 timeout=240
+
+A invincible on
+A bandit Bow 300 0
+# The body keeps the template's name. Nothing else built from the template stands near this save's spawn.
+A expect actlog start Template_Human_NPC contains logging timeout=30
+A expect actlog read contains "PrimaryAttack.0:AA_Bow_HuntingBow_Attack_00[AHSKLR" timeout=30
+
+# The player walks away: full draws released at the moving target, and no quiver reload.
+A walk -1 0 15
+A actlog start Template_Human_NPC
+A expect actlog read contains "PrimaryAttack.0:AA_Bow_HuntingBow_Attack_00[AHSKLR" timeout=12
+A expect actlog read !contains "Quiver"
+
+# The arrows land, at the latest once the walk is over: a moving player can sidestep them.
+A invincible off
+A expect health me !contains "40/40" timeout=30

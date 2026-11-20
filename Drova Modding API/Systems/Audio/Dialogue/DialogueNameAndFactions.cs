@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.Systems.Audio.Dialogue
+namespace Drova_Modding_API.Systems.Audio.Dialogue
 {
     internal static class DialogueNameAndFactions
     {

@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.Systems.Spawning
+namespace Drova_Modding_API.Systems.Spawning
 {
 
     /// <summary>

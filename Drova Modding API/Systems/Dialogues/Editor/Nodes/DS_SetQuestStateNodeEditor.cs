@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
+using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Il2CppDrova.DialogueSystem.DialogueTrees;
 using Il2CppDrova.GlobalVarSystem;
 using Il2CppDrova.QuestSystem;

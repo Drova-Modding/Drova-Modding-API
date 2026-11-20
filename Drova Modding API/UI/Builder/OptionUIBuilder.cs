@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Access;
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Register;
 using Il2Cpp;
 using Il2CppDrova.ConfigOptions;

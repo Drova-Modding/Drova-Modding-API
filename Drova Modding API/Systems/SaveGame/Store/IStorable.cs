@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.Systems.SaveGame.Store
+namespace Drova_Modding_API.Systems.SaveGame.Store
 {
     /// <summary>
     /// Base interface for storable objects.

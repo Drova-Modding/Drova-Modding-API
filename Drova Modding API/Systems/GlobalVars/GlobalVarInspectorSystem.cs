@@ -1,4 +1,4 @@
-﻿#if DEBUG
+#if DEBUG
 using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.Dialogues.Editor.Utils;
 using Drova_Modding_API.Systems.Editor;

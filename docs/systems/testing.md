@@ -1,4 +1,4 @@
-﻿# Automated in-game testing
+# Automated in-game testing
 
 Test your mod in the real game from a script: load a save, walk, teleport, read and set global variables, talk,
 fight, and assert the result. Works with one game or several (co-op).

@@ -1,4 +1,4 @@
-﻿using Drova_Modding_API.Systems.Spawning;
+using Drova_Modding_API.Systems.Spawning;
 using System.Text.Json;
 
 namespace Drova_Modding_API.Systems.SaveGame.Store

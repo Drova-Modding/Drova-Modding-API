@@ -1,4 +1,4 @@
-﻿using MelonLoader;
+using MelonLoader;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue
 {

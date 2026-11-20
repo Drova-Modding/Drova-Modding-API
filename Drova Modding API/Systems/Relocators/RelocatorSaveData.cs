@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 
 namespace Drova_Modding_API.Systems.Editor.Relocators
 {

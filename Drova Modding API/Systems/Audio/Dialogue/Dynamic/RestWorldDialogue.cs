@@ -1,4 +1,4 @@
-﻿using Il2Cpp;
+using Il2Cpp;
 using System.Text;
 
 namespace Drova_Modding_API.Systems.Audio.Dialogue.Dynamic

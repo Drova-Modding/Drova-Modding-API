@@ -1,4 +1,4 @@
-﻿using Il2Cpp;
+using Il2Cpp;
 using Il2CppDrova.HitSystem;
 using System.Text;
 

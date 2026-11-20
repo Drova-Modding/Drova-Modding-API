@@ -294,7 +294,8 @@ namespace Drova_Modding_API.Systems.Routines
             PooledTreeIds.Add(treeId);
         }
 
-        private static Il2CppSystem.Collections.Generic.Dictionary<string, GraphPool>? GetPools()
+        /// <summary>The AI factory's graph pools by graph name, or null outside a world.</summary>
+        internal static Il2CppSystem.Collections.Generic.Dictionary<string, GraphPool>? GetPools()
         {
             return FactoryAIGameHandler.TryGet(out FactoryAIGameHandler handler) && handler != null
                 ? handler._graphPool?._poolDict

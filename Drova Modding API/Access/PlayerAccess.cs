@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using Drova_Modding_API.Extensions;
 using Drova_Modding_API.Systems.Morphing;
@@ -53,20 +53,28 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static bool IsFree(Actor? player)
         {
-            if (player == null || !player._isInitialized || SceneGameHandler.IsLoadingScreenActive)
+            if (player == null || !player._isInitialized || IsWorldLoading())
             {
                 return false;
             }
 
-            LoadingScreenHandler? loading = LoadingScreenHandler.Instance;
             Health health = player.GetHealth();
-            if (loading == null || !loading.IsWorldReady() || health == null || health.IsDead)
+            if (health == null || health.IsDead)
             {
                 return false;
             }
 
             ICustomStats stats = player.CustomStats;
             return (stats == null || !stats.IsKnockout) && !player.IsInDialogue() && !player.IsPlayerTeleporting();
+        }
+
+        /// <summary>
+        /// Whether a loading screen is up or the world is not ready yet. Spawning then can freeze the game.
+        /// </summary>
+        public static bool IsWorldLoading()
+        {
+            LoadingScreenHandler? loading = LoadingScreenHandler.Instance;
+            return SceneGameHandler.IsLoadingScreenActive || loading == null || !loading.IsWorldReady();
         }
 
         /// <summary>

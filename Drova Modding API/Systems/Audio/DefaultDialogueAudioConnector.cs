@@ -1,4 +1,4 @@
-﻿using Il2CppDrova.DialogueNew;
+using Il2CppDrova.DialogueNew;
 using Il2CppNodeCanvas.DialogueTrees;
 using UnityEngine;
 

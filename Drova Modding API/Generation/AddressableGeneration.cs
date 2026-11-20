@@ -1,4 +1,4 @@
-﻿using MelonLoader;
+using MelonLoader;
 using System.Text;
 using System.Text.Json;
 using UnityEngine;

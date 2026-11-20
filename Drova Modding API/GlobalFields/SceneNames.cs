@@ -1,4 +1,4 @@
-﻿namespace Drova_Modding_API.GlobalFields
+namespace Drova_Modding_API.GlobalFields
 {
     /// <summary>
     /// Contains common scene names.
