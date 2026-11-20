@@ -1,4 +1,7 @@
+using System.Collections;
+using Drova_Modding_API.Access;
 using Drova_Modding_API.Systems.WorldEvents.Regional;
+using MelonLoader;
 using UnityEngine;
 
 namespace Drova_Modding_API.Systems.WorldEvents
@@ -12,6 +15,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
     internal sealed class WorldRegionCoordinator(List<ARegionalEvent> runningRegionalEvents, Func<float> getRegionalCooldownSeconds)
     {
         private readonly Dictionary<Region, float> _regionCooldowns = [];
+        private readonly Dictionary<Region, object> _pendingEntries = [];
 
         // Who is in each region: the local player (LocalKey) and remote players by their id. A region's events start
         // when its first occupant enters and end when its last one leaves, so a co-op teammate alone in a region gets
@@ -98,9 +102,13 @@ namespace Drova_Modding_API.Systems.WorldEvents
                     if (inside.Count > 1) return;
                 }
 
-                Anchor(region, key);
-                HandleRegionChange(region, true);
-                HandleRunningEvents(region, true);
+                if (PlayerAccess.IsWorldLoading())
+                {
+                    if (!_pendingEntries.ContainsKey(region)) _pendingEntries[region] = MelonCoroutines.Start(EnterWhenLoaded(region));
+                    return;
+                }
+
+                Enter(region, key);
                 return;
             }
 
@@ -113,8 +121,49 @@ namespace Drova_Modding_API.Systems.WorldEvents
                 return;
             }
 
+            if (_pendingEntries.Remove(region, out object? pending))
+            {
+                MelonCoroutines.Stop(pending);
+                return;
+            }
+
             HandleRegionChange(region, false);
             HandleRunningEvents(region, false);
+        }
+
+        /// <summary>Starts the region's events around <paramref name="key"/>.</summary>
+        private void Enter(Region region, int key)
+        {
+            Anchor(region, key);
+            HandleRegionChange(region, true);
+            HandleRunningEvents(region, true);
+        }
+
+        /// <summary>
+        /// Holds a region entered during a load until <see cref="PlayerAccess.IsWorldLoading"/> clears, then enters it for whoever is still inside.
+        /// </summary>
+        private IEnumerator EnterWhenLoaded(Region region)
+        {
+            while (PlayerAccess.IsWorldLoading())
+            {
+                yield return null;
+            }
+
+            _pendingEntries.Remove(region);
+            if (_occupants.TryGetValue(region, out List<int> inside) && inside.Count > 0)
+            {
+                Enter(region, inside[0]);
+            }
+        }
+
+        /// <summary>Drops the entries still waiting for a load, so they never start in the next world.</summary>
+        public void Stop()
+        {
+            foreach (object pending in _pendingEntries.Values)
+            {
+                MelonCoroutines.Stop(pending);
+            }
+            _pendingEntries.Clear();
         }
 
         /// <summary>Points the region's events at the occupant they are for.</summary>

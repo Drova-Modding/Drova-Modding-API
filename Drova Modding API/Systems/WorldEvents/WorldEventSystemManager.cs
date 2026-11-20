@@ -11,8 +11,9 @@ namespace Drova_Modding_API.Systems.WorldEvents
 {
 
     /// <summary>
-    /// Starts registered <see cref="IWorldEvent"/>s on a cooldown and <see cref="ARegionalEvent"/>s on region entry, paused in
-    /// dialogue, the options menu and blocked regions. An event still running after five cooldowns is ended.
+    /// Starts registered <see cref="IWorldEvent"/>s on a cooldown and <see cref="ARegionalEvent"/>s on region entry. A due world
+    /// event waits until <see cref="PlayerAccess.IsFree"/> and the options menu is closed. None starts in a blocked region.
+    /// An event still running after five cooldowns is ended.
     /// </summary>
     [RegisterTypeInIl2Cpp]
     public class WorldEventSystemManager(IntPtr ptr) : MonoBehaviour(ptr)
@@ -80,6 +81,7 @@ namespace Drova_Modding_API.Systems.WorldEvents
         {
             _cooldownRunning = false;
             Instance = null;
+            _regionCoordinator?.Stop();
             if (AreaNameSystem != null && _regionCoordinator != null)
                 AreaNameSystem.OnRegionChanged -= _regionCoordinator.OnRegionChanged;
             if(_cooldownCoroutine != null)
@@ -155,13 +157,6 @@ namespace Drova_Modding_API.Systems.WorldEvents
         {
             while (_cooldownRunning)
             {
-                
-                if (OptionMenuAccess.Instance.IsMenuOpen || IsPlayerInDialogueOrTeleporting())
-                {
-                    yield return _startEventCooldown;
-                    continue;
-                }
-
                 // The keys are only written once the modding options menu has been opened, so the sliders' defaults apply until then.
                 if (!ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMinOptionKey, out int min)) min = ModdingUI.ModdingUI.ModdingUIMinDefault;
                 if (!ConfigAccessor.TryGetConfigValue(ModdingUI.ModdingUI.ModdingUIMaxOptionKey, out int max)) max = ModdingUI.ModdingUI.ModdingUIMaxDefault;
@@ -170,6 +165,11 @@ namespace Drova_Modding_API.Systems.WorldEvents
 #else
                 yield return new WaitForSeconds(UnityEngine.Random.Range(min * 60, max * 60));
 #endif
+
+                while (OptionMenuAccess.Instance.IsMenuOpen || !PlayerAccess.IsFree(PlayerAccess.GetPlayer()))
+                {
+                    yield return _startEventCooldown;
+                }
 
                 if (CurrentEvent == null && WorldEvents.Count > 0 && !IsPlayerInBlockedRegion())
                 {
