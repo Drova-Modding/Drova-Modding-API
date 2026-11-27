@@ -454,6 +454,27 @@ namespace Drova_Modding_API.Systems.Testing
                     ResolveActor(Arg(parts, 1)).gameObject.SetActive(true);
                     return "shown";
 
+                // "editnpc <target>": selects that NPC in the editor HUD, as a click on it in cheat mode does. The HUD reads
+                // the mouse through the legacy Input, which no script can feed.
+                case "editnpc":
+                    Editor.EditorManager.TriggerNpcSelected(ResolveActor(Arg(parts, 1)));
+                    return "selected";
+
+                // "setactive <GameObject name> 0|1": switches every object of that exact name on or off. It keeps the game's
+                // cursor sprite or a debug label out of a recording.
+                case "setactive":
+                {
+                    int switched = 0;
+                    foreach (Transform transform in UnityEngine.Object.FindObjectsOfType<Transform>(true))
+                    {
+                        if (transform == null || transform.name != Arg(parts, 1)) continue;
+                        transform.gameObject.SetActive(Arg(parts, 2) == "1");
+                        switched++;
+                    }
+
+                    return "switched " + switched;
+                }
+
                 // "critstop on|off": the game's own no-crits cheat, for blows of a known size (a crit downs a lightly armored
                 // player outright).
                 case "critstop":

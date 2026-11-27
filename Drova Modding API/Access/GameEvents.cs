@@ -111,6 +111,15 @@ namespace Drova_Modding_API.Access
         /// </summary>
         public static event Action<TraderActorAdapter, ItemTraderStack>? OnTraderItemRemoved;
 
+        /// <summary>
+        /// An actor's equipment changed: an item went onto or off a slot, or a weapon set swap put a slot's item effects on
+        /// or took them off. Fires after the change, so the actor's stats already show it, for every actor and often
+        /// several times per change. Raised from <c>ActorEquipSlot.TryEquipIntern</c> and <c>UnequipIntern</c> as well as
+        /// <c>AddActiveEquipEffects</c> and <c>RemoveActiveEquipEffects</c>. The native build inlines the effect calls into
+        /// equipping and unequipping, so the effect methods alone miss most changes.
+        /// </summary>
+        public static event Action<Actor, ActorEquipSlot>? OnEquipmentChanged;
+
         private static bool _initialized;
 
         private static bool _pendingTalentLearn;
@@ -162,6 +171,15 @@ namespace Drova_Modding_API.Access
 
             Hooking.TryPostfix(harmony, typeof(TraderActorAdapter), nameof(TraderActorAdapter.RemoveItemFromTrader),
                 typeof(GameEvents), nameof(TraderItemRemovedPostfix));
+
+            Hooking.TryPostfix(harmony, typeof(ActorEquipSlot), nameof(ActorEquipSlot.TryEquipIntern),
+                typeof(GameEvents), nameof(EquipSlotPostfix));
+            Hooking.TryPostfix(harmony, typeof(ActorEquipSlot), nameof(ActorEquipSlot.UnequipIntern),
+                typeof(GameEvents), nameof(EquipSlotPostfix));
+            Hooking.TryPostfix(harmony, typeof(ActorEquipSlot), nameof(ActorEquipSlot.AddActiveEquipEffects),
+                typeof(GameEvents), nameof(EquipSlotPostfix));
+            Hooking.TryPostfix(harmony, typeof(ActorEquipSlot), nameof(ActorEquipSlot.RemoveActiveEquipEffects),
+                typeof(GameEvents), nameof(EquipSlotPostfix));
         }
 
         // Patching a closed generic without an AOT body hard-crashes, so check first and fall back otherwise.
@@ -502,6 +520,28 @@ namespace Drova_Modding_API.Access
             catch (Exception e)
             {
                 MelonLogger.Error("[GameEvents] RemoveItemFromTrader postfix failed: " + e);
+            }
+        }
+
+        private static void EquipSlotPostfix(ActorEquipSlot __instance)
+        {
+            try
+            {
+                if (OnEquipmentChanged == null || __instance == null)
+                {
+                    return;
+                }
+
+                Actor.EquipmentModule? module = __instance.GetEquipmentModule();
+                Actor? actor = module != null ? module.GetActor() : null;
+                if (actor != null)
+                {
+                    OnEquipmentChanged.Invoke(actor, __instance);
+                }
+            }
+            catch (Exception e)
+            {
+                MelonLogger.Error("[GameEvents] equipment changed postfix failed: " + e);
             }
         }
     }

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.9.3 - 2026-11-28]
+### Added
+- `GameEvents.OnEquipmentChanged(Actor, ActorEquipSlot)`: an item went onto or off a slot, or a weapon set swap turned a slot's item effects on or off. Fires for every actor, after the change.
+- `StatusEffectAccess.TryApplyFrom` and `TryApplyBleedingFrom` apply an effect on behalf of an owner, whose damage the ticks then count as: kill credit, and co-op reports them to the target's machine like the owner's blows.
+- Debug builds: test agent commands `editnpc <target>` (selects an NPC in the editor HUD) and `setactive <GameObject name> 0|1`.
+
 ## [0.9.2 - 2026-11-20]
 ### Added
 - `CombatTreeModule` gives an NPC one of the game's combat trees by name, for example a bow tree the default combat tree never picks.

@@ -34,6 +34,7 @@ GameEvents.OnQuestCompleted += questListName => MelonLogger.Msg($"Quest complete
 | `OnCacheLooted(SpawnFromLootTable)`                                            | a loot cache (breakable, hidden stash) drops its loot                                                     |
 | `OnResourceMinigameFinished(Interact_Bhvr_ResourceSpot, MinigameFinishedArgs)` | a mining or fishing minigame finishes                                                                     |
 | `OnTraderItemRemoved(TraderActorAdapter, ItemTraderStack)`                     | an item stack leaves a trader's inventory (buy or sell)                                                   |
+| `OnEquipmentChanged(Actor, ActorEquipSlot)`                                    | an item goes onto or off a slot, or a weapon set swap turns a slot's item effects on or off              |
 
 ### Reading a quest state
 
@@ -51,5 +52,8 @@ that method may be missing from the game build and crashes the game instead of t
 - **`OnTalentLearned` skips force-granted talents** (`ForceLearnTalent`) and talents the actor
   already knows.
 - **Knocked-out NPC loot** also comes through `OnLootInventoryOpened`.
+- **`OnEquipmentChanged` fires often.** Every actor's slot changes count, NPCs spawning with their gear
+  included, and one change can fire it several times. Recompute from the actor's slots rather than
+  counting calls. It fires after the change, so stats and `GetItemOnSlot()` are already current.
 - **Saving cache loot:** in `OnCacheLooted`, the dropped pickups get new ids every load. Save your
   state against the spawner's `GuidComponent` instead.

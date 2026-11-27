@@ -33,6 +33,8 @@ if (PlayerAccess.TryGetPlayer(out Actor? player))
 | `TryGet(guid, out effect)`                                             | Looks up an effect by GUID. `StatusEffectGuids` lists every GUID, grouped into `Buff`, `Consumable`, `Talent`, `Trinket` and `Other`.                             |
 | `TryApply(actor, effect, relatedItem = null, stacks = 0, seconds = 0)` | Applies the effect. `stacks` and `seconds` override the effect's own values when above 0. Returns false when the game refused it (actor dead, dodging or immune). |
 | `TryApplyBleeding(actor, damage)`                                      | Makes the actor bleed for `damage` health in total.                                                                                                               |
+| `TryApplyFrom(actor, effect, owner)`                                   | `TryApply` on behalf of `owner`: its ticks count as the owner's damage (kill credit, co-op reports).                                                              |
+| `TryApplyBleedingFrom(actor, damage, owner)`                           | `TryApplyBleeding` on behalf of `owner`, like a crit's bleeding.                                                                                                  |
 
 ## Things to know
 
